@@ -21,7 +21,7 @@
 # * To-do 1
 #
 
-require 'active_rdf'
+require 'node_factory'
 
 class QueryEngine
 
@@ -134,19 +134,19 @@ class QueryEngine
 
   # Generate a Sparql query. Return the query string.
 	def generate_sparql
-		require 'sparql_generator.rb'
+		require 'query_generator/sparql_generator.rb'
 		return SparqlQueryGenerator.generate(@bindings, @conditions, @order, @keyword_search)
 	end
 	
 	# Generate a NTriples query. Return the query string.
 	def generate_ntriples
-		require 'ntriples_generator.rb'
+		require 'query_generator/ntriples_generator.rb'
 		return NTriplesQueryGenerator.generate(@bindings, @conditions, @order, @keyword_search)
 	end
 
 	# Choose the query language and generate the query string.
 	def generate
-		case Resource.connection.query_language
+		case NodeFactory.connection.query_language
 		when 'sparql'
 			return generate_sparql
 		when 'n3'
@@ -169,7 +169,7 @@ class QueryEngine
 		clean
 		
 		# Execute query
-		return Resource.connection.query(qs)
+		return NodeFactory.connection.query(qs)
 	end
 
 	def count

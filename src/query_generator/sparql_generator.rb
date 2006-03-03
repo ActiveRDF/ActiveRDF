@@ -11,7 +11,7 @@
 #
 # (c) 2005-2006
 
-require 'abstract_generator.rb'
+require 'query_generator/abstract_generator'
 
 class SparqlQueryGenerator < AbstractQueryGenerator
 
@@ -100,7 +100,7 @@ private
 
 public
   
-  def self.generate(bindings, conditions, order_opt = nil)
+  def self.generate(bindings, conditions, order_opt = nil, keyword_search = nil)
 
 	template_query = <<END_OF_QUERY
 SELECT #{select(bindings)}

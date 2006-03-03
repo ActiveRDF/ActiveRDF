@@ -21,7 +21,7 @@
 # * To-do 1
 #
 
-require 'abstract_generator.rb'
+require 'query_generator/abstract_generator'
 
 class NTriplesQueryGenerator < AbstractQueryGenerator
 	@variables = {}

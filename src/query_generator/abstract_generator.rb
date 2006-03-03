@@ -22,8 +22,8 @@
 #					in Resource.find method
 #
 
-require 'active_rdf'
-require 'query_exceptions.rb'
+require 'node_factory'
+require 'query_generator/query_exceptions'
 
 class AbstractQueryGenerator
 
