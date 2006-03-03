@@ -26,42 +26,21 @@ require 'active_rdf'
 require 'node_factory'
 
 module Resource
-	def self.test_get_local_part(element)
-		return Resource.get_local_part(element)
-	end
-	
 	def self.test_return_distinct_results(results)
 		return Resource.return_distinct_results(results)
 	end
 end
 
 class TestResource < Test::Unit::TestCase
-
-	def test_1_namespace
-		assert_equal("http://www.w3.org/2000/01/rdf-schema#", Resource.namespace)
-	end
 	
-	def test_2_classuri
-		class_uri = Resource.classURI
+	def test_1_classuri
+		class_uri = Resource.class_URI
 		assert_not_nil(class_uri)
 		assert(class_uri.kind_of?(BasicIdentifiedResource))
 		assert_equal("http://www.w3.org/2000/01/rdf-schema#Resource", class_uri.uri)
 	end
 	
-	def test_3_get_local_part_error
-		assert_raise(ActiveRdfError) {
-			Resource.test_get_local_part(nil)
-		}
-		assert_raise(ResourceTypeError) {
-			Resource.test_get_local_part("42")
-		}
-	end
-	
-	def test_4_get_local_part
-		assert_equal('Resource', Resource.test_get_local_part(Resource.classURI))
-	end
-	
-	def test_5_return_distinct_results_error
+	def test_2_return_distinct_results_error
 		assert_raise(ActiveRdfError) {
 			Resource.test_return_distinct_results(nil)
 		}
@@ -70,7 +49,7 @@ class TestResource < Test::Unit::TestCase
 		}
 	end
 	
-	def test_6_return_distinct_results
+	def test_3_return_distinct_results
 		result = Resource.test_return_distinct_results(Array.new)
 		assert_nil(result)
 	

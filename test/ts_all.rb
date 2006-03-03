@@ -27,5 +27,11 @@ require 'test/node_factory/test_initialisation'
 require 'test/node_factory/test_create_literal'
 require 'test/node_factory/test_create_basic_resource'
 
+require 'test/adapter/redland/test_redland_adapter'
+require 'test/adapter/redland/test_redland_adapter_add'
+require 'test/adapter/redland/test_redland_adapter_remove'
+
 require 'test/resource/test_resource_get'
 require 'test/resource/test_resource'
+
+require 'test/namespace_factory/test_namespace_factory'
