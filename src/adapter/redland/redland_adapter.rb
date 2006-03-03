@@ -38,19 +38,19 @@ class RedlandAdapter; implements AbstractAdapter; implements RedlandAdapterToolB
 		# Verification of nil object
 		if s.nil? or p.nil? or o.nil?
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : nil received."
-			raise(StatementAdditionError, str_error)		
+			raise(StatementAdditionRedlandError, str_error)		
 		end
 		
 		# Verification of type
 		if !s.kind_of?(Resource) or !p.kind_of?(Resource) or !o.kind_of?(Node)
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : wrong type received."
-			raise(StatementAdditionError, str_error)		
+			raise(StatementAdditionRedlandError, str_error)		
 		end
 	
 		# Redland::Model::add return 0 if add succesfully the statement
 		if @model.add(wrap(s), wrap(p), wrap(o)) != 0
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
-			raise(StatementAdditionError, str_error)
+			raise(StatementAdditionRedlandError, str_error)
 		end
 	end
 
@@ -67,17 +67,20 @@ class RedlandAdapter; implements AbstractAdapter; implements RedlandAdapterToolB
 		# Verification of nil object
 		if s.nil? or p.nil? or o.nil?
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : nil received."
-			raise(StatementRemoveError, str_error)		
+			raise(StatementRemoveRedlandError, str_error)		
 		end
 		
 		# Verification of type
 		if !s.kind_of?(Resource) or !p.kind_of?(Resource) or !o.kind_of?(Node)
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : wrong type received."
-			raise(StatementRemoveError, str_error)		
+			raise(StatementRemoveRedlandError, str_error)		
 		end
 		
 		# Redland::Model::delete return 0 if delete succesfully the statement
-		@model.delete(wrap(s), wrap(p), wrap(o))
+		if @model.delete(wrap(s), wrap(p), wrap(o)) != 0
+			str_error = "In #{__FILE__}:#{__LINE__}, error during removal of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
+			raise(StatementRemoveRedlandError, str_error)
+		end
 	end
 
   # Synchronise the model to the model implementation.
@@ -101,7 +104,7 @@ class RedlandAdapter; implements AbstractAdapter; implements RedlandAdapterToolB
 		# Verify if the query has failed
 		raise(SparqlQueryFailed, "In #{__FILE__}:#{__LINE__}, Query failed:\n#{qs}") if query_results.nil?
 		# Convert the result to Hash if it is a binding
-		result = convert_query_result_to_hash(query_results) if query_results.is_bindings?
+		result = convert_query_result_to_array(query_results) if query_results.is_bindings?
 		return result
 	end
 	

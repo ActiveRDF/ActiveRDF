@@ -17,10 +17,10 @@ end
 class SparqlQueryFailed < RedlandAdapterError
 end
 
-class StatementAdditionError < RedlandAdapterError
+class StatementAdditionRedlandError < RedlandAdapterError
 end
 
-class StatementRemoveError < RedlandAdapterError
+class StatementRemoveRedlandError < RedlandAdapterError
 end
 
 class UnknownResourceError < RedlandAdapterError

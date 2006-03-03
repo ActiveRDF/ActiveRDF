@@ -31,26 +31,36 @@ module RedlandAdapterToolBox
 
   protected
 
-	def convert_query_result_to_hash(query_results)
+  # Convert Redland::QueryResult into an array.
+  #
+  # Arguments:
+  # * +query_results+ [<tt>Redland::QueryResult</tt>]: Query result from redland
+  #
+  # Return:
+  # * [<tt>Array</tt>] Array containing query results
+	def convert_query_result_to_array(query_results)
 		# Init
 	 	results = Array.new
 	 	binding_names = query_results.binding_names
-	  	
+
 	 	# Loop
-		while !query_results.finished?
-			case binding_names.size
-			when 0
-				raise(SparqlQueryFailed, "In #{__FILE__}:#{__LINE__}, no binding variable in result.")
-			when 1
+		case binding_names.size
+		when 0
+			raise(SparqlQueryFailed, "In #{__FILE__}:#{__LINE__}, no binding variable in result.")
+		when 1
+			while !query_results.finished?
 				results << convert_query_value_to_activerdf(binding_names[0], query_results)
-			else
+				query_results.next()
+			end
+		else
+			while !query_results.finished?
 				values = Array.new
 				for binding_name in binding_names
 					values << convert_query_value_to_activerdf(binding_name, query_results)
 				end
 				results << values
+				query_results.next()
 			end
-			query_results.next()
 		end
 		return results		
 	end
