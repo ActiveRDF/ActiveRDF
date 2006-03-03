@@ -69,7 +69,7 @@ class NodeFactory
 		when :redland
 			$logger.info 'loading Redland adapter'
 			require 'adapter/redland/redland_adapter'
-			@@_connection = RedlandAdapter.instance
+			@@_connection = RedlandAdapter.new
 		else
 			raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, invalid adapter.")
 		end

@@ -31,12 +31,10 @@ module ResourceToolbox
   # returns a hash containing from localname to full predicate URI (e.g. 
 	# 'firstName' => 'http://foaf.org/firstName')  
 	def find_predicates(resource)
-		# Load URI constants
-		require 'misc/constant_uri'
 	
 		predicates = Hash.new
 		
-		preds = Resource.find({ RDFSDomain => resource })
+		preds = Resource.find({ NamespaceFactory.get(:rdf_type) => resource })
 
 	 	preds.each do |predicate|
 			attribute = get_local_part(predicate)
@@ -44,7 +42,7 @@ module ResourceToolbox
 			$logger.debug "found predicate #{attribute}"
 		end unless preds.nil?
 
-		preds = Resource.find({ RDFSDomain => OwlThing })
+		preds = Resource.find({ NamespaceFactory.get(:rdfs_domain) => OwlThing })
 	 	preds.each do |predicate|
 			attribute = get_local_part(predicate)
 			predicates[attribute] = predicate.uri
@@ -53,8 +51,8 @@ module ResourceToolbox
 		
 		# Generate the query string
 		qe = QueryEngine.new
-		qe.add_binding_triple(resource, RDFSSubClassOf, :o)
-		qe.add_condition(resource, RDFSSubClassOf, :o)
+		qe.add_binding_triple(resource, NamespaceFactory.get(:rdfs_subclass), :o)
+		qe.add_condition(resource, NamespaceFactory.get(:rdfs_subclass), :o)
 		
 		# Execute the query
 		qe.execute do |s, p, o|
@@ -65,24 +63,7 @@ module ResourceToolbox
 
 		return predicates				
 	end
-	
-  # Extract the local part of a URI
-  #
-  # * +resource+: ActiveRDF::Resource representing the URI
-  # * returns string with local part of the URI
-	def get_local_part(resource)
-		raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, resource is nil.") if resource.nil?
-		raise(ResourceTypeError, "In #{__FILE__}:#{__LINE__}, not a resource.") if !resource.kind_of?(Resource)
-		
-		uri = resource.uri
-		delimiter = uri.rindex(/#|\//)
-		
-		# if no delimiter available then uri is broken
-		str_error = "In #{__FILE__}:#{__LINE__}, uri is broken ('#{uri}')."
-		raise(UriBrokenError, str_error) if delimiter.nil?
-		
-		return uri[delimiter+1..uri.size]			
-	end
+
 	
 	# Remove all duplicate values and return an array if multiple values, nil if no value
 	# or the single value.
@@ -99,7 +80,6 @@ module ResourceToolbox
     else
     	return results
 		end
-		
 	end
 		
 end

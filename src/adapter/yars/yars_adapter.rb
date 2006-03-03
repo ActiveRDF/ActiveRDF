@@ -35,7 +35,7 @@ class YarsAdapter; implements AbstractAdapter
 	# add the triple s,p,o in the database
 	def add s, p, o
 		if s.nil? or p.nil? or o.nil?
-			raise(StatementAdditionError, "trying to add nil triple: #{s}, #{p}, #{o}")
+			raise(StatementAdditionYarsError, "trying to add nil triple: #{s}, #{p}, #{o}")
 		end
 		put "#{wrap(s)} #{wrap(p)} #{wrap(o)} ."
 	end

@@ -29,18 +29,17 @@ require 'query_generator/query_engine'
 module Resource; implements Node; extend ResourceToolbox
 
 	# if no subclass is specified, this is an rdfs:resource
-	@namespace = 'http://www.w3.org/2000/01/rdf-schema#'
+	@_class_namespace = 'http://www.w3.org/2000/01/rdf-schema#Resource'
 
 #----------------------------------------------#
 #               PUBLIC METHODS                 #
 #----------------------------------------------#
 
 	public
-
-	# 
-	# * _returns_ BasicIdentifiedResource  
-	def self.classURI()
-		return NodeFactory.create_basic_identified_resource(namespace + self.to_s)
+	
+	# Return the namespace related to the class
+	def self.class_URI
+		return NodeFactory.create_basic_identified_resource(@_class_namespace)
 	end
 	
 	# 
@@ -71,15 +70,25 @@ module Resource; implements Node; extend ResourceToolbox
 			
 	end
 	
-	# 
-	# * _returns_ Array  
-	def self.find_all()
-			
-	end
+#----------------------------------------------#
+#               PRIVATE METHODS                #
+#----------------------------------------------#
 	
-	# Return the namespace related to the class
-	def self.namespace
-		return @namespace
+	private
+	
+  # Extract the local part of a URI
+  #
+  # * +resource+: ActiveRDF::Resource representing the URI
+  # * returns string with local part of the URI
+	def get_local_part
+		uri = self.uri
+		delimiter = uri.rindex(/#|\//)
+		
+		# if no delimiter available then uri is broken
+		str_error = "In #{__FILE__}:#{__LINE__}, uri is broken ('#{uri}')."
+		raise(UriBrokenError, str_error) if delimiter.nil?
+		
+		return uri[delimiter+1..uri.size]
 	end
 
 end

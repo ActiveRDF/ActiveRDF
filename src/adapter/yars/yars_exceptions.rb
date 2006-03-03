@@ -27,7 +27,7 @@ end
 class WrapYarsError < YarsError
 end
 
-class StatementAdditionError < YarsError
+class StatementAdditionYarsError < YarsError
 end
 
 class QueryYarsError < YarsError

@@ -29,17 +29,14 @@ module AbstractAdapter
 	attr_reader :query_language
 	
 	# Abstract method to be implemented in subclasses.
-	abstract :query, :add, :remove, :delete
+	#
+	# * query(qs) and delete(qs)
+	# +qs+ [<tt>String</tt>]: query string
+	# * add(s,p,o) and remove(s,p,o)
+	# +s+ [<tt>Resource</tt>]: triple subject
+	# +p+ [<tt>Resource</tt>]: triple predicate
+	# +o+ [<tt>Node</tt>]: triple object
+	# * save : no argument
+	abstract :query, :add, :remove, :delete, :save
 
-	def query
-	end
-
-	def add s,p,o
-	end
-
-	def remove s,p,o
-	end
-
-	def delete qs
-	end
 end

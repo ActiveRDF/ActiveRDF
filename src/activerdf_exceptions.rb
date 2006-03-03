@@ -40,3 +40,7 @@ end
 
 class NodeFactoryError < ActiveRdfError
 end
+
+class NamespaceFactoryError < ActiveRdfError
+end
+
