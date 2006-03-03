@@ -23,6 +23,10 @@ end
 # Load Module Class modification for true abstract class
 require 'misc/abstract_class'
 
+# Load common uri in NamespaceFactory
+require 'namespace_factory'
+NamespaceFactory.load_namespaces
+
 # Start the logger
 require 'logger'
 
