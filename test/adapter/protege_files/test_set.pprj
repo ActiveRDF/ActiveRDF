@@ -1,4 +1,4 @@
-; Fri Mar 03 19:23:29 GMT 2006
+; Fri Mar 03 20:18:26 GMT 2006
 ; 
 ;+ (version "3.1.1")
 ;+ (build "Build 216")
@@ -20,9 +20,9 @@
 ([BROWSER_SLOT_NAMES] of  Property_List
 
 	(properties
-		[test_set_ProjectKB_Instance_31]
-		[test_set_ProjectKB_Instance_32]
-		[test_set_ProjectKB_Instance_33]))
+		[test_set_ProjectKB_Instance_59]
+		[test_set_ProjectKB_Instance_60]
+		[test_set_ProjectKB_Instance_61]))
 
 ([CLSES_TAB] of  Widget
 
@@ -198,6 +198,7 @@
 	(is_hidden FALSE)
 	(label "Description")
 	(name ":PAL-DESCRIPTION")
+	(property_list [test_set_ProjectKB_Instance_40])
 	(widget_class_name "edu.stanford.smi.protege.widget.TextAreaWidget")
 	(width 250)
 	(x 275)
@@ -220,6 +221,7 @@
 	(is_hidden FALSE)
 	(label "Name")
 	(name ":PAL-NAME")
+	(property_list [test_set_ProjectKB_Instance_39])
 	(widget_class_name "edu.stanford.smi.protege.widget.TextFieldWidget")
 	(width 275)
 	(x 0)
@@ -229,9 +231,10 @@
 
 	(properties
 		[PAL_NAME_WIDGET]
-		[PAL_RANGE_WIDGET]
 		[PAL_DESCRIPTION_WIDGET]
-		[PAL_STATEMENT_WIDGET]))
+		[test_set_ProjectKB_Instance_34]
+		[test_set_ProjectKB_Instance_35]
+		[test_set_ProjectKB_Instance_37]))
 
 ([PAL_RANGE_WIDGET] of  Widget
 
@@ -292,7 +295,8 @@
 	(properties
 		[KB_890183_Instance_0]
 		[KB_890183_Instance_28]
-		[KB_890183_Instance_29]))
+		[KB_890183_Instance_29]
+		[test_set_ProjectKB_Instance_58]))
 
 ([STANDARD_CLASS_CONSTRAINTS_WIDGET] of  Widget
 
@@ -602,17 +606,101 @@
 
 	(name "SearchTab_Query"))
 
-([test_set_ProjectKB_Instance_31] of  String
+([test_set_ProjectKB_Instance_34] of  Property_List
+
+	(name "layout properties"))
+
+([test_set_ProjectKB_Instance_35] of  Widget
+
+	(height 60)
+	(is_hidden FALSE)
+	(name ":PAL-STATEMENT")
+	(property_list [test_set_ProjectKB_Instance_36])
+	(widget_class_name "edu.stanford.smi.protege.widget.TextFieldWidget")
+	(width 200)
+	(x 0)
+	(y 240))
+
+([test_set_ProjectKB_Instance_36] of  Property_List
+)
+
+([test_set_ProjectKB_Instance_37] of  Widget
+
+	(height 60)
+	(is_hidden FALSE)
+	(name ":PAL-RANGE")
+	(property_list [test_set_ProjectKB_Instance_38])
+	(widget_class_name "edu.stanford.smi.protege.widget.TextFieldWidget")
+	(width 200)
+	(x 0)
+	(y 180))
+
+([test_set_ProjectKB_Instance_38] of  Property_List
+)
+
+([test_set_ProjectKB_Instance_39] of  Property_List
+)
+
+([test_set_ProjectKB_Instance_40] of  Property_List
+)
+
+([test_set_ProjectKB_Instance_48] of  Widget
+
+	(height 60)
+	(is_hidden FALSE)
+	(name "knows")
+	(property_list [test_set_ProjectKB_Instance_49])
+	(widget_class_name "edu.stanford.smi.protege.widget.FloatFieldWidget")
+	(width 100)
+	(x 100)
+	(y 60))
+
+([test_set_ProjectKB_Instance_49] of  Property_List
+)
+
+([test_set_ProjectKB_Instance_50] of  Widget
+
+	(height 60)
+	(is_hidden FALSE)
+	(name "knows")
+	(property_list [test_set_ProjectKB_Instance_51])
+	(widget_class_name "edu.stanford.smi.protege.widget.InstanceFieldWidget")
+	(width 200)
+	(x 0)
+	(y 120))
+
+([test_set_ProjectKB_Instance_51] of  Property_List
+
+	(properties
+		[test_set_ProjectKB_Instance_52]
+		[test_set_ProjectKB_Instance_53]))
+
+([test_set_ProjectKB_Instance_52] of  Boolean
+
+	(boolean_value FALSE)
+	(name "ButtonDisplayed-View References to Value  "))
+
+([test_set_ProjectKB_Instance_53] of  Boolean
+
+	(boolean_value FALSE)
+	(name "ButtonDisplayed-Delete Instance"))
+
+([test_set_ProjectKB_Instance_58] of  Boolean
+
+	(boolean_value FALSE)
+	(name "use_roundtrip"))
+
+([test_set_ProjectKB_Instance_59] of  String
 
 	(name ":META-CLASS")
 	(string_value "%3ANAME"))
 
-([test_set_ProjectKB_Instance_32] of  String
+([test_set_ProjectKB_Instance_60] of  String
 
 	(name ":INSTANCE-ANNOTATION")
 	(string_value "%3AANNOTATION-TEXT"))
 
-([test_set_ProjectKB_Instance_33] of  String
+([test_set_ProjectKB_Instance_61] of  String
 
 	(name ":PAL-CONSTRAINT")
 	(string_value "%3APAL-NAME"))
