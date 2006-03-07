@@ -23,10 +23,10 @@
 #
 
 require 'node_factory'
-require 'module/resource_toolbox'
+require 'resource_toolbox'
 require 'query_generator/query_engine'
 
-module Resource; implements Node; extend ResourceToolbox
+module Resource; implements Node
 
 	# if no subclass is specified, this is an rdfs:resource
 	@_class_namespace = 'http://www.w3.org/2000/01/rdf-schema#Resource'
