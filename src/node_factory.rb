@@ -56,7 +56,7 @@ class NodeFactory
 	
 		if @@_connection.nil? and params.nil?
 			raise(ConnectionError, "In #{__FILE__}:#{__LINE__}, no parameters to instantiate connection.")
-		elsif !@@_connection.nil?
+		elsif !@@_connection.nil? and params.nil?
 			return @@_connection
 		end
 	
