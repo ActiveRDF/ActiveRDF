@@ -30,8 +30,8 @@ class QueryEngine
   private :related_resource
   
   # Container Attributes
-  attr_reader :bindings, :conditions, :order, :distinct
-  private :bindings, :conditions, :order, :distinct
+  attr_reader :bindings, :binding_triple, :conditions, :order, :distinct
+  private :bindings, :binding_triple, :conditions, :order, :distinct
  
   # Initialize the query engine.
   #
@@ -41,6 +41,7 @@ class QueryEngine
   	@relate_resource = related_resource
   	
   	@bindings = nil
+  	@binding_triple = nil
   	@conditions = nil
   	@order = nil
   	@distinct = nil
@@ -55,6 +56,7 @@ class QueryEngine
   # Clean all containers (bindings, conditions, order)
   def clean
 		@bindings = nil
+		@binding_triple = nil
 		@conditions = nil
 		@order = nil
 		@distinct = nil
@@ -87,7 +89,11 @@ class QueryEngine
   #
   # * *args* : Array of Symbol. Each symbol is a binding variable.
 	def add_binding_variables(*args)
-		@bindings = args
+		if @bindings.nil?
+			@bindings = args
+		else
+			@bindings += args
+		end
 	end
 
   # Add a binding triple in the select clause to the query (for Yars). Only one
@@ -97,7 +103,7 @@ class QueryEngine
   # * *predicate* : Predicate of the triple (Symbol or Resource)
   # * *object* : Object of the triple (Symbol, Resource, String, ...)
 	def add_binding_triple(subject, predicate, object)
-		@bindings = [subject, predicate, object]
+		@binding_triple = [[subject, predicate, object]]
 	end
 
   # Add a condition in the where clause. Convert the predicate if a resource is
@@ -133,15 +139,28 @@ class QueryEngine
 	end
 
   # Generate a Sparql query. Return the query string.
+  # Take only the array of binding variables.
 	def generate_sparql
+	
+		if (@binding_triple)
+			raise(BindingVariableError, "In #{__FILE__}:#{__LINE__}, SPARQL doesn't support binding triple.")
+		end
+
 		require 'query_generator/sparql_generator.rb'
 		return SparqlQueryGenerator.generate(@bindings, @conditions, @order, @keyword_search)
 	end
 	
 	# Generate a NTriples query. Return the query string.
+	# Can take the array of binding variable or a binding triple.
 	def generate_ntriples
+	
+		if (@bindings and @binding_triple)
+			raise(BindingVariableError, "In #{__FILE__}:#{__LINE__}, cannot add a binding triple with binding variables.")
+		end
+	
 		require 'query_generator/ntriples_generator.rb'
-		return NTriplesQueryGenerator.generate(@bindings, @conditions, @order, @keyword_search)
+		return NTriplesQueryGenerator.generate(@bindings, @conditions, @order, @keyword_search) if @bindings
+		return NTriplesQueryGenerator.generate(@binding_triple, @conditions, @order, @keyword_search) if @binding_triple
 	end
 
 	# Choose the query language and generate the query string.
@@ -170,12 +189,6 @@ class QueryEngine
 		
 		# Execute query
 		return NodeFactory.connection.query(qs)
-	end
-
-	def count
-		qs = generate
-		clean
-		return Resource.connection.count(qs)
 	end
 	
 end

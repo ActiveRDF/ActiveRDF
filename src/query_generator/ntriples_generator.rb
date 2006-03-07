@@ -24,9 +24,8 @@
 require 'query_generator/abstract_generator'
 
 class NTriplesQueryGenerator < AbstractQueryGenerator
-	@variables = {}
 
-  
+	@variables = {}  
   
 #----------------------------------------------#
 #               PRIVATE METHODS                #
@@ -43,16 +42,27 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
   #
   # *Return* :
   # * _String_ Select part of the n3 query
-  def self.select(binding_triple)
+  def self.select(bindings)
   	select_template = String.new
   	
-  	raise(BindingVariableError, "No binding variables received.") if binding_triple.empty? || binding_triple.nil?
-  	
-		s = convert_subject(binding_triple[0])
-		p = convert_predicate(binding_triple[1])
-		o = convert_object(binding_triple[2])
-		select_template << "#{s} #{p} #{o} . \n"
+  	raise(BindingVariableError, "No binding variables received.") if bindings.nil? or bindings.empty?
 
+		# If the first element of bindings is an Array, it is a binding triple
+		# else it is binding variables.
+		if bindings.first.instance_of?(Array)
+			s = convert_subject(bindings.first[0])
+			p = convert_predicate(bindings.first[1])
+			o = convert_object(bindings.first[2])
+			select_template << "#{s} #{p} #{o} ."
+		else
+			select_template << " ( "
+  		bindings.each { |binding|
+  			raise(WrongTypeQueryError, "Symbol expected, #{binding.class} received") if !binding.instance_of?(Symbol)
+  			select_template << "?#{binding.to_s} "
+  		}
+  		select_template << ") ."
+  	end
+  	
 		return select_template
   end
 
@@ -116,12 +126,12 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 
   public
   
-  def self.generate(binding_triple, conditions, order_opt = nil, keyword_match = false)
+  def self.generate(bindings, conditions, order_opt = nil, keyword_match = false)
 
 	template_query = <<END_OF_QUERY
 @prefix ql: <http://www.w3.org/2004/12/ql#> . 
 <> ql:select {
-#{select(binding_triple)}
+#{select(bindings)}
 }; 
 ql:where {
 #{where(conditions, keyword_match)}

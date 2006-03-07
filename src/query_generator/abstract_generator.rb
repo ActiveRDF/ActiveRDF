@@ -52,39 +52,44 @@ class AbstractQueryGenerator
   end
   
   def self.convert_predicate(p)
-  	predicate = String.new
+		predicate = String.new
   
  		# Case for the predicate of the condition triple
- 		case p
-    when Symbol
-    	predicate << '?' << p.to_s
-  	when Resource
-  		predicate << '<' << p.uri << '>'
-  	else
-  		raise(WrongTypeQueryError, "#{p.class} unexpected, wrong type received")
-  	end
-  	
-  	return predicate
+		case p
+		when Symbol
+			predicate << '?' << p.to_s
+		when Resource
+			predicate << '<' << p.uri << '>'
+		else
+			raise(WrongTypeQueryError, "#{p.class} unexpected, wrong type received")
+		end
+
+		return predicate
   end
   
   def self.convert_object(o)
-  		object = String.new
+  	object = String.new
   
-  		# Case for the object of the condition triple
-  		case o
-	    when Symbol
-	    	object << '?' << o.to_s
-	  	when Resource
-	  		object << '<' << o.uri << '>'
+  	# Case for the object of the condition triple
+  	case o
+		when Symbol
+			object << '?' << o.to_s
+	  when BasicIdentifiedResource
+	  	object << '<' << o.uri << '>'
+	  when Literal
+	  	case o.value
 	  	when String
-	  		object << '"' << o << '"'
+	  		object << '"' << o.value << '"'
 	  	when Fixnum, Bignum, Float, TrueClass, FalseClass
-	    	object = o.to_s
-	  	else
-	  		raise(WrongTypeQueryError, "#{o.class} unexpected, wrong type received")
-	  	end
+	   		object = o.value
+	   	end
+	  when AnonymousResource
+	  	raise(WrongTypeQueryError, "BlankNode not implemented for the moment.")
+	  else
+	  	raise(WrongTypeQueryError, "#{o.class} unexpected, wrong type received")
+	  end
 	  	
-	  	return object
+	  return object
   end
   
   def self.select(bindings)
