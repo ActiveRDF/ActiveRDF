@@ -30,6 +30,9 @@ end
 class StatementAdditionYarsError < YarsError
 end
 
+class StatementRemoveYarsError < YarsError
+end
+
 class QueryYarsError < YarsError
 end
 

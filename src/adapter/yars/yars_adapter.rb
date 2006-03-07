@@ -1,11 +1,24 @@
-# project : ActiveRDF, http://m3pe.org/activerdf/
+# = yars_adapter.rb
 #
-# authors : Renaud Delbru, Eyal Oren
+# ActiveRDF Adapter to Yars storage
 #
-# contact	: first dot last at deri dot org
+# == Project
 #
-# (c) 2005-2006
-
+# * ActiveRDF
+# <http://m3pe.org/activerdf/>
+#
+# == Authors
+# 
+# * Eyal Oren <first dot last at deri dot org>
+# * Renaud Delbru <first dot last at deri dot org>
+#
+# == Copyright
+#
+# (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
+#
+# == To-do
+#
+# * To-do 1
 
 require 'net/http'
 require 'uri'
@@ -13,11 +26,19 @@ require 'adapter/abstract_adapter'
 require 'adapter/yars/yars_tools.rb'
 
 class YarsAdapter; implements AbstractAdapter
-	# TODO make constants private
-	#Prefix = '@prefix ql: <http://www.w3.org/2004/12/ql#> . '
-	#private :Prefix
+	
+	attr_reader :context, :host, :port, :yars, :query_language
+	
+#----------------------------------------------#
+#               PUBLIC METHODS                 #
+#----------------------------------------------#
 
-	def initialize params={}
+	# Instantiate the connection with the Yars DataBase.
+	def initialize(params = {})
+		if params.nil?
+			raise(YarsError, "In #{__FILE__}:#{__LINE__}, Yars adapter initialisation error. Parameters are nil.")
+		end
+	
 		@host = params[:host] || 'localhost'
 		@port = params[:port] || 8080
 		@context = '/' + (params[:context] || '')
@@ -27,84 +48,125 @@ class YarsAdapter; implements AbstractAdapter
 		# it individually. It would be more efficient to pipeline methods, and keep 
 		# the connection open continuously, but then we need to close it manually at 
 		# some point in time (which I don't know how to do).
-		@yars = Net::HTTP.new(@host, @port)
+		@yars = Net::HTTP.new(host, port)
 
-		$logger.info("opened YARS connection on http://#{@yars.address}:#{@yars.port}")
+		$logger.info("opened YARS connection on http://#{yars.address}:#{yars.port}")
 	end
 
-	# add the triple s,p,o in the database
-	def add s, p, o
+  # Add the triple s,p,o in the database.
+  #
+  # Arguments:
+  # * +s+ [<tt>Resource</tt>]: Subject of triples
+  # * +p+ [<tt>Resource</tt>]: Predicate of triples
+  # * +o+ [<tt>Node</tt>]: Object of triples. Can be a _Literal_ or a _Resource_
+	def add(s, p, o)
+		# Verification of nil object
 		if s.nil? or p.nil? or o.nil?
-			raise(StatementAdditionYarsError, "trying to add nil triple: #{s}, #{p}, #{o}")
+			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : nil received."
+			raise(StatementAdditionYarsError, str_error)		
 		end
-		put "#{wrap(s)} #{wrap(p)} #{wrap(o)} ."
-	end
-
-	# add data (string of ntriples) to database
-	def put data
-		header = { 'Content-Type' => 'application/rdf+n3' }
-		#$logger.debug 'putting data to yars: ' + data
-		response = @yars.put @context, data, header
-		$logger.info 'response from yars: ' + response.message
-		#$logger.debug 'query result: ' + response.body
-		response.instance_of?(Net::HTTPCreated)
+				
+		# Verification of type
+		if !s.kind_of?(Resource) or !p.kind_of?(Resource) or !o.kind_of?(Node)
+			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : wrong type received."
+			raise(StatementAdditionYarsError, str_error)		
+		end
+		
+		if !put("#{wrap(s)} #{wrap(p)} #{wrap(o)} .")
+			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
+			raise(StatementAdditionYarsError, str_error)
+		end
 	end
 
 	# query the RDF database
 	#
 	# qs is an n3 query, e.g. '<> ql:select { ?s ?p ?o . } ; ql:where { ?s ?p ?o . } .'
-	def query(qs, distinct_var = nil)
+	def query(qs)
+		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
+		
 		$logger.debug "querying yars in context #@context:\n" + qs
 
 		header = { 'Accept' => 'application/rdf+n3' }
+		response = yars.get(context + '?q=' + URI.escape(qs), header)
+		return nil if response.is_a?(Net::HTTPNoContent)
+		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, bad request: " + qs) if response.is_a?(Net::HTTPBadRequest)
 		
-		response = @yars.get @context + '?q=' + URI.escape(qs), header
-		
-		return nil if response.is_a? Net::HTTPNoContent
-		raise(QueryYarsError,'bad request: ' + qs) if response.is_a? Net::HTTPBadRequest
 		$logger.info 'query response from yars: ' + URI.decode(response.message)
 		#$logger.debug 'results from yars: ' + URI.decode(response.body)
-		parse_n3 response.body		
-	end
-	
-	def count(qs, distinct_var = nil)
-		header = { 'Accept' => 'application/rdf+n3' }
-		response = @yars.get @context + '?q=' + URI.escape(qs), header
-		return nil if response.is_a? Net::HTTPNoContent
-		raise(QueryYarsError,'bad request: ' + qs) if response.is_a? Net::HTTPBadRequest
-		count_n3 response.body
-	end	
-
-	# delete results of query string from database
-	# qs is an n3 query, e.g. '<> ql:select {?s ?p ?o . }; ql:where {?s ?p ?o . } .'
-	def delete qs
-		#$logger.debug 'deleting from yars: ' + qs
-		response = @yars.delete @context + '?q=' + URI.encode(qs)
-		$logger.debug 'response from yars: ' + URI.decode(response.message)
-		return response.instance_of?(Net::HTTPOK)
+		
+		parse_yars_query_result(response.body)
 	end
 
+	# Delete a triple. Generate a query and call the delete method of Yars.
+	#
+	# Arguments:
+	# * +s+ [<tt>Resource</tt>]: The subject of the triple to delete
+	# * +p+ [<tt>Resource</tt>]: The predicate of the triple to delete
+	# * +o+ [<tt>Node</tt>]: The object of the triple to delete
+	def remove(s, p, o)
+
+		# Verification of nil object
+		if s.nil? or p.nil? or o.nil?
+			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : nil received."
+			raise(StatementRemoveYarsError, str_error)		
+		end
+		
+		# Verification of type
+		if !s.kind_of?(Resource) or !p.kind_of?(Resource) or !o.kind_of?(Node)
+			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : wrong type received."
+			raise(StatementRemoveYarsError, str_error)		
+		end
+
+		qe = QueryEngine.new
+		
+		# Add binding triple
+		qe.add_binding_triple(s, p, o)
+		qe.add_condition(s, p, o)
+		
+		if !delete(qe.generate)
+			str_error = "In #{__FILE__}:#{__LINE__}, error during removal of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
+			raise(StatementRemoveYarsError, str_error)
+		end
+	end
+
+	# Synchronise the model. For Yars, it isn't necessary. Just return true.
 	def save
 		true
 	end
 
-#	# TODO remove
-#	def find s,p,o
-#		s = s.nil? ? '?s' : N3.wrap(s)
-#		p = p.nil? ? '?p' : N3.wrap(p)
-#		o = o.nil? ? '?o' : N3.wrap(o)
-#		$logger.debug("trying to find: #{s.to_s} #{p.to_s} #{o.to_s}")
-#		qs = Prefix + "<> ql:select { #{s} #{p} #{o} . } ; ql:where { #{s} #{p} #{o} . } ."
-#		query qs
-#	end
-#
-#	# TODO change to delete(qs) maybe? Let ActiveRDF build the query string
-#	def remove s,p,o
-#		s = s.nil? ? '?s' : N3.wrap(s)
-#		p = p.nil? ? '?p' : N3.wrap(p)
-#		o = o.nil? ? '?o' : N3.wrap(o)
-#		qs = Prefix + "<> ql:select { #{s} #{p} #{o} . } ; ql:where { #{s} #{p} #{o} . } ."
-#		delete(qs)
-#	end
+#----------------------------------------------#
+#               PRIVATE METHODS                #
+#----------------------------------------------#
+	
+	private
+	
+	# Add data (string of ntriples) to database
+	#
+	# Arguments:
+	# * +data+ [<tt>String</tt>]: NTriples to add
+	def put(data)
+		header = { 'Content-Type' => 'application/rdf+n3' }
+		
+		$logger.debug 'Yars intance = ' + yars.to_s
+		$logger.debug 'putting data to yars: ' + data
+		
+		response = yars.put(context, data, header)
+		
+		$logger.info 'PUT - response from yars: ' + response.message
+		#$logger.debug 'query result: ' + response.body
+		
+		return response.instance_of?(Net::HTTPCreated)
+	end
+
+	# Delete results of query string from database
+	# qs is an n3 query, e.g. '<> ql:select {?s ?p ?o . }; ql:where {?s ?p ?o . } .'
+	def delete(qs)
+		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
+		$logger.debug 'DELETE - query: ' + qs
+		response = yars.delete(@context + '?q=' + URI.encode(qs))
+		$logger.debug 'DELETE - response from yars: ' + URI.decode(response.message)
+		return response.instance_of?(Net::HTTPOK)
+	end
+
 end
 
