@@ -23,13 +23,13 @@
 
 require 'adapter/redland/redland_exceptions'
 
-module RedlandAdapterToolBox
+class RedlandAdapter
   
 #----------------------------------------------#
 #               PRIVATE METHODS                #
 #----------------------------------------------#
 
-  protected
+  private
 
   # Convert Redland::QueryResult into an array.
   #
@@ -65,7 +65,7 @@ module RedlandAdapterToolBox
 		return results		
 	end
 	
-  # Convert value of REdland::QueryResult to ActiveRDF::Node
+  # Convert value of Redland::QueryResult to ActiveRDF::Node
   #
   # Arguments:
   # * +binding_name+: binding name for the query result
@@ -123,7 +123,7 @@ module RedlandAdapterToolBox
 	def wrap(node)
 		case node
     when NilClass
-    	raise(UnknownResourceError, "In #{__FILE__}:#{__LINE__}, node is nil.")
+    	return nil
   	when Literal
     	return Redland::Literal.new(node.value)
   	when BasicIdentifiedResource

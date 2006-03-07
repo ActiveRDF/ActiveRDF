@@ -1,24 +1,34 @@
 # = redland_adapter.rb
+#
 # ActiveRDF Adapter to Redland storage
-# ----
-# Project	: ActiveRDF
 #
-# See		: http://m3pe.org/activerdf/
+# == Project
 #
-# Author	: Renaud Delbru, Eyal Oren
+# * ActiveRDF
+# <http://m3pe.org/activerdf/>
 #
-# Mail		: first dot last at deri dot org
+# == Authors
+# 
+# * Eyal Oren <first dot last at deri dot org>
+# * Renaud Delbru <first dot last at deri dot org>
 #
-# (c) 2005-2006
+# == Copyright
+#
+# (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
+#
+# == To-do
+#
+# * To-do 1
+#
 
 require 'rdf/redland'
 require 'adapter/abstract_adapter'
 require 'adapter/redland/redland_tools'
 require 'adapter/redland/redland_exceptions'
 
-class RedlandAdapter; implements AbstractAdapter; implements RedlandAdapterToolBox
+class RedlandAdapter; implements AbstractAdapter
 	
-	attr_reader :model
+	attr_reader :model, :store, :query_language
 
 	# Instantiate the connection with the Redland DataBase.
 	def initialize
@@ -27,7 +37,7 @@ class RedlandAdapter; implements AbstractAdapter; implements RedlandAdapterToolB
 		@query_language = 'sparql'
 	end
 
-  # Add the statement to the model. Convert String or ActiveRDF::Resource into
+  # Add the statement to the model. Convert ActiveRDF::Node into
   # Redland::Literal or Redland::URI with wrap method.
   #
   # Arguments:
@@ -55,9 +65,6 @@ class RedlandAdapter; implements AbstractAdapter; implements RedlandAdapterToolB
 	end
 
 	# Delete a triple. Call the delete method of Redland Library.
-	# There is a hacks. Try to delete the triple with object as Literal, then
-	# try to delete the triple with object as Redland::Uri. It's due to ActiveRDF
-	# which manage only String.
 	#
 	# Arguments:
 	# * +s+ [<tt>Resource</tt>]: The subject of the triple to delete
@@ -97,6 +104,7 @@ class RedlandAdapter; implements AbstractAdapter; implements RedlandAdapterToolB
   # Return:
   # * [<tt>Hash</tt>] Hash containing the result of the query.
 	def query(qs)
+		raise(SparqlQueryFailed, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
 		# Create the Redland::Query
 		query = Redland::Query.new(qs, query_language)
 		# Execute the query and get the Redland::QueryResult
