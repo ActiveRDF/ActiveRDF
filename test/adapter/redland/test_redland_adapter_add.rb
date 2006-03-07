@@ -25,7 +25,7 @@ require 'test/unit'
 require 'active_rdf'
 require 'adapter/redland/redland_adapter'
 
-class TestRedlandAdapter < Test::Unit::TestCase
+class TestRedlandAdapterAdd < Test::Unit::TestCase
 
 	def test_1_add_triples_error_object_nil
 		adapter = RedlandAdapter.new

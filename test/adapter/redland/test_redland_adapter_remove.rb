@@ -18,54 +18,21 @@
 #
 # == To-do
 #
-# * To-do 1
+# * TODO: See again the remove test with nil, I think it'is allowed in redland.
 #
 
 require 'test/unit'
 require 'active_rdf'
 require 'adapter/redland/redland_adapter'
 
-class TestRedlandAdapter < Test::Unit::TestCase
+class TestRedlandAdapterRemove < Test::Unit::TestCase
 
 	def setup
 		# Load the data file
 		system("cd /tmp; rm test-store*")
 	end
-
-	def test_1_remove_triples_error_object_nil
-		adapter = RedlandAdapter.new
-		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-		
-		assert_raise(StatementRemoveRedlandError) {
-			adapter.remove(subject, predicate, nil)
-		}
-	end
 	
-	def test_2_remove_triples_error_predicate_nil
-		adapter = RedlandAdapter.new
-		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		
-		assert_raise(StatementRemoveRedlandError) {
-			adapter.remove(subject, nil, object)
-		}
-	end
-	
-	def test_3_remove_triples_error_subject_nil
-		adapter = RedlandAdapter.new
-		
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-		
-		assert_raise(StatementRemoveRedlandError) {
-			adapter.remove(nil, predicate, object)
-		}
-	end
-	
-	def test_4_remove_triples_error_object_not_node
+	def test_A_remove_triples_error_object_not_node
 		adapter = RedlandAdapter.new
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
@@ -76,7 +43,7 @@ class TestRedlandAdapter < Test::Unit::TestCase
 		}
 	end
 	
-	def test_5_remove_triples_error_predicate_not_resource
+	def test_B_remove_triples_error_predicate_not_resource
 		adapter = RedlandAdapter.new
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
@@ -87,7 +54,7 @@ class TestRedlandAdapter < Test::Unit::TestCase
 		}
 	end
 	
-	def test_6_remove_triples_error_subject_not_resource
+	def test_C_remove_triples_error_subject_not_resource
 		adapter = RedlandAdapter.new
 		
 		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
@@ -98,7 +65,7 @@ class TestRedlandAdapter < Test::Unit::TestCase
 		}
 	end
 	
-	def test_7_remove_triples_error_triple_dont_exist
+	def test_D_remove_triples_error_triple_dont_exist
 		adapter = RedlandAdapter.new
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
@@ -110,7 +77,40 @@ class TestRedlandAdapter < Test::Unit::TestCase
 		}
 	end
 	
-	def test_8_remove_triples_object_literal
+	def test_E_remove_triples_error_object_nil
+		adapter = RedlandAdapter.new
+		
+		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		
+		assert_raise(StatementRemoveRedlandError) {
+			adapter.remove(subject, predicate, nil)
+		}
+	end
+	
+	def test_F_remove_triples_error_predicate_nil
+		adapter = RedlandAdapter.new
+		
+		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
+		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		
+		assert_raise(StatementRemoveRedlandError) {
+			adapter.remove(subject, nil, object)
+		}
+	end
+	
+	def test_G_remove_triples_error_subject_nil
+		adapter = RedlandAdapter.new
+		
+		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		
+		assert_raise(StatementRemoveRedlandError) {
+			adapter.remove(nil, predicate, object)
+		}
+	end
+	
+	def test_H_remove_triples_object_literal
 		adapter = RedlandAdapter.new
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
@@ -122,10 +122,11 @@ class TestRedlandAdapter < Test::Unit::TestCase
 		
 		assert_nothing_raised(StatementRemoveRedlandError) {
 			adapter.remove(subject, predicate, object)
+			adapter.save
 		}
 	end
 	
-	def test_9_remove_triples_object_resource
+	def test_I_remove_triples_object_resource
 		adapter = RedlandAdapter.new
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
@@ -137,6 +138,8 @@ class TestRedlandAdapter < Test::Unit::TestCase
 		
 		assert_nothing_raised(StatementRemoveRedlandError) {
 			adapter.remove(subject, predicate, object)
+			adapter.save
 		}
 	end
+
 end
