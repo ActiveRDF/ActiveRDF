@@ -98,26 +98,26 @@ class YarsAdapter; implements AbstractAdapter
 	end
 
 	# Delete a triple. Generate a query and call the delete method of Yars.
+	# If an argument is nil, it becomes a wildcard.
 	#
 	# Arguments:
 	# * +s+ [<tt>Resource</tt>]: The subject of the triple to delete
 	# * +p+ [<tt>Resource</tt>]: The predicate of the triple to delete
 	# * +o+ [<tt>Node</tt>]: The object of the triple to delete
 	def remove(s, p, o)
-
-		# Verification of nil object
-		if s.nil? or p.nil? or o.nil?
-			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : nil received."
-			raise(StatementRemoveYarsError, str_error)		
-		end
-		
 		# Verification of type
-		if !s.kind_of?(Resource) or !p.kind_of?(Resource) or !o.kind_of?(Node)
+		if (!s.nil? and !s.kind_of?(Resource)) or
+			 (!p.nil? and !p.kind_of?(Resource)) or
+			 (!o.nil? and !o.kind_of?(Node))
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : wrong type received."
 			raise(StatementRemoveYarsError, str_error)		
 		end
 
 		qe = QueryEngine.new
+		
+		s = s.nil? ? :s : s
+		p = p.nil? ? :p : p
+		o = o.nil? ? :o : o
 		
 		# Add binding triple
 		qe.add_binding_triple(s, p, o)

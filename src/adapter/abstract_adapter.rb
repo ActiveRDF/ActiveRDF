@@ -30,13 +30,13 @@ module AbstractAdapter
 	
 	# Abstract method to be implemented in subclasses.
 	#
-	# * query(qs) and delete(qs)
+	# * query(qs)
 	# +qs+ [<tt>String</tt>]: query string
 	# * add(s,p,o) and remove(s,p,o)
 	# +s+ [<tt>Resource</tt>]: triple subject
 	# +p+ [<tt>Resource</tt>]: triple predicate
 	# +o+ [<tt>Node</tt>]: triple object
 	# * save : no argument
-	abstract :query, :add, :remove, :delete, :save
+	abstract :query, :add, :remove, :save
 
 end

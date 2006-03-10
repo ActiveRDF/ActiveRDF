@@ -30,7 +30,7 @@ class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 	@@adapter = nil
 
 	def setup
-		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test' }
+		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_query' }
 		@@adapter = NodeFactory.connection(params) if @@adapter.nil?
 	end
 	

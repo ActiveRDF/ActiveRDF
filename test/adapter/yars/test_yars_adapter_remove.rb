@@ -30,41 +30,11 @@ class TestYarsAdapterRemove < Test::Unit::TestCase
 	@@adapter = nil
 
 	def setup		
-		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_remove' }
+		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_remove2' }
 		@@adapter = NodeFactory.connection(params) if @@adapter.nil?
 	end
-
-	def test_1_remove_triples_error_object_nil
-		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-		
-		assert_raise(StatementRemoveYarsError) {
-			@@adapter.remove(subject, predicate, nil)
-		}
-	end
 	
-	def test_2_remove_triples_error_predicate_nil
-		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		
-		assert_raise(StatementRemoveYarsError) {
-			@@adapter.remove(subject, nil, object)
-		}
-	end
-	
-	def test_3_remove_triples_error_subject_nil
-		
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-		
-		assert_raise(StatementRemoveYarsError) {
-			@@adapter.remove(nil, predicate, object)
-		}
-	end
-	
-	def test_4_remove_triples_error_object_not_node
+	def test_A_remove_triples_error_object_not_node
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
 		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
@@ -74,7 +44,7 @@ class TestYarsAdapterRemove < Test::Unit::TestCase
 		}
 	end
 	
-	def test_5_remove_triples_error_predicate_not_resource
+	def test_B_remove_triples_error_predicate_not_resource
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
 		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
@@ -84,7 +54,7 @@ class TestYarsAdapterRemove < Test::Unit::TestCase
 		}
 	end
 	
-	def test_6_remove_triples_error_subject_not_resource
+	def test_C_remove_triples_error_subject_not_resource
 		
 		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
 		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
@@ -94,42 +64,84 @@ class TestYarsAdapterRemove < Test::Unit::TestCase
 		}
 	end
 	
-#	def test_7_remove_triples_error_triple_dont_exist
-#		
-#		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-#		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-#		object = NodeFactory.create_literal('42', 'xsd:integer')
-#		
-#		assert_raise(StatementRemoveYarsError) {
-#			@@adapter.remove(subject, predicate, object)
-#		}
-#	end
+	def test_D_remove_triples_triple_dont_exist
+		
+		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_literal('42', 'xsd:integer')
+		
+		assert_nothing_raised(StatementRemoveYarsError) {
+			@@adapter.remove(subject, predicate, object)
+		}
+	end
 	
-	def test_8_remove_triples_object_literal
+	def test_E_remove_triples_object_literal
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
 		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_literal('42', 'xsd:integer')
 
 		@@adapter.add(subject, predicate, object)
-		@@adapter.save
-		
+
 		assert_nothing_raised(StatementRemoveYarsError) {
 			@@adapter.remove(subject, predicate, object)
 		}
 	end
 	
-	def test_9_remove_triples_object_resource
+	def test_F_remove_triples_object_resource
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
 		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
 		
 		@@adapter.add(subject, predicate, object)
-		@@adapter.save
 		
 		assert_nothing_raised(StatementRemoveYarsError) {
 			@@adapter.remove(subject, predicate, object)
 		}
 	end
+	
+	def test_G_remove_triples_with_subject_as_wildcard
+		subject1 = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject1')
+		subject2 = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject2')
+		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		
+		@@adapter.add(subject1, predicate, object)
+		@@adapter.add(subject2, predicate, object)	
+		
+		assert_nothing_raised(StatementRemoveYarsError) {
+			@@adapter.remove(nil, predicate, object)
+		}
+	end
+
+	def test_H_remove_triples_with_predicate_and_object_as_wildcard
+		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
+		predicate1 = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate1')
+		object1 = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		predicate2 = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate2')
+		object2 = NodeFactory.create_literal('42', 'xsd:integer')
+		
+		@@adapter.add(subject, predicate1, object1)
+		@@adapter.add(subject, predicate2, object2)
+		
+		assert_nothing_raised(StatementRemoveYarsError) {
+			@@adapter.remove(subject, nil, nil)
+		}
+	end
+	
+	def test_I_remove_all_triples_with_wildcard
+		subject1 = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject1')
+		subject2 = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject2')
+		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		
+		@@adapter.add(subject1, predicate, object)
+		@@adapter.add(subject2, predicate, object)	
+		
+		assert_nothing_raised(StatementRemoveYarsError) {
+			@@adapter.remove(nil, nil, nil)
+		}
+	end
+	
 end

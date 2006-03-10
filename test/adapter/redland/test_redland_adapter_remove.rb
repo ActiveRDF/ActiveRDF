@@ -18,7 +18,6 @@
 #
 # == To-do
 #
-# * TODO: See again the remove test with nil, I think it'is allowed in redland.
 #
 
 require 'test/unit'
@@ -65,52 +64,19 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 		}
 	end
 	
-	def test_D_remove_triples_error_triple_dont_exist
+	def test_D_remove_triples_dont_exist
 		adapter = RedlandAdapter.new
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
 		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_literal('42', 'xsd:integer')
 		
-		assert_raise(StatementRemoveRedlandError) {
-			adapter.remove(subject, predicate, object)
+		assert_nothing_raised(StatementRemoveRedlandError) {
+			assert_equal(0, adapter.remove(subject, predicate, object))
 		}
 	end
 	
-	def test_E_remove_triples_error_object_nil
-		adapter = RedlandAdapter.new
-		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-		
-		assert_raise(StatementRemoveRedlandError) {
-			adapter.remove(subject, predicate, nil)
-		}
-	end
-	
-	def test_F_remove_triples_error_predicate_nil
-		adapter = RedlandAdapter.new
-		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		
-		assert_raise(StatementRemoveRedlandError) {
-			adapter.remove(subject, nil, object)
-		}
-	end
-	
-	def test_G_remove_triples_error_subject_nil
-		adapter = RedlandAdapter.new
-		
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-		
-		assert_raise(StatementRemoveRedlandError) {
-			adapter.remove(nil, predicate, object)
-		}
-	end
-	
-	def test_H_remove_triples_object_literal
+	def test_E_remove_triples_object_literal
 		adapter = RedlandAdapter.new
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
@@ -118,15 +84,13 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 		object = NodeFactory.create_literal('42', 'xsd:integer')
 
 		adapter.add(subject, predicate, object)
-		adapter.save
 		
 		assert_nothing_raised(StatementRemoveRedlandError) {
 			adapter.remove(subject, predicate, object)
-			adapter.save
 		}
 	end
 	
-	def test_I_remove_triples_object_resource
+	def test_F_remove_triples_object_resource
 		adapter = RedlandAdapter.new
 		
 		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
@@ -134,12 +98,44 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
 		
 		adapter.add(subject, predicate, object)
-		adapter.save
 		
 		assert_nothing_raised(StatementRemoveRedlandError) {
 			adapter.remove(subject, predicate, object)
-			adapter.save
 		}
 	end
+	
+	def test_G_remove_triples_with_subject_as_wildcard
+		adapter = RedlandAdapter.new
+		
+		subject1 = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject1')
+		subject2 = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject2')
+		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		
+		adapter.add(subject1, predicate, object)
+		adapter.add(subject2, predicate, object)
+		
+		assert_nothing_raised(StatementRemoveRedlandError) {
+			assert_equal(2, adapter.remove(nil, predicate, object))
+		}
+	end
+	
+	def test_H_remove_triples_with_predicate_and_object_as_wildcard
+		adapter = RedlandAdapter.new
+		
+		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
+		predicate1 = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate1')
+		object1 = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		predicate2 = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate2')
+		object2 = NodeFactory.create_literal('42', 'xsd:integer')
+		
+		adapter.add(subject, predicate1, object1)
+		adapter.add(subject, predicate2, object2)
+		
+		assert_nothing_raised(StatementRemoveRedlandError) {
+			assert_equal(2, adapter.remove(subject, nil, nil))
+		}
+	end
+
 
 end

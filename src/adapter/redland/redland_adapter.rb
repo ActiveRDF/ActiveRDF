@@ -62,32 +62,45 @@ class RedlandAdapter; implements AbstractAdapter
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
 			raise(StatementAdditionRedlandError, str_error)
 		end
+		
+		# Synchronise the model
+		save
 	end
 
 	# Delete a triple. Call the delete method of Redland Library.
+	# If an argument is nil, it becomes a wildcard.
 	#
 	# Arguments:
 	# * +s+ [<tt>Resource</tt>]: The subject of the triple to delete
 	# * +p+ [<tt>Resource</tt>]: The predicate of the triple to delete
 	# * +o+ [<tt>Node</tt>]: The object of the triple to delete
+  #
+  # Return:
+  # * [<tt>Integer</tt>] Number of statement removed
 	def remove(s, p, o)
-		# Verification of nil object
-		if s.nil? or p.nil? or o.nil?
-			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : nil received."
-			raise(StatementRemoveRedlandError, str_error)		
-		end
-		
 		# Verification of type
-		if !s.kind_of?(Resource) or !p.kind_of?(Resource) or !o.kind_of?(Node)
-			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : wrong type received."
+		if (!s.nil? and !s.kind_of?(Resource)) or
+			 (!p.nil? and !p.kind_of?(Resource)) or
+			 (!o.nil? and !o.kind_of?(Node))
+			str_error = "In #{__FILE__}:#{__LINE__}, error during removal of statement : wrong type received."
 			raise(StatementRemoveRedlandError, str_error)		
 		end
+
+		# Find all statement and remove them
+		counter = 0
+		@model.find(wrap(s), wrap(p), wrap(o)) { |_s, _p, _o|
+			# Redland::Model::delete return 0 if delete succesfully the statement
+			if @model.delete(_s, _p, _o) != 0
+				str_error = "In #{__FILE__}:#{__LINE__}, error during removal of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
+				raise(StatementRemoveRedlandError, str_error)
+			end
+			counter += 1
+		}
 		
-		# Redland::Model::delete return 0 if delete succesfully the statement
-		if @model.delete(wrap(s), wrap(p), wrap(o)) != 0
-			str_error = "In #{__FILE__}:#{__LINE__}, error during removal of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
-			raise(StatementRemoveRedlandError, str_error)
-		end
+		# Synchronise the model
+		save
+		
+		return counter
 	end
 
   # Synchronise the model to the model implementation.
