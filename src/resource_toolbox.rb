@@ -30,32 +30,34 @@ module Resource
   # Find all predicates for a resource from the schema definition
   # returns a hash containing from localname to full predicate URI (e.g. 
 	# 'firstName' => 'http://foaf.org/firstName')  
-	def self.find_predicates(resource)
-	
+	def self.find_predicates(class_uri)
+		raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, class uri is nil.") if class_uri.nil?
+		raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, class uri is not a Resource, it's a #{class_uri.class}.") if !class_uri.kind_of?(BasicIdentifiedResource)
+
 		predicates = Hash.new
 		
-		preds = Resource.find({ NamespaceFactory.get(:rdf_type) => resource })
+		preds = Resource.find({ NamespaceFactory.get(:rdfs_domain) => class_uri })
 
 	 	preds.each do |predicate|
-			attribute = get_local_part(predicate)
+			attribute = predicate.local_part
 			predicates[attribute] = predicate.uri
 			$logger.debug "found predicate #{attribute}"
 		end unless preds.nil?
 
-		preds = Resource.find({ NamespaceFactory.get(:rdfs_domain) => OwlThing })
+		preds = Resource.find({ NamespaceFactory.get(:rdfs_domain) => NamespaceFactory.get(:owl_thing) })
 	 	preds.each do |predicate|
-			attribute = get_local_part(predicate)
+			attribute = predicate.local_part
 			predicates[attribute] = predicate.uri
 			$logger.debug "added OWL Thing predicate #{attribute}"
 		end unless preds.nil?
 		
 		# Generate the query string
 		qe = QueryEngine.new
-		qe.add_binding_triple(resource, NamespaceFactory.get(:rdfs_subclass), :o)
-		qe.add_condition(resource, NamespaceFactory.get(:rdfs_subclass), :o)
+		qe.add_binding_variables(:o)
+		qe.add_condition(class_uri, NamespaceFactory.get(:rdfs_subclass), :o)
 		
 		# Execute the query
-		qe.execute do |s, p, o|
+		qe.execute do |o|
 			superclass = o
 			superpredicates = find_predicates(superclass)
 			predicates.update(superpredicates)			
