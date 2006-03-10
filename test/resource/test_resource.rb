@@ -29,18 +29,22 @@ module Resource
 	def self.test_return_distinct_results(results)
 		return Resource.return_distinct_results(results)
 	end
+	
+	def self.test_find_predicates(class_uri)
+		return Resource.find_predicates(class_uri)
+	end
 end
 
 class TestResource < Test::Unit::TestCase
 	
-	def test_1_classuri
+	def test_A_classuri
 		class_uri = Resource.class_URI
 		assert_not_nil(class_uri)
 		assert(class_uri.kind_of?(BasicIdentifiedResource))
 		assert_equal("http://www.w3.org/2000/01/rdf-schema#Resource", class_uri.uri)
 	end
 	
-	def test_2_return_distinct_results_error
+	def test_B_return_distinct_results_error
 		assert_raise(ActiveRdfError) {
 			Resource.test_return_distinct_results(nil)
 		}
@@ -49,7 +53,7 @@ class TestResource < Test::Unit::TestCase
 		}
 	end
 	
-	def test_3_return_distinct_results
+	def test_C_return_distinct_results
 		result = Resource.test_return_distinct_results(Array.new)
 		assert_nil(result)
 	
@@ -67,6 +71,40 @@ class TestResource < Test::Unit::TestCase
 		assert_not_nil(result)
 		assert(result.kind_of?(String))
 		assert_equal('42', result)
+	end
+	
+	def test_D_find_predicates_error_class_uri_nil
+		assert_raise(ActiveRdfError) {
+			Resource.test_find_predicates(nil)
+		}
+	end
+	
+	def test_E_find_predicates_error_class_uri_not_resource
+		assert_raise(ActiveRdfError) {
+			Resource.test_find_predicates(String.new)
+		}		
+	end
+	
+	def test_F_find_predicates
+		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_query' }
+		NodeFactory.connection(params)
+		
+		class_uri = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfPerson')
+		
+		predicates = Resource.test_find_predicates(class_uri)
+		assert_not_nil(predicates)
+		assert_instance_of(Hash, predicates)
+		assert_equal(3, predicates.size)
+		predicates.each { |attribute, uri|
+			case attribute
+			when 'rdfage'
+				assert_equal('http://protege.stanford.edu/rdfage', uri)
+			when 'rdfknows'
+				assert_equal('http://protege.stanford.edu/rdfknows', uri)
+			when 'rdfname'
+				assert_equal('http://protege.stanford.edu/rdfname', uri)
+			end
+		}
 	end
 	
 end
