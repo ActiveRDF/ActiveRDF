@@ -27,10 +27,17 @@ require 'resource'
 
 class BasicIdentifiedResource; implements Resource; extend Resource
 
+	# if no subclass is specified, this is an rdfs:resource
+	@@_class_uri[self] = 'http://www.w3.org/2000/01/rdf-schema#Resource'
+
 	# URI of the resource
 	attr_reader :uri
 				
 	def initialize(uri)
+		if uri.nil? or uri.empty?
+			raise(ActiveRdfError, 'Resource URI is invalid. Cannot instanciated the object.')
+		end
+		
 		@uri = uri
 	end
 
