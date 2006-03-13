@@ -25,7 +25,7 @@ require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
 
-class TestNodeFactoryIdentifiedResource < Test::Unit::TestCase
+class TestNodeFactoryUnknownIdentifiedResource < Test::Unit::TestCase
 
 	@@adapter = nil
 
