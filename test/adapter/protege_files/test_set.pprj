@@ -1,4 +1,4 @@
-; Fri Mar 03 20:18:26 GMT 2006
+; Mon Mar 13 11:27:15 GMT 2006
 ; 
 ;+ (version "3.1.1")
 ;+ (build "Build 216")
@@ -20,9 +20,9 @@
 ([BROWSER_SLOT_NAMES] of  Property_List
 
 	(properties
-		[test_set_ProjectKB_Instance_59]
-		[test_set_ProjectKB_Instance_60]
-		[test_set_ProjectKB_Instance_61]))
+		[test_set_ProjectKB_Instance_15]
+		[test_set_ProjectKB_Instance_16]
+		[test_set_ProjectKB_Instance_17]))
 
 ([CLSES_TAB] of  Widget
 
@@ -112,12 +112,6 @@
 ([KB_890183_Instance_19] of  Property_List
 )
 
-([KB_890183_Instance_2] of  Widget
-
-	(is_hidden TRUE)
-	(property_list [KB_890183_Instance_3])
-	(widget_class_name "edu.stanford.smi.protege.widget.ClsesAndInstancesTab"))
-
 ([KB_890183_Instance_20] of  Property_List
 )
 
@@ -152,18 +146,6 @@
 
 	(name "instances_file_name")
 	(string_value "test_set.pins"))
-
-([KB_890183_Instance_3] of  Property_List
-)
-
-([KB_890183_Instance_4] of  Widget
-
-	(is_hidden TRUE)
-	(property_list [KB_890183_Instance_5])
-	(widget_class_name "edu.stanford.smi.protege.widget.KAToolTab"))
-
-([KB_890183_Instance_5] of  Property_List
-)
 
 ([KB_890183_Instance_6] of  Property_List
 
@@ -235,28 +217,6 @@
 		[test_set_ProjectKB_Instance_34]
 		[test_set_ProjectKB_Instance_35]
 		[test_set_ProjectKB_Instance_37]))
-
-([PAL_RANGE_WIDGET] of  Widget
-
-	(height 180)
-	(is_hidden FALSE)
-	(label "Range")
-	(name ":PAL-RANGE")
-	(widget_class_name "edu.stanford.smi.protegex.widget.pal.constraint.PalRangeWidget")
-	(width 250)
-	(x 275)
-	(y 180))
-
-([PAL_STATEMENT_WIDGET] of  Widget
-
-	(height 300)
-	(is_hidden FALSE)
-	(label "Statement")
-	(name ":PAL-STATEMENT")
-	(widget_class_name "edu.stanford.smi.protegex.widget.pal.constraint.PalConstraintWidget")
-	(width 275)
-	(x 0)
-	(y 60))
 
 ([PROJECT] of  Project
 
@@ -602,6 +562,39 @@
 		[STANDARD_SLOT_TYPE_WIDGET]
 		[KB_890183_Instance_15]))
 
+([test_set_ProjectKB_Instance_0] of  Widget
+
+	(is_hidden TRUE)
+	(property_list [test_set_ProjectKB_Instance_1])
+	(widget_class_name "edu.stanford.smi.protege.widget.ClsesAndInstancesTab"))
+
+([test_set_ProjectKB_Instance_1] of  Property_List
+)
+
+([test_set_ProjectKB_Instance_15] of  String
+
+	(name ":META-CLASS")
+	(string_value "%3ANAME"))
+
+([test_set_ProjectKB_Instance_16] of  String
+
+	(name ":INSTANCE-ANNOTATION")
+	(string_value "%3AANNOTATION-TEXT"))
+
+([test_set_ProjectKB_Instance_17] of  String
+
+	(name ":PAL-CONSTRAINT")
+	(string_value "%3APAL-NAME"))
+
+([test_set_ProjectKB_Instance_2] of  Widget
+
+	(is_hidden TRUE)
+	(property_list [test_set_ProjectKB_Instance_3])
+	(widget_class_name "edu.stanford.smi.protege.widget.KAToolTab"))
+
+([test_set_ProjectKB_Instance_3] of  Property_List
+)
+
 ([test_set_ProjectKB_Instance_30] of  String
 
 	(name "SearchTab_Query"))
@@ -644,66 +637,10 @@
 ([test_set_ProjectKB_Instance_40] of  Property_List
 )
 
-([test_set_ProjectKB_Instance_48] of  Widget
-
-	(height 60)
-	(is_hidden FALSE)
-	(name "knows")
-	(property_list [test_set_ProjectKB_Instance_49])
-	(widget_class_name "edu.stanford.smi.protege.widget.FloatFieldWidget")
-	(width 100)
-	(x 100)
-	(y 60))
-
-([test_set_ProjectKB_Instance_49] of  Property_List
-)
-
-([test_set_ProjectKB_Instance_50] of  Widget
-
-	(height 60)
-	(is_hidden FALSE)
-	(name "knows")
-	(property_list [test_set_ProjectKB_Instance_51])
-	(widget_class_name "edu.stanford.smi.protege.widget.InstanceFieldWidget")
-	(width 200)
-	(x 0)
-	(y 120))
-
-([test_set_ProjectKB_Instance_51] of  Property_List
-
-	(properties
-		[test_set_ProjectKB_Instance_52]
-		[test_set_ProjectKB_Instance_53]))
-
-([test_set_ProjectKB_Instance_52] of  Boolean
-
-	(boolean_value FALSE)
-	(name "ButtonDisplayed-View References to Value  "))
-
-([test_set_ProjectKB_Instance_53] of  Boolean
-
-	(boolean_value FALSE)
-	(name "ButtonDisplayed-Delete Instance"))
-
 ([test_set_ProjectKB_Instance_58] of  Boolean
 
 	(boolean_value FALSE)
 	(name "use_roundtrip"))
-
-([test_set_ProjectKB_Instance_59] of  String
-
-	(name ":META-CLASS")
-	(string_value "%3ANAME"))
-
-([test_set_ProjectKB_Instance_60] of  String
-
-	(name ":INSTANCE-ANNOTATION")
-	(string_value "%3AANNOTATION-TEXT"))
-
-([test_set_ProjectKB_Instance_61] of  String
-
-	(name ":PAL-CONSTRAINT")
-	(string_value "%3APAL-NAME"))
 
 ([VERTICAL_STRETCHER] of  String
 

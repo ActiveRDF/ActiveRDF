@@ -1,4 +1,4 @@
-; Fri Mar 03 20:18:25 GMT 2006
+; Mon Mar 13 11:27:14 GMT 2006
 ; 
 ;+ (version "3.1.1")
 ;+ (build "Build 216")
@@ -11,13 +11,13 @@
 		(type STRING)
 ;+		(cardinality 0 1)
 		(create-accessor read-write))
-	(multislot knows
-		(type INSTANCE)
-;+		(allowed-classes)
-		(create-accessor read-write))
 	(single-slot age
 		(type INTEGER)
 ;+		(cardinality 0 1)
+		(create-accessor read-write))
+	(multislot knows
+		(type INSTANCE)
+;+		(allowed-classes)
 		(create-accessor read-write)))
 
 (defclass Person
