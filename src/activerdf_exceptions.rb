@@ -29,6 +29,9 @@ end
 class ResourceUpdateError < ActiveRdfError
 end
 
+class ResourceAttributeError < ActiveRdfError
+end
+
 class UriBrokenError < ActiveRdfError
 end
 
