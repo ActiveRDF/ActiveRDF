@@ -77,7 +77,18 @@ module InstanciatedResourceMethod
 		method_name = method_id.to_s
 
 		if !_attributes.nil? and _attributes.include?(method_name)
-			read_attribute(method_name)
+			attribute = read_attribute(method_name)
+			
+			# If attribute is already an resource, we return the instance,
+			# if it is a literal, we return the value of the literal
+			if attribute.kind_of?(IdentifiedResource)
+				return attribute
+			elsif attribute.kind_of?(Literal)
+				return attribute.value
+			else
+				raise(ResourceAttributeError, "In #{__FILE__}:#{__LINE__}, attribute have invalid type : #{attribute.class}.")
+			end
+			
 		elsif md = /(=|\?)$/.match(method_name)
 			attribute_name = md.pre_match
 			method_type = md.to_s
