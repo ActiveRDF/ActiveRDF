@@ -182,9 +182,15 @@ module AttributesContainer
 			end
 			
 			predicate_uri = self.class.predicates[attr_name]
-			value = self.class.get(self, predicate_uri)
+			value = Resource.get(self, predicate_uri)
 			
 			$logger.debug "loading value of #{attr_name} from datastore: value #{value}"
+			
+			# If value is already an identified resource or a Literal, we save it in the attributes hash,
+			# if it is a basic identified resource, we try to convert it into a identified resource
+			if value.instance_of?(BasicIdentifiedResource)
+				value = value.to_identified_resource
+			end
 			
 			@_attributes[attr_name] = value
 			return value

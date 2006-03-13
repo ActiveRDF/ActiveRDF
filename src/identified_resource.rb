@@ -34,7 +34,7 @@ class IdentifiedResource < BasicIdentifiedResource
 	include InstanciatedResourceMethod
 	
 	# if no subclass is specified, this is an rdfs:resource
-	@@_class_uri[self] = 'http://www.w3.org/2000/01/rdf-schema#Resource'
+	@@_class_uri[self] = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#Resource'
 
 	def initialize(uri, attributes = nil)
 		super(uri)
@@ -50,6 +50,12 @@ class IdentifiedResource < BasicIdentifiedResource
 #----------------------------------------------#
 #               PUBLIC METHODS                 #
 #----------------------------------------------#
+
+	public
+	
+	def to_identified_resource
+		raise(NoMethodError, "This object is already an identified resource.")
+	end
 
 end
 

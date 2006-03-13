@@ -28,7 +28,7 @@ require 'resource'
 class BasicIdentifiedResource; implements Resource; extend Resource
 
 	# if no subclass is specified, this is an rdfs:resource
-	@@_class_uri[self] = 'http://www.w3.org/2000/01/rdf-schema#Resource'
+	@@_class_uri[self] = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#Resource'
 
 	# URI of the resource
 	attr_reader :uri
@@ -39,6 +39,16 @@ class BasicIdentifiedResource; implements Resource; extend Resource
 		end
 		
 		@uri = uri
+	end
+	
+#----------------------------------------------#
+#               PUBLIC METHODS                 #
+#----------------------------------------------#
+
+	public
+	
+	def to_identified_resource
+		return NodeFactory.convert_basic_resource_into_identified_resource(uri)
 	end
 
 end

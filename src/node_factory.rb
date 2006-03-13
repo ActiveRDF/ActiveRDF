@@ -144,6 +144,51 @@ class NodeFactory
 		resources[uri] = resource
 	end
 	
+	def self.convert_basic_resource_into_identified_resource(uri)
+		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Resource hash not initialised.") if resources.nil?
+		raise(NodeFactoryError, 'In #{__FILE__}:#{__LINE__}, Resource URI is invalid. Cannot instanciated the object.') if uri.nil?
+
+		$logger.debug "creating new resource #{uri}"
+		
+		# try to instantiate object as class defined by the localname of its rdf:type, 
+		# e.g. a resource with rdf:type foaf:Person will be instantiated using Person.create
+		type = Resource.get(NodeFactory.create_basic_identified_resource(uri), NamespaceFactory.get(:rdf_type))
+		
+		if type.nil?
+			# we cannot convert into an identified resource, and we return the basic resource
+			return resource[uri]
+		else
+
+			$logger.debug "found #{uri} has rdf:type #{type}"
+
+			# create a resource in correct subclass
+			# if multiple types known, instantiate as first specific type known
+			if type.is_a?(Array)
+				type.each do |t|
+					if Module.constants.include?(t.local_part)
+					
+						$logger.debug "#{uri} will be intanciated as #{t.local_part}"
+					
+						resource = instantiate_resource(uri, t)
+						break
+					end
+				end
+			else
+				$logger.debug "#{uri} will be intanciated as #{type.local_part}"
+				resource = instantiate_resource(uri, type)
+			end
+		end
+
+		# if we didn't find any type to instantiate it to, we cannot converted this basic
+		# resource into a identified resource
+		if resource.nil?
+			# we cannot convert into an identified resource, and we return the basic resource
+			return resource[uri]
+		else
+			resources[uri] = resource
+		end
+	end
+	
 	# 
 	# * _id_  
 	# * _attributes_  
