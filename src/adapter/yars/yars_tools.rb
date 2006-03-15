@@ -53,7 +53,7 @@ class YarsAdapter
     	raise(WrapYarsError, "In #{__FILE__}:#{__LINE__}, node is nil.")
   	when Literal
     	return "\"#{node.value}\""
-  	when BasicIdentifiedResource
+  	when IdentifiedResource
     	return "<#{node.uri}>"
     when AnonymousResource
     	raise(WrapYarsError, "In #{__FILE__}:#{__LINE__}, Blank Nodes not implemented in yars adapter.")
@@ -150,14 +150,14 @@ class YarsAdapter
   # * +scanner+ [<tt>StringScanner</tt>]: The string scanner of the n3 triple
   #
   # Return:
-  # * [<tt>Resource</tt>] ActiveRDF Basic identified resource or anonymous resource.
+  # * [<tt>Resource</tt>] ActiveRDF identified resource or anonymous resource.
   def match_subject(scanner)
   	uri_pattern = /<([^>]+)>/
 		bnode_pattern = /_:(\S+)/
 		
 		if scanner.match?(uri_pattern)
 			scanner.scan(uri_pattern)
-			return NodeFactory.create_basic_identified_resource(scanner[1])
+			return NodeFactory.create_identified_resource(scanner[1])
 		elsif scanner.match?(bnode_pattern)
 			scanner.scan(bnode_pattern)
 			raise(NTriplesParsingYarsError, "Blank Node not implemented.")
@@ -173,13 +173,13 @@ class YarsAdapter
   # * +scanner+ [<tt>StringScanner</tt>]: The string scanner of the n3 triple
   #
   # Return:
-  # * [<tt>Resource</tt>] ActiveRDF Basic identified resource. 
+  # * [<tt>Resource</tt>] ActiveRDF identified resource. 
   def match_predicate(scanner)
   	uri_pattern = /<([^>]+)>/
   	
 		if scanner.match?(uri_pattern)
 			scanner.scan(uri_pattern)
-			return NodeFactory.create_basic_identified_resource(scanner[1])
+			return NodeFactory.create_identified_resource(scanner[1])
 		else
 			raise(NTriplesParsingYarsError, "Invalid predicate: #{scanner.inspect}.")
 		end  	
@@ -199,7 +199,7 @@ class YarsAdapter
 
 		if scanner.match?(uri_pattern)
 			scanner.scan(uri_pattern)
-			return NodeFactory.create_basic_identified_resource(scanner[1])
+			return NodeFactory.create_identified_resource(scanner[1])
 		elsif scanner.match?(bnode_pattern)
 			scanner.scan(bnode_pattern)
 			raise(NTriplesParsingYarsError, "Blank Node not implemented.")
