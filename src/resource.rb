@@ -26,7 +26,10 @@ require 'node_factory'
 require 'resource_toolbox'
 require 'query_generator/query_engine'
 
-module Resource; implements Node
+class Resource; implements Node
+
+	# Resource is an abstract class, we cannot instantiate it.
+	private_class_method :new
 
 	# if no subclass is specified, this is an rdfs:resource
 	@@_class_uri = Hash.new
@@ -38,18 +41,14 @@ module Resource; implements Node
 
 	public
 	
-	# Return the namespace related to the class (only for Resource)
+	# Return the namespace related to the class (only for Class level)
 	def self.class_URI
-		return NodeFactory.create_basic_identified_resource(@@_class_uri[self])
+		return NodeFactory.create_basic_resource(@@_class_uri[self])
 	end
 	
-	# Return the namespace related to the class (for other Node)
+	# Return the namespace related to the class (for instance level)
 	def class_URI
-		if self.class == Class
-			return NodeFactory.create_basic_identified_resource(@@_class_uri[self])
-		else
-			return NodeFactory.create_basic_identified_resource(@@_class_uri[self.class])
-		end		
+		return NodeFactory.create_basic_resource(@@_class_uri[self.class])		
 	end
 	
 	# 
@@ -57,7 +56,8 @@ module Resource; implements Node
 	# * _predicate_  
 	# * _returns_ Array  
 	def self.get(subject, predicate)
-		if !subject.kind_of?(Resource) or !predicate.kind_of?(Resource)
+		
+		if not subject.kind_of?(Resource) or not predicate.kind_of?(Resource)
 			raise(ResourceTypeError, "In #{__FILE__}:#{__LINE__}, subject or predicate is not a Resource.")
 		end
 	
@@ -86,7 +86,7 @@ module Resource; implements Node
 		# (e.g. :name -> foaf:name and no the binding variable name)
 		qe = QueryEngine.new(self)
 		qe.add_binding_variables(:s)
-		qe.add_condition(:s, NamespaceFactory.get(:rdf_type), class_URI) unless self == Resource
+		
 		if conditions.empty?
 			qe.add_condition(:s, :p, :o)
 		else
@@ -94,11 +94,31 @@ module Resource; implements Node
 				qe.add_condition(:s, pred, obj)
 			end
 		end
+		
+		if self != IdentifiedResource and self.ancestors.include?(IdentifiedResource)
+			qe.add_condition(:s, NamespaceFactory.get(:rdf_type), class_URI)
+		end
+		
 		qe.activate_keyword_search if options[:keyword_search]
 		
 		results = qe.execute
 		return nil if results.nil?
 		return_distinct_results(results)
+	end
+	
+	def self.exists?(resource)
+		# Build the query
+		qe = QueryEngine.new(self)
+		qe.add_binding_variables(:p, :o)
+		
+		if self != IdentifiedResource and self.ancestors.include?(IdentifiedResource)
+			qe.add_condition(:s, NamespaceFactory.get(:rdf_type), class_URI)
+		end
+		
+		qe.add_condition(resource, :p, :o)
+		 
+		# Execute query
+		return !qe.execute.empty?
 	end
 	
   # Extract the local part of a URI
