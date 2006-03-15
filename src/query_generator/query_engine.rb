@@ -38,7 +38,7 @@ class QueryEngine
   # * *connection* : _AbstractAdapter_ The connection used to execute query.
 	# * *related_resource* : _Resource_ Resource related to the query
   def initialize(related_resource = nil)
-  	@relate_resource = related_resource
+  	@related_resource = related_resource
   	
   	@bindings = nil
   	@binding_triple = nil
@@ -74,7 +74,7 @@ class QueryEngine
 		predicates = @related_resource.predicates	
 		
 		if predicate.is_a?(Symbol) && predicates.key?(predicate.to_s)
-				predicate = Resource.create(predicates[predicate.to_s])
+				predicate = predicates[predicate.to_s]
 		end
 		
 		return predicate
@@ -114,7 +114,7 @@ class QueryEngine
   # * *object* : Object of the triple (Symbol, Resource, String, ...)
 	def add_condition(subject, predicate, object)
 		@conditions = Array.new if @conditions.nil?
-		if @resource_related.nil?
+		if @related_resource.nil?
 			@conditions << [subject, predicate, object]
 		else
 			@conditions << [subject, convert_predicate(predicate), object]
