@@ -160,5 +160,27 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 			assert_match(/(renaud|regis)/, person.name)
 		end
 	end
+	
+	def test_M_dynamic_find_method_with_multiple_resource_attributes_on_person
+		audrey = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_9')
+		renaud = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_7')
+		regis = Person.find_by_knows([audrey, renaud])
+		assert_not_nil(regis)
+		assert_instance_of(Person, regis)
+		assert_equal('regis', regis.name)
+		persons = regis.knows
+		assert_not_nil(persons)
+		assert_instance_of(Array, persons)
+		for person in persons
+			assert_instance_of(Person, person)
+			assert_block("Regis doesn't known the good person") {
+				if person.object_id == audrey.object_id or person.object_id == renaud.object_id
+					return true
+				else
+					return false
+				end
+			}
+		end
+	end
 
 end
