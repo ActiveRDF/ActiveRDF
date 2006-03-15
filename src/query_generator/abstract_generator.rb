@@ -74,7 +74,7 @@ class AbstractQueryGenerator
   	case o
 		when Symbol
 			object << '?' << o.to_s
-	  when BasicIdentifiedResource
+	  when IdentifiedResource
 	  	object << '<' << o.uri << '>'
 	  when Literal
 	  	case o.value
