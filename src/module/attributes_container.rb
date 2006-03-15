@@ -29,8 +29,11 @@ module AttributesContainer
 	# http://foaf/firstName }, Agent => { ... }, ...]
 	@@predicates = Hash.new
 	
-	# attributes hash contains the attribute values for this instance, e.g. 
-	# firstName => 'Eyal'
+	# attributes hash contains the attribute values for this instance and a boolean
+	# to know if the attribute value has been changed.
+	# e.g. {firstName => ['Eyal', false]} if we haven't changed the name
+	# e.g. {firstName => ['Eyal', true]} if we have changed the name
+	# e.g. {firstName => nil} if the value is not yet loaded
 	attr_reader :_attributes
 	private :_attributes
 
@@ -67,15 +70,32 @@ module AttributesContainer
 		if attributes.nil?
 			raise(ResourceUpdateError, "In #{__FILE__}:#{__LINE__}, attributes hash is nil.")
 		end
-		 
+
+		# If _attributes is nil, we need to load it from the DB
+		if _attributes.nil?
+			initialize_attributes
+		end
+		
+		# Convert attributes value into Literal
+		converted_attributes = Hash.new
+		attributes.each { |attr_name, value|
+			if value.nil? or (value.instance_of?(String) and value.empty?)
+				converted_attributes[attr_name.to_s] = [nil, true]
+			elsif value.kind_of?(Resource) or value.kind_of?(Array)
+				converted_attributes[attr_name.to_s] = [value, true]
+			else
+				converted_attributes[attr_name.to_s] = [Literal.create(value), true]
+			end
+		}
+				 
 		# Verification of attributes existence
-		unknown_attributes = _attributes.keys - self.class.predicates.keys
-		if !unknown_attributes.empty? and !self.instance_of?(IdentifiedResource)
+		unknown_attributes = converted_attributes.keys - self.class.predicates.keys
+		if !unknown_attributes.empty?
 			raise(ResourceUpdateError, "In #{__FILE__}:#{__LINE__}, unknown attribute received during update: #{unknown_attributes.inspect}.") 
 		end
 		
 		# We update the attributes hash with the new
-		@_attributes.update(attributes)
+		@_attributes.update(converted_attributes)
 		save		
 	end
 
@@ -87,20 +107,20 @@ module AttributesContainer
   # Return:
   # * [<tt>Bool</tt>] True if attributes value exists
 	def query_attribute(attr_name)
-			attribute = _attributes[attr_name]
+			attribute = _attributes[attr_name.to_s][0]
 			if attribute.nil?
 					false
-			elsif attribute.kind_of?(Fixnum) && attribute == 0
+			elsif attribute.kind_of?(Literal) && attribute.value == 0
 					false
-			elsif attribute.kind_of?(String) && attribute == "0"
+			elsif attribute.kind_of?(Literal) && attribute.value == "0"
 					false
-			elsif attribute.kind_of?(String) && attribute.empty?
+			elsif attribute.kind_of?(Literal) && attribute.value.empty?
 					false
-			elsif attribute == false
+			elsif attribute.kind_of?(Literal) && attribute.value == false
 					false
-			elsif attribute == "f"
+			elsif attribute.kind_of?(Literal) && attribute.value == "f"
 					false
-			elsif attribute == "false"
+			elsif attribute.kind_of?(Literal) && attribute.value == "false"
 					false
 			else
 					true
@@ -134,7 +154,7 @@ module AttributesContainer
 					
 					Resource.find_predicates(self.class_URI).each do |localname, full_URI|
 						# the uri of the corresponding predicate, e.g. http://xmlns.com/foaf/firstName
-						class_hash[localname] = NodeFactory.create_basic_identified_resource(full_URI)
+						class_hash[localname] = NodeFactory.create_basic_resource(full_URI)
 						
 						$logger.debug "loading attribute #{localname} from schema into class #{self}"
 					
@@ -143,6 +163,16 @@ module AttributesContainer
 				end
 				
 				return class_hash				
+			end
+			
+			# Called by delete method of InstanciateResourceMethod to delete reference
+			# of the resource in the predicates hash.
+  		#
+  		# Arguments:
+			# * +key+: Key of the predicates. Can be a Class (for class level predicates)
+			# or a String (for instance level predicates).
+			def self.remove_predicates(key)
+				@@predicates.delete(key)
 			end
 			
 		# END OF DEFINITION
@@ -162,7 +192,19 @@ module AttributesContainer
   # * +attr_name+ [<tt>String</tt>]: Attribute name
   # * +value+: Attribute value
 	def write_attribute(attr_name, value)
-		@_attributes[attr_name.to_s] = value
+		# If _attributes is nil, we need to load it from the DB
+		if _attributes.nil?
+			initialize_attributes
+		end
+		
+		if value.nil? or (value.instance_of?(String) and value.empty?)
+			@_attributes[attr_name.to_s] = [nil, true]
+		elsif value.kind_of?(Resource) or value.kind_of?(Array)
+			@_attributes[attr_name.to_s] = [value, true]
+		else
+			@_attributes[attr_name.to_s] = [Literal.create(value), true]
+		end
+
 		save
 	end
 
@@ -175,27 +217,76 @@ module AttributesContainer
   # Return:
   # * Value of the attribute
 	def read_attribute(attr_name)
-		if !_attributes.key?(attr_name) or _attributes[attr_name].nil?
+		# If _attributes is nil, we need to load it from the DB
+		if _attributes.nil?
+			initialize_attributes
+		end
 		
-			if self.class.predicates[attr_name].nil?
-				raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, predicates doesn't exist for the attribute : #{attr_name}")
+		$logger.debug "READ_ATTRIBUTE #{attr_name} for #{self.uri}"
+
+		if !_attributes.key?(attr_name.to_s) or _attributes[attr_name.to_s].nil?
+		
+			if self.class.predicates[attr_name.to_s].nil?
+				raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, predicates doesn't exist for the attribute : #{attr_name.to_s}")
 			end
 			
-			predicate_uri = self.class.predicates[attr_name]
+			predicate_uri = self.class.predicates[attr_name.to_s]
 			value = Resource.get(self, predicate_uri)
 			
 			$logger.debug "loading value of #{attr_name} from datastore: value #{value}"
 			
-			# If value is already an identified resource or a Literal, we save it in the attributes hash,
-			# if it is a basic identified resource, we try to convert it into a identified resource
-			if value.instance_of?(BasicIdentifiedResource)
-				value = value.to_identified_resource
+			if value.nil? or value.kind_of?(Node) or value.kind_of?(Array)
+				@_attributes[attr_name.to_s] = [value, false]
+			else
+				raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, value have invalid type : #{value.class}")
+			end
+			return _attributes[attr_name.to_s][0]
+		else
+			return _attributes[attr_name.to_s][0]
+		end
+	end
+	
+  # Initialize the attributes hash for the instance. Load from the DB all the attributes
+  # name.
+	def initialize_attributes
+		@_attributes = Hash.new
+		self.class.predicates.each_key do |attr_name|
+			@_attributes[attr_name] = nil
+		end
+	end
+	
+	# save all property values. we use self.predicates hash to know the original 
+	# URIs of all predicates (we lost those when converting to attributes)
+	def save_attributes()
+
+		# If _attributes is nil, we need to load it from the DB
+		if _attributes.nil?
+			initialize_attributes
+		end
+		
+		self.class.predicates.each do |attr_localname, attr_fullname|
+			object = @_attributes[attr_localname]
+			
+			# to save the triple we need the full URI of the predicate
+			predicate = attr_fullname
+			
+			# if an attribute is an array, we save all constituents sequentially, 
+			# e.g. person.publications = ['article1', 'article2']
+			
+			# First, we remove all triples related to (subject, predicate) only if
+			# the attribute values have changed
+			if not object.nil? and object[1]
+				NodeFactory.connection.remove(self, predicate, nil)
 			end
 			
-			@_attributes[attr_name] = value
-			return value
-		else
-			return _attributes[attr_name]
+			# then save the new value, if the value have changed and the value is not nil
+			if not object.nil? and object[1] and not object[0].nil? and object[0].is_a?(Array)
+				object[0].each do |realvalue|
+					NodeFactory.connection.add(self, predicate, realvalue)
+				end
+			elsif not object.nil? and object[1] and not object[0].nil?
+				NodeFactory.connection.add(self, predicate, object[0])
+			end
 		end
 	end
 
