@@ -31,29 +31,29 @@ class TestNamespaceFactory < Test::Unit::TestCase
 		NamespaceFactory.add(:test, 'http://m3pe.org/test')
 		namespace = NamespaceFactory.get(:test)
 		assert_not_nil(namespace)
-		assert(namespace.instance_of?(BasicIdentifiedResource))
+		assert(namespace.instance_of?(IdentifiedResource))
 		assert_equal('http://m3pe.org/test', namespace.uri)
 	end
 
 	def test_2_load_namespace
 		rdf_type = NamespaceFactory.get(:rdf_type)
 		assert_not_nil(rdf_type)
-		assert(rdf_type.instance_of?(BasicIdentifiedResource))
+		assert(rdf_type.instance_of?(IdentifiedResource))
 		assert_equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#type', rdf_type.uri)
 		
 		rdfs_domain = NamespaceFactory.get(:rdfs_domain)
 		assert_not_nil(rdfs_domain)
-		assert(rdfs_domain.instance_of?(BasicIdentifiedResource))
+		assert(rdfs_domain.instance_of?(IdentifiedResource))
 		assert_equal('http://www.w3.org/2000/01/rdf-schema#domain', rdfs_domain.uri)
 		
 		rdfs_subclass = NamespaceFactory.get(:rdfs_subclass)
 		assert_not_nil(rdfs_subclass)
-		assert(rdfs_subclass.instance_of?(BasicIdentifiedResource))
+		assert(rdfs_subclass.instance_of?(IdentifiedResource))
 		assert_equal('http://www.w3.org/2000/01/rdf-schema#subClassOf', rdfs_subclass.uri)
 		
 		owl_thing = NamespaceFactory.get(:owl_thing)
 		assert_not_nil(owl_thing)
-		assert(owl_thing.instance_of?(BasicIdentifiedResource))
+		assert(owl_thing.instance_of?(IdentifiedResource))
 		assert_equal('http://www.w3.org/2002/07/owl#Thing', owl_thing.uri)
 	end
 	

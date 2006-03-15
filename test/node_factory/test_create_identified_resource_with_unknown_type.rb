@@ -46,14 +46,13 @@ class TestNodeFactoryUnknownIdentifiedResource < Test::Unit::TestCase
 
 	def test_C_type_of_unknow_type
 		identified_resource = NodeFactory.create_identified_resource('http://m3pe.org/identifiedresource')
-		assert_kind_of(IdentifiedResource, identified_resource)
+		assert_instance_of(IdentifiedResource, identified_resource)
 	end
 
-	def test_D_subclass_type_of_unknow_type
+	def test_D_superclass_type_of_unknow_type
 		identified_resource = NodeFactory.create_identified_resource('http://m3pe.org/identifiedresource')
 		assert_kind_of(Node, identified_resource)
 		assert_kind_of(Resource, identified_resource)
-		assert_kind_of(BasicIdentifiedResource, identified_resource)
 	end
 
 	def test_E_create_same_instance_of_unknow_type
@@ -63,29 +62,5 @@ class TestNodeFactoryUnknownIdentifiedResource < Test::Unit::TestCase
 		assert_equal(object_id, identified_resource.object_id, "Not the same instance of the identified resource.")
 	end
 
-	def test_F_create_identified_resource_with_unknow_type_and_with_attributes
-		# We remove all triples in the db
-		NodeFactory.connection.remove(nil, nil, nil)
-	
-		attributes = {'first' => 1, 'second' => 'two'}
-		identified_resource = NodeFactory.create_identified_resource('http://m3pe.org/identified_resource_with_unknow_type', attributes)
-		assert_not_nil(identified_resource)
-		assert_kind_of(IdentifiedResource, identified_resource)
-		assert_equal(1, identified_resource['first'])
-		assert_equal('two', identified_resource['second'])
-		assert_equal(1, identified_resource.first)
-		assert_equal('two', identified_resource.second)
-	end
-
-	def test_G_create_identified_resource_existing_in_the_db_with_unknow_type
-		attributes = {'first' => 'one', 'second' => 2}
-		identified_resource = NodeFactory.create_identified_resource('http://m3pe.org/identified_resource_with_unknow_type', attributes)
-		assert_not_nil(identified_resource)
-		assert_kind_of(IdentifiedResource, identified_resource)
-		assert_equal('one', identified_resource['first'])
-		assert_equal(2, identified_resource['second'])
-		assert_equal('one', identified_resource.first)
-		assert_equal(2, identified_resource.second)
-	end
 
 end

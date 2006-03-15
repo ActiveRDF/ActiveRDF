@@ -30,8 +30,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 	def test_1_add_triples_error_object_nil
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
 		assert_raise(StatementAdditionRedlandError) {
 			adapter.add(subject, predicate, nil)
@@ -41,8 +41,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 	def test_2_add_triples_error_predicate_nil
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
 		assert_raise(StatementAdditionRedlandError) {
 			adapter.add(subject, nil, object)
@@ -52,8 +52,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 	def test_3_add_triples_error_subject_nil
 		adapter = RedlandAdapter.new
 		
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
 		assert_raise(StatementAdditionRedlandError) {
 			adapter.add(nil, predicate, object)
@@ -63,8 +63,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 	def test_4_add_triples_error_object_not_node
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
 		assert_raise(StatementAdditionRedlandError) {
 			adapter.add(subject, predicate, 'test')
@@ -74,8 +74,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 	def test_5_add_triples_error_predicate_not_resource
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
 		assert_raise(StatementAdditionRedlandError) {
 			adapter.add(subject, 'test', object)
@@ -85,8 +85,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 	def test_6_add_triples_error_subject_not_resource
 		adapter = RedlandAdapter.new
 		
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
 		assert_raise(StatementAdditionRedlandError) {
 			adapter.add('test', predicate, object)
@@ -96,8 +96,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 	def test_7_add_triples_object_literal
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_literal('42', 'xsd:integer')
 		
 		assert_nothing_raised(StatementAdditionRedlandError) {
@@ -108,9 +108,9 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 	def test_8_add_triples_object_resource
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
 		assert_nothing_raised(StatementAdditionRedlandError) {
 			adapter.add(subject, predicate, object)

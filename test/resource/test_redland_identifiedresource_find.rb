@@ -1,6 +1,6 @@
-# = test_yars_resource_find.rb
+# = test_redland_identifiedresource_find.rb
 #
-# Unit Test of Resource find method with yars adapter
+# Unit Test of IdentifiedResource find method with redland adapter
 #
 # == Project
 #
@@ -25,23 +25,37 @@ require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
 
-class TestYarsResourceFind < Test::Unit::TestCase
+class TestRedlandIdentifiedResourceFind < Test::Unit::TestCase
+
+	@@loaded = false
 
 	def setup
-		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_query' }
-		NodeFactory.connection(params)
+		if !@@loaded
+			# Load the data file
+			dirname = File.dirname(__FILE__)
+			system("cd #{dirname}/../adapter/redland; cp reset_test_redland_query.sh /tmp")
+			system("cd #{dirname}/../adapter/redland; cp test_set.rdfs /tmp")
+			system("cd #{dirname}/../adapter/redland; cp test_set.rdf /tmp")
+			system("cd /tmp; ./reset_test_redland_query.sh")
+		
+			params = { :adapter => :redland }
+			NodeFactory.connection(params)
+			@@loaded = true
+		end
 	end
 	
 	def test_A_empty_db
-		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'empty' }
+		@@loaded = false
+		system("cd /tmp; rm test-store*.db")
+		params = { :adapter => :redland }
 		NodeFactory.connection(params)
 		
-		results = Resource.find
+		results = IdentifiedResource.find
 		assert_nil(results)
 	end
 	
 	def test_B_find_all
-		results = Resource.find
+		results = IdentifiedResource.find
 		assert_not_nil(results)
 		assert_instance_of(Array, results)
 		assert_equal(11, results.size)
@@ -49,7 +63,7 @@ class TestYarsResourceFind < Test::Unit::TestCase
 	
 	def test_C_find_predicate
 		class_uri = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfPerson')
-		predicates = Resource.find({ NamespaceFactory.get(:rdfs_domain) => class_uri })
+		predicates = IdentifiedResource.find({ NamespaceFactory.get(:rdfs_domain) => class_uri })
 		assert_not_nil(predicates)
 		assert_instance_of(Array, predicates)
 		assert_equal(3, predicates.size)
@@ -61,7 +75,7 @@ class TestYarsResourceFind < Test::Unit::TestCase
 	def test_D_find_resource_knows_instance_9
 		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
 		object = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
-		subjects = Resource.find({predicate => object})
+		subjects = IdentifiedResource.find({predicate => object})
 		assert_not_nil(subjects)
 		assert_instance_of(Array, subjects)
 		assert_equal(2, subjects.size)
@@ -76,7 +90,7 @@ class TestYarsResourceFind < Test::Unit::TestCase
 		predicate2 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfname')
 		object2 = NodeFactory.create_literal('renaud', 'string')
 		
-		subject = Resource.find({predicate1 => object1, predicate2 => object2})
+		subject = IdentifiedResource.find({predicate1 => object1, predicate2 => object2})
 		assert_not_nil(subject)
 		assert_kind_of(Resource, subject)
 		assert_equal('http://protege.stanford.edu/rdftest_set_Instance_7', subject.uri)

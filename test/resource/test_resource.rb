@@ -25,7 +25,7 @@ require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
 
-module Resource
+class Resource
 	def self.test_return_distinct_results(results)
 		return Resource.return_distinct_results(results)
 	end
@@ -40,8 +40,8 @@ class TestResource < Test::Unit::TestCase
 	def test_A_classuri
 		class_uri = Resource.class_URI
 		assert_not_nil(class_uri)
-		assert(class_uri.kind_of?(BasicIdentifiedResource))
-		assert_equal("http://www.w3.org/2000/01/rdf-schema#Resource", class_uri.uri)
+		assert_kind_of(IdentifiedResource, class_uri)
+		assert_equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#Resource', class_uri.uri)
 	end
 	
 	def test_B_return_distinct_results_error
@@ -89,7 +89,7 @@ class TestResource < Test::Unit::TestCase
 		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_query' }
 		NodeFactory.connection(params)
 		
-		class_uri = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfPerson')
+		class_uri = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfPerson')
 		
 		predicates = Resource.test_find_predicates(class_uri)
 		assert_not_nil(predicates)
@@ -104,6 +104,12 @@ class TestResource < Test::Unit::TestCase
 			when 'rdfname'
 				assert_equal('http://protege.stanford.edu/rdfname', uri)
 			end
+		}
+	end
+	
+	def test_G_try_to_instantiate_resource
+		assert_raise(NoMethodError) {
+			resource = Resource.new
 		}
 	end
 	

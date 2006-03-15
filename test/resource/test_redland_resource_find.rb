@@ -62,7 +62,7 @@ class TestRedlandResourceFind < Test::Unit::TestCase
 	end
 	
 	def test_C_find_predicate
-		class_uri = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfPerson')
+		class_uri = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfPerson')
 		predicates = Resource.find({ NamespaceFactory.get(:rdfs_domain) => class_uri })
 		assert_not_nil(predicates)
 		assert_instance_of(Array, predicates)
@@ -73,8 +73,8 @@ class TestRedlandResourceFind < Test::Unit::TestCase
 	end
 	
 	def test_D_find_resource_knows_instance_9
-		predicate = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfknows')
-		object = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
+		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
+		object = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
 		subjects = Resource.find({predicate => object})
 		assert_not_nil(subjects)
 		assert_instance_of(Array, subjects)
@@ -85,9 +85,9 @@ class TestRedlandResourceFind < Test::Unit::TestCase
 	end
 	
 	def test_E_find_resource_with_two_conditions
-		predicate1 = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfknows')
-		object1 = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
-		predicate2 = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfname')
+		predicate1 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
+		object1 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
+		predicate2 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfname')
 		object2 = NodeFactory.create_literal('renaud', 'string')
 		
 		subject = Resource.find({predicate1 => object1, predicate2 => object2})

@@ -30,7 +30,7 @@ class TestYarsAdapterJointQuery < Test::Unit::TestCase
 	@@adapter = nil
 
 	def setup
-		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test' }
+		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_query' }
 		@@adapter = NodeFactory.connection(params) if @@adapter.nil?
 	end
 	
@@ -83,9 +83,9 @@ class TestYarsAdapterJointQuery < Test::Unit::TestCase
 	private
 	
 	def query_test_A
-		predicate = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfknows')
-		object1 = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
-		object2 = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
+		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
+		object1 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
+		object2 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
 	
 		qe = QueryEngine.new
 		qe.add_binding_variables(:s)
@@ -95,8 +95,8 @@ class TestYarsAdapterJointQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_B
-		predicate1 = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfage')
-		predicate2 = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfname')
+		predicate1 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfage')
+		predicate2 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfname')
 		object1 = NodeFactory.create_literal('45', 'xsd:integer')
 		object2 = NodeFactory.create_literal('regis', 'xsd:string')
 	
@@ -108,8 +108,8 @@ class TestYarsAdapterJointQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_C
-		predicate1 = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfage')
-		predicate2 = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfknows')
+		predicate1 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfage')
+		predicate2 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
 		object1 = NodeFactory.create_literal('45', 'xsd:integer')
 	
 		qe = QueryEngine.new
@@ -120,8 +120,8 @@ class TestYarsAdapterJointQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_D
-		predicate1 = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfknows')
-		predicate2 = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfage')
+		predicate1 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
+		predicate2 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfage')
 		object = NodeFactory.create_literal('19', 'xsd:integer')
 	
 		qe = QueryEngine.new

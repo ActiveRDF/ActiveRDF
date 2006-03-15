@@ -28,10 +28,20 @@ require 'node_factory'
 class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 
 	@@adapter = nil
-
+	
 	def setup
-		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_query' }
-		@@adapter = NodeFactory.connection(params) if @@adapter.nil?
+		if @@adapter.nil?
+			dirname = File.dirname(__FILE__)
+			system("cd #{dirname}; cp yars-api-current.jar /tmp")
+			system("cd #{dirname}; cp reset_test_yars_query.sh /tmp")
+			system("cd #{dirname}; cp put_test_yars_query.sh /tmp")
+			system("cd #{dirname}; cp test_set.nt /tmp")
+			system("cd /tmp; ./reset_test_yars_query.sh")
+			system("cd /tmp; ./put_test_yars_query.sh")
+			
+			params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_query' }
+			@@adapter = NodeFactory.connection(params)
+		end
 	end
 	
 	def test_A_query_all
@@ -169,7 +179,7 @@ class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_E
-		predicate = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfage')
+		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfage')
 		object = NodeFactory.create_literal("23", 'xsd:integer')
 	
 		qe = QueryEngine.new
@@ -179,8 +189,8 @@ class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_F
-		predicate = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfknows')
-		object = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
+		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
+		object = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
 	
 		qe = QueryEngine.new
 		qe.add_binding_variables(:s)
@@ -189,7 +199,7 @@ class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_G
-		subject = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
+		subject = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
 		object = NodeFactory.create_literal('renaud', 'xsd:string')
 	
 		qe = QueryEngine.new
@@ -199,8 +209,8 @@ class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 	end
 
 	def query_test_H
-		subject = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
-		object = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
+		subject = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
+		object = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
 	
 		qe = QueryEngine.new
 		qe.add_binding_variables(:p)
@@ -209,8 +219,8 @@ class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_I
-		subject = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
-		predicate = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfname')
+		subject = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
+		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfname')
 		
 		qe = QueryEngine.new
 		qe.add_binding_variables(:o)
@@ -219,8 +229,8 @@ class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_J
-		subject = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
-		predicate = NodeFactory.create_basic_identified_resource('http://protege.stanford.edu/rdfknows')
+		subject = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
+		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
 		
 		qe = QueryEngine.new
 		qe.add_binding_variables(:o)

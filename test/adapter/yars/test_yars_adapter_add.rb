@@ -32,8 +32,8 @@ class TestYarsAdapterAdd < Test::Unit::TestCase
 	def test_1_add_triples_error_object_nil
 		adapter = YarsAdapter.new(@@params)
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
 		assert_raise(StatementAdditionYarsError) {
 			adapter.add(subject, predicate, nil)
@@ -43,8 +43,8 @@ class TestYarsAdapterAdd < Test::Unit::TestCase
 	def test_2_add_triples_error_predicate_nil
 		adapter = YarsAdapter.new(@@params)
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
 		assert_raise(StatementAdditionYarsError) {
 			adapter.add(subject, nil, object)
@@ -54,8 +54,8 @@ class TestYarsAdapterAdd < Test::Unit::TestCase
 	def test_3_add_triples_error_subject_nil
 		adapter = YarsAdapter.new(@@params)
 		
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
 		assert_raise(StatementAdditionYarsError) {
 			adapter.add(nil, predicate, object)
@@ -65,8 +65,8 @@ class TestYarsAdapterAdd < Test::Unit::TestCase
 	def test_4_add_triples_error_object_not_node
 		adapter = YarsAdapter.new(@@params)
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
 		assert_raise(StatementAdditionYarsError) {
 			adapter.add(subject, predicate, 'test')
@@ -76,8 +76,8 @@ class TestYarsAdapterAdd < Test::Unit::TestCase
 	def test_5_add_triples_error_predicate_not_resource
 		adapter = YarsAdapter.new(@@params)
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
 		assert_raise(StatementAdditionYarsError) {
 			adapter.add(subject, 'test', object)
@@ -87,8 +87,8 @@ class TestYarsAdapterAdd < Test::Unit::TestCase
 	def test_6_add_triples_error_subject_not_resource
 		adapter = YarsAdapter.new(@@params)
 		
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
 		assert_raise(StatementAdditionYarsError) {
 			adapter.add('test', predicate, object)
@@ -98,8 +98,8 @@ class TestYarsAdapterAdd < Test::Unit::TestCase
 	def test_7_add_triples_object_literal
 		adapter = YarsAdapter.new(@@params)
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_literal('42', 'xsd:integer')
 		
 		assert_nothing_raised(StatementAdditionYarsError) {
@@ -110,9 +110,9 @@ class TestYarsAdapterAdd < Test::Unit::TestCase
 	def test_8_add_triples_object_resource
 		adapter = YarsAdapter.new(@@params)
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
 		assert_nothing_raised(StatementAdditionYarsError) {
 			adapter.add(subject, predicate, object)

@@ -37,9 +37,9 @@ class TestRedlandAdapter < Test::Unit::TestCase
 	def test_2_save
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
 		adapter.add(subject, predicate, object)
 		

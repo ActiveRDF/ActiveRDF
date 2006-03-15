@@ -34,8 +34,8 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 	def test_A_remove_triples_error_object_not_node
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
 		assert_raise(StatementRemoveRedlandError) {
 			adapter.remove(subject, predicate, 'test')
@@ -45,8 +45,8 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 	def test_B_remove_triples_error_predicate_not_resource
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
 		assert_raise(StatementRemoveRedlandError) {
 			adapter.remove(subject, 'test', object)
@@ -56,8 +56,8 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 	def test_C_remove_triples_error_subject_not_resource
 		adapter = RedlandAdapter.new
 		
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
 		assert_raise(StatementRemoveRedlandError) {
 			adapter.remove('test', predicate, object)
@@ -67,8 +67,8 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 	def test_D_remove_triples_dont_exist
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_literal('42', 'xsd:integer')
 		
 		assert_nothing_raised(StatementRemoveRedlandError) {
@@ -79,8 +79,8 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 	def test_E_remove_triples_object_literal
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_literal('42', 'xsd:integer')
 
 		adapter.add(subject, predicate, object)
@@ -93,9 +93,9 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 	def test_F_remove_triples_object_resource
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
 		adapter.add(subject, predicate, object)
 		
@@ -107,10 +107,10 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 	def test_G_remove_triples_with_subject_as_wildcard
 		adapter = RedlandAdapter.new
 		
-		subject1 = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject1')
-		subject2 = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject2')
-		predicate = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate')
-		object = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
+		subject1 = NodeFactory.create_identified_resource('http://m3pe.org/subject1')
+		subject2 = NodeFactory.create_identified_resource('http://m3pe.org/subject2')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
 		adapter.add(subject1, predicate, object)
 		adapter.add(subject2, predicate, object)
@@ -123,10 +123,10 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 	def test_H_remove_triples_with_predicate_and_object_as_wildcard
 		adapter = RedlandAdapter.new
 		
-		subject = NodeFactory.create_basic_identified_resource('http://m3pe.org/subject')
-		predicate1 = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate1')
-		object1 = NodeFactory.create_basic_identified_resource('http://m3pe.org/object')
-		predicate2 = NodeFactory.create_basic_identified_resource('http://m3pe.org/predicate2')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
+		predicate1 = NodeFactory.create_identified_resource('http://m3pe.org/predicate1')
+		object1 = NodeFactory.create_identified_resource('http://m3pe.org/object')
+		predicate2 = NodeFactory.create_identified_resource('http://m3pe.org/predicate2')
 		object2 = NodeFactory.create_literal('42', 'xsd:integer')
 		
 		adapter.add(subject, predicate1, object1)
