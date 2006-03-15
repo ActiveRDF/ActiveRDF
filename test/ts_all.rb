@@ -49,8 +49,17 @@ require 'test/resource/test_redland_resource_get'
 require 'test/resource/test_yars_resource_get'
 require 'test/resource/test_redland_resource_find'
 require 'test/resource/test_yars_resource_find'
+require 'test/resource/test_identified_resource'
+require 'test/resource/test_identifiedresource_create'
+require 'test/resource/test_redland_identifiedresource_get'
+require 'test/resource/test_redland_identifiedresource_find'
+require 'test/resource/test_identifiedresource_attributescontainer'
 
 require 'test/namespace_factory/test_namespace_factory'
+
+require 'test/node_factory/test_create_identified_resource_with_unknown_type'
+require 'test/node_factory/test_create_identified_resource_on_person_type'
+require 'test/node_factory/test_person_methods'
 
 class TestSuite_AllTests
     def self.suite
@@ -81,6 +90,15 @@ class TestSuite_AllTests
         suite << TestYarsResourceGet.suite
         suite << TestRedlandResourceFind.suite
         suite << TestYarsResourceFind.suite
+        suite << TestIdentifiedResource.suite
+        suite << TestRedlandIdentifiedResourceFind.suite
+        suite << TestRedlandIdentifiedResourceGet.suite
+        suite << TestNodeFactoryUnknownIdentifiedResource.suite
+        suite << TestNodeFactoryIdentifiedResource.suite
+        suite << TestNodeFactoryPerson.suite
+        
+        suite << TestIdentifiedResourceCreate.suite
+        suite << TestAttributesContainer.suite
         
         $stderr << 'Start NamespaceFactory Tests' << "\n"
         suite << TestNamespaceFactory.suite    
