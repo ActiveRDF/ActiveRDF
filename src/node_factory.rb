@@ -21,15 +21,16 @@
 #
 # == To-do
 #
-# * To-do 1
+# * TODO: in new_resource, we override the resource or we jsut return the reference
+# if a resource with the same uri already exists in the predicates hash.
 #
 
 require 'activerdf_exceptions'
 
 require 'literal'
 require 'resource'
-require 'basic_identified_resource'
 require 'identified_resource'
+require 'anonymous_resource'
 
 class NodeFactory
 
@@ -77,33 +78,40 @@ class NodeFactory
 		return @@_connection
 		
 	end
-		
-	# 
-	# * _uri_  
-	# * _returns_ BasicIdentifiedResource  
-	def self.create_basic_identified_resource(uri)
-		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Resource hash not initialised.") if resources.nil?
-		raise(NodeFactoryError, 'In #{__FILE__}:#{__LINE__}, Resource URI is invalid. Cannot instanciated the object.') if uri.nil?
-		
+	
+  # You don't have to use this method. This method is used internaly in ActiveRDF.
+  #
+  # Arguments:
+  # * +uri+ [<tt>String</tt>]: The uri of the basic resource to instantiate
+  #
+  # Return:
+  # * [<tt>IdentifiedResource</tt>] A Basic IdentifiedResource.
+  def self.create_basic_resource(uri)
 		if resources.key?(uri)
 			return resources[uri]
 		else
-			resources[uri] = BasicIdentifiedResource.new(uri)
+			resources[uri] = IdentifiedResource.new(uri)
 			return resources[uri]
 		end
-	end
+  end
 		
-	# 
-	# * _uri_  
-	# * _attributes_  
-	# * _returns_ IdentifiedResource  
-	def self.create_identified_resource(uri, attributes = nil)
+  # Create a new identified resource.
+  # If the resource exists in the database, it tries to instantiate it with the good
+  # type. If no type is found, instantiate it as a IdentifiedResource.
+  # Return just a reference to the resource if the resource is included in the resources
+  # Hash.
+  #
+  # Arguments:
+  # * +uri+ [<tt>String</tt>]:The uri of the resource to instantiate.
+  #
+  # Return:
+  # * [<tt>IdentifiedResource</tt>] The resource instantiated
+	def self.create_identified_resource(uri, klass = nil)
 		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Resource hash not initialised.") if resources.nil?
 		raise(NodeFactoryError, 'In #{__FILE__}:#{__LINE__}, Resource URI is invalid. Cannot instanciated the object.') if uri.nil?
 		
 		if resources.key?(uri)
 			resource = resources[uri]
-			resource.update_attributes(attributes) unless attributes.nil?
 			return resource
 		else
 
@@ -111,14 +119,21 @@ class NodeFactory
 			
 			# try to instantiate object as class defined by the localname of its rdf:type, 
 			# e.g. a resource with rdf:type foaf:Person will be instantiated using Person.create
-			type = Resource.get(NodeFactory.create_basic_identified_resource(uri), NamespaceFactory.get(:rdf_type))
+			type = Resource.get(NodeFactory.create_basic_resource(uri), NamespaceFactory.get(:rdf_type))
+			
+			
 			
 			if type.nil?
 
 				$logger.debug "initialising #{uri}; didn't find rdf:type, falling back to type Resource"
 
-				# if type unknown, create toplevel resource
-				resource = IdentifiedResource.new(uri, attributes)
+				# if type unknown and klass given, create klass resource
+				if not klass.nil?
+					resource = instantiate_resource(uri, klass.to_s)
+				# otherwise, create top level resource
+				else
+					resource = IdentifiedResource.new(uri)
+				end
 			else
 
 				$logger.debug "found #{uri} has rdf:type #{type}"
@@ -128,79 +143,54 @@ class NodeFactory
 				if type.is_a?(Array)
 					type.each do |t|
 						if Module.constants.include?(t.local_part)
-							resource = instantiate_resource(uri, t, attributes)
+							class_name = determine_class(t)
+							
+							if not klass.nil? and not class_name.eql?(klass.to_s)
+								raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Try to instantiate a resource with a wrong type.")
+							end
+							
+							resource = instantiate_resource(uri, class_name)
 							break
 						end
 					end
 				else
-					resource = instantiate_resource(uri, type, attributes)
+					class_name = determine_class(type)
+					
+					if not klass.nil? and not class_name.eql?(klass.to_s)
+						raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Try to instantiate a resource with a wrong type.")
+					end
+					
+					resource = instantiate_resource(uri, class_name)
 				end
 			end
-
-			# if we didn't find any type to instantiate it to, we instantiate it as 
-			# top-level resource
-			resource = IdentifiedResource.new(uri, attributes) if resource.nil?
+			
+			# if we didn't find any type to instantiate it to and klass given, create klass resource
+			if resource.nil? and not klass.nil?
+				resource = instantiate_resource(uri, klass.to_s)
+			# otherwise, create top level resource
+			elsif resource.nil?
+				resource = IdentifiedResource.new(uri)
+			end
 		end
 		resources[uri] = resource
-	end
-	
-	def self.convert_basic_resource_into_identified_resource(uri)
-		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Resource hash not initialised.") if resources.nil?
-		raise(NodeFactoryError, 'In #{__FILE__}:#{__LINE__}, Resource URI is invalid. Cannot instanciated the object.') if uri.nil?
-
-		$logger.debug "creating new resource #{uri}"
-		
-		# try to instantiate object as class defined by the localname of its rdf:type, 
-		# e.g. a resource with rdf:type foaf:Person will be instantiated using Person.create
-		type = Resource.get(NodeFactory.create_basic_identified_resource(uri), NamespaceFactory.get(:rdf_type))
-		
-		if type.nil?
-			# we cannot convert into an identified resource, and we return the basic resource
-			return resource[uri]
-		else
-
-			$logger.debug "found #{uri} has rdf:type #{type}"
-
-			# create a resource in correct subclass
-			# if multiple types known, instantiate as first specific type known
-			if type.is_a?(Array)
-				type.each do |t|
-					if Module.constants.include?(t.local_part)
-					
-						$logger.debug "#{uri} will be intanciated as #{t.local_part}"
-					
-						resource = instantiate_resource(uri, t)
-						break
-					end
-				end
-			else
-				$logger.debug "#{uri} will be intanciated as #{type.local_part}"
-				resource = instantiate_resource(uri, type)
-			end
-		end
-
-		# if we didn't find any type to instantiate it to, we cannot converted this basic
-		# resource into a identified resource
-		if resource.nil?
-			# we cannot convert into an identified resource, and we return the basic resource
-			return resource[uri]
-		else
-			resources[uri] = resource
-		end
 	end
 	
 	# 
 	# * _id_  
 	# * _attributes_  
 	# * _returns_ AnonymousResource  
-	def create_anonymous_resource(id, attributes = nil)
+	def create_anonymous_resource(id)
 			
 	end
 		
-	# 
-	# * _value_  
-	# * _type_  
-	# * _returns_ Literal  
+  # Create a new Literal
+  #
+  # Arguments:
+  # * +value+: Literal value
+  # * +type+: Literal value type (xsd:integer, etc.)
+  #
+  # Return:
+  # * [<tt>Literal</tt>] A Literal node.
 	def self.create_literal(value, type)
 		return Literal.new(value, type)
 	end
@@ -244,32 +234,41 @@ class NodeFactory
   #
   # Arguments:
   # * +uri+ [<tt>String</tt>]: Uri of the resource to instantiate
-  # * +type+ [<tt>BasicIdentifiedResource</tt>]: Type of the resource
-	def self.instantiate_resource(uri, type, attributes = nil)
+  # * +class_name+ [<tt>String</tt>]: Class of the resource to isntantiate
+	def self.instantiate_resource(uri, class_name)
 		# Arguments verification
 		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Uri of the resource to instantiate is nil.") if uri.nil?
-		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Type of the resource to instantiate is nil.") if type.nil?
-		unless type.kind_of?(BasicIdentifiedResource)
-			raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Type of the resource to instantiate is invalid.")
-		end
+		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Class name of the resource is nil.") if class_name.nil?
+		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Invalid Class name.") if class_name.empty?
+
 		
-		$logger.debug "initialising #{uri} to type #{type}"
+		$logger.debug "initialising #{uri} to type #{class_name}"
+		
+		(eval class_name).predicates unless class_name == 'IdentifiedResource'
+		return (eval class_name).new(uri)
+	end
+
+  # Determine the Class of the resource to instantiate.
+  #
+  # Arguments:
+  # * +type+ [<tt>IdentifiedResource</tt>]: Type of the resource
+  #
+  # Return:
+  # * [<tt>String</tt>] Class name of the resource.
+	def self.determine_class(type)
+		# Arguments verification
+		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, type is nil.") if type.nil?
 
 		class_name = type.local_part
 
 		# If it is a known class but not a Resource class, we instantiate it into the
 		# correct class.
-		# If it is a Resource class, we instantiate it into a IdentifiedResource.
-		# Otherwise, we instantiate it into a BasicIdentifiedResource.
+		# Otherwise, we instantiate it into a IdentifiedResource.
 		if Module.constants.include?(class_name) and
 			 class_name != 'Class' and class_name != 'Resource'
-				# loading the predicates from the schema for this class
-				(eval class_name).predicates
-				return (eval class_name).new(uri, attributes)
-		elsif class_name == 'Resource'
-			return IdentifiedResource.new(uri, attributes)
+			return class_name
 		else
-			return BasicIdentifiedResource.new(uri)
+			return IdentifiedResource.to_s
 		end
 	end
 
