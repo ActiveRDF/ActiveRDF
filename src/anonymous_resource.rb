@@ -1,9 +1,7 @@
 # Class AnonymousResource
 # 
 class AnonymousResource < Resource
-include AttributeContainer
-include InstanciatedResourceMethod
-include DynamicQueryMethod
+
 
 # Public Items
 
