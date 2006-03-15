@@ -74,10 +74,10 @@ module DynamicQueryMethod
 		
 		conditions = Hash.new
 		attribute_names.each_index { |index|
-			if args[index].kind_of?(IdentifiedResource)
+			if args[index].kind_of?(IdentifiedResource) or args[index].kind_of?(Array)
 				conditions[attribute_names[index].to_sym] = args[index]
 			else
-				conditions[attribute_names[index].to_sym] = NodeFactory.create_literal(args[index], 'type not implemented')
+				conditions[attribute_names[index].to_sym] = Literal.create(args[index])
 			end
 		}
 		return self.find(conditions, { :keyword_search => keyword_search })				
