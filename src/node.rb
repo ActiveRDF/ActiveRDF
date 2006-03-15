@@ -21,8 +21,14 @@
 # * To-do 1
 #
 
-require 'activerdf_exceptions'
+require 'misc/abstract_class'
 
 module Node
+
+	# Abstract method to be implemented in subclasses.
+	# Create method call the create method of the NodeFactory related to the type
+	# of node.
+	abstract :create
+	
 end
 
