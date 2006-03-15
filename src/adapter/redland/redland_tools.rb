@@ -82,7 +82,7 @@ class RedlandAdapter
 		if value.literal?
 			return NodeFactory.create_literal(value.to_s, 'type not implemented in Redland Adapter.')
 		elsif value.resource?
-			return NodeFactory.create_basic_identified_resource(value.uri.to_s)
+			return NodeFactory.create_identified_resource(value.uri.to_s)
 		elsif value.blank?
 			return NodeFactory.create_anonymous_resource(value.id)
 		else
@@ -105,7 +105,7 @@ class RedlandAdapter
 		when Redland::Literal
 			return NodeFactory.create_literal(node.to_s, 'type not implemented in Redland Adapter.')
 		when Redland::Uri, Redland::Resource, Redland::Node
-			return NodeFactory.create_basic_identified_resource(node.uri.to_s)
+			return NodeFactory.create_identified_resource(node.uri.to_s)
 		when Redland::BNode
 			return NodeFactory.create_anonymous_resource(node.id)
 		else
@@ -126,7 +126,7 @@ class RedlandAdapter
     	return nil
   	when Literal
     	return Redland::Literal.new(node.value)
-  	when BasicIdentifiedResource
+  	when IdentifiedResource
     	return Redland::Uri.new(node.uri)
     when AnonymousResource
     	return Redland::BNode.new(node.id)
