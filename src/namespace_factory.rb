@@ -58,7 +58,7 @@ class NamespaceFactory
   # * +prefix+ [<tt>Symbol</tt>]: Prefix of the namespace
   #
   # Return:
-  # * [<tt>BasicIdentifiedResource</tt>] Basic Resource wrapping the namespace
+  # * [<tt>IdentifiedResource</tt>] Resource wrapping the namespace
 	def self.get(prefix)
 		if !prefix.is_a?(Symbol)
 			raise(NamespaceFactoryError, "In #{__FILE__}:#{__LINE__}, prefix is not a Symbol, received #{prefix.class}.")
@@ -68,7 +68,9 @@ class NamespaceFactory
 			raise(NamespaceFactoryError, "In #{__FILE__}:#{__LINE__}, unknown namespace.")
 		end
 
-		return NodeFactory.create_basic_identified_resource(namespaces[prefix])
+		$logger.debug "In NamespaceFactory.get : prefix = #{prefix}, namespace = #{namespaces[prefix]}"
+		
+		return NodeFactory.create_basic_resource(namespaces[prefix])
 	end
 	
 	def self.load_namespaces
