@@ -32,38 +32,23 @@ module InstanciatedResourceMethod
 	def save()
 		NodeFactory.connection.add(self, NamespaceFactory.get(:rdf_type), class_URI)
 		
-		# save all property values. we use self.predicates hash to know the original 
-		# URIs of all predicates (we lost those when converting to attributes)
-		self.class.predicates.each do |attr_localname, attr_fullname|
-			object = @attributes[attr_localname]
-			
-			unless object.nil?
-				# to save the triple we need the full URI of the predicate
-				predicate = attr_fullname
-				
-				# if an attribute is an array, we save all constituents sequentially, 
-				# e.g. person.publications = ['article1', 'article2']
-				
-				# First, we remove all triples related to (subject, predicate)
-				NodeFactory.connection.remove(self, predicate, nil)
-				
-				# then save the new value
-				if object.is_a? Array
-					object.each do |realvalue|
-						NodeFactory.connection.add(self, predicate, realvalue)
-					end
-				else
-					NodeFactory.connection.add(self, predicate, object)
-				end
-			end
-		end		
+		save_attributes()
 	end
 	
 	# Delete all triples with self as subject.
 	# With Redland, return the number of triples removed.
+	# Delete all instance references in the predicates hash of AttributeContainer.
+	# Delete the reference of the resource in the resources hash of the NodeFactory.
 	def delete()
 		# Delete all triples related to the subject (self)
 		NodeFactory.connection.remove(self, nil, nil)
+		# Delete all instance references in the predicates hash of AttributeContainer
+		self.class.remove_predicates(uri)
+		# Delete the attributes hash in AttributeContainer
+		@_attributes.clear
+		@_attributes = nil
+		# Delete the reference in the NodeFactory
+		NodeFactory.resources.delete(uri)
 	end
 
 #----------------------------------------------#
@@ -75,20 +60,26 @@ module InstanciatedResourceMethod
 	# Provides instance methods for all attributes e.g. person.age 
 	def method_missing(method_id, *args)
 		method_name = method_id.to_s
+		
+		# If _attributes is nil, we need to load it from the DB
+		if _attributes.nil?
+			initialize_attributes
+		end
 
+		# We try to find the method name in the attributes hash
 		if !_attributes.nil? and _attributes.include?(method_name)
 			attribute = read_attribute(method_name)
 			
-			# If attribute is already an resource, we return the instance,
-			# if it is a literal, we return the value of the literal
-			if attribute.kind_of?(IdentifiedResource)
+			# If attribute is already an resource (or an array of resource), we 
+			# return the instance, if it is a literal, we return the value of the literal
+			if attribute.nil? or attribute.kind_of?(Resource) or attribute.kind_of?(Array)
 				return attribute
 			elsif attribute.kind_of?(Literal)
 				return attribute.value
 			else
 				raise(ResourceAttributeError, "In #{__FILE__}:#{__LINE__}, attribute have invalid type : #{attribute.class}.")
 			end
-			
+		# Or we try to match the method name with one of the method (write or query)
 		elsif md = /(=|\?)$/.match(method_name)
 			attribute_name = md.pre_match
 			method_type = md.to_s
@@ -98,6 +89,7 @@ module InstanciatedResourceMethod
 			when '?'
 				query_attribute(attribute_name)
 			end
+		# Otherwise, this attribute doesn't exist
 		else
 			super
 		end			
