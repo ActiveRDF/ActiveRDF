@@ -68,10 +68,17 @@ private
   		
 			subject = convert_subject(s)
 			predicate = convert_predicate(p)
-			object = convert_object(o)
-  		
-  		where_template << "\t #{subject} #{predicate} #{object} . \n" if (i != nb_conditions)
-  		where_template << "\t #{subject} #{predicate} #{object}" if (i == nb_conditions)
+			if o.kind_of?(Array)
+				o.each { |resource| 
+					object = convert_object(resource)
+  				where_template << "\t #{subject} #{predicate} #{object} . \n" if (i != nb_conditions)
+  				where_template << "\t #{subject} #{predicate} #{object}" if (i == nb_conditions)
+				}
+			else
+				object = convert_object(o)
+  			where_template << "\t #{subject} #{predicate} #{object} . \n" if (i != nb_conditions)
+  			where_template << "\t #{subject} #{predicate} #{object}" if (i == nb_conditions)
+			end
   	end
   	return where_template
   end

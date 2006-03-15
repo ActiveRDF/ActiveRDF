@@ -77,21 +77,27 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
   # *Return* :
   # * _String_ Where clause of the Sparql query
   def self.where(conditions, keyword_match)
-  	# Init where template
-  	where_template = String.new
-  	# Init counter
+		# Init where template
+		where_template = String.new
+		# Init counter
   	
-  	conditions.each do |s, p, o|
+		conditions.each do |s, p, o|
 
 			subject = convert_subject(s)
 			predicate = convert_predicate(p)
-			object = convert_object(o)
-			  		
-  		where_template << "\t #{subject} #{predicate} #{add_keyword(o) if keyword_match} #{object} . \n"
-  	end
+			if o.kind_of?(Array)
+				o.each { |resource| 
+					object = convert_object(resource)
+					where_template << "\t #{subject} #{predicate} #{add_keyword(o) if keyword_match} #{object} . \n"
+				}
+			else
+				object = convert_object(o)
+				where_template << "\t #{subject} #{predicate} #{add_keyword(o) if keyword_match} #{object} . \n"
+			end
+		end
 		# remove last \n
-  	return where_template.chomp
-  end
+		return where_template.chomp
+	end
 
 
 	def self.add_keyword obj
