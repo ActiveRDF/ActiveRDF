@@ -62,7 +62,11 @@ class Resource; implements Node
 		end
 	
 		# Build the query
-		qe = QueryEngine.new(self)
+		if self != Resource
+			qe = QueryEngine.new(self)
+		else
+			qe = QueryEngine.new
+		end
 		qe.add_binding_variables(:o)
 		qe.add_condition(subject, predicate, :o)
 		 
@@ -84,8 +88,16 @@ class Resource; implements Node
 		# Generate the query string
 		# We give to QueryEngine self to enable Symbol as predicate name 
 		# (e.g. :name -> foaf:name and no the binding variable name)
-		qe = QueryEngine.new(self)
+		if self != Resource
+			qe = QueryEngine.new(self)
+		else
+			qe = QueryEngine.new
+		end
 		qe.add_binding_variables(:s)
+		
+		if self != IdentifiedResource and self.ancestors.include?(IdentifiedResource)
+			qe.add_condition(:s, NamespaceFactory.get(:rdf_type), class_URI)
+		end
 		
 		if conditions.empty?
 			qe.add_condition(:s, :p, :o)
@@ -93,10 +105,6 @@ class Resource; implements Node
 			conditions.each do |pred, obj|
 				qe.add_condition(:s, pred, obj)
 			end
-		end
-		
-		if self != IdentifiedResource and self.ancestors.include?(IdentifiedResource)
-			qe.add_condition(:s, NamespaceFactory.get(:rdf_type), class_URI)
 		end
 		
 		qe.activate_keyword_search if options[:keyword_search]
@@ -108,7 +116,11 @@ class Resource; implements Node
 	
 	def self.exists?(resource)
 		# Build the query
-		qe = QueryEngine.new(self)
+		if self != Resource
+			qe = QueryEngine.new(self)
+		else
+			qe = QueryEngine.new
+		end
 		qe.add_binding_variables(:p, :o)
 		
 		if self != IdentifiedResource and self.ancestors.include?(IdentifiedResource)
