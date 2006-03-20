@@ -1,0 +1,11 @@
+
+ - If the schema is given in the data base, we can use some triples like :
+		* <http://m3pe.org/activerdf/test/age> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2000/01/rdf-schema#Literal> .
+	 to restrict and verify in ActiveRDF the consistency of the data (the age attribute cannot be intialised 
+	 with a Resource, only with Literal).
+	 
+ - If a predicate have a multiple cardinality, I don't know if we manage this well with Literal attributes.
+   Try to see this point, and if it respects the two type of attribute accessors.
+   
+ - The exists? method take at the moment only a resource as parameter. See if it is not more practical
+   to take an URI string instead of a resource.

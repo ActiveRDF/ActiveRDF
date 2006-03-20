@@ -67,7 +67,7 @@ class NodeFactory
 			$logger.info 'loading YARS adapter'
 			# TODO: semperwiki web dies after coming here
 			require 'adapter/yars/yars_adapter'
-			@@_connection = YarsAdapter.new params
+			@@_connection = YarsAdapter.new(params)
 		when :redland
 			$logger.info 'loading Redland adapter'
 			require 'adapter/redland/redland_adapter'
