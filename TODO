@@ -9,3 +9,10 @@
    
  - The exists? method take at the moment only a resource as parameter. See if it is not more practical
    to take an URI string instead of a resource.
+   
+ - If we implement the 'add_predicate' method, maybe we need to implement the remove_predicate method.
+   This last method should delete all the values related to this predicate.
+   
+ - For the find method, thinks to allow String as restriction value, and not only
+   Literal, because for the keyword search, it's a little ugly to create a literal
+   for this.
