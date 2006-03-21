@@ -161,7 +161,8 @@ class YarsAdapter
 		elsif scanner.match?(bnode_pattern)
 			scanner.scan(bnode_pattern)
 			raise(NTriplesParsingYarsError, "Blank Node not implemented.")
-			#return NodeFactory.create_anonymous_resource(scanner[1])
+			# check if id in local hash, otherwise create new blank node
+			#return AnonymousResource.create
 		else
 			raise(NTriplesParsingYarsError, "Invalid subject: #{scanner.inspect}.")
 		end  	

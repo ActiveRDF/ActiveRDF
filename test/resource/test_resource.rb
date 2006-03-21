@@ -24,6 +24,7 @@
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
+require 'test/adapter/yars/setup_yars'
 
 class Resource
 	def self.test_return_distinct_results(results)
@@ -86,10 +87,11 @@ class TestResource < Test::Unit::TestCase
 	end
 	
 	def test_F_find_predicates
-		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_query' }
+		setup_yars 'test_query'	
+		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_query' }
 		NodeFactory.connection(params)
 		
-		class_uri = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfPerson')
+		class_uri = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/Person')
 		
 		predicates = Resource.test_find_predicates(class_uri)
 		assert_not_nil(predicates)
@@ -97,14 +99,16 @@ class TestResource < Test::Unit::TestCase
 		assert_equal(3, predicates.size)
 		predicates.each { |attribute, uri|
 			case attribute
-			when 'rdfage'
-				assert_equal('http://protege.stanford.edu/rdfage', uri)
-			when 'rdfknows'
-				assert_equal('http://protege.stanford.edu/rdfknows', uri)
-			when 'rdfname'
-				assert_equal('http://protege.stanford.edu/rdfname', uri)
+			when 'age'
+				assert_equal('http://m3pe.org/activerdf/test/age', uri)
+			when 'knows'
+				assert_equal('http://m3pe.org/activerdf/test/knows', uri)
+			when 'name'
+				assert_equal('http://m3pe.org/activerdf/test/name', uri)
 			end
 		}
+		
+		delete_yars 'test_query'
 	end
 	
 	def test_G_try_to_instantiate_resource

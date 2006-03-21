@@ -28,7 +28,7 @@ require 'adapter/yars/yars_adapter'
 class TestYarsAdapter < Test::Unit::TestCase
 
 	def test_1_initialize
-		adapter = YarsAdapter.new({ :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test' })
+		adapter = YarsAdapter.new({ :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test' })
 		assert_not_nil(adapter)
 		assert_kind_of(AbstractAdapter, adapter)
 		assert_instance_of(YarsAdapter, adapter)

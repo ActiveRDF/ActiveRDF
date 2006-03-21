@@ -25,15 +25,20 @@ require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
 require 'test/node_factory/person'
+require 'test/adapter/yars/setup_yars'
 
 class TestNodeFactoryIdentifiedResource < Test::Unit::TestCase
 
-	@@adapter = nil
 
 	def setup
-		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_node_factory' }
-		@@adapter = NodeFactory.connection(params) if @@adapter.nil?
-	end
+		setup_yars 'test_node_factory'
+		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_node_factory' }
+		NodeFactory.connection(params)
+	end	
+	
+	def teardown
+		delete_yars 'test_node_factory'
+	end	
 
 	def test_A_create_identified_resource_with_know_type_and_no_attributes
 		person = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')
@@ -64,5 +69,4 @@ class TestNodeFactoryIdentifiedResource < Test::Unit::TestCase
 		person = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')
 		assert_equal(object_id, person.object_id, "Not the same instance of Person.")
 	end
-
 end

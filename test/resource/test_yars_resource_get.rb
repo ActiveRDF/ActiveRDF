@@ -28,7 +28,7 @@ require 'node_factory'
 class TestYarsResourceGet < Test::Unit::TestCase
 
 	def setup
-		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_resource_get' }
+		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource_get' }
 		@connection = NodeFactory.connection(params)
 	end
 	

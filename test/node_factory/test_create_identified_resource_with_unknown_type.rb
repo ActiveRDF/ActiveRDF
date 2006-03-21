@@ -30,7 +30,7 @@ class TestNodeFactoryUnknownIdentifiedResource < Test::Unit::TestCase
 	@@adapter = nil
 
 	def setup
-		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_create_identified_resource' }
+		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_create_identified_resource' }
 		@@adapter = NodeFactory.connection(params) if @@adapter.nil?
 	end
 

@@ -27,7 +27,7 @@ require 'adapter/yars/yars_adapter'
 
 class TestYarsAdapterAdd < Test::Unit::TestCase
 
-	@@params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_add' }
+	@@params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_add' }
 
 	def test_1_add_triples_error_object_nil
 		adapter = YarsAdapter.new(@@params)

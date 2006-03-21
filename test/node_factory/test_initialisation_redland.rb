@@ -25,7 +25,7 @@ require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
 
-class TestNodeFactoryInitialisation < Test::Unit::TestCase
+class TestNodeFactoryInitialisationRedland < Test::Unit::TestCase
 
 	def test_1_connection_error
 		assert_raise(ConnectionError) {
@@ -33,19 +33,13 @@ class TestNodeFactoryInitialisation < Test::Unit::TestCase
 		}
 	end
 	
-	def test_2_connection_yars
-		params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => '/citeseer' }
-		connection = NodeFactory.connection(params)
-		assert_not_nil(connection)
-	end
-	
-	def test_3_connection_redland
+	def test_2_connection_redland
 		params = { :adapter => :redland }
 		connection = NodeFactory.connection(params)
 		assert_not_nil(connection)
 	end
 	
-	def test_4_connection_same_instance
+	def test_3_connection_same_instance
 		params = { :adapter => :redland }
 		connection = NodeFactory.connection(params)
 		object_id = connection.object_id

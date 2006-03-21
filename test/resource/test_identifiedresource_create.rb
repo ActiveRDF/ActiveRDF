@@ -31,17 +31,28 @@ class TestIdentifiedResourceCreate < Test::Unit::TestCase
 	@@loaded = false
 
 	def setup
-		if !@@loaded
-			# Load the data file
-			dirname = File.dirname(__FILE__)
-			system("cd #{dirname}; cp reset_test_identifiedresource_create.sh /tmp")
-			system("cd #{dirname}; cp test_set.rdf /tmp")
-			system("cd /tmp; ./reset_test_identifiedresource_create.sh")
+		# todo: check which database we are using, and make correct connection to 
+		# this database
 		
-			params = { :adapter => :redland }
-			NodeFactory.connection(params)
-			@@loaded = true
-		end
+#		case DB
+#		when :yars
+#			params = ...
+#		when :redland
+#			params = ...
+#		else
+#			raise Error
+#		end
+#		if !@@loaded
+#			# Load the data file
+#			dirname = File.dirname(__FILE__)
+#			system("cd #{dirname}; cp reset_test_identifiedresource_create.sh /tmp")
+#			system("cd #{dirname}; cp test_set.rdf /tmp")
+#			system("cd /tmp; ./reset_test_identifiedresource_create.sh")
+#		
+#			params = { :adapter => :redland }
+#			NodeFactory.connection(params)
+#			@@loaded = true
+#		end
 	end
 
 	def test_A_create_identified_resource

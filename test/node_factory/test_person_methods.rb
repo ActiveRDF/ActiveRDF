@@ -25,25 +25,18 @@ require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
 require 'test/node_factory/person'
-
+require 'test/adapter/yars/setup_yars'
 class TestNodeFactoryPerson < Test::Unit::TestCase
 
-	@@adapter = nil
-	
 	def setup
-		if @@adapter.nil?
-			dirname = File.dirname(__FILE__)
-			system("cd #{dirname}/../adapter/yars; cp yars-api-current.jar /tmp")
-			system("cd #{dirname}; cp reset_test_yars_node_factory.sh /tmp")
-			system("cd #{dirname}; cp put_test_yars_node_factory.sh /tmp")
-			system("cd #{dirname}; cp test_set.nt /tmp")
-			system("cd /tmp; ./reset_test_yars_node_factory.sh")
-			system("cd /tmp; ./put_test_yars_node_factory.sh")
-			
-			params = { :adapter => :yars, :host => 'opteron', :port => 8080, :context => 'test_node_factory' }
-			@@adapter = NodeFactory.connection(params)
-		end
-	end
+		setup_yars 'test_node_factory'
+		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_node_factory' }
+		NodeFactory.connection(params)
+	end	
+	
+	def teardown
+		delete_yars 'test_node_factory'
+	end	
 
 	def test_A_verify_literal_attributes
 		person = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_7')
@@ -181,6 +174,5 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 				end
 			}
 		end
-	end
-
+	end	
 end

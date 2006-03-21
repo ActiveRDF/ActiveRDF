@@ -27,6 +27,13 @@ require 'node_factory'
 
 class TestNodeFactoryBasicResource < Test::Unit::TestCase
 
+	@@adapter = nil
+
+	def setup
+		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_node_factory' }
+		@@adapter = NodeFactory.connection(params) if @@adapter.nil?
+	end
+
 	def test_A_create_basic_resource
 		basic_resource = NodeFactory.create_identified_resource('http://m3pe.org/basicresource')
 		assert_not_nil(basic_resource)

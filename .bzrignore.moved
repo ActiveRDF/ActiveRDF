@@ -1,0 +1,12 @@
+activerdf.kpf
+tags
+*.db
+test-store-*
+test-store-po2s.db
+.project
+active_rdf/doc/*
+*.html
+tags
+../hyperde.tar.gz
+hyperde.tar.gz
+active_rdf/test
