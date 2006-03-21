@@ -33,13 +33,21 @@ class Resource; implements Node
 
 	# if no subclass is specified, this is an rdfs:resource
 	@@_class_uri = Hash.new
+	@@_inverse_class_uri = Hash.new
 	@@_class_uri[self] = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#Resource'
+	@@_inverse_class_uri['http://www.w3.org/1999/02/22-rdf-syntax-ns#Resource'] = self
 
 #----------------------------------------------#
 #               PUBLIC METHODS                 #
 #----------------------------------------------#
 
 	public
+
+	# Sets the URI of the class
+	def self.set_class_uri uri
+		@@_class_uri[self] = uri
+		@@_inverse_class_uri[uri] = self
+	end
 	
 	# Return the namespace related to the class (only for Class level)
 	def self.class_URI
