@@ -1,18 +1,23 @@
 
- - If the schema is given in the data base, we can use some triples like :
-		* <http://m3pe.org/activerdf/test/age> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2000/01/rdf-schema#Literal> .
-	 to restrict and verify in ActiveRDF the consistency of the data (the age attribute cannot be intialised 
-	 with a Resource, only with Literal).
-	 
- - If a predicate have a multiple cardinality, I don't know if we manage this well with Literal attributes.
-   Try to see this point, and if it respects the two type of attribute accessors.
+ - predicates
+	 - If a predicate has a multiple cardinality, am not sure if correctly managed with Literal attributes.
+		 Needs to verify whether the attribute accessors (person.age and person[:age]) respect this.
+		 
+	 - If we implement the 'add_predicate' method, maybe we need to implement the remove_predicate method.
+		 This last method should delete all the values related to this predicate.
    
- - The exists? method take at the moment only a resource as parameter. See if it is not more practical
-   to take an URI string instead of a resource.
-   
- - If we implement the 'add_predicate' method, maybe we need to implement the remove_predicate method.
-   This last method should delete all the values related to this predicate.
-   
- - For the find method, thinks to allow String as restriction value, and not only
-   Literal, because for the keyword search, it's a little ugly to create a literal
-   for this.
+ - literal and resource wrapping:
+	- The exists? method take at the moment only a resource as parameter. See if 
+	  it is not more practical to take an URI string instead of a resource.
+	- For the find method, thinks to allow String as restriction value, and not 
+	  only Literal, because for the keyword search, it's a little ugly to create a 
+literal for this.
+
+ - class URI:
+	- allow classes where the localname of classURI != className, eg. class Person 
+	  with classURI http://test#test. To do this, need an inverted_class_uri hash 
+from classURI -> class.
+  - change @@_class_uri[self] in IdentifiedResource to method :classURI, usage: 
+ 		class Person
+ 			:classURI 'http://foaf#Person'
+		end
