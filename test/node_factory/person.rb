@@ -25,6 +25,6 @@ require 'active_rdf'
 require 'node_factory'
 
 class Person < IdentifiedResource
-	 @@_class_uri[self] = 'http://m3pe.org/activerdf/test/Person'
+	 classURI 'http://m3pe.org/activerdf/test/Person'
 end
 
