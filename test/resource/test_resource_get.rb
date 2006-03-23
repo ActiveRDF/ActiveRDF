@@ -1,6 +1,6 @@
-# = test_yars_resource_get.rb
+# = test_resource_get.rb
 #
-# Unit Test of Resource get method with yars adapter
+# Unit Test of Resource get method
 #
 # == Project
 #
@@ -16,20 +16,37 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
+require 'test/adapter/yars/manage_yars_db'
+require 'test/adapter/redland/manage_redland_db'
 
-class TestYarsResourceGet < Test::Unit::TestCase
+class TestResourceGet < Test::Unit::TestCase
 
 	def setup
-		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource_get' }
-		@connection = NodeFactory.connection(params)
+		case DB
+		when :yars
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource_get' }
+			@connection = NodeFactory.connection(params)
+		when :redland
+			params = { :adapter => :redland }
+			@connection = NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end
+	end
+	
+	def teardown
+		case DB
+		when :yars
+			delete_yars('test_resource_get')
+		when :redland
+			delete_redland
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
 	end
 	
 	def test_A_empty_db

@@ -16,9 +16,6 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
 
 require 'net/http'
 require 'uri'
@@ -53,12 +50,12 @@ class YarsAdapter; implements AbstractAdapter
 		$logger.info("opened YARS connection on http://#{yars.address}:#{yars.port}")
 	end
 
-  # Add the triple s,p,o in the database.
-  #
-  # Arguments:
-  # * +s+ [<tt>Resource</tt>]: Subject of triples
-  # * +p+ [<tt>Resource</tt>]: Predicate of triples
-  # * +o+ [<tt>Node</tt>]: Object of triples. Can be a _Literal_ or a _Resource_
+	# Add the triple s,p,o in the database.
+	#
+	# Arguments:
+	# * +s+ [<tt>Resource</tt>]: Subject of triples
+	# * +p+ [<tt>Resource</tt>]: Predicate of triples
+	# * +o+ [<tt>Node</tt>]: Object of triples. Can be a _Literal_ or a _Resource_
 	def add(s, p, o)
 		# Verification of nil object
 		if s.nil? or p.nil? or o.nil?
@@ -88,7 +85,10 @@ class YarsAdapter; implements AbstractAdapter
 
 		header = { 'Accept' => 'application/rdf+n3' }
 		response = yars.get(context + '?q=' + URI.escape(qs), header)
-		return nil if response.is_a?(Net::HTTPNoContent)
+		
+		# If no content, we return an empty array
+		return Array.new if response.is_a?(Net::HTTPNoContent)
+		
 		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, bad request: " + qs) if response.is_a?(Net::HTTPBadRequest)
 		
 		$logger.info 'query response from yars: ' + URI.decode(response.message)

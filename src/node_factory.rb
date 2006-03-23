@@ -19,18 +19,13 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * TODO: in new_resource, we override the resource or we jsut return the reference
-# if a resource with the same uri already exists in the predicates hash.
-#
 
 require 'activerdf_exceptions'
 
-require 'literal'
-require 'resource'
-require 'identified_resource'
-require 'anonymous_resource'
+require 'core/literal'
+require 'core/resource'
+require 'core/identified_resource'
+require 'core/anonymous_resource'
 
 class NodeFactory
 
@@ -44,16 +39,16 @@ class NodeFactory
 #               PUBLIC METHODS                 #
 #----------------------------------------------#
 
-  public
+	public
 
-  # Return the current instance of the connection. If no connection exists and 
-  # params given, instantiate a new connection.
-  #
-  # Arguments:
-  # * +params+ [<tt>Hash</tt>]: Connection parameter. Required only the first time, to initialize the connection.
-  #
-  # Return:
-  # * [<tt>AbstractAdapter</tt>] The current connection with the RDF DataBase.
+	# Return the current instance of the connection. If no connection exists and 
+	# params given, instantiate a new connection.
+	#
+	# Arguments:
+	# * +params+ [<tt>Hash</tt>]: Connection parameter. Required only the first time, to initialize the connection.
+	#
+	# Return:
+	# * [<tt>AbstractAdapter</tt>] The current connection with the RDF DataBase.
 	def self.connection(params = nil)
 	
 		if @@_connection.nil? and params.nil?
@@ -71,7 +66,7 @@ class NodeFactory
 		when :redland
 			$logger.info 'loading Redland adapter'
 			require 'adapter/redland/redland_adapter'
-			@@_connection = RedlandAdapter.new
+			@@_connection = RedlandAdapter.new(params)
 		else
 			raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, invalid adapter.")
 		end
@@ -79,33 +74,33 @@ class NodeFactory
 		
 	end
 	
-  # You don't have to use this method. This method is used internaly in ActiveRDF.
-  #
-  # Arguments:
-  # * +uri+ [<tt>String</tt>]: The uri of the basic resource to instantiate
-  #
-  # Return:
-  # * [<tt>IdentifiedResource</tt>] A Basic IdentifiedResource.
-  def self.create_basic_resource(uri)
+	# You don't have to use this method. This method is used internaly in ActiveRDF.
+	#
+	# Arguments:
+	# * +uri+ [<tt>String</tt>]: The uri of the basic resource to instantiate
+	#
+	# Return:
+	# * [<tt>IdentifiedResource</tt>] A Basic IdentifiedResource.
+	def self.create_basic_resource(uri)
 		if resources.key?(uri)
 			return resources[uri]
 		else
 			resources[uri] = IdentifiedResource.new(uri)
 			return resources[uri]
 		end
-  end
+	end
 		
-  # Create a new identified resource.
-  # If the resource exists in the database, it tries to instantiate it with the good
-  # type. If no type is found, instantiate it as a IdentifiedResource.
-  # Return just a reference to the resource if the resource is included in the resources
-  # Hash.
-  #
-  # Arguments:
-  # * +uri+ [<tt>String</tt>]:The uri of the resource to instantiate.
-  #
-  # Return:
-  # * [<tt>IdentifiedResource</tt>] The resource instantiated
+	# Create a new identified resource.
+	# If the resource exists in the database, it tries to instantiate it with the good
+	# type. If no type is found, instantiate it as a IdentifiedResource.
+	# Return just a reference to the resource if the resource is included in the resources
+	# Hash.
+	#
+	# Arguments:
+	# * +uri+ [<tt>String</tt>]:The uri of the resource to instantiate.
+	#
+	# Return:
+	# * [<tt>IdentifiedResource</tt>] The resource instantiated
 	def self.create_identified_resource(uri, klass = nil)
 		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Resource hash not initialised.") if resources.nil?
 		raise(NodeFactoryError, 'In #{__FILE__}:#{__LINE__}, Resource URI is invalid. Cannot instanciated the object.') if uri.nil?
@@ -114,19 +109,11 @@ class NodeFactory
 			resource = resources[uri]
 			return resource
 		else
-
-			$logger.debug "creating new resource #{uri}"
-			
 			# try to instantiate object as class defined by the localname of its rdf:type, 
 			# e.g. a resource with rdf:type foaf:Person will be instantiated using Person.create
 			type = Resource.get(NodeFactory.create_basic_resource(uri), NamespaceFactory.get(:rdf_type))
 			
-			
-			
 			if type.nil?
-
-				$logger.debug "initialising #{uri}; didn't find rdf:type, falling back to type Resource"
-
 				# if type unknown and klass given, create klass resource
 				if not klass.nil?
 					resource = instantiate_resource(uri, klass.to_s)
@@ -135,9 +122,6 @@ class NodeFactory
 					resource = IdentifiedResource.new(uri)
 				end
 			else
-
-				$logger.debug "found #{uri} has rdf:type #{type}"
-
 				# create a resource in correct subclass
 				# if multiple types known, instantiate as first specific type known
 				if type.is_a?(Array)
@@ -183,14 +167,14 @@ class NodeFactory
 			
 	end
 		
-  # Create a new Literal
-  #
-  # Arguments:
-  # * +value+: Literal value
-  # * +type+: Literal value type (xsd:integer, etc.)
-  #
-  # Return:
-  # * [<tt>Literal</tt>] A Literal node.
+	# Create a new Literal
+	#
+	# Arguments:
+	# * +value+: Literal value
+	# * +type+: Literal value type (xsd:integer, etc.)
+	#
+	# Return:
+	# * [<tt>Literal</tt>] A Literal node.
 	def self.create_literal(value, type)
 		return Literal.new(value, type)
 	end
@@ -218,43 +202,45 @@ class NodeFactory
 	def create_collection()
 			
 	end
+	
+	# Clear the resources hash
+  	def self.clear
+  		resources.clear
+  	end
   
 #----------------------------------------------#
 #               PRIVATE METHODS                #
 #----------------------------------------------#
 
-  private
+	private
 
-  # Return the resources Hash
+	# Return the resources Hash
 	def self.resources
 		return @@_resources
 	end
 
-  # Instantiate a resource with this related class
-  #
-  # Arguments:
-  # * +uri+ [<tt>String</tt>]: Uri of the resource to instantiate
-  # * +class_name+ [<tt>String</tt>]: Class of the resource to isntantiate
+	# Instantiate a resource with this related class
+	#
+	# Arguments:
+	# * +uri+ [<tt>String</tt>]: Uri of the resource to instantiate
+	# * +class_name+ [<tt>String</tt>]: Class of the resource to isntantiate
 	def self.instantiate_resource(uri, class_name)
 		# Arguments verification
 		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Uri of the resource to instantiate is nil.") if uri.nil?
 		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Class name of the resource is nil.") if class_name.nil?
 		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Invalid Class name.") if class_name.empty?
 
-		
-		$logger.debug "initialising #{uri} to type #{class_name}"
-		
 		(eval class_name).predicates unless class_name == 'IdentifiedResource'
 		return (eval class_name).new(uri)
 	end
 
-  # Determine the Class of the resource to instantiate.
-  #
-  # Arguments:
-  # * +type+ [<tt>IdentifiedResource</tt>]: Type of the resource
-  #
-  # Return:
-  # * [<tt>String</tt>] Class name of the resource.
+	# Determine the Class of the resource to instantiate.
+	#
+	# Arguments:
+	# * +type+ [<tt>IdentifiedResource</tt>]: Type of the resource
+	#
+	# Return:
+	# * [<tt>String</tt>] Class name of the resource.
 	def self.determine_class(type)
 		# Arguments verification
 		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, type is nil.") if type.nil?
@@ -265,7 +251,7 @@ class NodeFactory
 		# correct class.
 		# Otherwise, we instantiate it into a IdentifiedResource.
 		if Module.constants.include?(class_name) and
-			 class_name != 'Class' and class_name != 'Resource'
+			class_name != 'Class' and class_name != 'Resource'
 			return class_name
 		else
 			return IdentifiedResource.to_s

@@ -46,23 +46,21 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 class Module
 
-  def abstract(*ids)
-    for id in ids
-      name = id.id2name # 1.4.x specific
-      class_eval %Q{
-        def #{name}(*a)  
-          raise(NotImplementedError, "#{name} not implemented")
-        end
-      }
-    end
-  end
+	# Raise an exception when we call an abstract method not implemented in his sub-classes.
+	def abstract(*ids)
+		for id in ids
+			name = id.id2name # 1.4.x specific
+			class_eval %Q{
+				def #{name}(*a)  
+					raise(NotImplementedError, "#{name} not implemented")
+				end
+			}
+		end
+	end
 
-  alias implements include
+	alias implements include
+
 end

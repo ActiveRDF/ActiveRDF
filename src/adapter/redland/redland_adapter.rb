@@ -16,10 +16,6 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'rdf/redland'
 require 'adapter/abstract_adapter'
@@ -31,19 +27,38 @@ class RedlandAdapter; implements AbstractAdapter
 	attr_reader :model, :store, :query_language
 
 	# Instantiate the connection with the Redland DataBase.
-	def initialize
-		@store = Redland::HashStore.new('bdb', 'test-store', '/tmp' , false) if @store.nil?
+	def initialize(params = {})
+		if params.nil?
+			raise(RedlandError, "In #{__FILE__}:#{__LINE__}, Redland adapter initialisation error. Parameters are nil.")
+		end
+
+		if params[:location] and params[:location] != :memory
+			location_split = File.split(params[:location])
+			@store_path = location_split[0]
+			@store_file = location_split[1]
+			@hash_type = 'bdb'
+		elsif params[:location] == :memory
+			@hash_type = 'memory'
+			@store_path = ''
+			@store_file = '.'
+		else
+			@store_path = '/tmp'
+			@store_file = 'test-store'
+			@hash_type = 'bdb'
+		end		
+
+		@store = Redland::HashStore.new(@hash_type, @store_file, @store_path, false) if @store.nil?
 		@model = Redland::Model.new @store
 		@query_language = 'sparql'
 	end
 
-  # Add the statement to the model. Convert ActiveRDF::Node into
-  # Redland::Literal or Redland::URI with wrap method.
-  #
-  # Arguments:
-  # * +s+ [<tt>Resource</tt>]: Subject of triples
-  # * +p+ [<tt>Resource</tt>]: Predicate of triples
-  # * +o+ [<tt>Node</tt>]: Object of triples. Can be a _Literal_ or a _Resource_
+	# Add the statement to the model. Convert ActiveRDF::Node into
+	# Redland::Literal or Redland::URI with wrap method.
+	#
+	# Arguments:
+	# * +s+ [<tt>Resource</tt>]: Subject of triples
+	# * +p+ [<tt>Resource</tt>]: Predicate of triples
+	# * +o+ [<tt>Node</tt>]: Object of triples. Can be a _Literal_ or a _Resource_
 	def add(s, p, o)
 		# Verification of nil object
 		if s.nil? or p.nil? or o.nil?
@@ -74,9 +89,9 @@ class RedlandAdapter; implements AbstractAdapter
 	# * +s+ [<tt>Resource</tt>]: The subject of the triple to delete
 	# * +p+ [<tt>Resource</tt>]: The predicate of the triple to delete
 	# * +o+ [<tt>Node</tt>]: The object of the triple to delete
-  #
-  # Return:
-  # * [<tt>Integer</tt>] Number of statement removed
+	#
+	# Return:
+	# * [<tt>Integer</tt>] Number of statement removed
 	def remove(s, p, o)
 		# Verification of type
 		if (!s.nil? and !s.kind_of?(Resource)) or
@@ -103,19 +118,19 @@ class RedlandAdapter; implements AbstractAdapter
 		return counter
 	end
 
-  # Synchronise the model to the model implementation.
+	# Synchronise the model to the model implementation.
 	def save
 		# Redland::librdf_model_sync return nil if sync succesfully the model
 		raise(RedlandAdapterError, 'Model save failed.') unless Redland::librdf_model_sync(@model.model).nil?
 	end
 
-  # Query the Redland data storage
-  #
-  # Arguments:
-  # * +qs+ [<tt>String</tt>]: The query string in Sparql langage
-  #
-  # Return:
-  # * [<tt>Hash</tt>] Hash containing the result of the query.
+	# Query the Redland data storage
+	#
+	# Arguments:
+	# * +qs+ [<tt>String</tt>]: The query string in Sparql langage
+	#
+	# Return:
+	# * [<tt>Array</tt>] Array containing the result of the query.
 	def query(qs)
 		raise(SparqlQueryFailed, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
 		# Create the Redland::Query

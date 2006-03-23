@@ -16,15 +16,12 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'test/adapter/yars/setup_yars'
+require 'test/adapter/yars/manage_yars_db'
+require 'test/adapter/redland/manage_redland_db'
 
 class Resource
 	def self.test_return_distinct_results(results)
@@ -60,17 +57,17 @@ class TestResource < Test::Unit::TestCase
 	
 		result = Resource.test_return_distinct_results(['42'])
 		assert_not_nil(result)
-		assert(result.kind_of?(String))
+		assert_kind_of(String, result)
 		assert_equal('42', result)
 		
 		result = Resource.test_return_distinct_results(['42', '9'])
 		assert_not_nil(result)
-		assert(result.kind_of?(Array))
+		assert_kind_of(Array, result)
 		assert_equal(2, result.size)
 		
 		result = Resource.test_return_distinct_results(['42', '42'])
 		assert_not_nil(result)
-		assert(result.kind_of?(String))
+		assert_kind_of(String, result)
 		assert_equal('42', result)
 	end
 	
@@ -87,9 +84,7 @@ class TestResource < Test::Unit::TestCase
 	end
 	
 	def test_F_find_predicates
-		setup_yars 'test_query'	
-		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_query' }
-		NodeFactory.connection(params)
+		initialise_db
 		
 		class_uri = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/Person')
 		
@@ -108,13 +103,65 @@ class TestResource < Test::Unit::TestCase
 			end
 		}
 		
-		delete_yars 'test_query'
+		clean_db
 	end
 	
 	def test_G_try_to_instantiate_resource
 		assert_raise(NoMethodError) {
 			resource = Resource.new
 		}
+	end
+	
+	def test_H_exists_with_resource_as_parameter
+		resource = IdentifiedResource.create('http://m3pe.org/activerdf/test/exist')
+		
+		assert(!Resource.exists?(resource))
+		
+		resource.save
+		
+		assert(Resource.exists?(resource))
+		
+		clean_db
+	end
+	
+	def test_I_exists_with_uri_as_parameter
+		resource = IdentifiedResource.create('http://m3pe.org/activerdf/test/exist2')
+
+		assert(!Resource.exists?('http://m3pe.org/activerdf/test/exist2'))
+		
+		resource.save
+		
+		assert(Resource.exists?('http://m3pe.org/activerdf/test/exist2'))
+		
+		clean_db
+	end
+	
+	private
+	
+	def initialise_db
+		case DB
+		when :yars
+			setup_yars('test_resource')
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource' }
+			NodeFactory.connection(params)
+		when :redland
+			setup_redland
+			params = { :adapter => :redland }
+			NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end
+	end
+	
+	def clean_db
+		case DB
+		when :yars
+			delete_yars('test_resource')
+		when :redland
+			delete_redland
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
 	end
 	
 end

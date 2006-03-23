@@ -1,6 +1,6 @@
-# = test_initialisation.rb
+# = test_initialisation_connection.rb
 #
-# Unit Test of NodeFactory initialisation
+# Unit Test of NodeFactory connection method for Yars and Redland
 #
 # == Project
 #
@@ -25,7 +25,7 @@ require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
 
-class TestNodeFactoryInitialisationRedland < Test::Unit::TestCase
+class TestNodeFactoryInitialisationConnection < Test::Unit::TestCase
 
 	def test_1_connection_error
 		assert_raise(ConnectionError) {
@@ -34,17 +34,30 @@ class TestNodeFactoryInitialisationRedland < Test::Unit::TestCase
 	end
 	
 	def test_2_connection_redland
-		params = { :adapter => :redland }
+		params = get_connection_parameters
 		connection = NodeFactory.connection(params)
 		assert_not_nil(connection)
 	end
 	
 	def test_3_connection_same_instance
-		params = { :adapter => :redland }
+		params = get_connection_parameters
 		connection = NodeFactory.connection(params)
 		object_id = connection.object_id
 		connection = NodeFactory.connection
 		assert_equal(object_id, connection.object_id, "Not the same instance of the connection.")
+	end
+	
+	private
+	
+	def get_connection_parameters
+		case DB
+		when :yars
+			return { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'citeseer' }
+		when :redland
+			return { :adapter => :redland }
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end
 	end
 	
 end

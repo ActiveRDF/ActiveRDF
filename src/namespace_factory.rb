@@ -16,10 +16,6 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'node_factory'
 require 'activerdf_exceptions'
@@ -35,44 +31,43 @@ class NamespaceFactory
 
 	public
 
-  # Add a namespace related to a prefix.
-  #
-  # Arguments:
-  # * +prefix+ [<tt>Symbol</tt>]: Prefix of the namespace
-  # * +uri+ [<tt>String</tt>]: Namespace URI
+	# Add a namespace related to a prefix.
+	#
+	# Arguments:
+	# * +prefix+ [<tt>Symbol</tt>]: Prefix of the namespace
+	# * +uri+ [<tt>String</tt>]: Namespace URI
 	def self.add(prefix, uri)
 		if !prefix.is_a?(Symbol)
 			raise(NamespaceFactoryError, "In #{__FILE__}:#{__LINE__}, prefix is not a Symbol, received #{prefix.class}.")
 		end
-		
+
 		if namespaces.key?(prefix)
 			raise(NamespaceFactoryError, "In #{__FILE__}:#{__LINE__}, namespace already included.")
 		end
-		
+
 		@@_namespaces[prefix] = uri
 	end
 	
-  # Get a namespace
-  #
-  # Arguments:
-  # * +prefix+ [<tt>Symbol</tt>]: Prefix of the namespace
-  #
-  # Return:
-  # * [<tt>IdentifiedResource</tt>] Resource wrapping the namespace
+	# Get a namespace
+	#
+	# Arguments:
+	# * +prefix+ [<tt>Symbol</tt>]: Prefix of the namespace
+	#
+	# Return:
+	# * [<tt>IdentifiedResource</tt>] Resource wrapping the namespace
 	def self.get(prefix)
 		if !prefix.is_a?(Symbol)
 			raise(NamespaceFactoryError, "In #{__FILE__}:#{__LINE__}, prefix is not a Symbol, received #{prefix.class}.")
 		end
-		
+
 		if !namespaces.key?(prefix)
 			raise(NamespaceFactoryError, "In #{__FILE__}:#{__LINE__}, unknown namespace.")
 		end
-
-		$logger.debug "In NamespaceFactory.get : prefix = #{prefix}, namespace = #{namespaces[prefix]}"
 		
 		return NodeFactory.create_basic_resource(namespaces[prefix])
 	end
-	
+
+	# Load the commun uri in the factory.
 	def self.load_namespaces
 		add(:rdf_type, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
 		add(:rdfs_domain, 'http://www.w3.org/2000/01/rdf-schema#domain')
@@ -85,7 +80,8 @@ class NamespaceFactory
 #----------------------------------------------#
 
 	private
-	
+
+	# Accessor to the hash @@_namepaces
 	def self.namespaces
 		return @@_namespaces
 	end

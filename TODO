@@ -21,3 +21,8 @@ from classURI -> class.
  		class Person
  			:classURI 'http://foaf#Person'
 		end
+   
+ - For update attributes with multiple cardinality, when the user give an array of values, 
+   verify if all the object in the array have the same type (Literal or Resource).
+   
+ - Synchronise the hierarchy of exceptions with the norm defined in the ActiveRDF Manual.

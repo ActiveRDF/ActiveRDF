@@ -16,19 +16,21 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-#
 
 require 'test/unit'
 require 'active_rdf'
-require 'adapter/redland/redland_adapter'
+require 'node_factory'
+require 'test/adapter/redland/manage_redland_db'
 
 class TestRedlandAdapterRemove < Test::Unit::TestCase
 
 	def setup
-		# Load the data file
-		system("cd /tmp; rm test-store*")
+		params = { :adapter => :redland }
+		@connection = NodeFactory.connection(params)
+	end
+	
+	def teardown
+		delete_redland
 	end
 	
 	def test_A_remove_triples_error_object_not_node

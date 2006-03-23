@@ -16,29 +16,41 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
 require 'test/node_factory/person'
-require 'test/adapter/yars/setup_yars'
+require 'test/adapter/yars/manage_yars_db'
+require 'test/adapter/redland/manage_redland_db'
 
 class TestNodeFactoryIdentifiedResource < Test::Unit::TestCase
 
-
 	def setup
-		setup_yars 'test_node_factory'
-		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_node_factory' }
-		NodeFactory.connection(params)
-	end	
+		case DB
+		when :yars
+			setup_yars('test_create_person')
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_create_person' }
+			@connection = NodeFactory.connection(params)
+		when :redland
+			setup_redland
+			params = { :adapter => :redland }
+			@connection = NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end
+	end
 	
 	def teardown
-		delete_yars 'test_node_factory'
-	end	
+		case DB
+		when :yars
+			delete_yars('test_create_person')
+		when :redland
+			delete_redland
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
+	end
 
 	def test_A_create_identified_resource_with_know_type_and_no_attributes
 		person = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')

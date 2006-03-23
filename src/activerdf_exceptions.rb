@@ -1,15 +1,21 @@
-# = exceptions.rb
+# = activerdf_exceptions.rb
+#
 # Exceptions happened in ActiveRDF library
-# ----
-# Project	: ActiveRDF
 #
-# See		: http://m3pe.org/activerdf/
+# == Project
 #
-# Author	: Renaud Delbru, Eyal Oren
+# * ActiveRDF
+# <http://m3pe.org/activerdf/>
 #
-# Mail		: first dot last at deri dot org
+# == Authors
+# 
+# * Eyal Oren <first dot last at deri dot org>
+# * Renaud Delbru <first dot last at deri dot org>
 #
-# (c) 2005-2006
+# == Copyright
+#
+# (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
+#
 
 class ActiveRdfError < StandardError
 end

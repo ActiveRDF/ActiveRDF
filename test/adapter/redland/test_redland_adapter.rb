@@ -16,36 +16,62 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
-require 'adapter/redland/redland_adapter'
+require 'node_factory'
+require 'test/adapter/redland/manage_redland_db'
 
 class TestRedlandAdapter < Test::Unit::TestCase
 
-	def test_1_initialize
-		adapter = RedlandAdapter.new
-		assert_not_nil(adapter)
-		assert(adapter.kind_of?(AbstractAdapter))
-		assert(adapter.instance_of?(RedlandAdapter))
+	def test_A_initialize
+		params = { :adapter => :redland }
+		@connection = NodeFactory.connection(params)
+		
+		assert_not_nil(@connection)
+		assert_kind_of(AbstractAdapter, @connection)
+		assert_instance_of(RedlandAdapter, @connection)
+		
+		delete_redland
 	end
 	
-	def test_2_save
-		adapter = RedlandAdapter.new
+	def test_B_initialize_with_location
+		params = { :adapter => :redland, :location => '/tmp/test-store-2' }
+		@connection = NodeFactory.connection(params)
+		
+		assert_not_nil(@connection)
+		assert_kind_of(AbstractAdapter, @connection)
+		assert_instance_of(RedlandAdapter, @connection)
+		
+		assert(File.exists?('/tmp/test-store-2-po2s.db'))
+		
+		delete_redland
+	end
+
+	def test_C_initialize_with_location_in_memory
+		params = { :adapter => :redland, :location => :memory }
+		@connection = NodeFactory.connection(params)
+		
+		assert_not_nil(@connection)
+		assert_kind_of(AbstractAdapter, @connection)
+		assert_instance_of(RedlandAdapter, @connection)
+	end
+	
+	def test_D_save
+		params = { :adapter => :redland }
+		@connection = NodeFactory.connection(params)
 		
 		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
-		adapter.add(subject, predicate, object)
+		@connection.add(subject, predicate, object)
 		
 		assert_nothing_raised(RedlandAdapterError) {
-			adapter.save
+			@connection.save
 		}
+		
+		delete_redland
 	end
 	
 end

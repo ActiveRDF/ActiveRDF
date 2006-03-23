@@ -1,6 +1,6 @@
 # = node.rb
 #
-# Abstract Class definition of a RDF node.
+# Abstract Class definition of an RDF node.
 #
 # == Project
 #
@@ -15,10 +15,6 @@
 # == Copyright
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
-#
-# == To-do
-#
-# * To-do 1
 #
 
 require 'misc/abstract_class'

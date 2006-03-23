@@ -16,27 +16,41 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
 require 'test/node_factory/person'
-require 'test/adapter/yars/setup_yars'
+require 'test/adapter/yars/manage_yars_db'
+require 'test/adapter/redland/manage_redland_db'
+
 class TestNodeFactoryPerson < Test::Unit::TestCase
 
 	def setup
-		setup_yars 'test_node_factory'
-		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_node_factory' }
-		NodeFactory.connection(params)
-	end	
+		case DB
+		when :yars
+			setup_yars('test_create_person')
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_create_person' }
+			@connection = NodeFactory.connection(params)
+		when :redland
+			setup_redland
+			params = { :adapter => :redland }
+			@connection = NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end
+	end
 	
 	def teardown
-		delete_yars 'test_node_factory'
-	end	
+		case DB
+		when :yars
+			delete_yars('test_create_person')
+		when :redland
+			delete_redland
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
+	end
 
 	def test_A_verify_literal_attributes
 		person = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_7')
@@ -104,14 +118,14 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 		assert_equal('http://m3pe.org/activerdf/test/test_set_Instance_8', eyal.uri)
 	end
 	
-	def test_I_create_new_person
+	def test_I_create_and_delete_new_person
 		new_person = Person.create('http://m3pe.org/activerdf/test/new_person')
 		assert_not_nil(new_person)
 		assert_instance_of(Person, new_person)
 		new_person.name = 'new person'
 		new_person.age = '20'
 		new_person.delete
-		assert_nil(new_person['age'])
+		assert(new_person.frozen?)
 		assert_nil(NodeFactory.resources['http://m3pe.org/activerdf/test/new_person'])
 	end
 	

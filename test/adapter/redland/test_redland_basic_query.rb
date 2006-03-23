@@ -16,32 +16,22 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
+require 'test/adapter/redland/manage_redland_db'
 
 class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 
-	@@loaded = false
-
 	def setup
-		if !@@loaded
-			# Load the data file
-			dirname = File.dirname(__FILE__)
-			system("cd #{dirname}; cp reset_test_redland_query.sh /tmp")
-			system("cd #{dirname}; cp test_set.rdfs /tmp")
-			system("cd #{dirname}; cp test_set.rdf /tmp")
-			system("cd /tmp; ./reset_test_redland_query.sh")
-		
-			params = { :adapter => :redland }
-			NodeFactory.connection(params)
-			@@loaded = true
-		end
+		setup_redland
+		params = { :adapter => :redland }
+		NodeFactory.connection(params)
+	end
+	
+	def teardown
+		delete_redland
 	end
 	
 	def test_A_query_all
@@ -94,7 +84,7 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 		assert_not_nil(results)
 		assert_instance_of(Array, results)
 		assert_equal(1, results.size)
-		assert_equal('http://protege.stanford.edu/rdftest_set_Instance_7', results.first.uri)
+		assert_equal('http://m3pe.org/activerdf/test/test_set_Instance_7', results.first.uri)
 	end
 
 	def test_F_query_subject_by_predicate_and_resource_object
@@ -104,7 +94,7 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 		assert_instance_of(Array, results)
 		assert_equal(2, results.size)
 		for result in results
-			assert_match(/http:\/\/protege\.stanford\.edu\/rdftest_set_Instance_(7|10)/, result.uri)
+			assert_match(/http:\/\/m3pe\.org\/activerdf\/test\/test_set_Instance_(7|10)/, result.uri)
 		end
 	end
 	
@@ -115,7 +105,7 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 		assert_instance_of(Array, results)
 		assert_equal(1, results.size)
 		assert_kind_of(Resource, results.first)
-		assert_equal('http://protege.stanford.edu/rdfname', results.first.uri)
+		assert_equal('http://m3pe.org/activerdf/test/name', results.first.uri)
 	end
 	
 	def test_H_query_predicate_by_subject_and_resource_object
@@ -125,7 +115,7 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 		assert_instance_of(Array, results)
 		assert_equal(1, results.size)
 		assert_kind_of(Resource, results.first)
-		assert_equal('http://protege.stanford.edu/rdfknows', results.first.uri)
+		assert_equal('http://m3pe.org/activerdf/test/knows', results.first.uri)
 	end
 	
 	def test_I_query_literal_object_by_subject_and_predicate
@@ -145,7 +135,7 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 		assert_instance_of(Array, results)
 		assert_equal(1, results.size)
 		assert_kind_of(Resource, results.first)
-		assert_equal('http://protege.stanford.edu/rdftest_set_Instance_9', results.first.uri)
+		assert_equal('http://m3pe.org/activerdf/test/test_set_Instance_9', results.first.uri)
 	end
 
 	private
@@ -179,7 +169,7 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_E
-		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfage')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/age')
 		object = NodeFactory.create_literal("23", 'xsd:integer')
 	
 		qe = QueryEngine.new
@@ -189,8 +179,8 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_F
-		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
-		object = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/knows')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_9')
 	
 		qe = QueryEngine.new
 		qe.add_binding_variables(:s)
@@ -199,7 +189,7 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_G
-		subject = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')
 		object = NodeFactory.create_literal('renaud', 'xsd:string')
 	
 		qe = QueryEngine.new
@@ -209,8 +199,8 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 	end
 
 	def query_test_H
-		subject = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
-		object = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_9')
 	
 		qe = QueryEngine.new
 		qe.add_binding_variables(:p)
@@ -219,8 +209,8 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_I
-		subject = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
-		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfname')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/name')
 		
 		qe = QueryEngine.new
 		qe.add_binding_variables(:o)
@@ -229,8 +219,8 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_J
-		subject = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
-		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
+		subject = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/knows')
 		
 		qe = QueryEngine.new
 		qe.add_binding_variables(:o)

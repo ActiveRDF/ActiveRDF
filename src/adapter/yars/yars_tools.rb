@@ -16,19 +16,15 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'strscan'
 require 'adapter/yars/yars_exceptions.rb'
 
 class YarsAdapter
   
-  private
+	private
 
-  # Convert n3 resource and literal into ActiveRDF::Resource or String
+	# Convert n3 resource and literal into ActiveRDF::Resource or String
 	def unwrap(resource)
 		case resource
 		when /"(.*)"/
@@ -40,12 +36,12 @@ class YarsAdapter
 		end
 	end
 
-  # Convert ActiveRDF::Node into n3 resource and literal
-  #
-  # Arguments:
-  # * +node+ : ActiveRDF::Node to convert into yars object
-  #
-  # Return:
+	# Convert ActiveRDF::Node into n3 resource and literal
+	#
+	# Arguments:
+	# * +node+ : ActiveRDF::Node to convert into yars object
+	#
+	# Return:
 	# * String to use in Yars Adapter
 	def wrap(node)
 		case node
@@ -66,18 +62,17 @@ class YarsAdapter
 		end
 	end
 	
-  # Parse the query result of Yars.
-  #
-  # Arguments:
-  # * +query_result+ [<tt>String</tt>]: Query result of Yars to parse
-  #
-  # Return:
-  # * [<tt>Array</tt>] Array of Array containing each extracted object of each line.
+	# Parse the query result of Yars.
+	#
+	# Arguments:
+	# * +query_result+ [<tt>String</tt>]: Query result of Yars to parse
+	#
+	# Return:
+	# * [<tt>Array</tt>] Array of Array containing each extracted object of each line.
 	def parse_yars_query_result(query_result)
 		results = Array.new
 		query_result.each_line do |line|
 			scanner = StringScanner.new(line.strip)
-			$logger.debug "Begin parse binding line: \n" + line
 			if scanner.match?(/\(\s*/)
 				results << parse_bindings(scanner)
 			else
@@ -87,13 +82,13 @@ class YarsAdapter
 		return results
 	end
 
-  # Parse an N3 triple and extract each object.
-  #
-  # Arguments:
-  # * +scanner+ [<tt>StringScanner</tt>]: The string scanner containing the triple
-  #
-  # Return:
-  # * [<tt>Array</tt>] The triple instanciated in ActiveRDF object.
+	# Parse an N3 triple and extract each object.
+	#
+	# Arguments:
+	# * +scanner+ [<tt>StringScanner</tt>]: The string scanner containing the triple
+	#
+	# Return:
+	# * [<tt>Array</tt>] The triple instanciated in ActiveRDF object.
 	def parse_n3_triple(scanner)
 		# Match subject
 		subject = match_subject(scanner)		
@@ -108,13 +103,13 @@ class YarsAdapter
 		return [subject, predicate, object]
 	end
 
-  # Parse an Yars binding line result and extract each object.
-  #
-  # Arguments:
-  # * +scanner+ [<tt>StringScanner</tt>]: The string scanner containing the binding line.
-  #
-  # Return:
-  # * [<tt>Array</tt>] ActiveRDF object of the binding result.
+	# Parse an Yars binding line result and extract each object.
+	#
+	# Arguments:
+	# * +scanner+ [<tt>StringScanner</tt>]: The string scanner containing the binding line.
+	#
+	# Return:
+	# * [<tt>Array</tt>] ActiveRDF object of the binding result.
 	def parse_bindings(scanner)
 		results = Array.new
 	
@@ -125,17 +120,13 @@ class YarsAdapter
 		end		
 	
 		while !scanner.match?(/\)/) do
-			$logger.debug "Before parse object in binding line: " + scanner.peek(15)
 			results << match_object(scanner)
-			$logger.debug "After parse object in binding line: " + scanner.peek(15)
-			$logger.debug "Object parsed: " + results.last.to_s
 			scanner.scan(/\s*/)
 		end
 	
 		if !scanner.scan(/\)\s*\./)
 			raise(NTriplesParsingYarsError, "Opening parenthesis missing: #{scanner.inspect}.")
 		end
-		$logger.debug "Closing parenthesis parsed"
 		
 		if results.size == 1
 			return results.first
@@ -144,15 +135,15 @@ class YarsAdapter
 		end
 	end
   
-  # Match and extract a N3 subject
-  #
-  # Arguments:
-  # * +scanner+ [<tt>StringScanner</tt>]: The string scanner of the n3 triple
-  #
-  # Return:
-  # * [<tt>Resource</tt>] ActiveRDF identified resource or anonymous resource.
-  def match_subject(scanner)
-  	uri_pattern = /<([^>]+)>/
+	# Match and extract a N3 subject
+	#
+	# Arguments:
+	# * +scanner+ [<tt>StringScanner</tt>]: The string scanner of the n3 triple
+	#
+	# Return:
+	# * [<tt>Resource</tt>] ActiveRDF identified resource or anonymous resource.
+	def match_subject(scanner)
+		uri_pattern = /<([^>]+)>/
 		bnode_pattern = /_:(\S+)/
 		
 		if scanner.match?(uri_pattern)
@@ -166,17 +157,17 @@ class YarsAdapter
 		else
 			raise(NTriplesParsingYarsError, "Invalid subject: #{scanner.inspect}.")
 		end  	
-  end
+	end
 
-  # Match and extract a N3 predicate
-  #
-  # Arguments:
-  # * +scanner+ [<tt>StringScanner</tt>]: The string scanner of the n3 triple
-  #
-  # Return:
-  # * [<tt>Resource</tt>] ActiveRDF identified resource. 
-  def match_predicate(scanner)
-  	uri_pattern = /<([^>]+)>/
+	# Match and extract a N3 predicate
+	#
+	# Arguments:
+	# * +scanner+ [<tt>StringScanner</tt>]: The string scanner of the n3 triple
+	#
+	# Return:
+	# * [<tt>Resource</tt>] ActiveRDF identified resource. 
+	def match_predicate(scanner)
+		uri_pattern = /<([^>]+)>/
   	
 		if scanner.match?(uri_pattern)
 			scanner.scan(uri_pattern)
@@ -184,16 +175,16 @@ class YarsAdapter
 		else
 			raise(NTriplesParsingYarsError, "Invalid predicate: #{scanner.inspect}.")
 		end  	
-  end
+	end
 
-  # Match and extract a N3 object
-  #
-  # Arguments:
-  # * +scanner+ [<tt>StringScanner</tt>]: The string scanner of the n3 triple
-  #
-  # Return:
-  # * [<tt>Node</tt>] ActiveRDF node. 
-  def match_object(scanner)
+	# Match and extract a N3 object
+	#
+	# Arguments:
+	# * +scanner+ [<tt>StringScanner</tt>]: The string scanner of the n3 triple
+	#
+	# Return:
+	# * [<tt>Node</tt>] ActiveRDF node. 
+	def match_object(scanner)
 		uri_pattern = /<([^>]+)>/
 		bnode_pattern = /_:(\S+)/
 		literal_pattern = /"([^"]*)"/
@@ -211,6 +202,6 @@ class YarsAdapter
 		else
 			raise(NTriplesParsingYarsError, "Invalid object: #{scanner.inspect}.")
 		end  
-  end
+	end
   
 end

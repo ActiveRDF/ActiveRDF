@@ -1,6 +1,6 @@
-# = test_redland_resource_get.rb
+# = test_identifiedresource_get.rb
 #
-# Unit Test of Resource get method with redland adapter
+# Unit Test of identifiedResource get method
 #
 # == Project
 #
@@ -16,27 +16,44 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
+require 'test/adapter/yars/manage_yars_db'
+require 'test/adapter/redland/manage_redland_db'
 
-class TestRedlandResourceGet < Test::Unit::TestCase
+class TestIdentifiedResourceGet < Test::Unit::TestCase
 
 	def setup
-		params = { :adapter => :redland }
-		@connection = NodeFactory.connection(params)
+		case DB
+		when :yars
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource_get' }
+			@connection = NodeFactory.connection(params)
+		when :redland
+			params = { :adapter => :redland }
+			@connection = NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end
+	end
+	
+	def teardown
+		case DB
+		when :yars
+			delete_yars('test_resource_get')
+		when :redland
+			delete_redland
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
 	end
 	
 	def test_A_empty_db
 		subject = NodeFactory.create_identified_resource("http://m3pe.org/subject")
 		predicate = NodeFactory.create_identified_resource("http://m3pe.org/predicate")
 		assert_nothing_raised {
-			result = Resource.get(subject, predicate)
+			result = IdentifiedResource.get(subject, predicate)
 			assert_nil(result)
 		}
 	end
@@ -47,7 +64,7 @@ class TestRedlandResourceGet < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource("http://m3pe.org/subject")
 		predicate = NodeFactory.create_identified_resource("http://m3pe.org/predicate_not_exists")
 		assert_nothing_raised {
-			result = Resource.get(subject, predicate)
+			result = IdentifiedResource.get(subject, predicate)
 			assert_nil(result)
 		}
 	end
@@ -58,7 +75,7 @@ class TestRedlandResourceGet < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource("http://m3pe.org/subject")
 		predicate = NodeFactory.create_identified_resource("http://m3pe.org/predicate3")
 		assert_nothing_raised {
-			result = Resource.get(subject, predicate)
+			result = IdentifiedResource.get(subject, predicate)
 			assert_not_nil(result)
 			assert_instance_of(Literal, result)
 			assert_equal('', result.value)
@@ -71,7 +88,7 @@ class TestRedlandResourceGet < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource("http://m3pe.org/subject")
 		predicate = NodeFactory.create_identified_resource("http://m3pe.org/predicate1")
 		assert_nothing_raised {
-			result = Resource.get(subject, predicate)
+			result = IdentifiedResource.get(subject, predicate)
 			assert_not_nil(result)
 			assert_instance_of(Literal, result)
 			assert_equal('42', result.value)
@@ -84,7 +101,7 @@ class TestRedlandResourceGet < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource("http://m3pe.org/subject")
 		predicate = NodeFactory.create_identified_resource("http://m3pe.org/predicate2")
 		assert_nothing_raised {
-			result = Resource.get(subject, predicate)
+			result = IdentifiedResource.get(subject, predicate)
 			assert_not_nil(result)
 			assert_instance_of(IdentifiedResource, result)
 			assert_equal('http://m3pe.org/object2', result.uri)
@@ -95,7 +112,7 @@ class TestRedlandResourceGet < Test::Unit::TestCase
 		predicate = NodeFactory.create_identified_resource("http://m3pe.org/predicate")
 		
 		assert_raise(ResourceTypeError) {
-			Resource.get(nil, predicate)
+			IdentifiedResource.get(nil, predicate)
 		}		
 	end
 	
@@ -103,7 +120,7 @@ class TestRedlandResourceGet < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource("http://m3pe.org/subject")
 		
 		assert_raise(ResourceTypeError) {
-			Resource.get(subject, nil)
+			IdentifiedResource.get(subject, nil)
 		}		
 	end
 	

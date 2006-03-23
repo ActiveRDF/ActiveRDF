@@ -16,22 +16,21 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * TODO: See again the remove test with nil, I think it'is allowed in redland.
-#
 
 require 'test/unit'
 require 'active_rdf'
-require 'adapter/yars/yars_adapter'
+require 'node_factory'
+require 'test/adapter/yars/manage_yars_db'
 
 class TestYarsAdapterRemove < Test::Unit::TestCase
 
-	@@adapter = nil
-
-	def setup		
-		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_remove2' }
-		@@adapter = NodeFactory.connection(params) if @@adapter.nil?
+	def setup
+		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_yars_adapter' }
+		@@adapter = NodeFactory.connection(params)
+	end
+	
+	def teardown
+		delete_yars('test_yars_adapter')
 	end
 	
 	def test_A_remove_triples_error_object_not_node

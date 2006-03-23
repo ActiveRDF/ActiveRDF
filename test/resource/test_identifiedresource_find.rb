@@ -1,6 +1,6 @@
-# = test_yars_resource_find.rb
+# = test_identifiedresource_find.rb
 #
-# Unit Test of Resource find method with yars adapter
+# Unit Test of IdentifiedResource find method
 #
 # == Project
 #
@@ -16,38 +16,33 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'test/adapter/yars/setup_yars'
+require 'test/adapter/yars/manage_yars_db'
+require 'test/adapter/redland/manage_redland_db'
 
-class TestYarsResourceFind < Test::Unit::TestCase
+class TestIdentifiedResourceFind < Test::Unit::TestCase
 
 	def setup
-		setup_yars 'test_query'
-		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_query' }
-		NodeFactory.connection(params)
+		init_db
 	end
 	
 	def teardown
-		delete_yars 'test_query'
+		clean_db
 	end
 	
 	def test_A_empty_db
-		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'empty' }
-		NodeFactory.connection(params)
+		clean_db
+		init_empty_db
 		
-		results = Resource.find
+		results = IdentifiedResource.find
 		assert_nil(results)
 	end
 	
 	def test_B_find_all
-		results = Resource.find
+		results = IdentifiedResource.find
 		assert_not_nil(results)
 		assert_instance_of(Array, results)
 		assert_equal(11, results.size)
@@ -55,7 +50,7 @@ class TestYarsResourceFind < Test::Unit::TestCase
 	
 	def test_C_find_predicate
 		class_uri = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/Person')
-		predicates = Resource.find({ NamespaceFactory.get(:rdfs_domain) => class_uri })
+		predicates = IdentifiedResource.find({ NamespaceFactory.get(:rdfs_domain) => class_uri })
 		assert_not_nil(predicates)
 		assert_instance_of(Array, predicates)
 		assert_equal(3, predicates.size)
@@ -67,7 +62,7 @@ class TestYarsResourceFind < Test::Unit::TestCase
 	def test_D_find_resource_knows_instance_9
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/knows')
 		object = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_9')
-		subjects = Resource.find({predicate => object})
+		subjects = IdentifiedResource.find({predicate => object})
 		assert_not_nil(subjects)
 		assert_instance_of(Array, subjects)
 		assert_equal(2, subjects.size)
@@ -86,6 +81,47 @@ class TestYarsResourceFind < Test::Unit::TestCase
 		assert_not_nil(subject)
 		assert_kind_of(Resource, subject)
 		assert_equal('http://m3pe.org/activerdf/test/test_set_Instance_7', subject.uri)
+	end
+
+	private
+	
+	def init_db
+		case DB
+		when :yars
+			setup_yars('test_resource_find')
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource_find' }
+			@connection = NodeFactory.connection(params)
+		when :redland
+			setup_redland
+			params = { :adapter => :redland }
+			@connection = NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
+	end
+	
+	def init_empty_db
+		case DB
+		when :yars
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource_find' }
+			@connection = NodeFactory.connection(params)
+		when :redland
+			params = { :adapter => :redland }
+			@connection = NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
+	end
+	
+	def clean_db
+		case DB
+		when :yars
+			delete_yars('test_resource_find')
+		when :redland
+			delete_redland
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
 	end
 	
 end

@@ -1,4 +1,4 @@
-# = FileName.rb
+# = active_rdf.rb
 #
 # Loader of ActiveRDF library
 #
@@ -37,4 +37,4 @@ NamespaceFactory.load_namespaces
 require 'logger'
 
 $logger = Logger.new('/tmp/activerdf.log') if $logger.nil?
-$logger.level = Logger::DEBUG
+$logger.level = Logger::INFO

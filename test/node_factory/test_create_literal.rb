@@ -16,10 +16,6 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
@@ -51,12 +47,12 @@ class TestNodeFactoryLiteral < Test::Unit::TestCase
 	
 	def test_4_type
 		literal = NodeFactory.create_literal('42', 'xsd:integer')
-		assert(literal.kind_of?(Literal))
+		assert_kind_of(Literal, literal)
 	end
 	
 	def test_5_node_subclass
 		literal = NodeFactory.create_literal('42', 'xsd:integer')
-		assert(literal.kind_of?(Node))
+		assert_kind_of(Node, literal)
 	end
 	
 end

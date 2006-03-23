@@ -17,10 +17,6 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 module AttributesContainer
 
@@ -43,19 +39,19 @@ module AttributesContainer
 	
 	public
 
-  # Gets attribute value
-  #
-  # Arguments:
-  # * +attr_name+ [<tt>String</tt>]: Attribute name
+	# Gets attribute value
+	#
+	# Arguments:
+	# * +attr_name+ [<tt>String</tt>]: Attribute name
 	def [](attr_name)
 		read_attribute(attr_name)
 	end
 	
-  # Sets attribute value
-  #
-  # Arguments:
-  # * +attr_name+ [<tt>String</tt>]: Attribute name
-  # * +value+: Attribute value
+	# Sets attribute value
+	#
+	# Arguments:
+	# * +attr_name+ [<tt>String</tt>]: Attribute name
+	# * +value+: Attribute value
 	def []=(attr_name, value)
 		write_attribute(attr_name, value)
 	end
@@ -79,7 +75,7 @@ module AttributesContainer
 		# Convert attributes value into Literal
 		converted_attributes = Hash.new
 		attributes.each { |attr_name, value|
-			if value.nil? or (value.instance_of?(String) and value.empty?)
+			if value.nil?
 				converted_attributes[attr_name.to_s] = [nil, true]
 			elsif value.kind_of?(Resource) or value.kind_of?(Array)
 				converted_attributes[attr_name.to_s] = [value, true]
@@ -99,49 +95,56 @@ module AttributesContainer
 		save		
 	end
 
-  # Checks if attribute value exists
-  #
-  # Arguments:
-  # * +attr_name+ [<tt>String</tt>]: Attribute name
-  #
-  # Return:
-  # * [<tt>Bool</tt>] True if attributes value exists
+	# Checks if attribute value exists
+	#
+	# Arguments:
+	# * +attr_name+ [<tt>String</tt>]: Attribute name
+	#
+	# Return:
+	# * [<tt>Bool</tt>] True if attributes value exists
 	def query_attribute(attr_name)
-			attribute = _attributes[attr_name.to_s][0]
-			if attribute.nil?
-					false
-			elsif attribute.kind_of?(Literal) && attribute.value == 0
-					false
-			elsif attribute.kind_of?(Literal) && attribute.value == "0"
-					false
-			elsif attribute.kind_of?(Literal) && attribute.value.empty?
-					false
-			elsif attribute.kind_of?(Literal) && attribute.value == false
-					false
-			elsif attribute.kind_of?(Literal) && attribute.value == "f"
-					false
-			elsif attribute.kind_of?(Literal) && attribute.value == "false"
-					false
-			else
-					true
-			end
+		# If _attributes is nil, we need to load it from the DB
+		if _attributes.nil?
+			initialize_attributes
+		end
+		
+		# If we have just loaded the attributes, _attributes[attr_name.to_s] == nil
+		attribute = _attributes[attr_name.to_s].nil? ? nil : _attributes[attr_name.to_s][0]
+		
+		if attribute.nil?
+				false
+		elsif attribute.kind_of?(Literal) && attribute.value == 0
+				false
+		elsif attribute.kind_of?(Literal) && attribute.value == "0"
+				false
+		elsif attribute.kind_of?(Literal) && attribute.value.empty?
+				false
+		elsif attribute.kind_of?(Literal) && attribute.value == false
+				false
+		elsif attribute.kind_of?(Literal) && attribute.value == "f"
+				false
+		elsif attribute.kind_of?(Literal) && attribute.value == "false"
+				false
+		else
+				true
+		end
 	end
 
 #----------------------------------------------#
 #               CLASS METHODS                  #
 #----------------------------------------------#
 
-  # Included dynamically Class Method defined here during the inclusion of the module.
+	# Included dynamically Class Method defined here during the inclusion of the module.
 	def self.included(klass)
 		klass.module_eval do
 		
 		# DEFINITION OF CLASS METHODS
 		
-		  # Return the hash of predicates for the related class.
-		  # Fetch predicates if they are not loaded.
-		  #
-		  # Return:
-		  # * [<tt>Hash</tt>] Hash of predicates for the related class.
+			# Return the hash of predicates for the related class.
+			# Fetch predicates if they are not loaded.
+			#
+			# Return:
+			# * [<tt>Hash</tt>] Hash of predicates for the related class.
 			def self.predicates()
 				class_hash = @@predicates[self]
 				
@@ -167,8 +170,8 @@ module AttributesContainer
 			
 			# Called by delete method of InstanciateResourceMethod to delete reference
 			# of the resource in the predicates hash.
-  		#
-  		# Arguments:
+			#
+			# Arguments:
 			# * +key+: Key of the predicates. Can be a Class (for class level predicates)
 			# or a String (for instance level predicates).
 			def self.remove_predicates(key)
@@ -184,20 +187,20 @@ module AttributesContainer
 #               PRIVATE METHODS                #
 #----------------------------------------------#
 
-  private
+	private
 
-  # Write attribute and update the database.
-  #
-  # Arguments:
-  # * +attr_name+ [<tt>String</tt>]: Attribute name
-  # * +value+: Attribute value
+	# Write attribute and update the database.
+	#
+	# Arguments:
+	# * +attr_name+ [<tt>String</tt>]: Attribute name
+	# * +value+: Attribute value
 	def write_attribute(attr_name, value)
 		# If _attributes is nil, we need to load it from the DB
 		if _attributes.nil?
 			initialize_attributes
 		end
 		
-		if value.nil? or (value.instance_of?(String) and value.empty?)
+		if value.nil?
 			@_attributes[attr_name.to_s] = [nil, true]
 		elsif value.kind_of?(Resource) or value.kind_of?(Array)
 			@_attributes[attr_name.to_s] = [value, true]
@@ -208,21 +211,19 @@ module AttributesContainer
 		save
 	end
 
-  # Return attribute value.
-  # Fetch attribute value from database if it is not loaded.
-  #
-  # Arguments:
-  # * +attr_name+ [<tt>String</tt>]: Attribute name
-  #
-  # Return:
-  # * Value of the attribute
+	# Return attribute value.
+	# Fetch attribute value from database if it is not loaded.
+	#
+	# Arguments:
+	# * +attr_name+ [<tt>String</tt>]: Attribute name
+	#
+	# Return:
+	# * Value of the attribute
 	def read_attribute(attr_name)
 		# If _attributes is nil, we need to load it from the DB
 		if _attributes.nil?
 			initialize_attributes
 		end
-		
-		$logger.debug "READ_ATTRIBUTE #{attr_name} for #{self.uri}"
 
 		if !_attributes.key?(attr_name.to_s) or _attributes[attr_name.to_s].nil?
 		
@@ -232,8 +233,6 @@ module AttributesContainer
 			
 			predicate_uri = self.class.predicates[attr_name.to_s]
 			value = Resource.get(self, predicate_uri)
-			
-			$logger.debug "loading value of #{attr_name} from datastore: value #{value}"
 			
 			if value.nil? or value.kind_of?(Node) or value.kind_of?(Array)
 				@_attributes[attr_name.to_s] = [value, false]
@@ -246,8 +245,8 @@ module AttributesContainer
 		end
 	end
 	
-  # Initialize the attributes hash for the instance. Load from the DB all the attributes
-  # name.
+	# Initialize the attributes hash for the instance. Load from the DB all the attributes
+	# name.
 	def initialize_attributes
 		@_attributes = Hash.new
 		self.class.predicates.each_key do |attr_name|

@@ -16,32 +16,22 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
+require 'test/adapter/redland/manage_redland_db'
 
 class TestRedlandAdapterJointQuery < Test::Unit::TestCase
 
-	@@loaded = false
-
 	def setup
-		if !@@loaded
-			# Load the data file
-			dirname = File.dirname(__FILE__)
-			system("cd #{dirname}; cp reset_test_redland_query.sh /tmp")
-			system("cd #{dirname}; cp test_set.rdfs /tmp")
-			system("cd #{dirname}; cp test_set.rdf /tmp")
-			system("cd /tmp; ./reset_test_redland_query.sh")
-		
-			params = { :adapter => :redland }
-			NodeFactory.connection(params)
-			@@loaded = true
-		end
+		setup_redland
+		params = { :adapter => :redland }
+		NodeFactory.connection(params)
+	end
+	
+	def teardown
+		delete_redland
 	end
 	
 	def test_A_query_subject_with_joint_resource_object
@@ -52,7 +42,7 @@ class TestRedlandAdapterJointQuery < Test::Unit::TestCase
 		assert_equal(1, results.size)
 		result = results.first
 		assert_kind_of(Resource, result)
-		assert_equal('http://protege.stanford.edu/rdftest_set_Instance_10', result.uri)
+		assert_equal('http://m3pe.org/activerdf/test/test_set_Instance_10', result.uri)
 	end
 	
 	def test_B_query_subject_with_joint_literal_object
@@ -63,7 +53,7 @@ class TestRedlandAdapterJointQuery < Test::Unit::TestCase
 		assert_equal(1, results.size)
 		result = results.first
 		assert_kind_of(Resource, result)
-		assert_equal('http://protege.stanford.edu/rdftest_set_Instance_10', result.uri)
+		assert_equal('http://m3pe.org/activerdf/test/test_set_Instance_10', result.uri)
 	end
 	
 	def test_C_query_object_with_joint_resource_object
@@ -74,7 +64,7 @@ class TestRedlandAdapterJointQuery < Test::Unit::TestCase
 		assert_equal(3, results.size)
 		for result in results
 			assert_kind_of(Resource, result)
-			assert_match(/http:\/\/protege\.stanford\.edu\/rdftest_set_Instance_(7|9|10)/, result.uri)
+			assert_match(/http:\/\/m3pe\.org\/activerdf\/test\/test_set_Instance_(7|9|10)/, result.uri)
 		end	
 	end
 	
@@ -86,16 +76,16 @@ class TestRedlandAdapterJointQuery < Test::Unit::TestCase
 		assert_equal(2, results.size)
 		for result in results
 			assert_kind_of(Resource, result)
-			assert_match(/http:\/\/protege\.stanford\.edu\/rdftest_set_Instance_(7|10)/, result.uri)
+			assert_match(/http:\/\/m3pe\.org\/activerdf\/test\/test_set_Instance_(7|10)/, result.uri)
 		end			
 	end
 
 	private
 	
 	def query_test_A
-		predicate = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
-		object1 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_7')
-		object2 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdftest_set_Instance_9')
+		predicate = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/knows')
+		object1 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')
+		object2 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_9')
 	
 		qe = QueryEngine.new
 		qe.add_binding_variables(:s)
@@ -105,8 +95,8 @@ class TestRedlandAdapterJointQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_B
-		predicate1 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfage')
-		predicate2 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfname')
+		predicate1 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/age')
+		predicate2 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/name')
 		object1 = NodeFactory.create_literal('45', 'xsd:integer')
 		object2 = NodeFactory.create_literal('regis', 'xsd:string')
 	
@@ -118,8 +108,8 @@ class TestRedlandAdapterJointQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_C
-		predicate1 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfage')
-		predicate2 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
+		predicate1 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/age')
+		predicate2 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/knows')
 		object1 = NodeFactory.create_literal('45', 'xsd:integer')
 	
 		qe = QueryEngine.new
@@ -130,8 +120,8 @@ class TestRedlandAdapterJointQuery < Test::Unit::TestCase
 	end
 	
 	def query_test_D
-		predicate1 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfknows')
-		predicate2 = NodeFactory.create_identified_resource('http://protege.stanford.edu/rdfage')
+		predicate1 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/knows')
+		predicate2 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/age')
 		object = NodeFactory.create_literal('19', 'xsd:integer')
 	
 		qe = QueryEngine.new

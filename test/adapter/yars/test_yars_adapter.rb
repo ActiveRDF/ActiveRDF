@@ -16,10 +16,6 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
@@ -27,11 +23,24 @@ require 'adapter/yars/yars_adapter'
 
 class TestYarsAdapter < Test::Unit::TestCase
 
-	def test_1_initialize
+	def test_A_initialize
 		adapter = YarsAdapter.new({ :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test' })
 		assert_not_nil(adapter)
 		assert_kind_of(AbstractAdapter, adapter)
 		assert_instance_of(YarsAdapter, adapter)
+	end
+	
+	def test_B_initialise_with_no_parameters
+		adapter = YarsAdapter.new
+		assert_not_nil(adapter)
+		assert_kind_of(AbstractAdapter, adapter)
+		assert_instance_of(YarsAdapter, adapter)
+	end
+	
+	def test_C_error_initialise_with_nil_parameter
+		assert_raise(YarsError) {
+			adapter = YarsAdapter.new(nil)
+		}
 	end
 	
 end

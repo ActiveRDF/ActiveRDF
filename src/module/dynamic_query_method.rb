@@ -19,10 +19,6 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'activerdf_exceptions'
 
@@ -57,15 +53,15 @@ module DynamicQueryMethod
 		end				
 	end
 		
-  # Create a condition hash and executes query.
-  #
-  # Arguments:
-  # * +attribute_names+ [<tt>Array</tt>]: array of attribute_names (e.g. [name, homepage])
-  # * +keyword_search+ [<tt>Bool</tt>]: Activate the keyword search
-  # * +*args+ [<tt>Array</tt>]: array of arguments (e.g. ['eyal', 'http:/....'])
-  #
-  # Return:
-  # * [<tt>Array</tt>] Array of Resource 
+	# Create a condition hash and executes query.
+	#
+	# Arguments:
+	# * +attribute_names+ [<tt>Array</tt>]: array of attribute_names (e.g. [name, homepage])
+	# * +keyword_search+ [<tt>Bool</tt>]: Activate the keyword search
+	# * +*args+ [<tt>Array</tt>]: array of arguments (e.g. ['eyal', 'http:/....'])
+	#
+	# Return:
+	# * [<tt>Array</tt>] Array of Resource 
 	def call_find_from_args(attribute_names, keyword_search, *args)
 		arg_number = args.length
 		attr_number = attribute_names.length

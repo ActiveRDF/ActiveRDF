@@ -31,13 +31,13 @@ class RedlandAdapter
 
   private
 
-  # Convert Redland::QueryResult into an array.
-  #
-  # Arguments:
-  # * +query_results+ [<tt>Redland::QueryResult</tt>]: Query result from redland
-  #
-  # Return:
-  # * [<tt>Array</tt>] Array containing query results
+	# Convert Redland::QueryResult into an array.
+	#
+	# Arguments:
+	# * +query_results+ [<tt>Redland::QueryResult</tt>]: Query result from redland
+	#
+	# Return:
+	# * [<tt>Array</tt>] Array containing query results [[binding variables], [binding variables], ...]
 	def convert_query_result_to_array(query_results)
 		# Init
 	 	results = Array.new
@@ -65,13 +65,13 @@ class RedlandAdapter
 		return results		
 	end
 	
-  # Convert value of Redland::QueryResult to ActiveRDF::Node
-  #
-  # Arguments:
-  # * +binding_name+: binding name for the query result
-  #
-  # Return:
-  # * [<tt>ActiveRDF::Node</tt>]
+	# Convert value of Redland::QueryResult to ActiveRDF::Node
+	#
+	# Arguments:
+	# * +binding_name+: binding name for the query result
+	#
+	# Return:
+	# * [<tt>ActiveRDF::Node</tt>]
 	def convert_query_value_to_activerdf(binding_name, query_results)
 	
 		if binding_name.nil? or query_results.nil?
@@ -90,13 +90,13 @@ class RedlandAdapter
 		end	
 	end
 
-  # Convert Redland::Resource, Redland::Literal, Redland::BNode into
-  # ActiveRDF::Node
-  #
-  # Arguments:
-  # * +node+ : A Redland node
-  #
-  # Return:
+	# Convert Redland::Resource, Redland::Literal, Redland::BNode into
+	# ActiveRDF::Node
+	#
+	# Arguments:
+	# * +node+ : A Redland node
+	#
+	# Return:
 	# * A node (Literal, AnonymouResource, BasinIdentifiedResource, IdentifiedResource)
 	def unwrap(node)
 		case node
@@ -113,12 +113,12 @@ class RedlandAdapter
 		end
 	end
 
-  # Convert ActiveRDF::Node into Redland::Uri or Redland::Literal
-  #
-  # Arguments:
-  # * +node+ : ActiveRDF::Node to convert into Redland object
-  #
-  # Return:
+	# Convert ActiveRDF::Node into Redland::Uri or Redland::Literal
+	#
+	# Arguments:
+	# * +node+ : ActiveRDF::Node to convert into Redland object
+	#
+	# Return:
 	# * Redland::Uri or Redland::Literal to use in Redland Adapter
 	def wrap(node)
 		case node

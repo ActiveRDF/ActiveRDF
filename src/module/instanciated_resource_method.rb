@@ -17,10 +17,6 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 module InstanciatedResourceMethod
 
@@ -39,6 +35,7 @@ module InstanciatedResourceMethod
 	# With Redland, return the number of triples removed.
 	# Delete all instance references in the predicates hash of AttributeContainer.
 	# Delete the reference of the resource in the resources hash of the NodeFactory.
+	# Freeze the object to don't allow future change.
 	def delete()
 		# Delete all triples related to the subject (self)
 		NodeFactory.connection.remove(self, nil, nil)
@@ -49,6 +46,8 @@ module InstanciatedResourceMethod
 		@_attributes = nil
 		# Delete the reference in the NodeFactory
 		NodeFactory.resources.delete(uri)
+		# Freeze the object to don't allow future change
+		freeze
 	end
 
 #----------------------------------------------#

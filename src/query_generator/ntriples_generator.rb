@@ -18,7 +18,7 @@
 #
 # == To-do
 #
-# * To-do 1
+# * TODO: Implement the order_by method
 #
 
 require 'query_generator/abstract_generator'
@@ -31,21 +31,21 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 #               PRIVATE METHODS                #
 #----------------------------------------------#
 
-  private
-  
-  # Create the select clause for the n3 query
-  #
-  # *Arguments* :
-  # * *bindings* : 	Array of binding variables in the select clause.
-  #					Binding variables is an array containing the triples which must
-  #					be returned.
-  #
-  # *Return* :
-  # * _String_ Select part of the n3 query
-  def self.select(bindings)
-  	select_template = String.new
-  	
-  	raise(BindingVariableError, "No binding variables received.") if bindings.nil? or bindings.empty?
+	private
+
+	# Create the select clause for the n3 query
+	#
+	# Arguments:
+	# * +bindings+ [<tt>Array</tt>]: Array of binding variables in the select clause.
+	#				 				 Binding variables is an array containing the triples which must
+	#				 				 be returned.
+	#
+	# Return:
+	# [<tt>String</tt>] Select part of the n3 query
+	def self.select(bindings)
+		select_template = String.new
+
+		raise(BindingVariableError, "No binding variables received.") if bindings.nil? or bindings.empty?
 
 		# If the first element of bindings is an Array, it is a binding triple
 		# else it is binding variables.
@@ -56,33 +56,31 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 			select_template << "#{s} #{p} #{o} ."
 		else
 			select_template << " ( "
-  		bindings.each { |binding|
-  			raise(WrongTypeQueryError, "Symbol expected, #{binding.class} received") if !binding.instance_of?(Symbol)
-  			select_template << "?#{binding.to_s} "
-  		}
-  		select_template << ") ."
-  	end
-  	
-		return select_template
-  end
+  			bindings.each { |binding|
+  				raise(WrongTypeQueryError, "Symbol expected, #{binding.class} received") if !binding.instance_of?(Symbol)
+  				select_template << "?#{binding.to_s} "
+  			}
+			select_template << ") ."
+		end
 
-  # Create the where clause for the query
-  #
-  # *Arguments* :
-  # * *conditions* : Array of ActiveRDF::Resource, Symbol and Standard types.
-  #					 ActiveRDF::Resource for resource and predicate,
-  #					 Symbol for binding variable
-  #					 Standard types for Literal.
-  #
-  # *Return* :
-  # * _String_ Where clause of the Sparql query
-  def self.where(conditions, keyword_match)
+		return select_template
+	end
+
+	# Create the where clause for the query
+	#
+	# Arguments:
+	# * +conditions+ : Array of ActiveRDF::Resource, Symbol and Standard types.
+	#					 ActiveRDF::Resource for resource and predicate,
+	#					 Symbol for binding variable
+	#					 Standard types for Literal.
+	#
+	# Return:
+	# [<tt>String</tt>] Where clause of the Sparql query
+	def self.where(conditions, keyword_match)
 		# Init where template
 		where_template = String.new
-		# Init counter
-  	
-		conditions.each do |s, p, o|
 
+		conditions.each do |s, p, o|
 			subject = convert_subject(s)
 			predicate = convert_predicate(p)
 			if o.kind_of?(Array)
@@ -99,10 +97,16 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 		return where_template.chomp
 	end
 
-
-	def self.add_keyword obj
-		if obj.is_a? Resource
-			""
+	# Add keyword command for each object.
+	#
+	# Arguments:
+	# * +obj+: Add the keyword command only on Literal object
+	#
+	# Return:
+	# * [<tt>String</tt>] The part of the where clause with the keyword search command
+	def self.add_keyword(obj)
+		if obj.is_a?(Resource)
+			return ""
 		else
 			# creating unique placeholder variable for the keyword search, using a 
 			# random number and checking if we have already generated this exact 
@@ -116,25 +120,35 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 				;
 			end
 			@variables[variable] = true
-			" #{variable} . #{variable} <http://sw.deri.org/2004/06/yars#keyword> "
+			return " #{variable} . #{variable} <http://sw.deri.org/2004/06/yars#keyword> "
 		end
 	end
 
+	def self.order_by(order_opt)
 
-  
-  def self.order_by(order_opt)
-  
-  end
+	end
 	
 #----------------------------------------------#
 #               PUBLIC METHODS                 #
 #----------------------------------------------#
 
-  public
-  
-  def self.generate(bindings, conditions, order_opt = nil, keyword_match = false)
+	public
 
-	template_query = <<END_OF_QUERY
+	# Generate the query string. Abstract method. Need to be implemented in each
+	# Generator.
+	#
+	# Arguments:
+	# * +bindings+ [<tt>Array</tt>]: An array of Symbol (binding variables)
+	# * +conditions+ [<tt>Array</tt>]: An array of array containing each conditions.
+	# * +order_opt+ [<tt>Array</tt>]: An array containing binding variables need to be used
+	#								  to order the query result.
+	# * +keyword_match+ [<tt>Bool</tt>]: Activate or not the keyword searching.
+	#
+	# Return:
+	# * [<tt>String</tt>] The query string.
+	def self.generate(bindings, conditions, order_opt = nil, keyword_match = false)
+
+		template_query = <<END_OF_QUERY
 @prefix ql: <http://www.w3.org/2004/12/ql#> . 
 <> ql:select {
 #{select(bindings)}
@@ -145,9 +159,8 @@ ql:where {
 #{order_by(order_opt)}
 END_OF_QUERY
 		
-	return template_query
-
-  end
+		return template_query
+	end
   
 end
 

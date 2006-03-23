@@ -16,26 +16,24 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'test/adapter/yars/setup_yars'
+require 'test/adapter/yars/manage_yars_db'
 
 class TestYarsAdapterJointQuery < Test::Unit::TestCase
 
+	@context = 'test_query'
+
 	def setup
-		setup_yars 'test_query'
-		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_query' }
+		setup_yars(@context)
+		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => @context }
 		NodeFactory.connection(params)
 	end	
 	
 	def teardown
-		delete_yars 'test_query'
+		delete_yars(@context)
 	end
 	
 	def test_A_query_subject_with_joint_resource_object

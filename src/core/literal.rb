@@ -1,6 +1,7 @@
 # = literal.rb
 #
-# Class definition of Literal object. Wrap value and type of a RDF literal attribute.
+# Definition of model class for RDF Literal object. Wrap value and type of a RDF
+# literal attribute.
 #
 # == Project
 #
@@ -16,12 +17,8 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
-require 'node'
+require 'core/node'
 
 class Literal; implements Node
 
@@ -30,7 +27,12 @@ class Literal; implements Node
 		
 	# Type of the literal
 	attr_accessor :type
-				
+
+	# Initialize method of the class model for RDF literal.
+	#
+	# Arguments:
+	# * +value+: Value of the RDF literal
+	# * +type+ [<tt>String</tt>]: Type of the RDF literal
 	def initialize(value, type)
 		self.value = value
 		self.type = type
@@ -42,14 +44,14 @@ class Literal; implements Node
 	
 	public
 	
-  # Create a new Literal.
-  # Determine the type of the value.
-  #
-  # Arguments:
-  # * +value+: Value of the Literal
-  #
-  # Return:
-  # * [<tt>Literal</tt>] The new Literal node
+	# Create a new Literal.
+	# Determine the type of the value.
+	#
+	# Arguments:
+	# * +value+: Value of the Literal
+	#
+	# Return:
+	# * [<tt>Literal</tt>] The new Literal node
 	def self.create(value)
 		type = determine_type(value)
 		return NodeFactory.create_literal(value.to_s, type)
@@ -61,13 +63,13 @@ class Literal; implements Node
 
  	private
   
-  # Determine the value type of the literal.
-  #
-  # Arguments:
-  # * +value+: Value of the Literal
-  #
-  # Return:
-  # * [<tt>String</tt>] Value type
+	# Determine the value type of the literal.
+	#
+	# Arguments:
+	# * +value+: Value of the Literal
+	#
+	# Return:
+	# * [<tt>String</tt>] Value type
 	def self.determine_type(value)
 		return 'Literal type is not yet implemented.'
 	end

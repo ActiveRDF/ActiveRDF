@@ -19,10 +19,6 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'module/attributes_container'
 require 'module/instanciated_resource_method'
@@ -43,6 +39,10 @@ class IdentifiedResource < Resource
 	# URI of the resource
 	attr_reader :uri
 
+	# Iitialize method of IdentifiedResource.
+	#
+	# Arguments:
+	# * +uri+ [<tt>String</tt>]: The URI of the resource
 	def initialize(uri)
 		if uri.nil? or uri.empty?
 			raise(ActiveRdfError, 'Resource URI is invalid. Cannot instanciated the object.')
@@ -56,16 +56,16 @@ class IdentifiedResource < Resource
 	
 	public
 
-  # Create a new identified resource if it doesn't exists, otherwise laod the resource.
-  # This method must be called instead of the original new method, because
-  # it calls the creation method of the NodeFactory which allows to keep only
-  # one instance of the resource in memory.
-  #
-  # Arguments:
-  # * +uri+ [<tt>String</tt>]: Uri of the resource.
-  #
-  # Return:
-  # * [<tt>IdentifiedResource</tt>] The new identified resource
+	# Create a new identified resource if it doesn't exists, otherwise laod the resource.
+	# This method must be called instead of the original new method, because
+	# it calls the creation method of the NodeFactory which allows to keep only
+	# one instance of the resource in memory.
+	#
+	# Arguments:
+	# * +uri+ [<tt>String</tt>]: Uri of the resource.
+	#
+	# Return:
+	# * [<tt>IdentifiedResource</tt>] The new identified resource
 	def self.create(uri)
 		return NodeFactory.create_identified_resource(uri, self)
 	end

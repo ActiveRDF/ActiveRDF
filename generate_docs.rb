@@ -8,7 +8,9 @@
 #
 # Mail 		: mailto:renaud.delbru@deri.org
 
-result = `find . -name "*.rb" | rdoc1.8 -SN -c utf-8`
+rdoc_options = "-SN -c utf-8 -x test -x exceptions -x generate_docs --diagram"
+
+result = `rdoc1.8 #{rdoc_options}`
 
 if $? != 0
   exit($?)

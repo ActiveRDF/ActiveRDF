@@ -16,43 +16,40 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
 require 'test/node_factory/person'
+require 'test/adapter/yars/manage_yars_db'
+require 'test/adapter/redland/manage_redland_db'
 
 class TestIdentifiedResourceCreate < Test::Unit::TestCase
 
-	@@loaded = false
-
 	def setup
-		# todo: check which database we are using, and make correct connection to 
-		# this database
-		
-#		case DB
-#		when :yars
-#			params = ...
-#		when :redland
-#			params = ...
-#		else
-#			raise Error
-#		end
-#		if !@@loaded
-#			# Load the data file
-#			dirname = File.dirname(__FILE__)
-#			system("cd #{dirname}; cp reset_test_identifiedresource_create.sh /tmp")
-#			system("cd #{dirname}; cp test_set.rdf /tmp")
-#			system("cd /tmp; ./reset_test_identifiedresource_create.sh")
-#		
-#			params = { :adapter => :redland }
-#			NodeFactory.connection(params)
-#			@@loaded = true
-#		end
+		case DB
+		when :yars
+			setup_yars('test_identifiedresource_create')
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_identifiedresource_create' }
+			@connection = NodeFactory.connection(params)
+		when :redland
+			setup_redland
+			params = { :adapter => :redland }
+			@connection = NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end
+	end
+	
+	def teardown
+		case DB
+		when :yars
+			delete_yars('test_identifiedresource_create')
+		when :redland
+			delete_redland
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
 	end
 
 	def test_A_create_identified_resource
@@ -74,7 +71,7 @@ class TestIdentifiedResourceCreate < Test::Unit::TestCase
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
 		person.save
-		p Resource.exists?(person)
+		assert(Resource.exists?(person))
 	end
 	
 	def test_D_create_person
@@ -82,7 +79,7 @@ class TestIdentifiedResourceCreate < Test::Unit::TestCase
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
 		person.save
-		p Person.exists?(person)
+		assert(Person.exists?(person))
 	end
 	
 	def test_D_load_person

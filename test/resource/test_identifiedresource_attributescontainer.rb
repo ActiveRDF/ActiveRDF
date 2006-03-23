@@ -16,32 +16,40 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
 require 'test/node_factory/person'
+require 'test/adapter/yars/manage_yars_db'
+require 'test/adapter/redland/manage_redland_db'
 
 class TestAttributesContainer < Test::Unit::TestCase
 
-	@@loaded = false
-
 	def setup
-		if !@@loaded
-			# Load the data file
-			dirname = File.dirname(__FILE__)
-			system("cd #{dirname}; cp reset_test_identifiedresource_create.sh /tmp")
-			system("cd #{dirname}; cp test_set.rdf /tmp")
-			system("cd /tmp; ./reset_test_identifiedresource_create.sh")
-		
+		case DB
+		when :yars
+			setup_yars('test_attribute_container')
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_attribute_container' }
+			@connection = NodeFactory.connection(params)
+		when :redland
+			setup_redland
 			params = { :adapter => :redland }
-			NodeFactory.connection(params)
-			@@loaded = true
+			@connection = NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
 		end
+	end
+	
+	def teardown
+		case DB
+		when :yars
+			delete_yars('test_attribute_container')
+		when :redland
+			delete_redland
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
 	end
 	
 	def test_A_create_person_and_save_without_attributes
@@ -72,6 +80,15 @@ class TestAttributesContainer < Test::Unit::TestCase
 	
 	def test_C_attribute_accessors
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
+		person2 = Person.create('http://m3pe.org/activerdf/test/new_person_3')
+		
+		person.name = 'person 2'
+		person.age = 42
+		person.knows = person2
+		person.save
+		person2.name = 'person 3'
+		person2.save
+		
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
 		assert_equal('42', person.age)
@@ -244,6 +261,24 @@ class TestAttributesContainer < Test::Unit::TestCase
 		assert_raise(ResourceUpdateError) {
 			person.update_attributes(attributes)
 		}
+	end
+	
+	def test_L_update_attributes_with_empty_string
+		person = Person.create('http://m3pe.org/activerdf/test/new_person')
+		assert_not_nil(person)
+		assert_instance_of(Person, person)
+		
+		attributes = { 'age' => 42, 'name' => '' }
+		assert_nothing_raised(ResourceUpdateError) {
+			person.update_attributes(attributes)
+		}
+		
+		assert_equal('42', person.age)
+		assert_equal('', person.name)
+		assert_equal('42', person[:age].value)
+		assert_equal('', person[:name].value)
+		assert_equal('42', person['age'].value)
+		assert_equal('', person['name'].value)
 	end
 
 end

@@ -16,78 +16,78 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-# == To-do
-#
-# * To-do 1
-#
 
 require 'node_factory'
 
 class QueryEngine
 
 	# Arguments
-  attr_reader :related_resource
-  private :related_resource
-  
-  # Container Attributes
-  attr_reader :bindings, :binding_triple, :conditions, :order, :distinct
-  private :bindings, :binding_triple, :conditions, :order, :distinct
- 
-  # Initialize the query engine.
-  #
-  # * *connection* : _AbstractAdapter_ The connection used to execute query.
-	# * *related_resource* : _Resource_ Resource related to the query
-  def initialize(related_resource = nil)
-  	@related_resource = related_resource
-  	
-  	@bindings = nil
-  	@binding_triple = nil
-  	@conditions = nil
-  	@order = nil
-  	@distinct = nil
-  end
-  
-#----------------------------------------------#
-#               PRIVATE METHODS                #
-#----------------------------------------------#
+	attr_reader :related_resource
+	private :related_resource
 
-  private
+	# Container Attributes
+	attr_reader :bindings, :binding_triple, :conditions, :order, :distinct
+	private :bindings, :binding_triple, :conditions, :order, :distinct
 
-  # Clean all containers (bindings, conditions, order)
-  def clean
+	# Initialize the query engine.
+	#
+	# Arguments:
+	# * +connection+ [<tt>AbstractAdapter</tt>]: The connection used to execute query.
+	# * +related_resource+ [<tt>Resource</tt>]: Resource related to the query
+	def initialize(related_resource = nil)
+		@related_resource = related_resource
+
 		@bindings = nil
 		@binding_triple = nil
 		@conditions = nil
 		@order = nil
 		@distinct = nil
-  end
+	end
   
-  # Convert predicate if a resource is related to the query, e.g. verify if predicate is
-  # included in the resource attributes (for :title, look for a 'title' attribute),
-  # and convert it into a Resource.
-  #
-  # * *predicate* : Symbol representing the predicate.
-  #
-  # *Return* :
-  # * Return a Resource if the predicate is included, a Symbol otherwise.
-  def convert_predicate(predicate)
+#----------------------------------------------#
+#               PRIVATE METHODS                #
+#----------------------------------------------#
+
+	private
+
+	# Clean all containers (bindings, conditions, order)
+	def clean
+		@bindings = nil
+		@binding_triple = nil
+		@conditions = nil
+		@order = nil
+		@distinct = nil
+	end
+  
+	# Convert predicate if a resource is related to the query, e.g. verify if predicate is
+	# included in the resource attributes (for :title, look for a 'title' attribute),
+	# and convert it into a Resource.
+	#
+	# Arguments:
+	# * +predicate+: Symbol representing the predicate.
+	#
+	# Return:
+	# * Return a Resource if the predicate is included, a Symbol otherwise.
+	def convert_predicate(predicate)
 		predicates = @related_resource.predicates	
-		
+
 		if predicate.is_a?(Symbol) && predicates.key?(predicate.to_s)
-				predicate = predicates[predicate.to_s]
+			predicate = predicates[predicate.to_s]
 		end
-		
+
 		return predicate
-  end
+	end
+
 #----------------------------------------------#
 #               PUBLIC METHODS                 #
 #----------------------------------------------#
 
-  public
+	public
 
-  # Add bindings variables in the select clause to the query (for Sparql)
-  #
-  # * *args* : Array of Symbol. Each symbol is a binding variable.
+	# Add bindings variables in the select clause to the query (for Sparql)
+	#
+	# Arguments:
+	# * +args+ [<tt>Array</tt>]: Array of Symbol. Each symbol is a binding variable.
 	def add_binding_variables(*args)
 		if @bindings.nil?
 			@bindings = args
@@ -96,22 +96,24 @@ class QueryEngine
 		end
 	end
 
-  # Add a binding triple in the select clause to the query (for Yars). Only one
-  # triple is allowed for the moment.
-  #
-  # * *subject* : Subject of the triple (Symbol or Resource)
-  # * *predicate* : Predicate of the triple (Symbol or Resource)
-  # * *object* : Object of the triple (Symbol, Resource, String, ...)
+	# Add a binding triple in the select clause to the query (for Yars). Only one
+	# triple is allowed for the moment.
+	#
+	# Arguments:
+	# * +subject+ : Subject of the triple (Symbol or Resource)
+	# * +predicate+ : Predicate of the triple (Symbol or Resource)
+	# * +object+ : Object of the triple (Symbol, Resource, String, ...)
 	def add_binding_triple(subject, predicate, object)
 		@binding_triple = [[subject, predicate, object]]
 	end
 
-  # Add a condition in the where clause. Convert the predicate if a resource is
-  # related to the query.
-  #
-  # * *subject* : Subject of the triple (Symbol or Resource)
-  # * *predicate* : Predicate of the triple (Symbol or Resource)
-  # * *object* : Object of the triple (Symbol, Resource, String, ...)
+	# Add a condition in the where clause. Convert the predicate if a resource is
+	# related to the query.
+	#
+	# Arguments:
+	# * +subject+ : Subject of the triple (Symbol or Resource)
+	# * +predicate+ : Predicate of the triple (Symbol or Resource)
+	# * +object+ : Object of the triple (Symbol, Resource, String, ...)
 	def add_condition(subject, predicate, object)
 		@conditions = Array.new if @conditions.nil?
 		if @related_resource.nil?
@@ -121,27 +123,24 @@ class QueryEngine
 		end
 	end
 
-  # Add an order option on a binding variable
-  #
-  # * *binding_variable* : binding variable (Symbol) to order
-  # * *descendant* : Boolean which True if we want a descendant order.
+	# Add an order option on a binding variable
+	#
+	# Arguments:
+	# * +binding_variable+ : binding variable (Symbol) to order
+	# * +descendant+ : Boolean which True if we want a descendant order.
 	def order_by(binding_variable, descendant=true)
 		@order = Hash.new if @order.nil?
 		@order[binding_variable] = descendant
 	end
 
+	# Activate the keyword searching on Literal object
 	def activate_keyword_search
 		@keyword_search = true
 	end
-	
-	def distinct(*args)
-		@distinct = args
-	end
 
-  # Generate a Sparql query. Return the query string.
-  # Take only the array of binding variables.
+	# Generate a Sparql query. Return the query string.
+	# Take only the array of binding variables.
 	def generate_sparql
-	
 		if (@binding_triple)
 			raise(BindingVariableError, "In #{__FILE__}:#{__LINE__}, SPARQL doesn't support binding triple.")
 		end
@@ -149,11 +148,10 @@ class QueryEngine
 		require 'query_generator/sparql_generator.rb'
 		return SparqlQueryGenerator.generate(@bindings, @conditions, @order, @keyword_search)
 	end
-	
+
 	# Generate a NTriples query. Return the query string.
 	# Can take the array of binding variable or a binding triple.
-	def generate_ntriples
-	
+	def generate_ntriples	
 		if (@bindings and @binding_triple)
 			raise(BindingVariableError, "In #{__FILE__}:#{__LINE__}, cannot add a binding triple with binding variables.")
 		end
@@ -175,20 +173,20 @@ class QueryEngine
 		end
 	end
 
-  # Execute the query on a database, depending of the connection, and after clean
-  # all the containers (bindings, conditions, order).
-  #
-  # *Return* :
-  # * _Array_ Array containing the results of the query, nil if no result.
+	# Execute the query on a database, depending of the connection, and after clean
+	# all the containers (bindings, conditions, order).
+	#
+	# Return:
+	# * [<tt>Array</tt>] Array containing the results of the query, nil if no result.
 	def execute
 		# Choose the query language and generate the query string
 		qs = generate
-		
+
 		# Clean containers
 		clean
-		
+
 		# Execute query
 		return NodeFactory.connection.query(qs)
 	end
-	
+
 end
