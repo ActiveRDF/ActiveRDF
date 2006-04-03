@@ -19,11 +19,11 @@
 
 # We add the active_rdf subdirectory to the LOAD_PATH
 if File.symlink?(__FILE__)
-    $: << File.dirname(File.expand_path(File.readlink(__FILE__))) + '/src'
-    $: << File.dirname(File.expand_path(File.readlink(__FILE__))) + '/src/lib'
+    $: << File.dirname(File.expand_path(File.readlink(__FILE__))) + '/active_rdf/src'
+    $: << File.dirname(File.expand_path(File.readlink(__FILE__))) + '/active_rdf/src/lib'
 else
-    $: << File.dirname(File.expand_path(__FILE__)) + '/src'
-    $: << File.dirname(File.expand_path(__FILE__)) + '/src/lib'
+    $: << File.dirname(File.expand_path(__FILE__)) + '/active_rdf/src'
+    $: << File.dirname(File.expand_path(__FILE__)) + '/active_rdf/src/lib'
 end
 
 # Load Module Class modification for true abstract class
@@ -35,6 +35,7 @@ NamespaceFactory.load_namespaces
 
 # Start the logger
 require 'logger'
+require 'tmpdir'
 
-$logger = Logger.new('/tmp/activerdf.log') if $logger.nil?
+$logger = Logger.new(Dir.tmpdir + '/activerdf.log') if $logger.nil?
 $logger.level = Logger::INFO

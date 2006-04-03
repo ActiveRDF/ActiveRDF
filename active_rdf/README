@@ -1,0 +1,55 @@
+==ActiveRDF
+ActiveRDF is a library for accessing RDF data from Ruby programs.
+See http://activerdf.m3pe.org for more information.
+
+==License
+GPL, see GPL.txt
+
+==Version
+0.1
+
+==Installation
+1. put this whole directory in your Ruby library path, e.g. /usr/lib/ruby/1.8/activerdf.
+2. there is no step 2.
+
+==Usage
+1. require 'active_rdf' in your Ruby file, or
+2. look at the Unit tests to get an idea,  or
+3. read the manual on http://activerdf.m3pe.org
+
+==Problems
+See the log file activerdf.log in your temp directory (e.g /tmp or c:\windows\temp).
+
+==Rails
+To use ActiveRDF with Rails, you need to change a bit of your Rails 
+configuration.  The following works, but is not elegant. Email us if you have a 
+better suggestion.
+
+Put the following in config/environment.rb
+		----
+		require File.join(File.dirname(__FILE__), 'boot')
+
+		Rails::Initializer.run do |config|
+			# Settings in config/environments/* take precedence those specified here
+			
+			# Skip frameworks you're not going to use
+			config.frameworks -= [:active_record]
+
+			# Add additional load paths for your own custom dirs
+			config.load_paths += %W( "#{RAILS_ROOT}/lib/activerdf" )
+
+			# TODO find out the right version: development/testing/etc.
+			yaml = YAML::load_file config.database_configuration_file
+			yaml = yaml['development']
+			require 'active_rdf'
+			NodeFactory.connection yaml.symbolize_keys
+			nil
+		end
+		----
+
+==Authors
+Eyal Oren <first.last@deri.org>
+Renaud Delbru <first.last@deri.org>
+
+==Date
+Fri Mar 31 15:06:26 IST 2006
