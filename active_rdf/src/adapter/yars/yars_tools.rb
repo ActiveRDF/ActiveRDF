@@ -24,18 +24,6 @@ class YarsAdapter
   
 	private
 
-	# Convert n3 resource and literal into ActiveRDF::Resource or String
-	def unwrap(resource)
-		case resource
-		when /"(.*)"/
-			return $1
-		when /<(.*)>/
-			return Resource.new($1)
-		else
-			raise(WrapNTriplesError, "In #{__FILE__}:#{__LINE__}, cannot wrap unknown resource #{resource.class}")
-		end
-	end
-
 	# Convert ActiveRDF::Node into n3 resource and literal
 	#
 	# Arguments:
@@ -45,19 +33,19 @@ class YarsAdapter
 	# * String to use in Yars Adapter
 	def wrap(node)
 		case node
-    when NilClass
-    	raise(WrapYarsError, "In #{__FILE__}:#{__LINE__}, node is nil.")
-  	when Literal
-    	return "\"#{node.value}\""
-  	when IdentifiedResource
-    	return "<#{node.uri}>"
-    when AnonymousResource
-    	raise(WrapYarsError, "In #{__FILE__}:#{__LINE__}, Blank Nodes not implemented in yars adapter.")
-    when Container
-    	raise(WrapYarsError, "In #{__FILE__}:#{__LINE__}, container not implemented in yars adapter.")
-    when Collection
-    	raise(WrapYarsError, "In #{__FILE__}:#{__LINE__}, collection not implemented in yars adapter.")
-    else
+		when NilClass
+			raise(WrapYarsError, "In #{__FILE__}:#{__LINE__}, node is nil.")
+		when Literal
+			return "\"#{node.value}\""
+		when IdentifiedResource
+			return "<#{node.uri}>"
+		when AnonymousResource
+			raise(WrapYarsError, "In #{__FILE__}:#{__LINE__}, Blank Nodes not implemented in yars adapter.")
+		when Container
+			raise(WrapYarsError, "In #{__FILE__}:#{__LINE__}, container not implemented in yars adapter.")
+		when Collection
+			raise(WrapYarsError, "In #{__FILE__}:#{__LINE__}, collection not implemented in yars adapter.")
+		else
 			raise(WrapYarsError, "In #{__FILE__}:#{__LINE__}, cannot unwrap unknown resource #{resource.class}.")
 		end
 	end
@@ -79,6 +67,7 @@ class YarsAdapter
 				results << parse_n3_triple(scanner)
 			end
 		end
+		$logger.debug "parse_yars_query_result: " + results.inspect
 		return results
 	end
 
@@ -148,7 +137,7 @@ class YarsAdapter
 		
 		if scanner.match?(uri_pattern)
 			scanner.scan(uri_pattern)
-			return NodeFactory.create_identified_resource(scanner[1])
+			return IdentifiedResource.create(scanner[1])
 		elsif scanner.match?(bnode_pattern)
 			scanner.scan(bnode_pattern)
 			raise(NTriplesParsingYarsError, "Blank Node not implemented.")
@@ -171,7 +160,7 @@ class YarsAdapter
   	
 		if scanner.match?(uri_pattern)
 			scanner.scan(uri_pattern)
-			return NodeFactory.create_identified_resource(scanner[1])
+			return IdentifiedResource.create(scanner[1])
 		else
 			raise(NTriplesParsingYarsError, "Invalid predicate: #{scanner.inspect}.")
 		end  	
@@ -191,14 +180,14 @@ class YarsAdapter
 
 		if scanner.match?(uri_pattern)
 			scanner.scan(uri_pattern)
-			return NodeFactory.create_identified_resource(scanner[1])
+			return IdentifiedResource.create(scanner[1])
 		elsif scanner.match?(bnode_pattern)
 			scanner.scan(bnode_pattern)
 			raise(NTriplesParsingYarsError, "Blank Node not implemented.")
 			#return NodeFactory.create_anonymous_resource(scanner[1])
 		elsif scanner.match?(literal_pattern)
 			scanner.scan(literal_pattern)
-			return NodeFactory.create_literal(scanner[1], 'literal type not implemented.')
+			return Literal.create(scanner[1])
 		else
 			raise(NTriplesParsingYarsError, "Invalid object: #{scanner.inspect}.")
 		end  
