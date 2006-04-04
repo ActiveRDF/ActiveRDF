@@ -113,6 +113,8 @@ class NodeFactory
 			# e.g. a resource with rdf:type foaf:Person will be instantiated using Person.create
 			type = Resource.get(NodeFactory.create_basic_resource(uri), NamespaceFactory.get(:rdf_type))
 			
+			$logger.debug "create_identified_resource - type = " + type.to_s
+			
 			if type.nil?
 				# if type unknown and klass given, create klass resource
 				if not klass.nil?
@@ -140,8 +142,8 @@ class NodeFactory
 				else
 					class_name = determine_class(type)
 					
-					if not klass.nil? and not class_name.eql?(klass.to_s)
-						raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Try to instantiate a resource with a wrong type.")
+					if not klass.nil? and not klass = IdentifiedResource and not class_name.eql?(klass.to_s)
+						raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Try to instantiate a #{klass.to_s} with a wrong type #{class_name}.")
 					end
 					
 					resource = instantiate_resource(uri, class_name)
@@ -156,6 +158,7 @@ class NodeFactory
 				resource = IdentifiedResource.new(uri)
 			end
 		end
+		$logger.debug 'create_identified_resource return - class = ' + resource.class.to_s
 		resources[uri] = resource
 	end
 	
@@ -245,15 +248,24 @@ class NodeFactory
 		# Arguments verification
 		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, type is nil.") if type.nil?
 
+		$logger.debug 'determine_class - uri type = ' + type.uri
+
 		class_name = type.local_part
+
+		$logger.debug 'determine_class - class_name = ' + class_name
 
 		# If it is a known class but not a Resource class, we instantiate it into the
 		# correct class.
 		# Otherwise, we instantiate it into a IdentifiedResource.
 		if Module.constants.include?(class_name) and
 			class_name != 'Class' and class_name != 'Resource'
+			
+			$logger.debug 'determine_class - return = ' + class_name
+			
 			return class_name
 		else
+			$logger.debug 'determine_class - return = IdentifiedResource'
+		
 			return IdentifiedResource.to_s
 		end
 	end
