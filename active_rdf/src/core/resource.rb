@@ -84,8 +84,12 @@ class Resource; implements Node
 		 
 		# Execute query
 		results = qe.execute
-		return nil if results.nil?
-		return_distinct_results results
+		# results is not allowed to be nil, we should throw an AdapterError then 
+
+		if (results.nil? or not results.kind_of? Array)
+			raise(AdapterError,"Unexpected result in #{__FILE__}:#{__LINE__}") 
+		end
+		results.uniq
 	end
 
 	# Find statements of a resource according to the values of their attributes.
@@ -97,7 +101,7 @@ class Resource; implements Node
 	# * +options+ [<tt>Hash</tt>]: Hash of options : { :keyword_search => (true | false) }
 	#
 	# Return:
-	# * [<tt>Array</tt>] An array of distinct result (Node), a single Node or nil if no result.
+	# * [<tt>Array</tt>] A (possibly empty) array of distinct results (Node).
 	def self.find(conditions = {}, options = {})
 		# TODO: If Resource calls this function, we can't give conditions, because we don't
 		# know the namespace for predicates
@@ -128,8 +132,12 @@ class Resource; implements Node
 		qe.activate_keyword_search if options[:keyword_search]
 		
 		results = qe.execute
-		return nil if results.nil?
-		return_distinct_results(results)
+
+		# results is not allowed to be nil, we should throw an AdapterError then 
+		if (results.nil? or not results.kind_of? Array)
+			raise(AdapterError,"Unexpected result in #{__FILE__}:#{__LINE__}") 
+		end
+		results.uniq
 	end
 	
 	# Look in the database if a resource exists. Add automatically a condition on the resource
@@ -227,24 +235,4 @@ class Resource; implements Node
 		$logger.debug "Find predicate result : " + predicates.inspect
 		return predicates				
 	end
-
-	
-	# Remove all duplicate values and return an array if multiple values, nil if no value
-	# or the single value.
-	def self.return_distinct_results(results)
-		raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, results array is nil.") if results.nil?
-		raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, results is not an array.") if !results.kind_of?(Array)
-		
-		results.uniq!
-		case results.size
-		when 0
-			return nil
-		when 1
-			return results.pop
-		else
-			return results
-		end
-	end
-
 end
-
