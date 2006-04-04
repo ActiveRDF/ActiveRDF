@@ -89,5 +89,13 @@ class TestIdentifiedResourceCreate < Test::Unit::TestCase
 		assert_equal('regis', regis.name)
 		assert_equal('45', regis.age)
 	end
+	
+	def test_E_load_person_throught_identified_resource
+		regis = IdentifiedResource.create('http://m3pe.org/activerdf/test/test_set_Instance_10')
+		assert_not_nil(regis)
+		assert_instance_of(Person, regis)
+		assert_equal('regis', regis.name)
+		assert_equal('45', regis.age)		
+	end
 
 end
