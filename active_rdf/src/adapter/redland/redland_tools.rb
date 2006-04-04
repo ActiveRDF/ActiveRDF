@@ -80,11 +80,12 @@ class RedlandAdapter
 	
 		value = query_results.binding_value_by_name(binding_name)
 		if value.literal?
-			return NodeFactory.create_literal(value.to_s, 'type not implemented in Redland Adapter.')
+			return Literal.create(value.to_s)
 		elsif value.resource?
-			return NodeFactory.create_identified_resource(value.uri.to_s)
+			return IdentifiedResource.create(value.uri.to_s)
 		elsif value.blank?
-			return NodeFactory.create_anonymous_resource(value.id)
+			raise(RedlandAdapterError, "Blank Node not implemented.")
+			# return NodeFactory.create_anonymous_resource(value.id)
 		else
 			raise(UnknownResourceError, "In #{__FILE__}:#{__LINE__}, unknown node in results.")
 		end	
