@@ -214,13 +214,17 @@ class Resource; implements Node
 		qe.add_binding_variables(:o)
 		qe.add_condition(class_uri, NamespaceFactory.get(:rdfs_subclass), :o)
 		
+		$logger.debug "Before call Find superpredicate for #{class_uri}"
+		
 		# Execute the query
-		qe.execute do |o|
+		qe.execute.each do |o|
+			$logger.debug "Find superpredicate #{o.to_s} for #{class_uri}"
 			superclass = o
 			superpredicates = find_predicates(superclass)
-			predicates.update(superpredicates)			
+			$logger.debug "Found superpredicate : " + superpredicates.inspect
+			predicates.update(superpredicates)
 		end
-
+		$logger.debug "Find predicate result : " + predicates.inspect
 		return predicates				
 	end
 
