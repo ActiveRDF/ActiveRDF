@@ -249,11 +249,26 @@ module AttributesContainer
 			predicate_uri = self.class.predicates[attr_name.to_s]
 			value = Resource.get(self, predicate_uri)
 			
-			if value.nil? or value.kind_of?(Node) or value.kind_of?(Array)
-				@_attributes[attr_name.to_s] = [value, false]
+
+			# extracting the value from the returned Array (resource.get always returns an Array)			
+			database_value = 
+			case value.size
+			when 0:
+				nil
+			when 1:
+				value[0]
 			else
-				raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, value have invalid type : #{value.class}")
+				value
 			end
+
+			# storing the read value in the cache, stating that it has not been changed (yet)
+			@_attributes[attr_name.to_s] = [database_value, false]
+			
+			#if value.nil? or value.kind_of?(Node) or value.kind_of?(Array)
+			#		@_attributes[attr_name.to_s] = [value, false]
+			#else
+			#	raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, value have invalid type : #{value.class}")
+			#end
 			return _attributes[attr_name.to_s][0]
 		else
 			return _attributes[attr_name.to_s][0]
