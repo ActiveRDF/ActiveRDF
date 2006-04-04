@@ -130,6 +130,21 @@ module AttributesContainer
 		end
 	end
 
+	# Get the list of dynamic attributes
+	#
+	# Return:
+	# * [<tt>Array</tt>] An array containing the dynamic attribute names
+	def attributes
+		# If _attributes is nil, we need to load it from the DB
+		if _attributes.nil?
+			initialize_attributes
+		end
+
+		$logger.info 'Get list of dynamic attributes : ' + _attributes.keys.inspect
+
+		return _attributes.keys
+	end
+
 #----------------------------------------------#
 #               CLASS METHODS                  #
 #----------------------------------------------#
