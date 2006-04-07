@@ -60,7 +60,6 @@ class NodeFactory
 		case params[:adapter]
 		when :yars
 			$logger.info 'loading YARS adapter'
-			# TODO: semperwiki web dies after coming here
 			require 'adapter/yars/yars_adapter'
 			@@_connection = YarsAdapter.new(params)
 		when :redland
@@ -124,29 +123,23 @@ class NodeFactory
 					resource = IdentifiedResource.new(uri)
 				end
 			else
+				# adapter should return an Array
+				raise(AdapterError) unless type.is_a? Array
+				 
 				# create a resource in correct subclass
 				# if multiple types known, instantiate as first specific type known
-				if type.is_a?(Array)
-					type.each do |t|
-						if Module.constants.include?(t.local_part)
-							class_name = determine_class(t)
-							
-							if not klass.nil? and not class_name.eql?(klass.to_s)
-								raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Try to instantiate a resource with a wrong type.")
-							end
-							
-							resource = instantiate_resource(uri, class_name)
-							break
+				type.each do |t|
+					if Module.constants.include?(t.local_part)
+						class_name = determine_class(t)
+
+						if not klass.nil? and not klass == IdentifiedResource and not class_name.eql?(klass.to_s)
+							p 'piep'
+							raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Try to instantiate a #{klass.to_s} as type #{class_name}.")
 						end
+						
+						resource = instantiate_resource(uri, class_name)
+						break
 					end
-				else
-					class_name = determine_class(type)
-					
-					if not klass.nil? and not klass = IdentifiedResource and not class_name.eql?(klass.to_s)
-						raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Try to instantiate a #{klass.to_s} with a wrong type #{class_name}.")
-					end
-					
-					resource = instantiate_resource(uri, class_name)
 				end
 			end
 			
