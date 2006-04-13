@@ -19,6 +19,7 @@
 
 require 'net/http'
 require 'uri'
+require 'cgi'
 require 'adapter/abstract_adapter'
 require 'adapter/yars/yars_tools.rb'
 
@@ -84,12 +85,12 @@ class YarsAdapter; implements AbstractAdapter
 		$logger.debug "querying yars in context #@context:\n" + qs
 
 		header = { 'Accept' => 'application/rdf+n3' }
-		response = yars.get(context + '?q=' + URI.escape(qs), header)
+		response = yars.get(context + '?q=' + CGI.escape(qs), header)
 		
 		# If no content, we return an empty array
 		return Array.new if response.is_a?(Net::HTTPNoContent)
 		
-		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, bad request: " + qs) if response.is_a?(Net::HTTPBadRequest)
+		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, bad request: " + qs) unless response.is_a?(Net::HTTPOK)
 		
 		$logger.info 'query response from yars: ' + URI.decode(response.message)
 		#$logger.debug 'results from yars: ' + URI.decode(response.body)
@@ -163,7 +164,7 @@ class YarsAdapter; implements AbstractAdapter
 	def delete(qs)
 		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
 		$logger.debug 'DELETE - query: ' + qs
-		response = yars.delete(@context + '?q=' + URI.encode(qs))
+		response = yars.delete(@context + '?q=' + CGI.escape(qs))
 		$logger.debug 'DELETE - response from yars: ' + URI.decode(response.message)
 		return response.instance_of?(Net::HTTPOK)
 	end

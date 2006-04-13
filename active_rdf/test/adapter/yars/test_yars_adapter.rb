@@ -42,5 +42,12 @@ class TestYarsAdapter < Test::Unit::TestCase
 			adapter = YarsAdapter.new(nil)
 		}
 	end
+
+	def test_query_string_escaped
+		adapter = YarsAdapter.new({ :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test' })
+		s = '@prefix ql: <http://www.w3.org/2004/12/ql#> .  <> ql:select { ?s ?p ?o . };
+			ql:where { ?s ?p ";/?:@&=+$,\\[\\]" . } .'
+		assert_nothing_raised { adapter.query s }
+	end
 	
 end
