@@ -64,6 +64,15 @@ class Literal; implements Node
 	def ==(b)
 		return b.value == value
 	end
+
+	def eql?(b)
+		return self==b
+	end
+
+	def hash
+		value.hash
+	end
+
 	
 #----------------------------------------------#
 #               PRIVATE METHODS                #
