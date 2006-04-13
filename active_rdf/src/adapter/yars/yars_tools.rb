@@ -176,7 +176,13 @@ class YarsAdapter
 	def match_object(scanner)
 		uri_pattern = /<([^>]+)>/
 		bnode_pattern = /_:(\S+)/
-		literal_pattern = /"([^"]*)"/
+		#literal_pattern = /"([^"]*)"/
+		
+		#literal can be either "abc" (without any quote inside), or it 
+		#can be "abc\"def" (with an escaped quote inside)
+		#thus, allowed characters inside the quote is either \" or anything but "
+		literal_characters = /\\"|[^"]/
+		literal_pattern = /"(#{literal_characters}*)"/
 
 		if scanner.match?(uri_pattern)
 			scanner.scan(uri_pattern)
@@ -189,7 +195,7 @@ class YarsAdapter
 			scanner.scan(literal_pattern)
 			return Literal.create(scanner[1])
 		else
-			raise(NTriplesParsingYarsError, "Invalid object: #{scanner.inspect}.")
+			raise(NTriplesParsingYarsError, "Invalid object: \"#{scanner.string}\".")
 		end  
 	end
   
