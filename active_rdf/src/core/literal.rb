@@ -56,6 +56,10 @@ class Literal; implements Node
 		type = determine_type(value)
 		return NodeFactory.create_literal(value.to_s, type)
 	end
+
+	def to_s
+		return value
+	end
 	
 #----------------------------------------------#
 #               PRIVATE METHODS                #

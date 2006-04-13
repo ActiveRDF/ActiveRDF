@@ -36,5 +36,9 @@ class AnonymousResource < Resource
 	# 
 	attr_writer :_id
 
+	def to_s
+		return '[]'
+	end
+
 end
 

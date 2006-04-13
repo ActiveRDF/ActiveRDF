@@ -70,5 +70,9 @@ class IdentifiedResource < Resource
 		return NodeFactory.create_identified_resource(uri, self)
 	end
 
+	def to_s
+		return uri
+	end
+
 end
 
