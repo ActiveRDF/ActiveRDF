@@ -129,11 +129,13 @@ class NodeFactory
 				# create a resource in correct subclass
 				# if multiple types known, instantiate as first specific type known
 				type.each do |t|
+					break if t.is_a? Literal # if the resource has rdf:type "..." it has to be outside our type system
+
+
 					if Module.constants.include?(t.local_part)
 						class_name = determine_class(t)
 
 						if not klass.nil? and not klass == IdentifiedResource and not class_name.eql?(klass.to_s)
-							p 'piep'
 							raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Try to instantiate a #{klass.to_s} as type #{class_name}.")
 						end
 						
