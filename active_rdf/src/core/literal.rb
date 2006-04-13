@@ -60,6 +60,10 @@ class Literal; implements Node
 	def to_s
 		return value
 	end
+
+	def ==(b)
+		return b.value == value
+	end
 	
 #----------------------------------------------#
 #               PRIVATE METHODS                #
