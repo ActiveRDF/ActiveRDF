@@ -129,8 +129,8 @@ class NodeFactory
 				# create a resource in correct subclass
 				# if multiple types known, instantiate as first specific type known
 				type.each do |t|
-					break if t.is_a? Literal # if the resource has rdf:type "..." it has to be outside our type system
-
+					# rdf:type Literal or BNode are outside our type system
+					break unless t.is_a? IdentifiedResource 
 
 					if Module.constants.include?(t.local_part)
 						class_name = determine_class(t)
