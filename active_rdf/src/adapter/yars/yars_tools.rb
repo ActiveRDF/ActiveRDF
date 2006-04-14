@@ -176,17 +176,17 @@ class YarsAdapter
 	# Return:
 	# * [<tt>Node</tt>] ActiveRDF node. 
 	def match_object(scanner)
-		if scanner.match?(Uri_pattern)
+		if scanner.match?(Literal_pattern)
+			# progressing scanner pointer past matched pattern
+			scanner.pos += scanner.matched.size
+			return Literal.create(scanner[1])
+		elsif scanner.match?(Uri_pattern)
 			# progressing scanner pointer past matched pattern
 			scanner.pos += scanner.matched.size
 			return IdentifiedResource.create(scanner[1])
 		elsif scanner.match?(Bnode_pattern)
 			# BNodes not implemented yet
 			raise(NTriplesParsingYarsError, "Blank Node not implemented.")
-		elsif scanner.match?(Literal_pattern)
-			# progressing scanner pointer past matched pattern
-			scanner.pos += scanner.matched.size
-			return Literal.create(scanner[1])
 		else
 			raise(NTriplesParsingYarsError, "Invalid object: \"#{scanner.string}\".")
 		end  
