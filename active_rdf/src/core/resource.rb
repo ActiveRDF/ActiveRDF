@@ -68,6 +68,7 @@ class Resource; implements Node
 	# Return:
 	# * An array of distinct value (Literal or Resource). Nil if no result.
 	def self.get(subject, predicate)
+		$logger.debug "getting #{predicate.local_part} of #{subject}"
 		
 		if not subject.kind_of?(Resource) or not predicate.kind_of?(Resource)
 			raise(ResourceTypeError, "In #{__FILE__}:#{__LINE__}, subject or predicate is not a Resource.")
@@ -79,11 +80,13 @@ class Resource; implements Node
 		else
 			qe = QueryEngine.new
 		end
-		qe.add_binding_variables(:o)
+		qe.add_binding_variables :o
 		qe.add_condition(subject, predicate, :o)
+		$logger.debug "GET query: #{qe.generate}"
 		 
 		# Execute query
 		results = qe.execute
+		$logger.debug "#{subject} has #{predicate.local_part} #{results.uniq}"
 		# results is not allowed to be nil, we should throw an AdapterError then 
 
 		if (results.nil? or not results.kind_of? Array)
