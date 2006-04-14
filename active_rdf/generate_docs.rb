@@ -8,7 +8,7 @@
 #
 # Mail 		: mailto:renaud.delbru@deri.org
 
-rdoc_options = "-SN -c utf-8 -x test -x exceptions -x generate_docs --diagram"
+rdoc_options = "-SN -c utf-8 -x test -x exceptions -x generate_docs"
 
 result = `rdoc1.8 #{rdoc_options}`
 
