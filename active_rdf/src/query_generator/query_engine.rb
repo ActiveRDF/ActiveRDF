@@ -43,6 +43,7 @@ class QueryEngine
 		@conditions = nil
 		@order = nil
 		@distinct = nil
+		@keyword_search = nil
 		@count_variables = false
 	end
   
@@ -59,6 +60,7 @@ class QueryEngine
 		@conditions = nil
 		@order = nil
 		@distinct = nil
+		@keyword_search = nil
 		@count_variables = false
 	end
   
