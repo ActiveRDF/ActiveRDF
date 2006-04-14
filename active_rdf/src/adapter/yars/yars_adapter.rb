@@ -48,7 +48,7 @@ class YarsAdapter; implements AbstractAdapter
 		# some point in time (which I don't know how to do).
 		@yars = Net::HTTP.new(host, port)
 
-		$logger.info("opened YARS connection on http://#{yars.address}:#{yars.port}")
+		$logger.debug("opened YARS connection on http://#{yars.address}:#{yars.port}")
 	end
 
 	# Add the triple s,p,o in the database.
@@ -79,23 +79,29 @@ class YarsAdapter; implements AbstractAdapter
 	# query the RDF database
 	#
 	# qs is an n3 query, e.g. '<> ql:select { ?s ?p ?o . } ; ql:where { ?s ?p ?o . } .'
-	def query(qs)
+	def query(qs, method=:curl)
 		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
 		
 		$logger.debug "querying yars in context #@context:\n" + qs
-
-		header = { 'Accept' => 'application/rdf+n3' }
-		response = yars.get(context + '?q=' + CGI.escape(qs), header)
 		
-		# If no content, we return an empty array
-		return Array.new if response.is_a?(Net::HTTPNoContent)
+		case method
+		when :curl
+			curl_string = "curl -s -H \"Accept: application/rdf+n3\" \"http://#{@host}:#{@port}#{@context}?q=#{CGI.escape(qs)}\""
+			$logger.debug "Sending CURL command: #{curl_string}"
+			response = `#{curl_string}`
+		when :net
+			header = { 'Accept' => 'application/rdf+n3' }
+			response = yars.get(context + '?q=' + CGI.escape(qs), header)
+			
+			# If no content, we return an empty array
+			return Array.new if response.is_a?(Net::HTTPNoContent)
+			
+			raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, bad request: " + qs) unless response.is_a?(Net::HTTPOK)
+			response = response.body
+		end
 		
-		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, bad request: " + qs) unless response.is_a?(Net::HTTPOK)
-		
-		$logger.info 'query response from yars: ' + URI.decode(response.message)
-		#$logger.debug 'results from yars: ' + URI.decode(response.body)
-		
-		parse_yars_query_result(response.body)
+		$logger.debug "parsing YARS response"
+		parse_yars_query_result response
 	end
 
 	# Delete a triple. Generate a query and call the delete method of Yars.
@@ -153,7 +159,7 @@ class YarsAdapter; implements AbstractAdapter
 		
 		response = yars.put(context, data, header)
 		
-		$logger.info 'PUT - response from yars: ' + response.message
+		$logger.debug 'PUT - response from yars: ' + response.message
 		#$logger.debug 'query result: ' + response.body
 		
 		return response.instance_of?(Net::HTTPCreated)

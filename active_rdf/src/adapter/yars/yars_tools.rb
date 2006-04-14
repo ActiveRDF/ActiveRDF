@@ -60,6 +60,7 @@ class YarsAdapter
 	def parse_yars_query_result(query_result)
 		results = Array.new
 		query_result.each_line do |line|
+			$logger.debug "parsing result: #{line}"
 			scanner = StringScanner.new(line.strip)
 			if scanner.match?(/\(\s*/)
 				results << parse_bindings(scanner)
@@ -67,7 +68,6 @@ class YarsAdapter
 				results << parse_n3_triple(scanner)
 			end
 		end
-		$logger.debug "parse_yars_query_result: " + results.inspect
 		return results
 	end
 
@@ -101,8 +101,6 @@ class YarsAdapter
 	# * [<tt>Array</tt>] ActiveRDF object of the binding result.
 	def parse_bindings(scanner)
 		results = Array.new
-	
-		$logger.debug "Enter parse binding line: " + scanner.peek(15)
 	
 		if !scanner.scan(/\(\s*/)
 			raise(NTriplesParsingYarsError, "Closing parenthesis missing: #{scanner.inspect}.")
