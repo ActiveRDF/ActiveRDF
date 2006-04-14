@@ -43,25 +43,28 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 	# Return:
 	# [<tt>String</tt>] Select part of the n3 query
 	def self.select(bindings)
-		select_template = String.new
+		select_template = ''
 
 		raise(BindingVariableError, "No binding variables received.") if bindings.nil? or bindings.empty?
 
 		# If the first element of bindings is an Array, it is a binding triple
 		# else it is binding variables.
 		if bindings.first.instance_of?(Array)
+			$logger.debug "Triple binding: #{bindings.first.inspect}" 
 			s = convert_subject(bindings.first[0])
 			p = convert_predicate(bindings.first[1])
 			o = convert_object(bindings.first[2])
 			select_template << "#{s} #{p} #{o} ."
 		else
+			$logger.debug "Variable binding: #{bindings.inspect}" 
 			select_template << " ( "
   			bindings.each { |binding|
-  				raise(WrongTypeQueryError, "Symbol expected, #{binding.class} received") if !binding.instance_of?(Symbol)
+  				raise(WrongTypeQueryError, "Symbol expected, #{binding.class} received") unless binding.instance_of?(Symbol)
   				select_template << "?#{binding.to_s} "
   			}
 			select_template << ") ."
 		end
+		$logger.debug "Select clause: #{select_template}" 
 
 		return select_template
 	end
