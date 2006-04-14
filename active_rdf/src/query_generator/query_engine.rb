@@ -35,6 +35,7 @@ class QueryEngine
 	# * +connection+ [<tt>AbstractAdapter</tt>]: The connection used to execute query.
 	# * +related_resource+ [<tt>Resource</tt>]: Resource related to the query
 	def initialize(related_resource = nil)
+		@count = NodeFactory.create_basic_resource 'http://sw.deri.org/2004/06/yars#count'
 		@related_resource = related_resource
 
 		@bindings = nil
@@ -42,6 +43,7 @@ class QueryEngine
 		@conditions = nil
 		@order = nil
 		@distinct = nil
+		@count_variables = false
 	end
   
 #----------------------------------------------#
@@ -57,6 +59,7 @@ class QueryEngine
 		@conditions = nil
 		@order = nil
 		@distinct = nil
+		@count_variables = false
 	end
   
 	# Convert predicate if a resource is related to the query, e.g. verify if predicate is
@@ -96,6 +99,22 @@ class QueryEngine
 		end
 	end
 
+	def add_counting_variable(arg)
+		raise(QueryError,'cannot count more than one variable') if arg.kind_of? Array
+		raise(QueryError, 'can only count unbound variables') unless arg.kind_of? Symbol
+		@count_variables = true
+
+		# TODO: Commented since YARS counting is broken
+		## add binding variable to the select list
+		##add_select_variables :n
+		##add_condition arg, @count, :n
+		
+		# TODO: now adding arg itself to select, and then counting uniq results 
+		# (change it back later to use yars:count)
+		add_binding_variables arg
+	end
+
+
 	# Add a binding triple in the select clause to the query (for Yars). Only one
 	# triple is allowed for the moment.
 	#
@@ -115,12 +134,14 @@ class QueryEngine
 	# * +predicate+ : Predicate of the triple (Symbol or Resource)
 	# * +object+ : Object of the triple (Symbol, Resource, String, ...)
 	def add_condition(subject, predicate, object)
+		$logger.debug "adding condition: #{subject} #{predicate} #{object}"
 		@conditions = Array.new if @conditions.nil?
 		if @related_resource.nil?
 			@conditions << [subject, predicate, object]
 		else
 			@conditions << [subject, convert_predicate(predicate), object]
 		end
+		$logger.debug "added condition: #{subject} #{predicate} #{object}"
 	end
 
 	# Add an order option on a binding variable
@@ -141,9 +162,8 @@ class QueryEngine
 	# Generate a Sparql query. Return the query string.
 	# Take only the array of binding variables.
 	def generate_sparql
-		if (@binding_triple)
-			raise(BindingVariableError, "In #{__FILE__}:#{__LINE__}, SPARQL doesn't support binding triple.")
-		end
+		raise(BindingVariableError, "In #{__FILE__}:#{__LINE__}, SPARQL doesn't support binding triple.") if @binding_triple
+		raise(WrongTypeQueryError, "In #{__FILE__}:#{__LINE__}, SPARQL doesn't support counting triples.") if @count_variables
 
 		require 'query_generator/sparql_generator.rb'
 		return SparqlQueryGenerator.generate(@bindings, @conditions, @order, @keyword_search)
@@ -181,12 +201,23 @@ class QueryEngine
 	def execute
 		# Choose the query language and generate the query string
 		qs = generate
+		counting = @count_variables
 
 		# Clean containers
 		clean
 
 		# Execute query
-		return NodeFactory.connection.query(qs)
+		results = NodeFactory.connection.query(qs)
+		if counting
+			# TODO: commented because yars:count broken, change back later
+##			counts = results.collect{|result| result.value.to_i}
+##			return counts[0] if counts.size == 1
+##			return counts
+			#
+			return results.uniq.size
+		else
+			results
+		end
 	end
 
 end
