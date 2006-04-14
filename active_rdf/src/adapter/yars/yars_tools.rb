@@ -21,6 +21,15 @@ require 'strscan'
 require 'adapter/yars/yars_exceptions.rb'
 
 class YarsAdapter
+	Uri_pattern = /<([^>]+)>/
+	Bnode_pattern = /_:(\S+)/
+	
+	#literal can be either "abc" (without any quote inside), or it 
+	#can be "abc\"def" (with an escaped quote inside)
+	#thus, allowed characters inside the quote is either \" or anything but "
+	Literal_characters = /\\"|[^"]/
+	Literal_pattern = /"(#{Literal_characters}*)"/
+
   
 	private
 
@@ -71,6 +80,8 @@ class YarsAdapter
 		return results
 	end
 
+	Space = /\s*/
+
 	# Parse an N3 triple and extract each object.
 	#
 	# Arguments:
@@ -81,13 +92,13 @@ class YarsAdapter
 	def parse_n3_triple(scanner)
 		# Match subject
 		subject = match_subject(scanner)		
-		scanner.scan(/\s*/)
+		scanner.scan Space
 		# Match predicate
 		predicate = match_predicate(scanner)
-		scanner.scan(/\s*/)
+		scanner.scan Space
 		# Match object
 		object = match_object(scanner)
-		scanner.scan(/\s*/)
+		scanner.scan Space
 		
 		return [subject, predicate, object]
 	end
@@ -108,7 +119,7 @@ class YarsAdapter
 	
 		while !scanner.match?(/\)/) do
 			results << match_object(scanner)
-			scanner.scan(/\s*/)
+			scanner.scan Space
 		end
 	
 		if !scanner.scan(/\)\s*\./)
@@ -130,17 +141,12 @@ class YarsAdapter
 	# Return:
 	# * [<tt>Resource</tt>] ActiveRDF identified resource or anonymous resource.
 	def match_subject(scanner)
-		uri_pattern = /<([^>]+)>/
-		bnode_pattern = /_:(\S+)/
-		
-		if scanner.match?(uri_pattern)
-			scanner.scan(uri_pattern)
+		if scanner.match?(Uri_pattern)
+			scanner.pos += scanner.matched.size
 			return IdentifiedResource.create(scanner[1])
-		elsif scanner.match?(bnode_pattern)
-			scanner.scan(bnode_pattern)
+		elsif scanner.match?(Bnode_pattern)
+			scanner.pos += scanner.matched.size
 			raise(NTriplesParsingYarsError, "Blank Node not implemented.")
-			# check if id in local hash, otherwise create new blank node
-			#return AnonymousResource.create
 		else
 			raise(NTriplesParsingYarsError, "Invalid subject: #{scanner.inspect}.")
 		end  	
@@ -154,10 +160,8 @@ class YarsAdapter
 	# Return:
 	# * [<tt>Resource</tt>] ActiveRDF identified resource. 
 	def match_predicate(scanner)
-		uri_pattern = /<([^>]+)>/
-  	
-		if scanner.match?(uri_pattern)
-			scanner.scan(uri_pattern)
+		if scanner.match?(Uri_pattern)
+			scanner.pos += scanner.matched.size
 			return IdentifiedResource.create(scanner[1])
 		else
 			raise(NTriplesParsingYarsError, "Invalid predicate: #{scanner.inspect}.")
@@ -172,25 +176,16 @@ class YarsAdapter
 	# Return:
 	# * [<tt>Node</tt>] ActiveRDF node. 
 	def match_object(scanner)
-		uri_pattern = /<([^>]+)>/
-		bnode_pattern = /_:(\S+)/
-		#literal_pattern = /"([^"]*)"/
-		
-		#literal can be either "abc" (without any quote inside), or it 
-		#can be "abc\"def" (with an escaped quote inside)
-		#thus, allowed characters inside the quote is either \" or anything but "
-		literal_characters = /\\"|[^"]/
-		literal_pattern = /"(#{literal_characters}*)"/
-
-		if scanner.match?(uri_pattern)
-			scanner.scan(uri_pattern)
+		if scanner.match?(Uri_pattern)
+			# progressing scanner pointer past matched pattern
+			scanner.pos += scanner.matched.size
 			return IdentifiedResource.create(scanner[1])
-		elsif scanner.match?(bnode_pattern)
-			scanner.scan(bnode_pattern)
+		elsif scanner.match?(Bnode_pattern)
+			# BNodes not implemented yet
 			raise(NTriplesParsingYarsError, "Blank Node not implemented.")
-			#return NodeFactory.create_anonymous_resource(scanner[1])
-		elsif scanner.match?(literal_pattern)
-			scanner.scan(literal_pattern)
+		elsif scanner.match?(Literal_pattern)
+			# progressing scanner pointer past matched pattern
+			scanner.pos += scanner.matched.size
 			return Literal.create(scanner[1])
 		else
 			raise(NTriplesParsingYarsError, "Invalid object: \"#{scanner.string}\".")
