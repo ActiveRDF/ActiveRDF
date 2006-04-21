@@ -223,7 +223,9 @@ module AttributesContainer
 			@_attributes[attr_name.to_s] = [Literal.create(value), true]
 		end
 
-		save
+		# NOTE: we do not save data automatically, uncomment this to automatically save 
+		# all changes directly into the database
+		#save
 	end
 
 	# Return attribute value.
