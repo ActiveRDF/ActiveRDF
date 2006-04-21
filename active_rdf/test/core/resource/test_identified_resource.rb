@@ -29,6 +29,12 @@ class TestIdentifiedResource < Test::Unit::TestCase
 		assert_kind_of(IdentifiedResource, class_uri)
 		assert_equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#Resource', class_uri.uri)
 	end
+
+	def test_equality_identified_resources
+		a = IdentifiedResource.new 'abc'
+		b = IdentifiedResource.new 'abc'
+		assert_equal a,b
+	end
 	
 	def test_B_classuri_on_instance_level
 		resource = IdentifiedResource.new('http://m3pe.org/activerdf/test/identifiedresource')
