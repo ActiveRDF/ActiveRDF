@@ -66,7 +66,11 @@ class Literal; implements Node
 	end
 
 	def eql?(b)
-		return b.value == value
+		if b.class == self.class
+			return b.value == value
+		else
+			return false
+		end
 	end
 
 	def hash

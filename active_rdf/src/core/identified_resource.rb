@@ -79,7 +79,11 @@ class IdentifiedResource < Resource
 	end
 
 	def eql?(b)
-		return b.uri == uri
+		if b.class == self.class
+			return b.uri == uri
+		else 
+			return false
+		end
 	end
 
 	def hash
