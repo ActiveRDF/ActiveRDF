@@ -130,10 +130,10 @@ class NodeFactory
 		raise(NodeFactoryError, 'In #{__FILE__}:#{__LINE__}, Resource URI is invalid. Cannot instanciated the object.') if uri.nil?
 		
 		unless resources[uri].nil?
-			$logger.info "creating resource #{uri}; found in cache"
+			$logger.debug "creating resource #{uri}; found in cache"
 			return resources[uri]
 		else
-			$logger.info "creating resource #{uri}; not found in cache"
+			$logger.debug "creating resource #{uri}; not found in cache"
 			# try to instantiate object as class defined by the localname of its rdf:type, 
 			# e.g. a resource with rdf:type foaf:Person will be instantiated using Person.create
 			type = Resource.get(NodeFactory.create_basic_resource(uri), NamespaceFactory.get(:rdf_type))
