@@ -21,19 +21,16 @@
 #
 
 require 'activerdf_exceptions'
-
 require 'core/literal'
 require 'core/resource'
 require 'core/identified_resource'
 require 'core/anonymous_resource'
-
+require 'memcache'
 class NodeFactory
 
 	# Instanciation of adapter
 	@@_connection = nil
-	
-	# Hash of instanciated resources
-	@@_resources = Hash.new
+	@@cache = nil
 	
 #----------------------------------------------#
 #               PUBLIC METHODS                 #
@@ -50,12 +47,15 @@ class NodeFactory
 	# Return:
 	# * [<tt>AbstractAdapter</tt>] The current connection with the RDF DataBase.
 	def self.connection(params = nil)
+		$logger.info "initialising connection #{params.inspect}"
 	
 		if @@_connection.nil? and params.nil?
 			raise(ConnectionError, "In #{__FILE__}:#{__LINE__}, no parameters to instantiate connection.")
 		elsif !@@_connection.nil? and params.nil?
 			return @@_connection
 		end
+
+		init_cache(params[:cache_server] || params[:host]) if @@cache.nil?
 	
 		case params[:adapter]
 		when :yars
@@ -70,9 +70,27 @@ class NodeFactory
 			raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, invalid adapter.")
 		end
 		return @@_connection
-		
 	end
-	
+
+	# initialises memcached server
+	def self.init_cache cache_server 
+		if cache_server.kind_of? String
+			cache_servers = [cache_server]
+		elsif cache_server.kind_of? Array
+			cache_servers = cache_server
+		else
+			raise ActiveRdfError('incorrect cache server specified')
+		end
+
+		begin
+			@@cache = MemCache.new
+			@@cache.servers = cache_servers.collect {|host| MemCache::Server.new host }
+		rescue MemCache::MemCacheError => e
+			raise ActiveRdfError("cache server not accessible: #{e.message}")
+		end
+		$logger.info "memcache initialised: #{@@cache.inspect}"
+	end
+
 	# You don't have to use this method. This method is used internaly in ActiveRDF.
 	#
 	# Arguments:
@@ -81,11 +99,18 @@ class NodeFactory
 	# Return:
 	# * [<tt>IdentifiedResource</tt>] A Basic IdentifiedResource.
 	def self.create_basic_resource(uri)
-		if resources.key?(uri)
-			return resources[uri]
-		else
+
+		raise(ActiveRdfError, "connection not initialised") if @@_connection.nil?
+		
+		# if resources[uri] exists (cache) and is not nil, then we return that
+		# otherwise, we create the new resource, store it in resources[uri] (cache) 
+		# and return it
+		if resources[uri].nil?
+			$logger.debug "creating resource #{uri}; not found in cache"
 			resources[uri] = IdentifiedResource.new(uri)
-			return resources[uri]
+		else
+			$logger.debug "creating resource #{uri}; found in cache"
+			resources[uri]
 		end
 	end
 		
@@ -104,10 +129,11 @@ class NodeFactory
 		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Resource hash not initialised.") if resources.nil?
 		raise(NodeFactoryError, 'In #{__FILE__}:#{__LINE__}, Resource URI is invalid. Cannot instanciated the object.') if uri.nil?
 		
-		if resources.key?(uri)
-			resource = resources[uri]
-			return resource
+		unless resources[uri].nil?
+			$logger.info "creating resource #{uri}; found in cache"
+			return resources[uri]
 		else
+			$logger.info "creating resource #{uri}; not found in cache"
 			# try to instantiate object as class defined by the localname of its rdf:type, 
 			# e.g. a resource with rdf:type foaf:Person will be instantiated using Person.create
 			type = Resource.get(NodeFactory.create_basic_resource(uri), NamespaceFactory.get(:rdf_type))
@@ -144,7 +170,7 @@ class NodeFactory
 					end
 				end
 			end
-			
+		
 			# if we didn't find any type to instantiate it to and klass given, create klass resource
 			if resource.nil? and not klass.nil?
 				resource = instantiate_resource(uri, klass.to_s)
@@ -154,6 +180,7 @@ class NodeFactory
 			end
 		end
 		$logger.debug 'create_identified_resource return - class = ' + resource.class.to_s
+
 		resources[uri] = resource
 	end
 	
@@ -202,9 +229,10 @@ class NodeFactory
 	end
 	
 	# Clear the resources hash
-  	def self.clear
-  		resources.clear
-  	end
+	def self.clear
+		$logger.info 'clearing the cache'
+		resources.flush_all
+	end
   
 #----------------------------------------------#
 #               PRIVATE METHODS                #
@@ -214,7 +242,7 @@ class NodeFactory
 
 	# Return the resources Hash
 	def self.resources
-		return @@_resources
+		@@cache
 	end
 
 	# Instantiate a resource with this related class
