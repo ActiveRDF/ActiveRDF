@@ -24,6 +24,8 @@ require 'test/node_factory/person'
 require 'test/adapter/yars/manage_yars_db'
 require 'test/adapter/redland/manage_redland_db'
 
+DB = :yars
+DB_HOST = 'opteron'
 class TestNodeFactoryPerson < Test::Unit::TestCase
 
 	def setup
@@ -71,7 +73,7 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 		assert_equal('audrey', other_person.name)		
 
 		renaud = other_person.knows
-		assert_equal(renaud.object_id, person.object_id)
+		assert_equal(renaud, person)
 	end
 	
 	def test_C_verify_multiple_resource_attributes
@@ -139,22 +141,22 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 	end
 	
 	def test_K_dynamic_find_method_on_person
-		renaud = Person.find_by_name('renaud')
+		renaud = Person.find_by_name('renaud').first
 		assert_not_nil(renaud)
 		assert_instance_of(Person, renaud)
 		assert_equal('renaud', renaud.name)
 		assert_equal('23', renaud.age)
 		assert_instance_of(Person, renaud.knows)
 		
-		renaud2 = Person.find_by_age('23')
+		renaud2 = Person.find_by_age('23').first
 		assert_not_nil(renaud2)
 		assert_instance_of(Person, renaud2)
-		assert_equal(renaud.object_id, renaud2.object_id)
+		assert_equal(renaud, renaud2)
 		
-		renaud3 = Person.find_by_name_and_age('renaud', '23')
+		renaud3 = Person.find_by_name_and_age('renaud', '23').first
 		assert_not_nil(renaud3)
 		assert_instance_of(Person, renaud3)
-		assert_equal(renaud.object_id, renaud3.object_id)
+		assert_equal(renaud, renaud3)
 	end
 	
 	def test_L_dynamic_find_method_with_resource_attribute_on_person
@@ -171,7 +173,7 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 	def test_M_dynamic_find_method_with_multiple_resource_attributes_on_person
 		audrey = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_9')
 		renaud = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_7')
-		regis = Person.find_by_knows([audrey, renaud])
+		regis = Person.find_by_knows([audrey, renaud]).first
 		assert_not_nil(regis)
 		assert_instance_of(Person, regis)
 		assert_equal('regis', regis.name)

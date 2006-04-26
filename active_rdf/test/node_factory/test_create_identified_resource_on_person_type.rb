@@ -76,9 +76,8 @@ class TestNodeFactoryIdentifiedResource < Test::Unit::TestCase
 	end
 
 	def test_E_create_same_instance_of_known_type
-		person = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')
-		object_id = person.object_id
-		person = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')
-		assert_equal(object_id, person.object_id, "Not the same instance of Person.")
+		person1 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')
+		person2 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_7')
+		assert_equal(person1,person2, "Not the same instance of Person.")
 	end
 end

@@ -71,10 +71,9 @@ class TestNodeFactoryUnknownIdentifiedResource < Test::Unit::TestCase
 	end
 
 	def test_E_create_same_instance_of_unknow_type
-		identified_resource = NodeFactory.create_identified_resource('http://m3pe.org/identifiedresource')
-		object_id = identified_resource.object_id
-		identified_resource = NodeFactory.create_identified_resource('http://m3pe.org/identifiedresource')
-		assert_equal(object_id, identified_resource.object_id, "Not the same instance of the identified resource.")
+		identified_resource1 = NodeFactory.create_identified_resource('http://m3pe.org/identifiedresource')
+		identified_resource2 = NodeFactory.create_identified_resource('http://m3pe.org/identifiedresource')
+		assert_equal(identified_resource1, identified_resource2, "Not the same instance of the identified resource.")
 	end
 
 
