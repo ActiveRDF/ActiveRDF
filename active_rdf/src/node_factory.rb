@@ -47,8 +47,6 @@ class NodeFactory
 	# Return:
 	# * [<tt>AbstractAdapter</tt>] The current connection with the RDF DataBase.
 	def self.connection(params = nil)
-		$logger.info "initialising connection #{params.inspect}"
-	
 		if @@_connection.nil? and params.nil?
 			raise(ConnectionError, "In #{__FILE__}:#{__LINE__}, no parameters to instantiate connection.")
 		elsif !@@_connection.nil? and params.nil?
