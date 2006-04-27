@@ -140,7 +140,7 @@ module AttributesContainer
 			initialize_attributes
 		end
 
-		$logger.info 'Get list of dynamic attributes : ' + _attributes.keys.inspect
+		$logger.debug 'Get list of dynamic attributes : ' + _attributes.keys.inspect
 
 		return _attributes.keys
 	end
