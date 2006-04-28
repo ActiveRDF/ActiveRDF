@@ -75,7 +75,7 @@ class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 		assert_not_nil(results)
 		assert_instance_of(Array, results)
 		results.uniq!
-		assert_equal(31, results.size)
+		assert_equal(25, results.size)
 		result = results.first
 		assert_kind_of(Node, result)
 	end
