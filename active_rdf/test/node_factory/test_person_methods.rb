@@ -24,8 +24,6 @@ require 'test/node_factory/person'
 require 'test/adapter/yars/manage_yars_db'
 require 'test/adapter/redland/manage_redland_db'
 
-DB = :yars
-DB_HOST = 'opteron'
 class TestNodeFactoryPerson < Test::Unit::TestCase
 
 	def setup

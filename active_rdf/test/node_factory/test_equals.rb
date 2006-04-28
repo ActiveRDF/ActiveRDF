@@ -57,7 +57,7 @@ class TestResourceEquality < Test::Unit::TestCase
 		assert a.object_id != b.object_id
 		assert_equal a,b
 		assert a == b
-		assert a.eql? b
+		assert a.eql?(b)
 		assert !(a.equal? b)
 	end
 end
