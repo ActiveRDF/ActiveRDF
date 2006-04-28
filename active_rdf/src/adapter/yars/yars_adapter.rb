@@ -39,7 +39,7 @@ class YarsAdapter; implements AbstractAdapter
 	
 		@host = params[:host] || 'localhost'
 		@port = params[:port] || 8080
-		@context = '/' + (params[:context] || '')
+		@context = params[:context] || ''
 		@query_language = 'n3'
 
 		# We don't open the connection yet but let each HTTP method open and close 
@@ -84,7 +84,7 @@ class YarsAdapter; implements AbstractAdapter
 		$logger.debug "querying yars in context #@context:\n" + qs
 		
 		header = { 'Accept' => 'application/rdf+n3' }
-		response = yars.get(context + '?q=' + CGI.escape(qs), header)
+		response = yars.get("/#{context}?q=#{CGI.escape(qs)}", header)
 		
 		# If no content, we return an empty array
 		return Array.new if response.is_a?(Net::HTTPNoContent)
@@ -156,12 +156,11 @@ class YarsAdapter; implements AbstractAdapter
 		header = { 'Content-Type' => 'application/rdf+n3' }
 		
 		$logger.debug 'Yars intance = ' + yars.to_s
-		$logger.debug 'putting data to yars: ' + data
 		
-		response = yars.put(context, data, header)
+		$logger.debug "putting data to yars (in context #{'/'+context}): #{data}"
+		response = yars.put('/'+context, data, header)
 		
 		$logger.debug 'PUT - response from yars: ' + response.message
-		#$logger.debug 'query result: ' + response.body
 		
 		return response.instance_of?(Net::HTTPCreated)
 	end

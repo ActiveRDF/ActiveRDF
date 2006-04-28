@@ -25,10 +25,15 @@ module InstanciatedResourceMethod
 #----------------------------------------------#
 
 	# Saves the current identified  or anonymous resource (self) to RDF storage
-	def save()
+	def save
+		# save resource into database
 		NodeFactory.connection.add(self, NamespaceFactory.get(:rdf_type), class_URI)
+
+		# update the cache
+		NodeFactory.resources[self.uri] = self
 		
-		save_attributes()
+		# and save the (updated) attributes into database
+		save_attributes
 	end
 	
 	# Delete all triples with self as subject.

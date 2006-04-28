@@ -28,56 +28,152 @@ require 'core/anonymous_resource'
 require 'memcache'
 class NodeFactory
 
-	# Instanciation of adapter
-	@@_connection = nil
 	@@cache = nil
+	@@default_host_parameters = {}
+	@@connections = {}
+	@@current_connection = nil
 	
-#----------------------------------------------#
-#               PUBLIC METHODS                 #
-#----------------------------------------------#
-
 	public
 
-	# Return the current instance of the connection. If no connection exists and 
-	# params given, instantiate a new connection.
+	# Initialises connection to data source. Connections are used to execute 
+	# queries on a datasource.
 	#
-	# Arguments:
-	# * +params+ [<tt>Hash</tt>]: Connection parameter. Required only the first time, to initialize the connection.
+	# Params is a hash of parameters such as (depending on the adapter to be 
+	# used) :adapter => :yars, :context => 'test'.
 	#
-	# Return:
-	# * [<tt>AbstractAdapter</tt>] The current connection with the RDF DataBase.
-	def self.connection(params = nil)
-		if @@_connection.nil? and params.nil?
-			raise(ConnectionError, 'no parameters to instantiate connection')
-		elsif !@@_connection.nil? and params.nil?
-			return @@_connection
+	# Connections can only be used if a context has been defined. If invoked 
+	# with only host parameters a host will be setup that cannot be used until a 
+	# context has been specified.
+	#
+	# If only a :context parameter is given and a host has previously been 
+	# defined, the context will be used within that host, and the connection to 
+	# that context will be returned
+	def self.connection params=nil
+		if params.nil?
+			raise ConnectionError,'no parameters defined' if @@current_connection.nil?
+			return @@current_connection
 		end
 
-		init_cache(params[:cache_server] || params[:host]) if @@cache.nil?
-	
+		host = params[:host]
+		context = params[:context]
+		port = params[:port]
+
+		if context.nil?
+			# we are initialising a host 
+			raise ConnectionError, 'no host or context defined' if host.nil?
+			@@default_host_parameters = params
+			return true
+		else
+			if host.nil?
+				if @@default_host_parameters.empty?
+					raise ConnectionError, 'no host known but only context defined'
+				else
+					host = @@default_host_parameters
+				end
+			else
+				# storing the host parameters (except the context) as default (for a possible next time) 
+				@@default_host_parameters = params
+			end
+
+			# init cache if necessary
+			init_cache(params) if @@cache.nil?
+
+			# return the earlier established connection for this context if it exists, 
+			# or establish one otherwise
+			@@current_connection = @@connections[context] || init_adapter(@@default_host_parameters.merge(params))
+			return @@current_connection
+		end
+	end
+
+	# Selects a context to use by default. Invoke multiple times to continuously change context of following 
+	# data manipulations.
+	def self.select_context context=nil
+		raise ConnectionError, 'invalid context' if context.nil?
+		raise ConnectionError, 'no host specified' if @@default_host_parameters.empty?
+		@@current_connection = @@connections[context] || init_adapter({:context => context}.merge(@@default_host_parameters))
+	end
+
+	def self.init_adapter params
 		case params[:adapter]
 		when :yars
 			$logger.debug 'loading YARS adapter'
 			require 'adapter/yars/yars_adapter'
-			@@_connection = YarsAdapter.new(params)
+			connection = YarsAdapter.new(params)
 		when :redland
 			$logger.debug 'loading Redland adapter'
 			require 'adapter/redland/redland_adapter'
-			@@_connection = RedlandAdapter.new(params)
+			connection = RedlandAdapter.new(params)
 		else
 			raise(ActiveRdfError, 'invalid adapter')
 		end
-		return @@_connection
+
+		# saving the connection into connection_pool
+		@@connections[params[:context]] = connection
+		return connection
 	end
 
+	def self.get_contexts params
+		case params[:adapter]
+		when :yars
+			connection = YarsAdapter.new(params.merge(:context => ''))
+			qs = <<EOF
+			@prefix yars: <http://sw.deri.org/2004/06/yars#> . 
+			@prefix ql: <http://www.w3.org/2004/12/ql#> . 
+ 
+			<>  ql:select { (?c).  }; 
+					ql:where { { ?s ?p ?o .} yars:context ?c . } . 
+EOF
+			connection.query qs
+		else
+			raise ConnectionError,'querying for contexts not supported yet'
+		end
+	end
+
+
+
+
+
+##	# Return the current instance of the connection. If no connection exists and 
+##	# params given, instantiate a new connection.
+##	#
+##	# Arguments:
+##	# * +params+ [<tt>Hash</tt>]: Connection parameter. Required only the first time, to initialize the connection.
+##	#
+##	# Return:
+##	# * [<tt>AbstractAdapter</tt>] The current connection with the RDF DataBase.
+##	def self.connection(params = nil)
+##		if @@_connection.nil? and params.nil?
+##			raise(ConnectionError, 'no parameters to instantiate connection')
+##		elsif !@@_connection.nil? and params.nil?
+##			return @@_connection
+##		end
+##
+##		init_cache(params[:cache_server] || params[:host]) if @@cache.nil?
+##	
+##		case params[:adapter]
+##		when :yars
+##			$logger.debug 'loading YARS adapter'
+##			require 'adapter/yars/yars_adapter'
+##			@@_connection = YarsAdapter.new(params)
+##		when :redland
+##			$logger.debug 'loading Redland adapter'
+##			require 'adapter/redland/redland_adapter'
+##			@@_connection = RedlandAdapter.new(params)
+##		else
+##			raise(ActiveRdfError, 'invalid adapter')
+##		end
+##		return @@_connection
+##	end
+
 	# initialises memcached server
-	def self.init_cache cache_server 
+	def self.init_cache params
+		cache_server = params[:cache_server] || params[:host]
 		if cache_server.kind_of? String
 			cache_servers = [cache_server]
 		elsif cache_server.kind_of? Array
 			cache_servers = cache_server
 		else
-			raise ActiveRdfError('incorrect cache server specified')
+			raise(ActiveRdfError,'incorrect cache server specified')
 		end
 
 		begin
@@ -97,17 +193,13 @@ class NodeFactory
 	# Return:
 	# * [<tt>IdentifiedResource</tt>] A Basic IdentifiedResource.
 	def self.create_basic_resource(uri)
-
-		raise(ActiveRdfError, "connection not initialised") if @@_connection.nil?
-		
 		# if resources[uri] exists (cache) and is not nil, then we return that
-		# otherwise, we create the new resource, store it in resources[uri] (cache) 
-		# and return it
+		# otherwise, we create the new resource, store it in the cache and return it
 		if resources[uri].nil?
-			$logger.info "-cache miss for: #{uri}"
+			$logger.debug "-cache miss for: #{uri}"
 			resources[uri] = IdentifiedResource.new(uri)
 		else
-			$logger.info "+cache hit for: #{uri}"
+			$logger.debug "+cache hit for: #{uri}"
 			resources[uri]
 		end
 	end
@@ -228,8 +320,11 @@ class NodeFactory
 	
 	# Clear the resources hash
 	def self.clear
-		$logger.info 'clearing the cache'
-		resources.flush_all
+		$logger.debug 'clearing the cache'
+		@@cache.flush_all unless @@cache.nil?
+		@@default_host_parameters = {}
+		@@connections = {}
+		@@current_connection = nil
 	end
   
 #----------------------------------------------#
@@ -240,6 +335,7 @@ class NodeFactory
 
 	# Return the resources Hash
 	def self.resources
+		raise ActiveRdfError,'cache not initialised yet' if @@cache.nil?
 		@@cache
 	end
 

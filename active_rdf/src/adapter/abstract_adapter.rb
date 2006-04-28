@@ -23,6 +23,7 @@ module AbstractAdapter
 
 	# Type of query language (N3, Sparql)
 	attr_reader :query_language
+	attr_reader :context
 	
 	# Abstract method to be implemented in subclasses.
 	#

@@ -29,12 +29,15 @@ class QueryEngine
 	attr_reader :bindings, :binding_triple, :conditions, :order, :distinct
 	private :bindings, :binding_triple, :conditions, :order, :distinct
 
+	attr_reader :connection
+
 	# Initialize the query engine.
 	#
 	# Arguments:
-	# * +connection+ [<tt>AbstractAdapter</tt>]: The connection used to execute query.
 	# * +related_resource+ [<tt>Resource</tt>]: Resource related to the query
-	def initialize(related_resource = nil)
+	# * +connection+ [<tt>AbstractAdapter</tt>]: The connection used to execute query.
+	def initialize(related_resource = nil, connection = nil)
+		@connection = connection || NodeFactory.connection
 		@count = NodeFactory.create_basic_resource 'http://sw.deri.org/2004/06/yars#count'
 		@related_resource = related_resource
 
@@ -185,7 +188,7 @@ class QueryEngine
 
 	# Choose the query language and generate the query string.
 	def generate
-		case NodeFactory.connection.query_language
+		case connection.query_language
 		when 'sparql'
 			return generate_sparql
 		when 'n3'
@@ -200,7 +203,10 @@ class QueryEngine
 	#
 	# Return:
 	# * [<tt>Array</tt>] Array containing the results of the query, nil if no result.
-	def execute
+	def execute(_connection=nil)
+		@connection = _connection unless _connection.nil?
+		raise ActiveRdfError,"given connection #{_connection} is not an adapter" unless @connection.kind_of? AbstractAdapter
+
 		# Choose the query language and generate the query string
 		qs = generate
 		counting = @count_variables
@@ -209,7 +215,7 @@ class QueryEngine
 		clean
 
 		# Execute query
-		results = NodeFactory.connection.query(qs)
+		results = connection.query(qs)
 		if counting
 			# TODO: commented because yars:count broken, change back later
 ##			counts = results.collect{|result| result.value.to_i}
