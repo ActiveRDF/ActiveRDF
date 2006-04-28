@@ -22,6 +22,9 @@ require 'active_rdf'
 require 'node_factory'
 
 class TestIdentifiedResource < Test::Unit::TestCase
+	def setup
+		NodeFactory.connection :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'nothing'
+	end
 	
 	def test_A_classuri_on_class_level
 		class_uri = IdentifiedResource.class_URI

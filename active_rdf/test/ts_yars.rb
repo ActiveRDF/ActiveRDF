@@ -89,23 +89,23 @@ class TestSuite_AllTests
 
 	def self.test_nodefactory suite
 		# NodeFactory Tests
-		#suite << TestNodeFactoryInitialisationConnection.suite
-		#suite << TestNodeFactoryLiteral.suite
-		#suite << TestNodeFactoryBasicResource.suite
-		#suite << TestResourceEquality.suite
-		#suite << TestNodeFactoryUnknownIdentifiedResource.suite
-		#suite << TestNodeFactoryIdentifiedResource.suite
-		#suite << TestNodeFactoryPerson.suite
+		suite << TestNodeFactoryInitialisationConnection.suite
+		suite << TestNodeFactoryLiteral.suite
+		suite << TestNodeFactoryBasicResource.suite
+		suite << TestResourceEquality.suite
+		suite << TestNodeFactoryUnknownIdentifiedResource.suite
+		suite << TestNodeFactoryIdentifiedResource.suite
+		suite << TestNodeFactoryPerson.suite
 		suite << TestConnection.suite
 	end
 
 	def self.suite
 		suite = Test::Unit::TestSuite.new("ActiveRDF Tests")
 		
-		#test_nodefactory suite
-		#test_adapter suite
-		#test_resource suite
-		#test_namespace suite
+		test_nodefactory suite
+		test_adapter suite
+		test_resource suite
+		test_namespace suite
 					 
 		return suite
 	end

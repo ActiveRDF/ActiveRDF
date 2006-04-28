@@ -24,16 +24,16 @@ require 'test/adapter/yars/manage_yars_db'
 
 class TestYarsAdapterJointQuery < Test::Unit::TestCase
 
-	@context = 'test_query'
+	Context = 'test_query'
 
 	def setup
-		setup_yars(@context)
-		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => @context }
+		setup_yars(Context)
+		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => Context }
 		NodeFactory.connection(params)
 	end	
 	
 	def teardown
-		delete_yars(@context)
+		delete_yars(Context)
 	end
 	
 	def test_A_query_subject_with_joint_resource_object

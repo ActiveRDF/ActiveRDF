@@ -57,7 +57,7 @@ class TestResource < Test::Unit::TestCase
 	def teardown
 		case DB
 		when :yars
-			delete_yars('test_resource')
+			#delete_yars('test_resource')
 		when :redland
 			delete_redland
 		else
@@ -150,9 +150,7 @@ class TestResource < Test::Unit::TestCase
 		resource = IdentifiedResource.create('http://m3pe.org/activerdf/test/exist')
 		
 		assert(!Resource.exists?(resource))
-		
 		resource.save
-		
 		assert(Resource.exists?(resource))
 		
 		clean_db

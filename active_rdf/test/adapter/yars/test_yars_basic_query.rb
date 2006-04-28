@@ -24,19 +24,20 @@ require 'test/adapter/yars/manage_yars_db'
 
 class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 
-	@context = 'test_query'
+	Context = 'test_query'
 
 	def setup
-		setup_yars(@context)
-		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => @context }
+		setup_yars(Context)
+		params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => Context }
 		NodeFactory.connection(params)
 	end	
 	
 	def teardown
-		delete_yars(@context)
+		delete_yars(Context)
 	end
 	
 	def test_A_query_all
+		NodeFactory.connection
 		qs = query_test_A
 		results = NodeFactory.connection.query(qs)
 		assert_not_nil(results)
@@ -142,12 +143,12 @@ class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 
 	private
 	
-	def query_test_A
-		qe = QueryEngine.new
-		qe.add_binding_variables(:s, :p, :o)
-		qe.add_condition(:s, :p, :o)
-		return qe.generate
-	end
+ def query_test_A
+ 	qe = QueryEngine.new
+ 	qe.add_binding_variables(:s, :p, :o)
+ 	qe.add_condition(:s, :p, :o)
+ 	return qe.generate
+ end
 	
 	def query_test_B
 		qe = QueryEngine.new

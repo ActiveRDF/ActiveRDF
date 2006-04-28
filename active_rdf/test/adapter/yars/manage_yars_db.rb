@@ -23,7 +23,7 @@ def setup_yars(context)
 	`java -jar #{dirname}/yars-api-current.jar -p -u http://#{DB_HOST}:8080/#{context} #{dirname}/../../test_set_person.nt`
 	
 	# Delete all instances in the resources hash of the NodeFactory
-	NodeFactory.init_cache DB_HOST
+	#NodeFactory.init_cache DB_HOST
 	NodeFactory.clear
 end
 
