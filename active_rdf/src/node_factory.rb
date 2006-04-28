@@ -48,7 +48,7 @@ class NodeFactory
 	# * [<tt>AbstractAdapter</tt>] The current connection with the RDF DataBase.
 	def self.connection(params = nil)
 		if @@_connection.nil? and params.nil?
-			raise(ConnectionError, "In #{__FILE__}:#{__LINE__}, no parameters to instantiate connection.")
+			raise(ConnectionError, 'no parameters to instantiate connection')
 		elsif !@@_connection.nil? and params.nil?
 			return @@_connection
 		end
@@ -57,15 +57,15 @@ class NodeFactory
 	
 		case params[:adapter]
 		when :yars
-			$logger.info 'loading YARS adapter'
+			$logger.debug 'loading YARS adapter'
 			require 'adapter/yars/yars_adapter'
 			@@_connection = YarsAdapter.new(params)
 		when :redland
-			$logger.info 'loading Redland adapter'
+			$logger.debug 'loading Redland adapter'
 			require 'adapter/redland/redland_adapter'
 			@@_connection = RedlandAdapter.new(params)
 		else
-			raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, invalid adapter.")
+			raise(ActiveRdfError, 'invalid adapter')
 		end
 		return @@_connection
 	end
@@ -104,10 +104,10 @@ class NodeFactory
 		# otherwise, we create the new resource, store it in resources[uri] (cache) 
 		# and return it
 		if resources[uri].nil?
-			$logger.debug "creating resource #{uri}; not found in cache"
+			$logger.info "-cache miss for: #{uri}"
 			resources[uri] = IdentifiedResource.new(uri)
 		else
-			$logger.debug "creating resource #{uri}; found in cache"
+			$logger.info "+cache hit for: #{uri}"
 			resources[uri]
 		end
 	end
