@@ -26,6 +26,31 @@ require 'active_rdf'
 require 'namespace_factory'
 
 class TestNamespaceFactory < Test::Unit::TestCase
+	def setup
+		case DB
+		when :yars
+			setup_yars('test_namespace')
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_namespace' }
+			@connection = NodeFactory.connection(params)
+		when :redland
+			setup_redland
+			params = { :adapter => :redland }
+			@connection = NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end
+	end
+	
+	def teardown
+		case DB
+		when :yars
+			delete_yars('test_namespace')
+		when :redland
+			delete_redland
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
+	end
 
 	def test_1_add_and_get_namespace
 		NamespaceFactory.add(:test, 'http://m3pe.org/test')
