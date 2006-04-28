@@ -25,7 +25,14 @@ require 'test/adapter/redland/manage_redland_db'
 
 class Resource
 	def self.test_return_distinct_results(results)
-		return Resource.return_distinct_results(results)
+		case DB
+		when :yars
+			return results.uniq
+		when :redland
+			return Resource.return_distinct_results(results)
+		else
+			raise ActiveRdfError, 'unknown adapter'
+		end
 	end
 	
 	def self.test_find_predicates(class_uri)
@@ -34,6 +41,29 @@ class Resource
 end
 
 class TestResource < Test::Unit::TestCase
+	def setup
+		case DB
+		when :yars
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource' }
+			@connection = NodeFactory.connection(params)
+		when :redland
+			params = { :adapter => :redland }
+			@connection = NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end
+	end
+	
+	def teardown
+		case DB
+		when :yars
+			delete_yars('test_resource')
+		when :redland
+			delete_redland
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
+	end
 	
 	def test_A_classuri
 		class_uri = Resource.class_URI
@@ -43,32 +73,36 @@ class TestResource < Test::Unit::TestCase
 	end
 	
 	def test_B_return_distinct_results_error
-		assert_raise(ActiveRdfError) {
-			Resource.test_return_distinct_results(nil)
-		}
-		assert_raise(ActiveRdfError) {
-			Resource.test_return_distinct_results(Hash.new)
-		}
+		if DB == :redland
+			assert_raise(ActiveRdfError) {
+				Resource.test_return_distinct_results(nil)
+			}
+			assert_raise(ActiveRdfError) {
+				Resource.test_return_distinct_results(Hash.new)
+			}
+		end
 	end
 	
 	def test_C_return_distinct_results
-		result = Resource.test_return_distinct_results(Array.new)
-		assert_nil(result)
-	
-		result = Resource.test_return_distinct_results(['42'])
-		assert_not_nil(result)
-		assert_kind_of(String, result)
-		assert_equal('42', result)
+		if DB == :redland
+			result = Resource.test_return_distinct_results(Array.new)
+			assert_nil(result)
 		
-		result = Resource.test_return_distinct_results(['42', '9'])
-		assert_not_nil(result)
-		assert_kind_of(Array, result)
-		assert_equal(2, result.size)
-		
-		result = Resource.test_return_distinct_results(['42', '42'])
-		assert_not_nil(result)
-		assert_kind_of(String, result)
-		assert_equal('42', result)
+			result = Resource.test_return_distinct_results(['42'])
+			assert_not_nil(result)
+			assert_kind_of(String, result)
+			assert_equal('42', result)
+			
+			result = Resource.test_return_distinct_results(['42', '9'])
+			assert_not_nil(result)
+			assert_kind_of(Array, result)
+			assert_equal(2, result.size)
+			
+			result = Resource.test_return_distinct_results(['42', '42'])
+			assert_not_nil(result)
+			assert_kind_of(String, result)
+			assert_equal('42', result)
+		end
 	end
 	
 	def test_D_find_predicates_error_class_uri_nil

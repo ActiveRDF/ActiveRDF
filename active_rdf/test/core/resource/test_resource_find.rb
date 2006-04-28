@@ -38,7 +38,7 @@ class TestResourceFind < Test::Unit::TestCase
 		init_empty_db
 		
 		results = Resource.find
-		assert_nil(results)
+		assert results.empty?
 	end
 	
 	def test_B_find_all
@@ -77,7 +77,7 @@ class TestResourceFind < Test::Unit::TestCase
 		predicate2 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/name')
 		object2 = NodeFactory.create_literal('renaud', 'string')
 		
-		subject = Resource.find({predicate1 => object1, predicate2 => object2})
+		subject = Resource.find({predicate1 => object1, predicate2 => object2}).first
 		assert_not_nil(subject)
 		assert_kind_of(Resource, subject)
 		assert_equal('http://m3pe.org/activerdf/test/test_set_Instance_7', subject.uri)

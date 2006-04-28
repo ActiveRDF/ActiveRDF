@@ -54,7 +54,7 @@ class TestResourceGet < Test::Unit::TestCase
 		predicate = NodeFactory.create_identified_resource("http://m3pe.org/predicate")
 		assert_nothing_raised {
 			result = Resource.get(subject, predicate)
-			assert_nil(result)
+			assert result.empty?
 		}
 	end
 	
@@ -65,7 +65,7 @@ class TestResourceGet < Test::Unit::TestCase
 		predicate = NodeFactory.create_identified_resource("http://m3pe.org/predicate_not_exists")
 		assert_nothing_raised {
 			result = Resource.get(subject, predicate)
-			assert_nil(result)
+			assert result.empty?
 		}
 	end
 	
@@ -75,9 +75,8 @@ class TestResourceGet < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource("http://m3pe.org/subject")
 		predicate = NodeFactory.create_identified_resource("http://m3pe.org/predicate3")
 		assert_nothing_raised {
-			result = Resource.get(subject, predicate)
+			result = Resource.get(subject, predicate).first
 			assert_not_nil(result)
-			assert_instance_of(Literal, result)
 			assert_equal('', result.value)
 		}		
 	end
@@ -88,7 +87,7 @@ class TestResourceGet < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource("http://m3pe.org/subject")
 		predicate = NodeFactory.create_identified_resource("http://m3pe.org/predicate1")
 		assert_nothing_raised {
-			result = Resource.get(subject, predicate)
+			result = Resource.get(subject, predicate).first
 			assert_not_nil(result)
 			assert_instance_of(Literal, result)
 			assert_equal('42', result.value)
@@ -101,7 +100,7 @@ class TestResourceGet < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource("http://m3pe.org/subject")
 		predicate = NodeFactory.create_identified_resource("http://m3pe.org/predicate2")
 		assert_nothing_raised {
-			result = Resource.get(subject, predicate)
+			result = Resource.get(subject, predicate).first
 			assert_not_nil(result)
 			assert_instance_of(IdentifiedResource, result)
 			assert_equal('http://m3pe.org/object2', result.uri)

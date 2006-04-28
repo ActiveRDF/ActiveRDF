@@ -63,7 +63,7 @@ class TestIdentifiedResourceCreate < Test::Unit::TestCase
 		assert_not_nil(ir)
 		assert_instance_of(IdentifiedResource, ir)
 		ir2 = IdentifiedResource.create('http://m3pe.org/activerdf/test/identifiedresource')
-		assert_equal(ir.object_id, ir2.object_id)
+		assert_equal(ir, ir2)
 	end
 	
 	def test_C_create_person
