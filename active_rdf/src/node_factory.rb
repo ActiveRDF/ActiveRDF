@@ -81,6 +81,7 @@ class NodeFactory
 			# return the earlier established connection for this context if it exists, 
 			# or establish one otherwise
 			@@current_connection = @@connections[context] || init_adapter(@@default_host_parameters.merge(params))
+			$logger.debug "NodeFactory returning current connection: #{connection}"
 			return @@current_connection
 		end
 	end
@@ -90,7 +91,10 @@ class NodeFactory
 	def self.select_context context=nil
 		raise ConnectionError, 'invalid context' if context.nil?
 		raise ConnectionError, 'no host specified' if @@default_host_parameters.empty?
-		@@current_connection = @@connections[context] || init_adapter({:context => context}.merge(@@default_host_parameters))
+		$logger.info "changing to context #{context}"
+		adapter_params = @@default_host_parameters.merge({:context => context})
+		@@current_connection = (@@connections[context] ||= init_adapter(adapter_params))
+		$logger.debug "available connections: #@@connections"
 	end
 
 	def self.init_adapter params

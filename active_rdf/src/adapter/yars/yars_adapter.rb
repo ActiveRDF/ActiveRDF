@@ -48,7 +48,7 @@ class YarsAdapter; implements AbstractAdapter
 		# some point in time (which I don't know how to do).
 		@yars = Net::HTTP.new(host, port)
 
-		$logger.debug("opened YARS connection on http://#{yars.address}:#{yars.port}")
+		$logger.debug("opened YARS connection on http://#{yars.address}:#{yars.port}/#{context}")
 	end
 
 	# Add the triple s,p,o in the database.
