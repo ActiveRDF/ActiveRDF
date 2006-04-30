@@ -47,13 +47,16 @@ class TestConnection < Test::Unit::TestCase
 
 	def test_A_4
 		NodeFactory.connection :adapter => DB, :host => DB_HOST, :port => 8080
-		assert_nothing_raised {NodeFactory.connection :context => Context }
+		
+		assert_nothing_raised {NodeFactory.connection }
+		assert_raise(ConnectionError) {NodeFactory.connection :context => Context }
+		assert_nothing_raised {NodeFactory.select_context Context }
 	end
 
 	def test_AB_various_inits
 		assert_raise(ConnectionError) {NodeFactory.connection :context => Context }
-		assert_raise(ConnectionError) {NodeFactory.connection :adapter => :yars}
-		assert_raise(ConnectionError) {NodeFactory.connection}
+		assert_nothing_raised {NodeFactory.connection :adapter => :yars}
+		assert_nothing_raised {NodeFactory.connection}
 	end
 
 	def test_B_get_contexts
@@ -67,8 +70,8 @@ class TestConnection < Test::Unit::TestCase
 	def test_C_add_context
 		assert_raise(ConnectionError){NodeFactory.connection}
 		assert_nothing_raised { NodeFactory.connection :adapter => DB, :host => DB_HOST, :port => 8080, :context => Context }
-		assert_nothing_raised {NodeFactory.connection :context => Context}
-		assert_nothing_raised {NodeFactory.connection :context => 'another-context'}
+		assert_nothing_raised {NodeFactory.select_context Context}
+		assert_nothing_raised {NodeFactory.select_context 'another-context'}
 		assert_kind_of YarsAdapter, NodeFactory.connection(:context => Context )
 		all_resources = IdentifiedResource.find
 
