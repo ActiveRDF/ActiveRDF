@@ -22,8 +22,31 @@ require 'active_rdf'
 require 'node_factory'
 
 class TestIdentifiedResource < Test::Unit::TestCase
+
 	def setup
-		NodeFactory.connection :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'nothing'
+		case DB
+		when :yars
+			setup_yars('test_identified_resource')
+			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_identified_resource' }
+			@connection = NodeFactory.connection(params)
+		when :redland
+			setup_redland
+			params = { :adapter => :redland }
+			@connection = NodeFactory.connection(params)
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end
+	end
+	
+	def teardown
+		case DB
+		when :yars
+			delete_yars('test_identified_resource')
+		when :redland
+			delete_redland
+		else
+			raise(StandardError, "Unknown DB type : #{DB}")
+		end	
 	end
 	
 	def test_A_classuri_on_class_level
