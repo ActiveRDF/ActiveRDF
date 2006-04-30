@@ -45,7 +45,7 @@ class IdentifiedResource < Resource
 	# * +uri+ [<tt>String</tt>]: The URI of the resource
 	def initialize(uri)
 		if uri.nil? or uri.empty?
-			raise(ActiveRdfError, 'Resource URI is invalid. Cannot instanciated the object.')
+			raise(ActiveRdfError, 'No URI given. Cannot instantiate object without URI.')
 		end
 		@uri = uri
 	end

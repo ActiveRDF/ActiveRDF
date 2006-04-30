@@ -190,6 +190,8 @@ class Resource; implements Node
 		return uri[delimiter+1..uri.size]
 	end
 
+	alias local_name local_part
+
 #----------------------------------------------#
 #               PRIVATE METHODS                #
 #----------------------------------------------#
