@@ -24,7 +24,7 @@ require 'adapter/redland/redland_exceptions'
 
 class RedlandAdapter; implements AbstractAdapter
 	
-	attr_reader :model, :store, :query_language
+	attr_reader :model, :store, :query_language, :context
 
 	# Instantiate the connection with the Redland DataBase.
 	def initialize(params = {})
@@ -45,8 +45,9 @@ class RedlandAdapter; implements AbstractAdapter
 			@store_path = '/tmp'
 			@store_file = 'test-store'
 			@hash_type = 'bdb'
-		end		
-
+		end
+		
+		@context = params[:context]
 		@store = Redland::HashStore.new(@hash_type, @store_file, @store_path, false) if @store.nil?
 		@model = Redland::Model.new @store
 		@query_language = 'sparql'
@@ -73,7 +74,7 @@ class RedlandAdapter; implements AbstractAdapter
 		end
 	
 		# Redland::Model::add return 0 if add succesfully the statement
-		if @model.add(wrap(s), wrap(p), wrap(o)) != 0
+		if @model.add(wrap(s), wrap(p), wrap(o), context) != 0
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
 			raise(StatementAdditionRedlandError, str_error)
 		end
@@ -103,9 +104,9 @@ class RedlandAdapter; implements AbstractAdapter
 
 		# Find all statement and remove them
 		counter = 0
-		@model.find(wrap(s), wrap(p), wrap(o)) { |_s, _p, _o|
+		@model.find(wrap(s), wrap(p), wrap(o), context) { |_s, _p, _o|
 			# Redland::Model::delete return 0 if delete succesfully the statement
-			if @model.delete(_s, _p, _o) != 0
+			if @model.delete(_s, _p, _o, context) != 0
 				str_error = "In #{__FILE__}:#{__LINE__}, error during removal of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
 				raise(StatementRemoveRedlandError, str_error)
 			end
@@ -133,6 +134,7 @@ class RedlandAdapter; implements AbstractAdapter
 	# * [<tt>Array</tt>] Array containing the result of the query.
 	def query(qs)
 		raise(SparqlQueryFailed, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
+		$logger.debug "Querying redland:\n" + qs
 		# Create the Redland::Query
 		query = Redland::Query.new(qs, query_language)
 		# Execute the query and get the Redland::QueryResult
