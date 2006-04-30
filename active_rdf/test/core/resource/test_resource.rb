@@ -24,17 +24,6 @@ require 'test/adapter/yars/manage_yars_db'
 require 'test/adapter/redland/manage_redland_db'
 
 class Resource
-	def self.test_return_distinct_results(results)
-		case DB
-		when :yars
-			return results.uniq
-		when :redland
-			return Resource.return_distinct_results(results)
-		else
-			raise ActiveRdfError, 'unknown adapter'
-		end
-	end
-	
 	def self.test_find_predicates(class_uri)
 		return Resource.find_predicates(class_uri)
 	end
@@ -57,7 +46,7 @@ class TestResource < Test::Unit::TestCase
 	def teardown
 		case DB
 		when :yars
-			#delete_yars('test_resource')
+			delete_yars('test_resource')
 		when :redland
 			delete_redland
 		else
@@ -70,39 +59,6 @@ class TestResource < Test::Unit::TestCase
 		assert_not_nil(class_uri)
 		assert_kind_of(IdentifiedResource, class_uri)
 		assert_equal('http://www.w3.org/1999/02/22-rdf-syntax-ns#Resource', class_uri.uri)
-	end
-	
-	def test_B_return_distinct_results_error
-		if DB == :redland
-			assert_raise(ActiveRdfError) {
-				Resource.test_return_distinct_results(nil)
-			}
-			assert_raise(ActiveRdfError) {
-				Resource.test_return_distinct_results(Hash.new)
-			}
-		end
-	end
-	
-	def test_C_return_distinct_results
-		if DB == :redland
-			result = Resource.test_return_distinct_results(Array.new)
-			assert_nil(result)
-		
-			result = Resource.test_return_distinct_results(['42'])
-			assert_not_nil(result)
-			assert_kind_of(String, result)
-			assert_equal('42', result)
-			
-			result = Resource.test_return_distinct_results(['42', '9'])
-			assert_not_nil(result)
-			assert_kind_of(Array, result)
-			assert_equal(2, result.size)
-			
-			result = Resource.test_return_distinct_results(['42', '42'])
-			assert_not_nil(result)
-			assert_kind_of(String, result)
-			assert_equal('42', result)
-		end
 	end
 	
 	def test_D_find_predicates_error_class_uri_nil
