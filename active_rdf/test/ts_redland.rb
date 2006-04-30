@@ -45,14 +45,14 @@ require 'test/adapter/redland/test_redland_basic_query'
 require 'test/adapter/redland/test_redland_joint_query'
 
 # Core Tests
-require 'test/resource/test_resource'
-require 'test/resource/test_resource_get'
-require 'test/resource/test_resource_find'
-require 'test/resource/test_identified_resource'
-require 'test/resource/test_identifiedresource_get'
-require 'test/resource/test_identifiedresource_find'
-require 'test/resource/test_identifiedresource_create'
-require 'test/resource/test_identifiedresource_attributescontainer'
+require 'test/core/resource/test_resource'
+require 'test/core/resource/test_resource_get'
+require 'test/core/resource/test_resource_find'
+require 'test/core/resource/test_identified_resource'
+require 'test/core/resource/test_identifiedresource_get'
+require 'test/core/resource/test_identifiedresource_find'
+require 'test/core/resource/test_identifiedresource_create'
+require 'test/core/resource/test_identifiedresource_attributescontainer'
 
 # NamespaceFactory Test
 require 'test/namespace_factory/test_namespace_factory'
