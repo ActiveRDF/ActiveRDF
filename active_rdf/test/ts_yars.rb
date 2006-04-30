@@ -27,6 +27,7 @@ require 'test/unit/ui/console/testrunner'
 
 DB_HOST = 'opteron'
 DB = :yars
+TestContext = 'test'
 
 # Unit test include
 

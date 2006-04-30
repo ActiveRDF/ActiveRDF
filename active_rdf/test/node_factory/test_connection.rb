@@ -55,18 +55,18 @@ class TestConnection < Test::Unit::TestCase
 
 	def test_AB_various_inits
 		assert_raise(ConnectionError) {NodeFactory.connection :context => Context }
-		assert_nothing_raised {NodeFactory.connection :adapter => :yars}
+		assert_nothing_raised {NodeFactory.connection :adapter => :yars, :host => DB_HOST}
 		assert_nothing_raised {NodeFactory.connection}
 	end
 
-	def test_B_get_contexts
-		##
-		## disabling context test...is very slow!
-		
-		#assert_nothing_raised {contexts = NodeFactory.get_contexts :adapter => DB, :host => DB_HOST, :port => 8080}
-		#assert_not_nil contexts
-	end
-
+#	def test_B_get_contexts
+#		##
+#		## disabling context test...is very slow!
+#		
+#		#assert_nothing_raised {contexts = NodeFactory.get_contexts :adapter => DB, :host => DB_HOST, :port => 8080}
+#		#assert_not_nil contexts
+#	end
+#
 	def test_C_add_context
 		assert_raise(ConnectionError){NodeFactory.connection}
 		assert_nothing_raised { NodeFactory.connection :adapter => DB, :host => DB_HOST, :port => 8080, :context => Context }

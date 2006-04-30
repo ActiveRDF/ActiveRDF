@@ -75,11 +75,11 @@ public
 			return @@current_connection
 		end
 		
+		# Initialize cache system
+		init_cache(params[:cache_server] || params[:host])
 		
 		# Initialize DB adapter
 		connection = init_adapter(params)
-		# Initialize cache system
-		init_cache(params[:cache_server] || params[:host])
 		
 		# Save the parameter
 		@@default_host_parameters = params
@@ -522,25 +522,32 @@ private
 			@@context = @@current_connection.context
 		end
 
-		class_name = type.local_part
-		eval "#{class_name} = Class.new IdentifiedResource, &setup_context"
-		$logger.info "created class #{class_name}"
+		class_name = make_class_name type
+		unless self.const_defined? class_name
+			eval "#{class_name} = Class.new IdentifiedResource, &setup_context" 
+			$logger.info "created class #{class_name}"
+		end
 
 		# and loading all attributes into the class
 		get_class_attributes_from_data type, qe
 	end
 
+	def self.make_class_name type
+		type.local_part.delete('_').capitalize
+	end
+
 	# fetches the attribute of a type from the database, and adds them to the 
 	# class of that type
 	def self.get_class_attributes_from_data type, qe
+		class_name = make_class_name type
 		qe.add_binding_variables :p
 		qe.add_condition :s, NamespaceFactory.get(:rdf_type), type
 		qe.add_condition :s, :p, :o
 		all_attributes = qe.execute.uniq
 		for attribute in all_attributes
 			begin
-				self.const_get(type.local_part).add_predicate attribute
-				$logger.info "added attribute #{attribute} to class #{type.local_part}"
+				self.const_get(class_name).add_predicate attribute
+				$logger.info "added attribute #{attribute} to class #{class_name}"
 			rescue ActiveRdfError
 				$logger.warn "found empty attribute in class #{type.uri}"
 			end

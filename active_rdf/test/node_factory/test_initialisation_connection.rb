@@ -28,12 +28,10 @@ require 'node_factory'
 class TestNodeFactoryInitialisationConnection < Test::Unit::TestCase
 
 	def test_1_connection_error
-		assert_raise(ConnectionError) {
-			NodeFactory.connection
-		}
+		assert_raise(ConnectionError) { NodeFactory.connection }
 	end
 	
-	def test_2_connection_redland
+	def test_2_connection
 		params = get_connection_parameters
 		connection = NodeFactory.connection(params)
 		assert_not_nil(connection)
@@ -52,7 +50,7 @@ class TestNodeFactoryInitialisationConnection < Test::Unit::TestCase
 	def get_connection_parameters
 		case DB
 		when :yars
-			return { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'citeseer' }
+			return { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => TestContext }
 		when :redland
 			return { :adapter => :redland }
 		else
