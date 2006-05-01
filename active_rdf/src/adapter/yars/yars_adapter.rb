@@ -77,6 +77,25 @@ class YarsAdapter; implements AbstractAdapter
 		end
 	end
 
+	# queries the RDF database and only counts the results
+	def query_count(qs)
+		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
+		$logger.debug "querying count yars in context #@context:\n" + qs
+		
+		header = { 'Accept' => 'application/rdf+n3' }
+		response = yars.get("/#{context}?q=#{CGI.escape(qs)}", header)
+		
+		# If no content, we return an empty array
+		return 0 if response.is_a?(Net::HTTPNoContent)
+
+		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, bad request: " + qs) unless response.is_a?(Net::HTTPOK)
+		response = response.body
+		
+		# returns number of results
+		return response.count("\n")
+	end
+
+
 	# query the RDF database
 	#
 	# qs is an n3 query, e.g. '<> ql:select { ?s ?p ?o . } ; ql:where { ?s ?p ?o . } .'

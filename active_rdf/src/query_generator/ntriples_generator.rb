@@ -153,7 +153,7 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 
 		template_query = <<END_OF_QUERY
 @prefix ql: <http://www.w3.org/2004/12/ql#> . 
-<> ql:select {
+<> ql:distinct {
 #{select(bindings)}
 }; 
 ql:where {

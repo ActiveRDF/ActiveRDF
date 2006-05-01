@@ -38,7 +38,7 @@ class QueryEngine
 	# * +connection+ [<tt>AbstractAdapter</tt>]: The connection used to execute query.
 	def initialize(related_resource = nil, connection = nil)
 		@connection = connection || NodeFactory.connection
-		@count = NodeFactory.create_basic_resource 'http://sw.deri.org/2004/06/yars#count'
+		#@count = NodeFactory.create_basic_resource 'http://sw.deri.org/2004/06/yars#count'
 		@related_resource = related_resource
 
 		@bindings = nil
@@ -215,16 +215,17 @@ class QueryEngine
 		clean
 
 		# Execute query
-		results = connection.query(qs)
 		if counting
+			## We can now count the results directly (since YARS supports distinct queries)
+			raise ActiveRdfError,'Counting outside YARS disabled temporarily' unless @connection.kind_of? YarsAdapter
+			return connection.query_count(qs)
 			# TODO: commented because yars:count broken, change back later
 ##			counts = results.collect{|result| result.value.to_i}
 ##			return counts[0] if counts.size == 1
 ##			return counts
 			#
-			return results.uniq.size
 		else
-			results
+			return connection.query(qs)
 		end
 	end
 
