@@ -39,7 +39,7 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 		results = NodeFactory.connection.query(qs)
 		assert_not_nil(results)
 		assert_instance_of(Array, results)
-		assert_equal(46, results.size)
+		assert_equal(46, results.size)	
 		result = results.first
 		assert_instance_of(Array, result)
 		assert_equal(3, result.size)
@@ -73,7 +73,7 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 		assert_not_nil(results)
 		assert_instance_of(Array, results)
 		results.uniq!
-		assert_equal(31, results.size)
+		assert_equal(25, results.size)
 		result = results.first
 		assert_kind_of(Node, result)
 	end
