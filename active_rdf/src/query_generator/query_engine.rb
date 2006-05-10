@@ -28,6 +28,10 @@ class QueryEngine
 	# Container Attributes
 	attr_reader :bindings, :binding_triple, :conditions, :order, :distinct
 	private :bindings, :binding_triple, :conditions, :order, :distinct
+	
+	# Container Attributes
+	attr_reader :keywords
+	private :keywords
 
 	attr_reader :connection
 
@@ -46,7 +50,7 @@ class QueryEngine
 		@conditions = nil
 		@order = nil
 		@distinct = nil
-		@keyword_search = nil
+		@keywords = nil
 		@count_variables = false
 	end
   
@@ -63,7 +67,7 @@ class QueryEngine
 		@conditions = nil
 		@order = nil
 		@distinct = nil
-		@keyword_search = nil
+		@keywords = nil
 		@count_variables = false
 	end
   
@@ -105,8 +109,8 @@ class QueryEngine
 	end
 
 	def add_counting_variable(arg)
-		raise(QueryError,'cannot count more than one variable') if arg.kind_of? Array
-		raise(QueryError, 'can only count unbound variables') unless arg.kind_of? Symbol
+		raise(QueryError,'Cannot count more than one variable') if arg.kind_of? Array
+		raise(QueryError, 'Can only count unbound variables') unless arg.kind_of? Symbol
 		@count_variables = true
 
 		# TODO: Commented since YARS counting is broken
@@ -116,9 +120,8 @@ class QueryEngine
 		
 		# TODO: now adding arg itself to select, and then counting uniq results 
 		# (change it back later to use yars:count)
-		add_binding_variables arg
+		add_binding_variables(arg)
 	end
-
 
 	# Add a binding triple in the select clause to the query (for Yars). Only one
 	# triple is allowed for the moment.
@@ -148,6 +151,20 @@ class QueryEngine
 		end
 		$logger.debug "added condition: #{subject} #{predicate} #{object}"
 	end
+	
+	# Add a condition in the where clause. Convert the predicate if a resource is
+	# related to the query.
+	#
+	# Arguments:
+	# * +subject+ : Subject of the triple (Symbol or Resource)
+	# * +predicate+ : Predicate of the triple (Symbol or Resource)
+	# * +object+ : Object of the triple (Symbol, Resource, String, ...)
+	def add_keyword(object, keyword)
+		$logger.debug "adding keyword condition: #{object} #{keyword}"
+		@keywords = Array.new if @keywords.nil?
+		@keywords << [object, keyword]
+		$logger.debug "added keyword condition: #{object} #{keyword}"
+	end
 
 	# Add an order option on a binding variable
 	#
@@ -159,11 +176,6 @@ class QueryEngine
 		@order[binding_variable] = descendant
 	end
 
-	# Activate the keyword searching on Literal object
-	def activate_keyword_search
-		@keyword_search = true
-	end
-
 	# Generate a Sparql query. Return the query string.
 	# Take only the array of binding variables.
 	def generate_sparql
@@ -171,7 +183,7 @@ class QueryEngine
 		raise(WrongTypeQueryError, "In #{__FILE__}:#{__LINE__}, SPARQL doesn't support counting triples.") if @count_variables
 
 		require 'query_generator/sparql_generator.rb'
-		return SparqlQueryGenerator.generate(@bindings, @conditions, @order, @keyword_search)
+		return SparqlQueryGenerator.generate(@bindings, @conditions, @keywords, @order)
 	end
 
 	# Generate a NTriples query. Return the query string.
@@ -182,8 +194,8 @@ class QueryEngine
 		end
 	
 		require 'query_generator/ntriples_generator.rb'
-		return NTriplesQueryGenerator.generate(@bindings, @conditions, @order, @keyword_search) if @bindings
-		return NTriplesQueryGenerator.generate(@binding_triple, @conditions, @order, @keyword_search) if @binding_triple
+		return NTriplesQueryGenerator.generate(@bindings, @conditions, @keywords, @order) if @bindings
+		return NTriplesQueryGenerator.generate(@binding_triple, @conditions, @keywords, @order) if @binding_triple
 	end
 
 	# Choose the query language and generate the query string.

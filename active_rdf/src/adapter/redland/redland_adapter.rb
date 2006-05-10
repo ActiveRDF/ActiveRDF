@@ -141,7 +141,6 @@ class RedlandAdapter; implements AbstractAdapter
 		query_results = @model.query_execute(query)
 		# Verify if the query has failed
 		raise(SparqlQueryFailed, "In #{__FILE__}:#{__LINE__}, Query failed:\n#{qs}") if query_results.nil?
-		
 		# Convert the result to Array if it is a binding, otherwise throw error
 		raise(SparqlQueryFailed, "In #{__FILE__}:#{__LINE__}, Query failed:\n#{qs}") unless query_results.is_bindings?
 		convert_query_result_to_array(query_results) 

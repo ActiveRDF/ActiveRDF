@@ -57,6 +57,9 @@ require 'test/core/resource/test_identifiedresource_attributescontainer'
 # NamespaceFactory Test
 require 'test/namespace_factory/test_namespace_factory'
 
+# QueryEngine Test
+require 'test/query_generator/test_query_engine'
+
 class TestSuite_AllTests
     def self.suite
         suite = Test::Unit::TestSuite.new("ActiveRDF Tests")

@@ -45,7 +45,9 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 	def self.select(bindings)
 		select_template = ''
 
-		raise(BindingVariableError, "No binding variables received.") if bindings.nil? or bindings.empty?
+		if bindings.nil? or bindings.empty?
+			raise(BindingVariableError, "No binding variables received.")
+		end
 
 		# If the first element of bindings is an Array, it is a binding triple
 		# else it is binding variables.
@@ -59,7 +61,9 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 			$logger.debug "Variable binding: #{bindings.inspect}" 
 			select_template << " ( "
   			bindings.each { |binding|
-  				raise(WrongTypeQueryError, "Symbol expected, #{binding.class} received") unless binding.instance_of?(Symbol)
+  				if not binding.instance_of?(Symbol)
+  					raise(WrongTypeQueryError, "Symbol expected, #{binding.class} received")
+  				end
   				select_template << "?#{binding.to_s} "
   			}
 			select_template << ") ."
@@ -79,7 +83,7 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 	#
 	# Return:
 	# [<tt>String</tt>] Where clause of the Sparql query
-	def self.where(conditions, keyword_match)
+	def self.where(conditions)
 		# Init where template
 		where_template = String.new
 
@@ -89,42 +93,43 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 			if o.kind_of?(Array)
 				o.each { |resource| 
 					object = convert_object(resource)
-					where_template << "\t #{subject} #{predicate} #{add_keyword(o) if keyword_match} #{object} . \n"
+					where_template << "\t #{subject} #{predicate} #{object} . \n"
 				}
 			else
 				object = convert_object(o)
-				where_template << "\t #{subject} #{predicate} #{add_keyword(o) if keyword_match} #{object} . \n"
+				where_template << "\t #{subject} #{predicate} #{object} . \n"
 			end
 		end
 		# remove last \n
 		return where_template.chomp
 	end
 
-	# Add keyword command for each object.
+	# Add keywords search conditions.
 	#
 	# Arguments:
-	# * +obj+: Add the keyword command only on Literal object
+	# * +conditions+: Array of [Symbol (variable), String (keyword)].
 	#
 	# Return:
 	# * [<tt>String</tt>] The part of the where clause with the keyword search command
-	def self.add_keyword(obj)
-		if obj.is_a?(Resource)
-			return ""
-		else
-			# creating unique placeholder variable for the keyword search, using a 
-			# random number and checking if we have already generated this exact 
-			# placeholder before
-			#
-			# resulting query will be something like
-			# select {?s ?p ?o .}
-			# where {?s :title ?keyword12345 . ?keyword12345 yars:keyword "test" .}
-			raise(ActiveRdfError, 'too many conditions for keyword search') if @variables.size > 100
-			while @variables[variable = '?keyword' + rand(100).to_s]
-				;
-			end
-			@variables[variable] = true
-			return " #{variable} . #{variable} <http://sw.deri.org/2004/06/yars#keyword> "
+	def self.keyword(conditions)
+		if conditions.nil?
+			return ''
 		end
+		if not conditions.kind_of?(Array)
+			raise(WrongTypeQueryError, "Invalid keyword search condition array received #{conditions.inspect}.")
+		end
+
+		# Init where template
+		keyword_template = String.new
+		yars_cmd = 'yars:keyword'
+					
+		for condition in conditions
+			o = condition[0]
+			object = convert_object(o)
+			keyword = condition[1]
+			keyword_template << "\t #{object} #{yars_cmd} \"#{keyword}\" . \n"
+		end
+		return keyword_template
 	end
 
 	def self.order_by(order_opt)
@@ -145,20 +150,21 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 	# * +conditions+ [<tt>Array</tt>]: An array of array containing each conditions.
 	# * +order_opt+ [<tt>Array</tt>]: An array containing binding variables need to be used
 	#								  to order the query result.
-	# * +keyword_match+ [<tt>Bool</tt>]: Activate or not the keyword searching.
 	#
 	# Return:
 	# * [<tt>String</tt>] The query string.
-	def self.generate(bindings, conditions, order_opt = nil, keyword_match = false)
+	def self.generate(bindings, conditions, keywords = nil, order_opt = nil)
 		$logger.debug "generating query:\n\t#{bindings.inspect}\n\t#{$loggeconditions.inspect}"
 
 		template_query = <<END_OF_QUERY
+@prefix yars: <http://sw.deri.org/2004/06/yars#> .
 @prefix ql: <http://www.w3.org/2004/12/ql#> . 
 <> ql:distinct {
 #{select(bindings)}
 }; 
 ql:where {
-#{where(conditions, keyword_match)}
+#{where(conditions)}
+#{keyword(keywords)}
 } .
 #{order_by(order_opt)}
 END_OF_QUERY

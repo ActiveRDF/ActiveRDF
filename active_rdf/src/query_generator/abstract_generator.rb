@@ -129,6 +129,16 @@ class AbstractQueryGenerator
 	# * [<tt>String</tt>] The where clause of the query string.
 	def self.where(conditions)
 	end
+	
+	# Add keywords search conditions.
+	#
+	# Arguments:
+	# * +conditions+: Array of [Symbol (variable), String (keyword)].
+	#
+	# Return:
+	# * [<tt>String</tt>] The part of the where clause with the keyword search command
+	def self.keyword(conditions)
+	end
 
 	# Generate the order by clause. Abstract method. Need to be implemented in each
 	# Generator.

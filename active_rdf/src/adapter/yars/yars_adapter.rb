@@ -95,7 +95,6 @@ class YarsAdapter; implements AbstractAdapter
 		return response.count("\n")
 	end
 
-
 	# query the RDF database
 	#
 	# qs is an n3 query, e.g. '<> ql:select { ?s ?p ?o . } ; ql:where { ?s ?p ?o . } .'
@@ -109,7 +108,7 @@ class YarsAdapter; implements AbstractAdapter
 		# If no content, we return an empty array
 		return Array.new if response.is_a?(Net::HTTPNoContent)
 
-		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, bad request: " + qs) unless response.is_a?(Net::HTTPOK)
+		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, bad request #{response.inspect}: " + qs) unless response.is_a?(Net::HTTPOK)
 		response = response.body
 		
 		$logger.debug "parsing YARS response"

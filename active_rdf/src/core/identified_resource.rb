@@ -91,7 +91,7 @@ class IdentifiedResource < Resource
 	end
 
 	# Adds the predicate to the class level of the resource
-	def self.add_predicate uri, localname=nil
+	def self.add_predicate(uri, localname = nil)
 		$logger.debug "adding predicate #{uri} to class #{self}"
 
 		# if we received a Resource as URI then that is ok, otherwise if we resource 
@@ -112,10 +112,8 @@ class IdentifiedResource < Resource
 		# (hashing localname -> IdentifiedResource-fullURI
 		class_hash = @@predicates[self]
 
-
 		# initialise predicates hash for this class if undefined
 		@@predicates[self] = (class_hash = Hash.new) if class_hash.nil?
-
 
 		$logger.debug "adding predicate #{uri}; class hash has size #{class_hash.size}"
 

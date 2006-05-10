@@ -108,9 +108,9 @@ public
 		
 		# Update the current connection
 		@@current_connection = connection
-
+	
 		# constructing the class model
-    construct_class_model
+		construct_class_model
 
 		return connection		
 	end
@@ -138,7 +138,7 @@ public
 			rescue MemCache::MemCacheError => e
 				raise ActiveRdfError("Cache server not accessible: #{e.message}")
 			end
-
+			$logger.debug "MemCache initialised with servers #{hosts.inspect}."
 		else
 			raise(ActiveRdfError, "Invalid parameter #{host.inspect}. Cannot initialize ActiveRDF cache.")
 		end			
@@ -351,7 +351,6 @@ EOF
 	def self.create_basic_resource(uri)
 		# if resources[uri] exists (cache) and is not nil, then we return that
 		# otherwise, we create the new resource, store it in the cache and return it
-		
 		$logger.debug "CREATE_BASIC_RESOURCE : #{uri}"
 		
 		begin
@@ -368,7 +367,6 @@ EOF
 			$logger.debug "ArgumentError in CREATE_BASIC_RESOURCE :" + $!
 			raise
 		end	
-			
 	end
 		
 	# Create a new identified resource.
@@ -488,12 +486,15 @@ EOF
 	# Clear the resources hash
 	def self.clear
 		$logger.debug 'clearing the cache'
+
+		require 'rubygems'
+		require 'memcache'
 		
 		case @@cache
-		when MemCache
-			@@cache.flush_all
 		when Hash
 			@@cache.clear
+		when MemCache
+			@@cache.flush_all
 		end
 		@@default_host_parameters = {}
 		@@connections = {}
@@ -510,7 +511,7 @@ private
 	def self.construct_class_model
 		qe = QueryEngine.new
 		qe.add_binding_variables :o
-		qe.add_condition :s, NamespaceFactory.get(:rdf_type), :o
+		qe.add_condition(:s, NamespaceFactory.get(:rdf_type), :o)
 		all_types = qe.execute
 		$logger.info "found #{all_types.size} types in #{connection.context}"
 		
@@ -525,7 +526,7 @@ private
 				type = create_basic_resource(type.uri + 'Clashed')
 			end
 
-			construct_class type, qe
+			construct_class(type, qe)
 		end
 
 		# I don't think we need to store the classes in the cache actually...
@@ -533,7 +534,7 @@ private
 	end
 
 	# constructs a class from an RDF resource (using its local_name as class name)
-	def self.construct_class type, qe
+	def self.construct_class(type, qe)
 		# creating the class with the correct className and @@context variable
 		context = @@current_connection.context
 		setup_context = lambda do
@@ -558,14 +559,14 @@ private
 	# fetches the attribute of a type from the database, and adds them to the 
 	# class of that type
 	def self.get_class_attributes_from_data type, qe
-		class_name = make_class_name type
+		class_name = make_class_name(type)
 		qe.add_binding_variables :p
-		qe.add_condition :s, NamespaceFactory.get(:rdf_type), type
-		qe.add_condition :s, :p, :o
+		qe.add_condition(:s, NamespaceFactory.get(:rdf_type), type)
+		qe.add_condition(:s, :p, :o)
 		all_attributes = qe.execute
 		for attribute in all_attributes
 			begin
-				self.const_get(class_name).add_predicate attribute
+				self.const_get(class_name).add_predicate(attribute)
 				$logger.info "added attribute #{attribute} to class #{class_name}"
 			rescue ActiveRdfError
 				$logger.warn "found empty attribute in class #{type.uri}"

@@ -71,8 +71,11 @@ class NamespaceFactory
 	def self.load_namespaces
 		add(:rdf_type, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
 		add(:rdfs_domain, 'http://www.w3.org/2000/01/rdf-schema#domain')
+		add(:rdfs_range, 'http://www.w3.org/2000/01/rdf-schema#range')
 		add(:rdfs_subclass, 'http://www.w3.org/2000/01/rdf-schema#subClassOf')
 		add(:owl_thing, 'http://www.w3.org/2002/07/owl#Thing')
+		add(:rdfs_label, 'http://www.w3.org/2000/01/rdf-schema#label')
+		add(:rdfs_comment, 'http://www.w3.org/2000/01/rdf-schema#comment')
 	end
 
 #----------------------------------------------#

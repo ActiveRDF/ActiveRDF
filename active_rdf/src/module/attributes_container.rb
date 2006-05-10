@@ -144,6 +144,10 @@ module AttributesContainer
 
 		return _attributes.keys
 	end
+	
+	def predicates
+		return @@predicates[self.class]
+	end
 
 #----------------------------------------------#
 #               CLASS METHODS                  #
