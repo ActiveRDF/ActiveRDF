@@ -38,4 +38,4 @@ require 'logger'
 require 'tmpdir'
 
 $logger = Logger.new(Dir.tmpdir + '/activerdf.log') if $logger.nil?
-$logger.level = Logger::INFO
+$logger.level = Logger::DEBUG

@@ -150,6 +150,7 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 	# Return:
 	# * [<tt>String</tt>] The query string.
 	def self.generate(bindings, conditions, order_opt = nil, keyword_match = false)
+		$logger.debug "generating query:\n\t#{bindings.inspect}\n\t#{$loggeconditions.inspect}"
 
 		template_query = <<END_OF_QUERY
 @prefix ql: <http://www.w3.org/2004/12/ql#> . 

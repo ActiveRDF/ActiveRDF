@@ -26,9 +26,6 @@ require 'core/resource'
 require 'core/identified_resource'
 require 'core/anonymous_resource'
 
-require 'rubygems'
-require 'memcache'
-
 class NodeFactory
 
 	# The cache of ActiveRDF::Node. The cache can be a hash (memory of localhost)
@@ -127,7 +124,13 @@ public
 	# :memory. By default, :memory.
 	def self.init_cache(host = nil)
 		case host
+		when :memory, NilClass
+			@@cache = Hash.new
+
 		when String, Array
+			require 'rubygems'
+			require 'memcache'
+
 			hosts = [host] if host.kind_of?(String)
 			begin
 				@@cache = MemCache.new
@@ -135,8 +138,7 @@ public
 			rescue MemCache::MemCacheError => e
 				raise ActiveRdfError("Cache server not accessible: #{e.message}")
 			end
-		when :memory, NilClass
-			@@cache = Hash.new
+
 		else
 			raise(ActiveRdfError, "Invalid parameter #{host.inspect}. Cannot initialize ActiveRDF cache.")
 		end			
@@ -158,8 +160,9 @@ public
 		else
 			@@current_connection = @@connections[context]
 		end
-
 		$logger.debug "available connections: #@@connections"
+
+		return @@current_connection
 	end
 	
 	def self.get_contexts(params)
@@ -348,13 +351,24 @@ EOF
 	def self.create_basic_resource(uri)
 		# if resources[uri] exists (cache) and is not nil, then we return that
 		# otherwise, we create the new resource, store it in the cache and return it
-		if resources[uri].nil?
-			$logger.debug "-cache miss for: #{uri}"
-			resources[uri] = IdentifiedResource.new(uri)
-		else
-			$logger.debug "+cache hit for: #{uri}"
-			resources[uri]
-		end
+		
+		$logger.debug "CREATE_BASIC_RESOURCE : #{uri}"
+		
+		begin
+			
+			if resources[uri].nil?
+				$logger.debug "-cache miss for: #{uri}"
+				resources[uri] = IdentifiedResource.new(uri)
+			else
+				$logger.debug "+cache hit for: #{uri}"
+				resources[uri]
+			end
+			
+		rescue MemCache::MemCacheError
+			$logger.debug "ArgumentError in CREATE_BASIC_RESOURCE :" + $!
+			raise
+		end	
+			
 	end
 		
 	# Create a new identified resource.
@@ -497,10 +511,15 @@ private
 		qe = QueryEngine.new
 		qe.add_binding_variables :o
 		qe.add_condition :s, NamespaceFactory.get(:rdf_type), :o
-		all_types = qe.execute.uniq
+		all_types = qe.execute
 		$logger.info "found #{all_types.size} types in #{connection.context}"
-
+		
 		for type in all_types do
+			
+			if not type.kind_of?(Resource)
+				raise(NodeFactoryError, "Get a Literal #{type} instead of a Resource for resource type.")
+			end
+			
 			case type.local_part
 			when 'Class', 'Resource'
 				type = create_basic_resource(type.uri + 'Clashed')
@@ -543,7 +562,7 @@ private
 		qe.add_binding_variables :p
 		qe.add_condition :s, NamespaceFactory.get(:rdf_type), type
 		qe.add_condition :s, :p, :o
-		all_attributes = qe.execute.uniq
+		all_attributes = qe.execute
 		for attribute in all_attributes
 			begin
 				self.const_get(class_name).add_predicate attribute

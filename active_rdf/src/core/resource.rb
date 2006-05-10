@@ -86,13 +86,13 @@ class Resource; implements Node
 		 
 		# Execute query
 		results = qe.execute
-		$logger.debug "#{subject} has #{predicate.local_part} #{results.uniq}"
+		$logger.debug "#{subject} has #{predicate.local_part} #{results}"
 		# results is not allowed to be nil, we should throw an AdapterError then 
 
 		if (results.nil? or not results.kind_of? Array)
 			raise(AdapterError,"Unexpected result in #{__FILE__}:#{__LINE__}") 
 		end
-		results.uniq
+		results
 	end
 
 	# Find statements of a resource according to the values of their attributes.
@@ -140,7 +140,7 @@ class Resource; implements Node
 		if (results.nil? or not results.kind_of? Array)
 			raise(AdapterError,"Unexpected result in #{__FILE__}:#{__LINE__}") 
 		end
-		results.uniq
+		results
 	end
 	
 	# Look in the database if a resource exists. Add automatically a condition on the resource
@@ -184,8 +184,7 @@ class Resource; implements Node
 		delimiter = uri.rindex(/#|\//)
 		
 		# if no delimiter available then uri is broken
-		str_error = "In #{__FILE__}:#{__LINE__}, uri is broken ('#{uri}')."
-		raise(UriBrokenError, str_error) if delimiter.nil?
+		return uri if delimiter.nil?
 		
 		return uri[delimiter+1..uri.size]
 	end

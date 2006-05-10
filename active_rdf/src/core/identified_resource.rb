@@ -140,7 +140,6 @@ class IdentifiedResource < Resource
 		# uri rdf:type property; uri rdfs:domain self
 		
 		$logger.debug "added predicate; class hash has size #{class_hash.size}"
-		$logger.debug "@@predicates: #{@@predicates}"
 		return uri
 	end
 	
