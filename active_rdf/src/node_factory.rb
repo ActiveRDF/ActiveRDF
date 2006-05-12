@@ -110,7 +110,8 @@ public
 		@@current_connection = connection
 	
 		# constructing the class model
-		construct_class_model
+		## disabling class_model_construction
+		##construct_class_model
 
 		return connection		
 	end
@@ -182,165 +183,6 @@ EOF
 		end
 	end
 	
-#	EYAL CODE
-	
-#	# Selects a context to use by default. Invoke multiple times to continuously change context of following 
-#	# data manipulations.
-#	def self.select_context(context = nil)
-#		#raise ConnectionError, 'invalid context' if context.nil?
-#		raise ConnectionError, 'no host specified' if @@default_host_parameters.empty?
-#		$logger.info "changing to context #{context}"
-#		adapter_params = @@default_host_parameters.merge({:context => context})
-#		@@current_connection = (@@connections[context] ||= init_adapter(adapter_params))
-#		$logger.debug "available connections: #@@connections"
-#	end
-#	
-#	def self.get_contexts params
-#		case params[:adapter]
-#		when :yars
-#			connection = YarsAdapter.new(params.merge(:context => ''))
-#			qs = <<EOF
-#			@prefix yars: <http://sw.deri.org/2004/06/yars#> . 
-#			@prefix ql: <http://www.w3.org/2004/12/ql#> . 
-# 
-#			<>  ql:select { (?c).  }; 
-#					ql:where { { ?s ?p ?o .} yars:context ?c . } . 
-#EOF
-#			connection.query qs
-#		else
-#			raise ConnectionError,'querying for contexts not supported yet'
-#		end
-#	end
-#
-#	# Initialises connection to data source. Connections are used to execute 
-#	# queries on a datasource.
-#	#
-#	# Params is a hash of parameters such as (depending on the adapter to be 
-#	# used) :adapter => :yars, :context => 'test'.
-#	#
-#	# Connections can only be used if a context has been defined. If invoked 
-#	# with only host parameters a host will be setup that cannot be used until a 
-#	# context has been specified.
-#	#
-#	# If only a :context parameter is given and a host has previously been 
-#	# defined, the context will be used within that host, and the connection to 
-#	# that context will be returned
-#	def self.connection(params = nil)
-#		if params.nil?
-#			raise(ConnectionError, 'no parameters defined') if @@current_connection.nil?
-#			return @@current_connection
-#		end
-#
-#		host = params[:host]
-#		context = params[:context]
-#		port = params[:port]
-#
-#		if context.nil?
-#			# we are initialising a host 
-#			raise(ConnectionError, 'no host or context defined') if host.nil?
-#			@@default_host_parameters = params
-#			return true
-#		else
-#			if host.nil?
-#				if @@default_host_parameters.empty?
-#					raise(ConnectionError, 'no host known but only context defined')
-#				else
-#					host = @@default_host_parameters
-#				end
-#			else
-#				# storing the host parameters (except the context) as default (for a possible next time) 
-#				@@default_host_parameters = params
-#			end
-#
-#			# init cache if necessary
-#			init_cache(params) if @@cache.nil?
-#
-#			# return the earlier established connection for this context if it exists, 
-#			# or establish one otherwise
-#			@@current_connection = @@connections[context] || init_adapter(@@default_host_parameters.merge(params))
-#			$logger.debug "NodeFactory returning current connection: #{connection}"
-#			return @@current_connection
-#		end
-#	end
-#
-#	def self.init_adapter params
-#		case params[:adapter]
-#		when :yars
-#			$logger.debug 'loading YARS adapter'
-#			require 'adapter/yars/yars_adapter'
-#			connection = YarsAdapter.new(params)
-#		when :redland
-#			$logger.debug 'loading Redland adapter'
-#			require 'adapter/redland/redland_adapter'
-#			connection = RedlandAdapter.new(params)
-#		else
-#			raise(ActiveRdfError, 'invalid adapter')
-#		end
-#
-#		# saving the connection into connection_pool
-#		@@connections[params[:context]] = connection
-#		return connection
-#	end
-#
-#	# initialises memcached server
-#	def self.init_cache params
-#		cache_server = params[:cache_server] || params[:host]
-#		if cache_server.kind_of? String
-#			cache_servers = [cache_server]
-#		elsif cache_server.kind_of? Array
-#			cache_servers = cache_server
-#		else
-#			raise(ActiveRdfError,'incorrect cache server specified')
-#		end
-#
-#		begin
-#			@@cache = MemCache.new
-#			@@cache.servers = cache_servers.collect {|host| MemCache::Server.new host }
-#		rescue MemCache::MemCacheError => e
-#			raise ActiveRdfError("cache server not accessible: #{e.message}")
-#		end
-#		$logger.info "memcache initialised: #{@@cache.inspect}"
-#	end
-
-
-
-
-##	# Return the current instance of the connection. If no connection exists and 
-##	# params given, instantiate a new connection.
-##	#
-##	# Arguments:
-##	# * +params+ [<tt>Hash</tt>]: Connection parameter. Required only the first time, to initialize the connection.
-##	#
-##	# Return:
-##	# * [<tt>AbstractAdapter</tt>] The current connection with the RDF DataBase.
-##	def self.connection(params = nil)
-##		if @@_connection.nil? and params.nil?
-##			raise(ConnectionError, 'no parameters to instantiate connection')
-##		elsif !@@_connection.nil? and params.nil?
-##			return @@_connection
-##		end
-##
-##		init_cache(params[:cache_server] || params[:host]) if @@cache.nil?
-##	
-##		case params[:adapter]
-##		when :yars
-##			$logger.debug 'loading YARS adapter'
-##			require 'adapter/yars/yars_adapter'
-##			@@_connection = YarsAdapter.new(params)
-##		when :redland
-##			$logger.debug 'loading Redland adapter'
-##			require 'adapter/redland/redland_adapter'
-##			@@_connection = RedlandAdapter.new(params)
-##		else
-##			raise(ActiveRdfError, 'invalid adapter')
-##		end
-##		return @@_connection
-##	end
-
-
-
-
-
 	# You don't have to use this method. This method is used internaly in ActiveRDF.
 	#
 	# Arguments:
@@ -511,14 +353,14 @@ private
 	def self.construct_class_model
 		qe = QueryEngine.new
 		qe.add_binding_variables :o
-		qe.add_condition(:s, NamespaceFactory.get(:rdf_type), :o)
+		qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), NamespaceFactory.get(:rdfs,:Class)
 		all_types = qe.execute
 		$logger.info "found #{all_types.size} types in #{connection.context}"
 		
 		for type in all_types do
 			
-			if not type.kind_of?(Resource)
-				raise(NodeFactoryError, "Get a Literal #{type} instead of a Resource for resource type.")
+			unless type.kind_of?(Resource)
+				raise(NodeFactoryError, "received literal #{type} instead as resource type")
 			end
 			
 			case type.local_part
@@ -528,9 +370,6 @@ private
 
 			construct_class(type, qe)
 		end
-
-		# I don't think we need to store the classes in the cache actually...
-		# ActiveRDF NodeFactory will still run as a Singleton
 	end
 
 	# constructs a class from an RDF resource (using its local_name as class name)
@@ -560,9 +399,14 @@ private
 	# class of that type
 	def self.get_class_attributes_from_data type, qe
 		class_name = make_class_name(type)
-		qe.add_binding_variables :p
-		qe.add_condition(:s, NamespaceFactory.get(:rdf_type), type)
-		qe.add_condition(:s, :p, :o)
+		qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), NamespaceFactory.get(:rdf,:Property)
+		qe.add_condition(:s, NamespaceFactory.get(:rdfs,:domain), type)
+		qe.add_binding_variables :s
+
+		#qe.add_binding_variables :p
+		#qe.add_condition(:s, NamespaceFactory.get(:rdf_type), type)
+		#qe.add_condition(:s, :p, :o)
+		
 		all_attributes = qe.execute
 		for attribute in all_attributes
 			begin
