@@ -77,6 +77,14 @@ class Literal; implements Node
 		value.hash
 	end
 
+	def <=>(b)
+		if b.kind_of? Literal
+			value <=> b.value
+		else
+			to_s <=> b.to_s
+		end
+	end
+
 	
 #----------------------------------------------#
 #               PRIVATE METHODS                #

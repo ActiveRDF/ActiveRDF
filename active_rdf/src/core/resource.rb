@@ -189,6 +189,24 @@ class Resource; implements Node
 		return uri[delimiter+1..uri.size]
 	end
 
+	def render_label
+		if attributes.include? 'label'
+			label = self.label
+			label = label.sort.join(', ') if label.kind_of? Array
+			return label
+		else
+			local_part
+		end
+	end
+
+	def <=> b
+		if b.kind_of? Resource
+			uri <=> b.uri
+		else
+			to_s <=> b.to_s
+		end
+	end
+
 	alias local_name local_part
 
 #----------------------------------------------#

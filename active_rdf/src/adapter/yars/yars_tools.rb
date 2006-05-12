@@ -179,7 +179,10 @@ class YarsAdapter
 		if scanner.match?(Literal_pattern)
 			# progressing scanner pointer past matched pattern
 			scanner.pos += scanner.matched.size
-			return Literal.create(scanner[1])
+			value = scanner[1].u
+			value.gsub!('\\','')
+			value.gsub!('\"','"')
+			return Literal.create(value)
 		elsif scanner.match?(Uri_pattern)
 			# progressing scanner pointer past matched pattern
 			scanner.pos += scanner.matched.size
@@ -191,5 +194,10 @@ class YarsAdapter
 			raise(NTriplesParsingYarsError, "Invalid object: \"#{scanner.string}\".")
 		end  
 	end
-  
 end
+
+# addition to string to parse ntriples with \uxxxx unicode escapes
+class String
+	  def u(); self.gsub(/\\u([0-9a-fA-F]{4,4})/u){["#$1".hex ].pack('U*')}; end
+end
+
