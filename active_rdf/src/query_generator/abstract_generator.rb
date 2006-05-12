@@ -95,7 +95,7 @@ class AbstractQueryGenerator
 		when Literal
 			case o.value
 			when String
-				object << '"' << o.value << '"'
+				object << '"' << o.value.gsub('"','\"') << '"'
 			when Fixnum, Bignum, Float, TrueClass, FalseClass
 				object = o.value
 			end

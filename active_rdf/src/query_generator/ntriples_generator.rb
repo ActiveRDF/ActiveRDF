@@ -133,7 +133,6 @@ class NTriplesQueryGenerator < AbstractQueryGenerator
 	end
 
 	def self.order_by(order_opt)
-
 	end
 	
 #----------------------------------------------#
