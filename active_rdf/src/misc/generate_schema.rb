@@ -1,27 +1,21 @@
 #!/bin/ruby
 require 'active_rdf'
 
-class RdfsClass < IdentifiedResource
-	set_class_uri NamespaceFactory.get(:rdfs,:Class)  #'http://www.w3.org/2000/01/rdf-schema#Class'
-end
-
-class RdfProperty < IdentifiedResource
-	 set_class_uri NamespaceFactory.get(:rdf,:Property) # 'http://www.w3.org/1999/02/22-rdf-syntax-ns#Property'
-	 add_predicate NamespaceFactory.get(:rdfs,:domain)
-end
+NodeFactory.connection :adapter => :yars, :host => 'localhost', :context => 'great-buildings'
+require 'core/standard_classes'
 
 # constructs the class model from a RDF dataset
 def self.construct_class_model
 	qe = QueryEngine.new
 	qe.add_binding_variables :o
-	qe.add_condition(:s, NamespaceFactory.get(:rdf_type), :o)
+	qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), :o)
 	all_types = qe.execute
 
-	logger.info "found #{all_types.size} types in #{connection.context}"
+	$logger.info "found #{all_types.size} types"
 	
 	for type in all_types do
-		klass = RdfsClass.new(type)
-		#klass.save
+		klass = RdfsClass.new(type.uri)
+		klass.save
 
 		qe.add_binding_variables :p
 		qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), type)
@@ -30,18 +24,15 @@ def self.construct_class_model
 
 		for attribute in all_attributes
 			begin
-				property = RdfProperty.new(attribute)
+				property = RdfProperty.new(attribute.uri)
 				property.domain = klass
-				#property.save
-				logger.info "added attribute #{attribute} to class #{klass}"
+				property.save
+				$logger.info "added attribute #{attribute.local_name} to class #{klass.uri}"
 			rescue ActiveRdfError
-				logger.warn "found empty attribute in class #{type.uri}"
+				$logger.warn "found empty attribute in class #{type.uri}"
 			end
 		end
 	end
 end
-
-logger = Logger.new(STDOUT)
-NodeFactory.connection :adapter => :yars, :host => 'localhost', :context => 'fbi'
 
 construct_class_model

@@ -121,7 +121,7 @@ class Resource; implements Node
 		qe.add_binding_variables(:s)
 		
 		if self != IdentifiedResource and self.ancestors.include?(IdentifiedResource)
-			qe.add_condition(:s, NamespaceFactory.get(:rdf_type), class_URI)
+			qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), class_URI)
 		end
 		
 		if conditions.empty?
@@ -163,7 +163,7 @@ class Resource; implements Node
 		qe.add_binding_variables(:p, :o)
 		
 		if self != IdentifiedResource and self.ancestors.include?(IdentifiedResource)
-			qe.add_condition(:s, NamespaceFactory.get(:rdf_type), class_URI)
+			qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), class_URI)
 		end
 		
 		# Convert URI string into basic resource
@@ -224,7 +224,7 @@ class Resource; implements Node
 
 		predicates = Hash.new
 		
-		preds = Resource.find({ NamespaceFactory.get(:rdfs_domain) => class_uri })
+		preds = Resource.find({ NamespaceFactory.get(:rdfs,:domain) => class_uri })
 
 	 	preds.each do |predicate|
 			attribute = predicate.local_part
@@ -232,7 +232,7 @@ class Resource; implements Node
 			$logger.debug "found predicate #{attribute}"
 		end unless preds.nil?
 
-		preds = Resource.find({ NamespaceFactory.get(:rdfs_domain) => NamespaceFactory.get(:owl_thing) })
+		preds = Resource.find({ NamespaceFactory.get(:rdfs,:domain) => NamespaceFactory.get(:owl,:Thing) })
 	 	preds.each do |predicate|
 			attribute = predicate.local_part
 			predicates[attribute] = predicate.uri
@@ -242,7 +242,7 @@ class Resource; implements Node
 		# Generate the query string
 		qe = QueryEngine.new
 		qe.add_binding_variables(:o)
-		qe.add_condition(class_uri, NamespaceFactory.get(:rdfs_subclass), :o)
+		qe.add_condition(class_uri, NamespaceFactory.get(:rdfs,:subClassOf), :o)
 		
 		$logger.debug "Before call Find superpredicate for #{class_uri}"
 		

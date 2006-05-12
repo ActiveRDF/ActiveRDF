@@ -25,6 +25,7 @@ require 'core/literal'
 require 'core/resource'
 require 'core/identified_resource'
 require 'core/anonymous_resource'
+#require 'core/standard_classes'
 
 class NodeFactory
 
@@ -110,8 +111,7 @@ public
 		@@current_connection = connection
 	
 		# constructing the class model
-		## disabling class_model_construction
-		##construct_class_model
+		construct_class_model
 
 		return connection		
 	end
@@ -195,20 +195,21 @@ EOF
 		# otherwise, we create the new resource, store it in the cache and return it
 		$logger.debug "CREATE_BASIC_RESOURCE : #{uri}"
 		
-		begin
-			
-			if resources[uri].nil?
-				$logger.debug "-cache miss for: #{uri}"
-				resources[uri] = IdentifiedResource.new(uri)
-			else
-				$logger.debug "+cache hit for: #{uri}"
-				resources[uri]
-			end
-			
-		rescue MemCache::MemCacheError
-			$logger.debug "ArgumentError in CREATE_BASIC_RESOURCE :" + $!
-			raise
-		end	
+		IdentifiedResource.new(uri)
+		#begin
+		#	
+		#	if resources[uri].nil?
+		#		$logger.debug "-cache miss for: #{uri}"
+		#		resources[uri] = IdentifiedResource.new(uri)
+		#	else
+		#		$logger.debug "+cache hit for: #{uri}"
+		#		resources[uri]
+		#	end
+		#	
+		#rescue MemCache::MemCacheError
+		#	$logger.debug "ArgumentError in CREATE_BASIC_RESOURCE :" + $!
+		#	raise
+		#end	
 	end
 		
 	# Create a new identified resource.
@@ -233,7 +234,7 @@ EOF
 			$logger.debug "creating resource #{uri}; not found in cache"
 			# try to instantiate object as class defined by the localname of its rdf:type, 
 			# e.g. a resource with rdf:type foaf:Person will be instantiated using Person.create
-			type = Resource.get(NodeFactory.create_basic_resource(uri), NamespaceFactory.get(:rdf_type))
+			type = Resource.get(NodeFactory.create_basic_resource(uri), NamespaceFactory.get(:rdf,:type))
 			
 			$logger.debug "create_identified_resource - type = " + type.to_s
 			
@@ -253,9 +254,9 @@ EOF
 				# if multiple types known, instantiate as first specific type known
 				type.each do |t|
 					# rdf:type Literal or BNode are outside our type system
-					break unless t.is_a? IdentifiedResource 
+					next unless t.is_a? IdentifiedResource 
 
-					if Module.constants.include?(t.local_part)
+					if Module.const_defined?(t.local_part)
 						class_name = determine_class(t)
 
 						if not klass.nil? and not klass == IdentifiedResource and not class_name.eql?(klass.to_s)
@@ -352,8 +353,8 @@ private
 	# constructs the class model from a RDF dataset
 	def self.construct_class_model
 		qe = QueryEngine.new
-		qe.add_binding_variables :o
-		qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), NamespaceFactory.get(:rdfs,:Class)
+		qe.add_binding_variables :s
+		qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), NamespaceFactory.get(:rdfs,:Class))
 		all_types = qe.execute
 		$logger.info "found #{all_types.size} types in #{connection.context}"
 		
@@ -383,7 +384,7 @@ private
 
 		class_name = make_class_name type
 		unless self.const_defined? class_name
-			eval "#{class_name} = Class.new IdentifiedResource, &setup_context" 
+			Module.module_eval "#{class_name} = Class.new IdentifiedResource, &setup_context" 
 			$logger.info "created class #{class_name}"
 		end
 
@@ -399,18 +400,18 @@ private
 	# class of that type
 	def self.get_class_attributes_from_data type, qe
 		class_name = make_class_name(type)
-		qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), NamespaceFactory.get(:rdf,:Property)
+		qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), NamespaceFactory.get(:rdf,:Property))
 		qe.add_condition(:s, NamespaceFactory.get(:rdfs,:domain), type)
 		qe.add_binding_variables :s
 
 		#qe.add_binding_variables :p
-		#qe.add_condition(:s, NamespaceFactory.get(:rdf_type), type)
+		#qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), type)
 		#qe.add_condition(:s, :p, :o)
 		
 		all_attributes = qe.execute
 		for attribute in all_attributes
 			begin
-				self.const_get(class_name).add_predicate(attribute)
+				Module.const_get(class_name).add_predicate(attribute)
 				$logger.info "added attribute #{attribute} to class #{class_name}"
 			rescue ActiveRdfError
 				$logger.warn "found empty attribute in class #{type.uri}"
@@ -459,10 +460,11 @@ private
 		# If it is a known class but not a Resource class, we instantiate it into the
 		# correct class.
 		# Otherwise, we instantiate it into a IdentifiedResource.
-		if Module.constants.include?(class_name) and
+		if Module.const_defined?(class_name) and
 			class_name != 'Class' and class_name != 'Resource'
 			
-			$logger.debug 'determine_class - return = ' + class_name
+			class_name = Module.const_get(class_name).to_s
+			$logger.debug "determine_class returns #{class_name}"
 			
 			return class_name
 		else

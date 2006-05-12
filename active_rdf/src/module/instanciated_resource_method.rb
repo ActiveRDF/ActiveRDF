@@ -27,7 +27,7 @@ module InstanciatedResourceMethod
 	# Saves the current identified  or anonymous resource (self) to RDF storage
 	def save
 		# save resource into database
-		NodeFactory.connection.add(self, NamespaceFactory.get(:rdf_type), class_URI)
+		NodeFactory.connection.add(self, NamespaceFactory.get(:rdf,:type), class_URI) unless local_name == 'Class'
 
 		# update the cache
 		NodeFactory.resources[self.uri] = self

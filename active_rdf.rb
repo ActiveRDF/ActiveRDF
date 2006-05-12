@@ -17,6 +17,12 @@
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
 
+# Start the logger
+require 'logger'
+require 'tmpdir'
+$logger = Logger.new(Dir.tmpdir + '/activerdf.log') if $logger.nil?
+$logger.level = Logger::DEBUG
+
 # We add the active_rdf subdirectory to the LOAD_PATH
 if File.symlink?(__FILE__)
     $: << File.dirname(File.expand_path(File.readlink(__FILE__))) + '/active_rdf/src'
@@ -33,9 +39,3 @@ require 'misc/abstract_class'
 require 'namespace_factory'
 NamespaceFactory.load_namespaces
 
-# Start the logger
-require 'logger'
-require 'tmpdir'
-
-$logger = Logger.new(Dir.tmpdir + '/activerdf.log') if $logger.nil?
-$logger.level = Logger::DEBUG
