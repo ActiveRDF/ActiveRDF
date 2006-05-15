@@ -6,7 +6,7 @@ See http://activerdf.m3pe.org for more information.
 GPL, see GPL.txt
 
 ==Version
-0.1
+0.2-trunk (you are running a development version!)
 
 ==Installation
 1. put this whole directory in your Ruby library path, e.g. /usr/lib/ruby/1.8/activerdf.
@@ -52,4 +52,4 @@ Eyal Oren <first.last@deri.org>
 Renaud Delbru <first.last@deri.org>
 
 ==Date
-Fri Mar 31 15:06:26 IST 2006
+...
