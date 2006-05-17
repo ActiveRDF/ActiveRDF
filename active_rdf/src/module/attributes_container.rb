@@ -254,7 +254,6 @@ module AttributesContainer
 			
 			predicate_uri = self.class.predicates[attr_name.to_s]
 			value = Resource.get(self, predicate_uri)
-			
 
 			# extracting the value from the returned Array (resource.get always returns an Array)			
 			database_value = 

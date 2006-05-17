@@ -25,7 +25,7 @@ require 'core/literal'
 require 'core/resource'
 require 'core/identified_resource'
 require 'core/anonymous_resource'
-#require 'core/standard_classes'
+require 'core/standard_classes'
 
 class NodeFactory
 
@@ -111,7 +111,7 @@ public
 		@@current_connection = connection
 	
 		# constructing the class model
-		construct_class_model
+		construct_class_model if params[:construct_class_model]
 
 		return connection		
 	end
@@ -229,57 +229,67 @@ EOF
 		
 		unless resources[uri].nil?
 			$logger.debug "creating resource #{uri}; found in cache"
-			return resources[uri]
-		else
-			$logger.debug "creating resource #{uri}; not found in cache"
-			# try to instantiate object as class defined by the localname of its rdf:type, 
-			# e.g. a resource with rdf:type foaf:Person will be instantiated using Person.create
-			type = Resource.get(NodeFactory.create_basic_resource(uri), NamespaceFactory.get(:rdf,:type))
-			
-			$logger.debug "create_identified_resource - type = " + type.to_s
-			
-			if type.nil?
-				# if type unknown and klass given, create klass resource
-				if not klass.nil?
-					resource = instantiate_resource(uri, klass.to_s)
-				# otherwise, create top level resource
-				else
-					resource = IdentifiedResource.new(uri)
-				end
-			else
-				# adapter should return an Array
-				raise(AdapterError) unless type.is_a? Array
-				 
-				# create a resource in correct subclass
-				# if multiple types known, instantiate as first specific type known
-				type.each do |t|
-					# rdf:type Literal or BNode are outside our type system
-					next unless t.is_a? IdentifiedResource 
-
-					if Module.const_defined?(t.local_part)
-						class_name = determine_class(t)
-
-						if not klass.nil? and not klass == IdentifiedResource and not class_name.eql?(klass.to_s)
-							raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Try to instantiate a #{klass.to_s} as type #{class_name}.")
-						end
-						
-						resource = instantiate_resource(uri, class_name)
-						break
-					end
-				end
+			begin
+				return resources[uri]
+			rescue StandardError => e
+				puts e.message
 			end
+		else
+			create_resource_and_store_in_cache uri, klass
+		end
+	end
+	
+	def self.create_resource_and_store_in_cache(uri, klass)
+		$logger.debug "creating resource #{uri}; not found in cache"
+		# try to instantiate object as class defined by the localname of its rdf:type, 
+		# e.g. a resource with rdf:type foaf:Person will be instantiated using Person.create
+		type = Resource.get(NodeFactory.create_basic_resource(uri), NamespaceFactory.get(:rdf,:type))
 		
-			# if we didn't find any type to instantiate it to and klass given, create klass resource
-			if resource.nil? and not klass.nil?
-				resource = instantiate_resource(uri, klass.to_s)
+		$logger.debug "create_identified_resource - type = " + type.to_s
+		
+		if type.nil?
+			# if type unknown and klass given, create klass resource
+			if not klass.nil?
+				resource = instantiate_resource(uri, klass)
 			# otherwise, create top level resource
-			elsif resource.nil?
+			else
 				resource = IdentifiedResource.new(uri)
 			end
+		else
+			# adapter should return an Array
+			raise(AdapterError) unless type.is_a? Array
+			 
+			# create a resource in correct subclass
+			# if multiple types known, instantiate as first specific type known
+			#
+			type.each do |t|
+				# rdf:type Literal or BNode are outside our type system
+				next unless t.is_a? IdentifiedResource 
+
+				found_klass = t.to_class_name
+				if Object.const_defined?(found_klass.to_sym)
+
+					if not klass.nil? and not klass == IdentifiedResource and not found_klass == klass.to_s
+						raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, trying to instantiate a #{klass} as type #{found_klass}.")
+					end
+					
+					resource = instantiate_resource(uri, found_klass.to_class)
+					break
+				end
+			end
 		end
-		$logger.debug 'create_identified_resource return - class = ' + resource.class.to_s
+	
+		# if we didn't find any type to instantiate it to and klass given, create klass resource
+		if resource.nil? and not klass.nil?
+			resource = instantiate_resource(uri, klass)
+		# otherwise, create top level resource
+		elsif resource.nil?
+			resource = IdentifiedResource.new(uri)
+		end
 
 		resources[uri] = resource
+
+		resource
 	end
 	
 	# 
@@ -364,11 +374,6 @@ private
 				raise(NodeFactoryError, "received literal #{type} instead as resource type")
 			end
 			
-			case type.local_part
-			when 'Class', 'Resource'
-				type = create_basic_resource(type.uri + 'Clashed')
-			end
-
 			construct_class(type, qe)
 		end
 	end
@@ -382,39 +387,31 @@ private
 			@@context = @@current_connection.context
 		end
 
-		class_name = make_class_name type
-		unless self.const_defined? class_name
-			Module.module_eval "#{class_name} = Class.new IdentifiedResource, &setup_context" 
+		class_name  = type.to_class_name
+		unless Object.const_defined? class_name.to_sym
+			klass = Object.module_eval("#{class_name} = Class.new IdentifiedResource, &setup_context")
+			klass.set_class_uri type
 			$logger.info "created class #{class_name}"
+
+			# and loading all attributes into the class
+			get_class_attributes_from_data klass, qe
 		end
-
-		# and loading all attributes into the class
-		get_class_attributes_from_data type, qe
-	end
-
-	def self.make_class_name type
-		type.local_part.delete('_').capitalize
 	end
 
 	# fetches the attribute of a type from the database, and adds them to the 
 	# class of that type
-	def self.get_class_attributes_from_data type, qe
-		class_name = make_class_name(type)
+	def self.get_class_attributes_from_data klass, qe
 		qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), NamespaceFactory.get(:rdf,:Property))
-		qe.add_condition(:s, NamespaceFactory.get(:rdfs,:domain), type)
+		qe.add_condition(:s, NamespaceFactory.get(:rdfs,:domain), klass.class_URI.uri)
 		qe.add_binding_variables :s
 
-		#qe.add_binding_variables :p
-		#qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), type)
-		#qe.add_condition(:s, :p, :o)
-		
 		all_attributes = qe.execute
 		for attribute in all_attributes
 			begin
-				Module.const_get(class_name).add_predicate(attribute)
-				$logger.info "added attribute #{attribute} to class #{class_name}"
+				klass.add_predicate(attribute, attribute.to_method_name)
+				$logger.info "added attribute #{attribute} to class #{klass}"
 			rescue ActiveRdfError
-				$logger.warn "found empty attribute in class #{type.uri}"
+				$logger.warn "found empty attribute in class #{klass}"
 			end
 		end
 	end
@@ -430,49 +427,56 @@ private
 	# Arguments:
 	# * +uri+ [<tt>String</tt>]: Uri of the resource to instantiate
 	# * +class_name+ [<tt>String</tt>]: Class of the resource to isntantiate
-	def self.instantiate_resource(uri, class_name)
+	def self.instantiate_resource(uri, klass)
 		# Arguments verification
 		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Uri of the resource to instantiate is nil.") if uri.nil?
-		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Class name of the resource is nil.") if class_name.nil?
-		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Invalid Class name.") if class_name.empty?
-
-		(eval class_name).predicates unless class_name == 'IdentifiedResource'
-		return (eval class_name).new(uri)
+		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Class name of the resource is nil.") if klass.nil?
+		#raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Invalid Class name.") if klass.nil?
+		
+		unless rdf_classes_without_properties.include?(klass.to_s)
+			klass.send(:predicates)
+		end
+		return klass.send(:new,uri)
 	end
 
-	# Determine the Class of the resource to instantiate.
-	#
-	# Arguments:
-	# * +type+ [<tt>IdentifiedResource</tt>]: Type of the resource
-	#
-	# Return:
-	# * [<tt>String</tt>] Class name of the resource.
-	def self.determine_class(type)
-		# Arguments verification
-		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, type is nil.") if type.nil?
+	def self.rdf_classes_without_properties
+		%w{RdfsClass RdfProperty IdentifiedResource}
+	end
 
-		$logger.debug 'determine_class - uri type = ' + type.uri
+	def self.protected_ruby_classes
+		%w{Class Resource Property}
+	end
+end
 
-		class_name = type.local_part
-
-		$logger.debug 'determine_class - class_name = ' + class_name
-
-		# If it is a known class but not a Resource class, we instantiate it into the
-		# correct class.
-		# Otherwise, we instantiate it into a IdentifiedResource.
-		if Module.const_defined?(class_name) and
-			class_name != 'Class' and class_name != 'Resource'
-			
-			class_name = Module.const_get(class_name).to_s
-			$logger.debug "determine_class returns #{class_name}"
-			
-			return class_name
+class IdentifiedResource
+	def to_class_name
+		class_name = local_part.gsub(/\/(.?)/) { "::" + $1.upcase }.gsub(/(^|_|-)(.)/) { $2.upcase }
+		case class_name
+		when 'Class'
+			'RdfsClass'
+		when 'Property'
+			'RdfProperty'
+		when 'Resource'
+			'IdentifiedResource'
 		else
-			$logger.debug 'determine_class - return = IdentifiedResource'
-		
-			return IdentifiedResource.to_s
+			class_name
 		end
 	end
 
+	def to_method_name
+		local_part.downcase.gsub('-','_')
+	end
 end
 
+
+class String
+	def to_class
+		class_name = self
+		raise ActiveRdfError if NodeFactory.protected_ruby_classes.include?(self)
+		if Object.const_defined?(class_name)
+			Object.const_get(class_name)
+		else
+			return IdentifiedResource
+		end
+	end
+end

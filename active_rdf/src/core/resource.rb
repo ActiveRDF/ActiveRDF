@@ -198,13 +198,15 @@ class Resource; implements Node
 	end
 
 	def render_label
+		# look for rdfs:label
 		if attributes.include? 'label'
 			label = self.label
+			# construct something readable if multiple labels given
 			label = label.sort.join(', ') if label.kind_of? Array
-			return label
-		else
-			local_part
 		end
+
+		# return the found label or the local_part if label is nil
+		label || local_part
 	end
 
 	alias local_name local_part
