@@ -18,10 +18,7 @@
 #
 
 # Start the logger
-require 'logger'
 require 'tmpdir'
-$logger = Logger.new(Dir.tmpdir + '/activerdf.log') if $logger.nil?
-$logger.level = Logger::DEBUG
 
 # We add the active_rdf subdirectory to the LOAD_PATH
 if File.symlink?(__FILE__)

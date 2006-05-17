@@ -222,7 +222,7 @@ class Resource; implements Node
 	# 'firstName' => 'http://foaf.org/firstName')  
 	def self.find_predicates(class_uri)
 		raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, class uri is nil.") if class_uri.nil?
-		raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, class uri is not a Resource, it's a #{class_uri.class}.") if !class_uri.instance_of?(IdentifiedResource)
+		raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, class uri is not a Resource, it's a #{class_uri.class}.") unless class_uri.kind_of?(IdentifiedResource)
 
 		predicates = Hash.new
 		

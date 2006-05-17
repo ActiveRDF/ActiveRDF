@@ -92,7 +92,6 @@ class IdentifiedResource < Resource
 
 	# Adds the predicate to the class level of the resource
 	def self.add_predicate(uri, localname = nil)
-		$logger.debug "adding predicate #{uri} to class #{self}"
 
 		# if we received a Resource as URI then that is ok, otherwise if we resource 
 		# a String we create an IdentifiedResource ourselves, otherwise we throw an 
@@ -115,11 +114,9 @@ class IdentifiedResource < Resource
 		# initialise predicates hash for this class if undefined
 		@@predicates[self] = (class_hash = Hash.new) if class_hash.nil?
 
-		$logger.debug "adding predicate #{uri}; class hash has size #{class_hash.size}"
 
 		# if localname collision detected
 		if class_hash.include? localname
-			$logger.debug "localname collision when adding predicate #{uri}"
 
 			# if this predicate was already defined for the class, we don't do 
 			# anything and just return the predicate
@@ -137,7 +134,6 @@ class IdentifiedResource < Resource
 		# TODO: add schema information to database: 
 		# uri rdf:type property; uri rdfs:domain self
 		
-		$logger.debug "added predicate; class hash has size #{class_hash.size}"
 		return uri
 	end
 	
