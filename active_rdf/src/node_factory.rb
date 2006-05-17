@@ -20,6 +20,7 @@
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
 
+require 'logger'
 require 'activerdf_exceptions'
 require 'core/literal'
 require 'core/resource'
@@ -71,6 +72,14 @@ public
 		if params.nil?
 			raise(ConnectionError, 'no parameters defined') if @@current_connection.nil?
 			return @@current_connection
+		end
+
+		if params[:logger]
+			$logger = Logger.new(params[:logger]) if $logger.nil?
+			$logger.level = params[:log_level]
+		else
+			$logger = Logger.new STDOUT
+			$logger.level = Logger::FATAL
 		end
 		
 		# Initialize cache system
@@ -195,21 +204,20 @@ EOF
 		# otherwise, we create the new resource, store it in the cache and return it
 		$logger.debug "CREATE_BASIC_RESOURCE : #{uri}"
 		
-		IdentifiedResource.new(uri)
-		#begin
-		#	
-		#	if resources[uri].nil?
-		#		$logger.debug "-cache miss for: #{uri}"
-		#		resources[uri] = IdentifiedResource.new(uri)
-		#	else
-		#		$logger.debug "+cache hit for: #{uri}"
-		#		resources[uri]
-		#	end
-		#	
-		#rescue MemCache::MemCacheError
-		#	$logger.debug "ArgumentError in CREATE_BASIC_RESOURCE :" + $!
-		#	raise
-		#end	
+		#IdentifiedResource.new(uri)
+		begin
+			if resources[uri].nil?
+				$logger.debug "-cache miss for: #{uri}"
+				resources[uri] = IdentifiedResource.new(uri)
+			else
+				$logger.debug "+cache hit for: #{uri}"
+				resources[uri]
+			end
+			
+		rescue MemCache::MemCacheError
+			$logger.debug "ArgumentError in CREATE_BASIC_RESOURCE :" + $!
+			raise
+		end	
 	end
 		
 	# Create a new identified resource.
@@ -226,7 +234,7 @@ EOF
 	def self.create_identified_resource(uri, klass = nil)
 		raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Resource hash not initialised.") if resources.nil?
 		raise(NodeFactoryError, 'In #{__FILE__}:#{__LINE__}, Resource URI is invalid. Cannot instanciated the object.') if uri.nil?
-		
+
 		unless resources[uri].nil?
 			$logger.debug "creating resource #{uri}; found in cache"
 			begin
@@ -269,8 +277,12 @@ EOF
 				found_klass = t.to_class_name
 				if Object.const_defined?(found_klass.to_sym)
 
-					if not klass.nil? and not klass == IdentifiedResource and not found_klass == klass.to_s
-						raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, trying to instantiate a #{klass} as type #{found_klass}.")
+					if !klass.nil? 
+						if klass != IdentifiedResource 
+							if found_klass != klass.to_s
+								raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, trying to instantiate a #{klass} as type #{found_klass}.")
+							end
+						end
 					end
 					
 					resource = instantiate_resource(uri, found_klass.to_class)
@@ -367,34 +379,36 @@ private
 		qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), NamespaceFactory.get(:rdfs,:Class))
 		all_types = qe.execute
 		$logger.info "found #{all_types.size} types in #{connection.context}"
-		
-		for type in all_types do
-			
-			unless type.kind_of?(Resource)
-				raise(NodeFactoryError, "received literal #{type} instead as resource type")
-			end
-			
-			construct_class(type, qe)
+
+		klasses = all_types.collect do |type|
+			construct_class(type, qe) if type.kind_of?(Resource)
+		end
+		p " ************** constructed all klasses ****************"
+		##for type in all_types do
+		##	unless type.kind_of?(Resource)
+		##		raise(NodeFactoryError, "received literal #{type} instead as resource type")
+		##	end
+		##	klasses << construct_class(type, qe)
+		##end
+
+		klasses.uniq.each do |klass|
+			# and loading all attributes into the class
+			get_class_attributes_from_data klass, qe
 		end
 	end
 
 	# constructs a class from an RDF resource (using its local_name as class name)
 	def self.construct_class(type, qe)
-		# creating the class with the correct className and @@context variable
-		context = @@current_connection.context
-		setup_context = lambda do
-			set_class_uri type.uri
-			@@context = @@current_connection.context
-		end
+		## TODO: setup context inside class
 
 		class_name  = type.to_class_name
 		unless Object.const_defined? class_name.to_sym
-			klass = Object.module_eval("#{class_name} = Class.new IdentifiedResource, &setup_context")
-			klass.set_class_uri type
+			klass = Object.module_eval("#{class_name} = Class.new IdentifiedResource")
+			klass.set_class_uri type.uri
 			$logger.info "created class #{class_name}"
-
-			# and loading all attributes into the class
-			get_class_attributes_from_data klass, qe
+			klass
+		else
+			Object.const_get(class_name)
 		end
 	end
 
@@ -402,7 +416,7 @@ private
 	# class of that type
 	def self.get_class_attributes_from_data klass, qe
 		qe.add_condition(:s, NamespaceFactory.get(:rdf,:type), NamespaceFactory.get(:rdf,:Property))
-		qe.add_condition(:s, NamespaceFactory.get(:rdfs,:domain), klass.class_URI.uri)
+		qe.add_condition(:s, NamespaceFactory.get(:rdfs,:domain), klass.class_URI)
 		qe.add_binding_variables :s
 
 		all_attributes = qe.execute
@@ -464,7 +478,7 @@ class IdentifiedResource
 	end
 
 	def to_method_name
-		local_part.downcase.gsub('-','_')
+		local_part.underscore.gsub('-','_')
 	end
 end
 
@@ -478,5 +492,13 @@ class String
 		else
 			return IdentifiedResource
 		end
+	end
+
+	def underscore
+	  gsub(/::/, '/').
+	      gsub(/([A-Z]+)([A-Z][a-z])/,'\1_\2').
+	      gsub(/([a-z\d])([A-Z])/,'\1_\2').
+	      tr("-", "_").
+	      downcase
 	end
 end
