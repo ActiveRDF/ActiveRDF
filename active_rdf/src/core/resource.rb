@@ -152,7 +152,9 @@ class Resource; implements Node
 	# Return:
 	# * [<tt>Bool</tt>] True if present in database, false otherwise.
 	def self.exists?(resource)
-		raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, resource is nil.") if resource.nil?
+		if resource.nil?
+			raise(ActiveRdfError, "In #{__FILE__}:#{__LINE__}, resource is nil.")
+		end
 		
 		# Build the query
 		if self != Resource
@@ -167,7 +169,9 @@ class Resource; implements Node
 		end
 		
 		# Convert URI string into basic resource
-		resource = NodeFactory.create_basic_resource(resource) if resource.instance_of?(String)
+		if resource.instance_of?(String)
+			resource = NodeFactory.create_basic_resource(resource)
+		end
 		
 		qe.add_condition(resource, :p, :o)
 		 

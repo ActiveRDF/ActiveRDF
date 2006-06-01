@@ -87,6 +87,17 @@ class SparqlQueryGenerator < AbstractQueryGenerator
 		end
 		return where_template
 	end
+	
+	# Add keywords search conditions.
+	#
+	# Arguments:
+	# * +conditions+: Array of [Symbol (variable), String (keyword)].
+	#
+	# Return:
+	# * [<tt>String</tt>] The part of the where clause with the keyword search command
+	def self.keyword(conditions)
+		raise(QueryError, 'Keyword search not implemented for sparql.')
+	end
 
 	# Generate the order by clause. Abstract method. Need to be implemented in each
 	# Generator.
@@ -132,10 +143,10 @@ class SparqlQueryGenerator < AbstractQueryGenerator
 	#
 	# Return:
 	# * [<tt>String</tt>] The query string.
-	def self.generate(bindings, conditions, order_opt = nil, keyword_search = nil)
+	def self.generate(bindings, conditions, keywords = nil, order_opt = nil)
 
 		template_query = <<END_OF_QUERY
-SELECT #{select(bindings)}
+SELECT DISTINCT #{select(bindings)}
 WHERE {
 #{where(conditions)}
 }

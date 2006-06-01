@@ -69,8 +69,8 @@ class NamespaceFactory
 
 	# Load the commun uri in the factory.
 	def self.load_namespaces
-		add(:rdf,'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
-		add(:rdfs,'http://www.w3.org/2000/01/rdf-schema#')
+		add(:rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
+		add(:rdfs, 'http://www.w3.org/2000/01/rdf-schema#')
 		add(:owl, 'http://www.w3.org/2002/07/owl#')
 
 		#add(:rdf_type, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type')

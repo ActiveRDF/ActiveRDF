@@ -62,7 +62,7 @@ class RedlandAdapter
 				query_results.next()
 			end
 		end
-		return results		
+		return results
 	end
 	
 	# Convert value of Redland::QueryResult to ActiveRDF::Node
