@@ -473,6 +473,8 @@ class IdentifiedResource
 			'RdfProperty'
 		when 'Resource'
 			'IdentifiedResource'
+		when ''
+			raise ActiveRdfError, "empty class name #{self}"
 		else
 			class_name
 		end
