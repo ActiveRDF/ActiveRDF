@@ -26,7 +26,7 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 
 	def setup
 		setup_redland
-		params = { :adapter => :redland }
+		params = { :adapter => :redland, :cache_server => :memory, :construct_class_model => false }
 		NodeFactory.connection(params)
 	end
 	
