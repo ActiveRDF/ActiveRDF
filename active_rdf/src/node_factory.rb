@@ -76,7 +76,7 @@ public
 
 		if params[:logger]
 			$logger = Logger.new(params[:logger]) if $logger.nil?
-			$logger.level = params[:log_level]
+			$logger.level = params[:log_level] || Logger::DEBUG
 		else
 			$logger = Logger.new STDOUT
 			$logger.level = Logger::FATAL
@@ -350,7 +350,7 @@ EOF
 	
 	# Clear the resources hash
 	def self.clear
-		$logger.debug 'clearing the cache'
+		#$logger.debug 'clearing the cache'
 
 		require 'rubygems'
 		require 'memcache'
@@ -448,7 +448,8 @@ private
 		#raise(NodeFactoryError, "In #{__FILE__}:#{__LINE__}, Invalid Class name.") if klass.nil?
 		
 		unless rdf_classes_without_properties.include?(klass.to_s)
-			klass.send(:predicates)
+			## TODO: does this if really make sense?
+			klass.send(:predicates) if klass.respond_to?(:predicates)
 		end
 		return klass.send(:new,uri)
 	end
