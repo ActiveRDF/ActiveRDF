@@ -17,10 +17,7 @@
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
 
-require 'test/unit'
-require 'active_rdf'
-require 'node_factory'
-require 'test/adapter/yars/manage_yars_db'
+require "#{File.dirname(__FILE__)}/manage_yars_db"
 
 class TestYarsAdapterBasicQuery < Test::Unit::TestCase
 

@@ -16,12 +16,13 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
+#$:.unshift File.join(File.dirname(__FILE__),'../../../')
 
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'test/adapter/yars/manage_yars_db'
-require 'test/adapter/redland/manage_redland_db'
+require 'active_rdf/test/adapter/yars/manage_yars_db'
+require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class Resource
 	def self.test_find_predicates(class_uri)

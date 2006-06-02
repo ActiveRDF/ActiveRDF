@@ -76,7 +76,7 @@ public
 
 		# TODO: add logger
 		# use default settings for undefined parameters
-		default_parameters = { :host => 'localhost', :adapter => :yars, :port => 
+		default_parameters = { :cache_server => :memory, :host => 'localhost', :adapter => :yars, :port => 
 			8080, :context => '', :construct_class_model => true, :construct_schema => false, :proxy => nil}
 		params = default_parameters.merge(params)
 			
@@ -88,9 +88,9 @@ public
 			$logger = Logger.new STDOUT
 			$logger.level = Logger::FATAL
 		end
-		
+    
 		# Initialize cache system
-		init_cache(params[:cache_server] || params[:host])
+    init_cache(params[:cache_server] || params[:host])
 		
 		# Initialize DB adapter
 		connection = init_adapter(params)

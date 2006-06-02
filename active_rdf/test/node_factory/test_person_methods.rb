@@ -20,9 +20,8 @@
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'test/node_factory/person'
-require 'test/adapter/yars/manage_yars_db'
-require 'test/adapter/redland/manage_redland_db'
+require 'active_rdf/test/adapter/yars/manage_yars_db'
+require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestNodeFactoryPerson < Test::Unit::TestCase
 
@@ -39,6 +38,7 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 		else
 			raise(StandardError, "Unknown DB type : #{DB}")
 		end
+    require 'active_rdf/test/node_factory/person'
 	end
 	
 	def teardown

@@ -23,11 +23,11 @@ require 'tmpdir'
 # We add the active_rdf subdirectory to the LOAD_PATH
 if File.symlink?(__FILE__)
     $: << File.dirname(File.expand_path(File.readlink(__FILE__))) + '/active_rdf/src'
-    $: << File.dirname(File.expand_path(File.readlink(__FILE__))) + '/active_rdf/src/lib'
-else
+    $: << File.dirname(File.expand_path(File.readlink(__FILE__)))
+ else
     $: << File.dirname(File.expand_path(__FILE__)) + '/active_rdf/src'
-    $: << File.dirname(File.expand_path(__FILE__)) + '/active_rdf/src/lib'
-end
+    $: << File.dirname(File.expand_path(__FILE__))
+ end
 
 # Load Module Class modification for true abstract class
 require 'misc/abstract_class'

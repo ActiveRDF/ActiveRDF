@@ -20,8 +20,8 @@
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'test/adapter/yars/manage_yars_db'
-require 'test/adapter/redland/manage_redland_db'
+require 'active_rdf/test/adapter/yars/manage_yars_db'
+require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestNodeFactoryUnknownIdentifiedResource < Test::Unit::TestCase
 

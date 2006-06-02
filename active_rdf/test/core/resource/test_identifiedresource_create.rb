@@ -16,13 +16,11 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'test/node_factory/person'
-require 'test/adapter/yars/manage_yars_db'
-require 'test/adapter/redland/manage_redland_db'
+require 'active_rdf/test/adapter/yars/manage_yars_db'
+require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestIdentifiedResourceCreate < Test::Unit::TestCase
 
@@ -39,6 +37,8 @@ class TestIdentifiedResourceCreate < Test::Unit::TestCase
 		else
 			raise(StandardError, "Unknown DB type : #{DB}")
 		end
+   
+    require 'active_rdf/test/node_factory/person'
 	end
 	
 	def teardown

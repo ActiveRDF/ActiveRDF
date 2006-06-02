@@ -16,20 +16,15 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-
 require 'test/unit'
 require 'active_rdf'
-require 'test/adapter/yars/manage_yars_db'
-require 'test/adapter/redland/manage_redland_db'
-DB_HOST = 'opteron'
+require 'active_rdf/test/adapter/yars/manage_yars_db'
 
 class A < IdentifiedResource
 	set_class_uri 'http://test/A'
 end
 	
 class TestResource < Test::Unit::TestCase
-	$logger.level = Logger::DEBUG
-
 	def setup
 		setup_yars 'test_resource'
 		NodeFactory.connection :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource'

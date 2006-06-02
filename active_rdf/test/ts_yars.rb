@@ -16,6 +16,7 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
+$:.unshift File.join(File.dirname(__FILE__),'..')
 
 require 'active_rdf'
 require 'node_factory'
@@ -23,13 +24,9 @@ require 'node_factory'
 require 'test/unit/testsuite'
 require 'test/unit/ui/console/testrunner'
 
-# Constant definition
-
-DB_HOST = 'opteron'
 DB = :yars
-TestContext = 'test'
-
-# Unit test include
+DB_HOST = 'browserdf.org'
+DB_CONTEXT = 'test-context'
 
 # NodeFactory Tests
 require 'test/node_factory/test_connection'
@@ -60,56 +57,3 @@ require 'test/core/resource/test_identifiedresource_attributescontainer'
 
 # NamespaceFactory Test
 require 'test/namespace_factory/test_namespace_factory'
-
-class TestSuite_AllTests
-	def self.test_adapter suite
-		# Yars Adapter Tests
-		suite << TestYarsAdapter.suite
-		suite << TestYarsAdapterAdd.suite
-		suite << TestYarsAdapterRemove.suite
-		suite << TestYarsAdapterBasicQuery.suite
-		suite << TestYarsAdapterJointQuery.suite
-	end
-
-	def self.test_resource suite
-		# Resource Tests
-		suite << TestResource.suite
-		suite << TestResourceGet.suite
-		suite << TestResourceFind.suite
-		suite << TestIdentifiedResource.suite
-		suite << TestIdentifiedResourceGet.suite
-		suite << TestIdentifiedResourceFind.suite
-		suite << TestIdentifiedResourceCreate.suite
-		suite << TestAttributesContainer.suite
-	end
-		
-	def self.test_namespace suite
-		# NamespaceFactory Tests
-		suite << TestNamespaceFactory.suite    
-	end
-
-	def self.test_nodefactory suite
-		# NodeFactory Tests
-		suite << TestNodeFactoryInitialisationConnection.suite
-		suite << TestNodeFactoryLiteral.suite
-		suite << TestNodeFactoryBasicResource.suite
-		suite << TestResourceEquality.suite
-		suite << TestNodeFactoryUnknownIdentifiedResource.suite
-		suite << TestNodeFactoryIdentifiedResource.suite
-		suite << TestNodeFactoryPerson.suite
-		suite << TestConnection.suite
-	end
-
-	def self.suite
-		suite = Test::Unit::TestSuite.new("ActiveRDF Tests")
-		
-		test_nodefactory suite
-		test_adapter suite
-		test_resource suite
-		test_namespace suite
-					 
-		return suite
-	end
-end
-
-Test::Unit::UI::Console::TestRunner.run(TestSuite_AllTests)

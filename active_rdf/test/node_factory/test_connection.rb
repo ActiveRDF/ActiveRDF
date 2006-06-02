@@ -17,13 +17,11 @@
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
 
-	DB = :yars
-	DB_HOST = 'browserdf.org'
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'test/adapter/yars/manage_yars_db'
-require 'test/adapter/redland/manage_redland_db'
+require 'active_rdf/test/adapter/yars/manage_yars_db'
+require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestConnection < Test::Unit::TestCase
 	Context = 'test_connection'

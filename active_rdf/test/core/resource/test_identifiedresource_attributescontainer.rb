@@ -20,9 +20,7 @@
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'test/node_factory/person'
-require 'test/adapter/yars/manage_yars_db'
-require 'test/adapter/redland/manage_redland_db'
+require 'active_rdf/test/adapter/yars/manage_yars_db'
 
 class TestAttributesContainer < Test::Unit::TestCase
 
@@ -32,24 +30,20 @@ class TestAttributesContainer < Test::Unit::TestCase
 			setup_yars('test_attribute_container')
 			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_attribute_container' }
 			@connection = NodeFactory.connection(params)
-		when :redland
-			setup_redland
-			params = { :adapter => :redland }
-			@connection = NodeFactory.connection(params)
-		else
+      
+    when :redland
+			@connection = NodeFactory.connection( :adapter => :redland, :location => :memory )
+    else
 			raise(StandardError, "Unknown DB type : #{DB}")
 		end
+    require 'active_rdf/test/node_factory/person'
 	end
 	
 	def teardown
 		case DB
 		when :yars
 			delete_yars('test_attribute_container')
-		when :redland
-			delete_redland
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end	
+    end
 	end
 	
 	def test_A_create_person_and_save_without_attributes
@@ -112,9 +106,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		person2.name = 'person 3'
 		
 		attributes = { :age => 23, :name => 'person two', :knows => person2 }
-		assert_nothing_raised(ResourceUpdateError) {
-			person.update_attributes(attributes)
-		}
+		assert_nothing_raised(ResourceUpdateError) {person.update_attributes(attributes)}
 		
 		assert_equal('23', person.age)
 		assert_equal('person two', person.name)

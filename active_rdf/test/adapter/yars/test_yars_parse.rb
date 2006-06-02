@@ -16,10 +16,7 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-
-require 'test/unit'
-require 'active_rdf'
-require 'adapter/yars/yars_adapter'
+require "#{File.dirname(__FILE__)}/manage_yars_db"
 
 class YarsAdapter
 	def public_match_object s

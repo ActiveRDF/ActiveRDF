@@ -87,7 +87,7 @@ module AttributesContainer
 		# Verification of attributes existence
 		unknown_attributes = converted_attributes.keys - self.class.predicates.keys
 		if !unknown_attributes.empty?
-			raise(ResourceUpdateError, "In #{__FILE__}:#{__LINE__}, unknown attribute received during update: #{unknown_attributes.inspect}.") 
+			raise(ResourceUpdateError, "updating unknown attribute: #{unknown_attributes.inspect}.") 
 		end
 		
 		# We update the attributes hash with the new

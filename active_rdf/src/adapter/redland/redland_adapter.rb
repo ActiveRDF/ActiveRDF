@@ -73,9 +73,11 @@ class RedlandAdapter; implements AbstractAdapter
 			raise(StatementAdditionRedlandError, str_error)		
 		end
 	
-		# Redland::Model::add return 0 if add succesfully the statement
-		if @model.add(wrap(s), wrap(p), wrap(o), context) != 0
-			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
+		begin
+      # TODO: disabled context temporarily, does not work properly in Redland
+      @model.add(wrap(s), wrap(p), wrap(o))
+    rescue Redland::RedlandError => e
+			str_error = "Redland error in model.add: #{e.message}"
 			raise(StatementAdditionRedlandError, str_error)
 		end
 		
@@ -104,9 +106,11 @@ class RedlandAdapter; implements AbstractAdapter
 
 		# Find all statement and remove them
 		counter = 0
-		@model.find(wrap(s), wrap(p), wrap(o), context) { |_s, _p, _o|
+    
+    # TODO: disabled context temporarily, does not work properly in Redland
+		@model.find(wrap(s), wrap(p), wrap(o)) { |_s, _p, _o|
 			# Redland::Model::delete return 0 if delete succesfully the statement
-			if @model.delete(_s, _p, _o, context) != 0
+			if @model.delete(_s, _p, _o) != 0
 				str_error = "In #{__FILE__}:#{__LINE__}, error during removal of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
 				raise(StatementRemoveRedlandError, str_error)
 			end

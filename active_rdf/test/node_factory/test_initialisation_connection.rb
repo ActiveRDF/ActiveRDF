@@ -50,9 +50,9 @@ class TestNodeFactoryInitialisationConnection < Test::Unit::TestCase
 	def get_connection_parameters
 		case DB
 		when :yars
-			return { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => TestContext }
+			return { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => DB_CONTEXT }
 		when :redland
-			return { :adapter => :redland }
+			return { :adapter => :redland, :location => :memory }
 		else
 			raise(StandardError, "Unknown DB type : #{DB}")
 		end

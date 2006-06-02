@@ -15,90 +15,44 @@
 # == Copyright
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
-#
+
 
 require 'active_rdf'
 require 'node_factory'
 
+DB = :redland
+
 require 'test/unit/testsuite'
 require 'test/unit/ui/console/testrunner'
 
-# Constant definition
-
-DB = :redland
-
-# Unit test include
-
 # NodeFactory Tests
-require 'test/node_factory/test_initialisation_connection'
-require 'test/node_factory/test_create_literal'
-require 'test/node_factory/test_create_basic_resource'
-require 'test/node_factory/test_create_identified_resource_with_unknown_type'
-require 'test/node_factory/test_create_identified_resource_on_person_type'
-require 'test/node_factory/test_person_methods'
+require 'active_rdf/test/node_factory/test_initialisation_connection'
+require 'active_rdf/test/node_factory/test_create_literal'
+require 'active_rdf/test/node_factory/test_create_basic_resource'
+require 'active_rdf/test/node_factory/test_create_identified_resource_with_unknown_type'
+require 'active_rdf/test/node_factory/test_create_identified_resource_on_person_type'
+require 'active_rdf/test/node_factory/test_person_methods'
 
-# Redland adpater Tests
-require 'test/adapter/redland/test_redland_adapter'
-require 'test/adapter/redland/test_redland_adapter_add'
-require 'test/adapter/redland/test_redland_adapter_remove'
-require 'test/adapter/redland/test_redland_basic_query'
-require 'test/adapter/redland/test_redland_joint_query'
+# Redland adapter Tests
+require 'active_rdf/test/adapter/redland/test_redland_adapter'
+require 'active_rdf/test/adapter/redland/test_redland_adapter_add'
+require 'active_rdf/test/adapter/redland/test_redland_adapter_remove'
+require 'active_rdf/test/adapter/redland/test_redland_basic_query'
+require 'active_rdf/test/adapter/redland/test_redland_joint_query'
 
 # Core Tests
-require 'test/core/resource/test_resource'
-require 'test/core/resource/test_resource_get'
-require 'test/core/resource/test_resource_find'
-require 'test/core/resource/test_identified_resource'
-require 'test/core/resource/test_identifiedresource_get'
-require 'test/core/resource/test_identifiedresource_find'
-require 'test/core/resource/test_identifiedresource_create'
-require 'test/core/resource/test_identifiedresource_attributescontainer'
+require 'active_rdf/test/core/resource/test_resource'
+require 'active_rdf/test/core/resource/test_resource_get'
+require 'active_rdf/test/core/resource/test_resource_find'
+require 'active_rdf/test/core/resource/test_identified_resource'
+require 'active_rdf/test/core/resource/test_identifiedresource_get'
+require 'active_rdf/test/core/resource/test_identifiedresource_find'
+require 'active_rdf/test/core/resource/test_identifiedresource_create'
+require 'active_rdf/test/core/resource/test_identifiedresource_attributescontainer'
 
 # NamespaceFactory Test
-require 'test/namespace_factory/test_namespace_factory'
+require 'active_rdf/test/namespace_factory/test_namespace_factory'
 
 # QueryEngine Test
-require 'test/query_generator/test_query_engine'
-
-class TestSuite_AllTests
-    def self.suite
-        suite = Test::Unit::TestSuite.new("ActiveRDF Tests")
-        
-        # NodeFactory Tests
-        suite << TestNodeFactoryInitialisationConnection.suite
-        suite << TestNodeFactoryLiteral.suite
-        suite << TestNodeFactoryBasicResource.suite
-        
-        # Yars Adapter Tests
-        suite << TestRedlandAdapter.suite
-        suite << TestRedlandAdapterAdd.suite
-        suite << TestRedlandAdapterRemove.suite
-        suite << TestRedlandAdapterBasicQuery.suite
-        suite << TestRedlandAdapterJointQuery.suite
-        
-        # Resource Tests
-        suite << TestResource.suite
-        suite << TestResourceGet.suite
-        suite << TestResourceFind.suite
-        suite << TestIdentifiedResource.suite
-        suite << TestIdentifiedResourceGet.suite
-        suite << TestIdentifiedResourceFind.suite
-        
-        # NodeFactory Tests suite
-        suite << TestNodeFactoryUnknownIdentifiedResource.suite
-        suite << TestNodeFactoryIdentifiedResource.suite
-        suite << TestNodeFactoryPerson.suite
-        
-        # Resource Tests suite
-        suite << TestIdentifiedResourceCreate.suite
-        suite << TestAttributesContainer.suite
-        
-        # NamespaceFactory Tests
-        suite << TestNamespaceFactory.suite    
-               
-        return suite
-    end
-end
-
-Test::Unit::UI::Console::TestRunner.run(TestSuite_AllTests)
+require 'active_rdf/test/query_generator/test_query_engine'
 
