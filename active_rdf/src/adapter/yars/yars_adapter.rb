@@ -48,6 +48,7 @@ class YarsAdapter; implements AbstractAdapter
 		# manually at some point in time, which I do not want to do.
 	
 		if proxy=params[:proxy]
+			proxy = Net::HTTP.Proxy(proxy) if (proxy.is_a? String and not proxy.empty?)
 			raise YarsError, "provided proxy is not a valid Net::HTTP::Proxy" unless (proxy.is_a?(Class) and proxy.ancestors.include?(Net::HTTP))
 			@yars = proxy.new(host,port)
 		else

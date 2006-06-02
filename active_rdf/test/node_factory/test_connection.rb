@@ -110,11 +110,20 @@ class TestConnection < Test::Unit::TestCase
 		#assert (not all_resources.eql?(resources_in_cia))
 	end
 
-	def test_proxy
+	def test_proxy_A
 		# TODO: verify querying over proxy server
-		assert_raise(ConnectionError) { NodeFactory.connection Default_parameters.merge(:proxy => 'http://proxy.m3pe.org') }
 		assert_raise(ConnectionError){ NodeFactory.connection Default_parameters.merge(:proxy => '') }
-		assert_nothing_raised { NodeFactory.connection Default_parameters.merge(:proxy => Net::HTTP.Proxy('81.22.90.226')) }
+	end
+
+	def test_proxy_B
+		assert_nothing_raised { NodeFactory.connection Default_parameters.merge(:proxy => '81.22.90.226', :construct_class_model => false) }
+	end
+
+	def test_proxy_C
+		assert_nothing_raised { NodeFactory.connection Default_parameters.merge(:proxy => Net::HTTP.Proxy('81.22.90.226'), :construct_class_model=> false) }
+	end
+
+	def test_proxy_D
 		assert_nothing_raised { NodeFactory.connection Default_parameters.merge(:proxy => nil) }
 	end
 end
