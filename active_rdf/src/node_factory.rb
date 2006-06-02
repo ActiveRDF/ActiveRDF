@@ -74,6 +74,13 @@ public
 			return @@current_connection
 		end
 
+		# TODO: add logger
+		# use default settings for undefined parameters
+		default_parameters = { :host => 'localhost', :adapter => :yars, :port => 
+			8080, :context => '', :construct_class_model => true, :construct_schema => false, :proxy => nil}
+		params = default_parameters.merge(params)
+			
+		# setup logger
 		if params[:logger]
 			$logger = Logger.new(params[:logger]) if $logger.nil?
 			$logger.level = params[:log_level] || Logger::DEBUG
@@ -104,7 +111,11 @@ public
 		when :yars
 			$logger.debug 'loading YARS adapter'
 			require 'adapter/yars/yars_adapter'
-			connection = YarsAdapter.new(params)
+			begin 
+				connection = YarsAdapter.new(params)
+			rescue YarsError => e
+				raise ConnectionError, e.message
+			end
 		when :redland
 			$logger.debug 'loading Redland adapter'
 			require 'adapter/redland/redland_adapter'
@@ -383,7 +394,6 @@ private
 		klasses = all_types.collect do |type|
 			construct_class(type, qe) if type.kind_of?(Resource)
 		end
-		p " ************** constructed all klasses ****************"
 		##for type in all_types do
 		##	unless type.kind_of?(Resource)
 		##		raise(NodeFactoryError, "received literal #{type} instead as resource type")

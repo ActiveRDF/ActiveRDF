@@ -17,6 +17,8 @@
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
 
+	DB = :yars
+	DB_HOST = 'browserdf.org'
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
@@ -25,6 +27,8 @@ require 'test/adapter/redland/manage_redland_db'
 
 class TestConnection < Test::Unit::TestCase
 	Context = 'test_connection'
+	Default_parameters = { :adapter => DB, :host => DB_HOST, :portr => 8080, :context => Context }
+
 	def setup
 		setup_yars Context
 	end
@@ -34,7 +38,7 @@ class TestConnection < Test::Unit::TestCase
 	end
 
 	def test_A_1
-		assert_raise(ConnectionError) { NodeFactory.connection :context => Context }
+		assert_nothing_raised { NodeFactory.connection :context => Context }
 	end
 
 	def test_A_2
@@ -48,15 +52,15 @@ class TestConnection < Test::Unit::TestCase
 	def test_A_4
 		NodeFactory.connection :adapter => DB, :host => DB_HOST, :port => 8080
 		
-		assert_nothing_raised {NodeFactory.connection }
-		assert_raise(ConnectionError) {NodeFactory.connection :context => Context }
-		assert_nothing_raised {NodeFactory.select_context Context }
+		assert_nothing_raised { NodeFactory.connection }
+		assert_nothing_raised { NodeFactory.connection :context => Context }
+		assert_nothing_raised { NodeFactory.select_context Context }
 	end
 
 	def test_AB_various_inits
-		assert_raise(ConnectionError) {NodeFactory.connection :context => Context }
-		assert_nothing_raised {NodeFactory.connection :adapter => :yars, :host => DB_HOST}
-		assert_nothing_raised {NodeFactory.connection}
+		assert_nothing_raised { NodeFactory.connection :context => Context }
+		assert_nothing_raised { NodeFactory.connection :adapter => :yars, :host => DB_HOST}
+		assert_nothing_raised { NodeFactory.connection}
 	end
 
 #	def test_B_get_contexts
@@ -68,10 +72,10 @@ class TestConnection < Test::Unit::TestCase
 #	end
 #
 	def test_C_add_context
-		assert_raise(ConnectionError){NodeFactory.connection}
-		assert_nothing_raised { NodeFactory.connection :adapter => DB, :host => DB_HOST, :port => 8080, :context => Context }
-		assert_nothing_raised {NodeFactory.select_context Context}
-		assert_nothing_raised {NodeFactory.select_context 'another-context'}
+		assert_raise(ConnectionError) { NodeFactory.connection}
+		assert_nothing_raised { NodeFactory.connection :adapter => DB, :host => DB_HOST, :port => 8080, :context => Context}
+		assert_nothing_raised { NodeFactory.select_context Context}
+		assert_nothing_raised { NodeFactory.select_context 'another-context'}
 		assert_kind_of YarsAdapter, NodeFactory.connection(:context => Context )
 		all_resources = IdentifiedResource.find
 
@@ -104,5 +108,13 @@ class TestConnection < Test::Unit::TestCase
 		# all resources should return cia plus fbi
 		#assert all_resources.eql?(resources_in_cia + resources_in_fbi)
 		#assert (not all_resources.eql?(resources_in_cia))
+	end
+
+	def test_proxy
+		# TODO: verify querying over proxy server
+		assert_raise(ConnectionError) { NodeFactory.connection Default_parameters.merge(:proxy => 'http://proxy.m3pe.org') }
+		assert_raise(ConnectionError){ NodeFactory.connection Default_parameters.merge(:proxy => '') }
+		assert_nothing_raised { NodeFactory.connection Default_parameters.merge(:proxy => Net::HTTP.Proxy('81.22.90.226')) }
+		assert_nothing_raised { NodeFactory.connection Default_parameters.merge(:proxy => nil) }
 	end
 end

@@ -37,17 +37,22 @@ class YarsAdapter; implements AbstractAdapter
 			raise(YarsError, "In #{__FILE__}:#{__LINE__}, Yars adapter initialisation error. Parameters are nil.")
 		end
 	
-		@host = params[:host] || 'localhost'
-		@port = params[:port] || 8080
-		@context = params[:context] || ''
-		
+		@host = params[:host]
+		@port = params[:port]
+		@context = params[:context]
 		@query_language = 'n3'
 
 		# We don't open the connection yet but let each HTTP method open and close 
 		# it individually. It would be more efficient to pipeline methods, and keep 
-		# the connection open continuously, but then we need to close it manually at 
-		# some point in time (which I don't know how to do).
-		@yars = Net::HTTP.new(host, port)
+		# the connection open continuously, but then we would need to close it 
+		# manually at some point in time, which I do not want to do.
+	
+		if proxy=params[:proxy]
+			raise YarsError, "provided proxy is not a valid Net::HTTP::Proxy" unless (proxy.is_a?(Class) and proxy.ancestors.include?(Net::HTTP))
+			@yars = proxy.new(host,port)
+		else
+			@yars = Net::HTTP.new(host,port)
+		end
 
 		$logger.debug("opened YARS connection on http://#{yars.address}:#{yars.port}/#{context}")
 	end
