@@ -33,3 +33,22 @@ or Resource).
 
 - Synchronise the hierarchy of exceptions with the norm defined in the ActiveRDF 
   Manual.
+  
+QueryGenerator:
+
+ - Bug in convert object into sparql query when escaped characters are present :
+ 	 librdf warning URI file:///home/renaud/travail/deri/workspace/RDF-Statistics/:4 - Unknown SPARQL string escape \s in "Two examples of verification of multirate timed automata with {\sc Kronos}""
+	 librdf warning URI file:///home/renaud/travail/deri/workspace/RDF-Statistics/:4 - Unknown SPARQL string escape \m in "Text classification with \mbox{self-organizing} maps: {SOM} lessons learned""
+	 librdf warning URI file:///home/renaud/travail/deri/workspace/RDF-Statistics/:4 - Unknown SPARQL string escape \s in "Joins that generalize: text classification using {{\sc Whirl}}""
+	 librdf warning URI file:///home/renaud/travail/deri/workspace/RDF-Statistics/:4 - Unknown SPARQL string escape \, in "A unified approach to interior point algorithms for linear complementarity problems\,: {A} summary""
+	 librdf error URI file:///home/renaud/travail/deri/workspace/RDF-Statistics/:4 - SPARQL syntax error at '"'
+ 	 
+ 	 Other bugs on citeseer dataset :
+ 	 SELECT DISTINCT ?s 
+
+	WHERE {
+	 	?s <http://m3pe.org/activerdf/citeseer#title> "An Improved Mixture of Experts Approach for Model
+ 		Partitioning in {VLSI}-Design Using
+ 		Genetic Algorithms"
+	}
+ 	 
