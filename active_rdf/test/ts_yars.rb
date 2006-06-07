@@ -29,31 +29,30 @@ DB_HOST = 'browserdf.org'
 DB_CONTEXT = 'test-context'
 
 # NodeFactory Tests
-require 'test/node_factory/test_connection'
-require 'test/node_factory/test_initialisation_connection'
-require 'test/node_factory/test_create_literal'
-require 'test/node_factory/test_create_basic_resource'
-require 'test/node_factory/test_create_identified_resource_with_unknown_type'
-require 'test/node_factory/test_create_identified_resource_on_person_type'
-require 'test/node_factory/test_person_methods'
-require 'test/node_factory/test_equals'
-
-# Yars adapter Tests
-require 'test/adapter/yars/test_yars_adapter'
-require 'test/adapter/yars/test_yars_adapter_add'
-require 'test/adapter/yars/test_yars_adapter_remove'
-require 'test/adapter/yars/test_yars_basic_query'
-require 'test/adapter/yars/test_yars_joint_query'
-
-# Core Tests
-require 'test/core/resource/test_resource'
-require 'test/core/resource/test_resource_get'
-require 'test/core/resource/test_resource_find'
-require 'test/core/resource/test_identified_resource'
-require 'test/core/resource/test_identifiedresource_get'
-require 'test/core/resource/test_identifiedresource_find'
-require 'test/core/resource/test_identifiedresource_create'
-require 'test/core/resource/test_identifiedresource_attributescontainer'
-
-# NamespaceFactory Test
-require 'test/namespace_factory/test_namespace_factory'
+require 'active_rdf/test/node_factory/test_yars_connection'
+require 'active_rdf/test/node_factory/test_create_literal'
+require 'active_rdf/test/node_factory/test_create_basic_resource'
+require 'active_rdf/test/node_factory/test_create_identified_resource_with_unknown_type'
+require 'active_rdf/test/node_factory/test_create_identified_resource_on_person_type'
+require 'active_rdf/test/node_factory/test_person_methods'
+require 'active_rdf/test/node_factory/test_equals'
+#
+## Yars adapter Tests
+#require 'active_rdf/test/adapter/yars/test_yars_adapter'
+#require 'active_rdf/test/adapter/yars/test_yars_adapter_add'
+#require 'active_rdf/test/adapter/yars/test_yars_adapter_remove'
+#require 'active_rdf/test/adapter/yars/test_yars_basic_query'
+#require 'active_rdf/test/adapter/yars/test_yars_joint_query'
+#
+## Core Tests
+#require 'active_rdf/test/core/resource/test_resource'
+#require 'active_rdf/test/core/resource/test_resource_get'
+#require 'active_rdf/test/core/resource/test_resource_find'
+#require 'active_rdf/test/core/resource/test_identified_resource'
+#require 'active_rdf/test/core/resource/test_identifiedresource_get'
+#require 'active_rdf/test/core/resource/test_identifiedresource_find'
+#require 'active_rdf/test/core/resource/test_identifiedresource_create'
+#require 'active_rdf/test/core/resource/test_identifiedresource_attributescontainer'
+#
+## NamespaceFactory Test
+#require 'active_rdf/test/namespace_factory/test_namespace_factory'

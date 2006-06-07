@@ -33,6 +33,10 @@ def setup_redland(context = nil)
 	end
 	
 	# Delete all instances in the resources hash of the NodeFactory
+	NodeFactory.connection(:adapter => :redland,
+						   :location => '/tmp/test-store',
+						   :cache_server => :memory,
+						   :construct_class_model => false)
 	NodeFactory.clear
 end
 
@@ -44,5 +48,9 @@ def delete_redland(context = nil)
 	end
 	
 	# Delete all instances in the resources hash of the NodeFactory
+	NodeFactory.connection(:adapter => :redland,
+						   :location => '/tmp/test-store',
+						   :cache_server => :memory,
+						   :construct_class_model => false)
 	NodeFactory.clear
 end

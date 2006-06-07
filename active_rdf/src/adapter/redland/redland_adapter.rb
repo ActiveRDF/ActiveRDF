@@ -26,29 +26,26 @@ class RedlandAdapter; implements AbstractAdapter
 	
 	attr_reader :model, :store, :query_language, :context
 
-	# Instantiate the connection with the Redland DataBase.
-	def initialize(params = {})
-		if params.nil?
-			raise(RedlandError, "In #{__FILE__}:#{__LINE__}, Redland adapter initialisation error. Parameters are nil.")
+	# Instantiate the connection with a Redland database.
+	def initialize(params)
+		if params.empty?
+			raise(RedlandAdapterError, "Redland adapter initialised without parameters")
 		end
 
+		path, file, type = nil
 		if params[:location] and params[:location] != :memory
-			location_split = File.split(params[:location])
-			@store_path = location_split[0]
-			@store_file = location_split[1]
-			@hash_type = 'bdb'
+			path, file = File.split(params[:location])
+			type = 'bdb'
 		elsif params[:location] == :memory
-			@hash_type = 'memory'
-			@store_path = ''
-			@store_file = '.'
+			type = 'memory'
+			path = ''
+			file = '.'
 		else
-			@store_path = '/tmp'
-			@store_file = 'test-store'
-			@hash_type = 'bdb'
+			raise RedlandAdapterError, "no location specified for Redland adapter"
 		end
 		
 		@context = params[:context]
-		@store = Redland::HashStore.new(@hash_type, @store_file, @store_path, false) if @store.nil?
+		@store = Redland::HashStore.new(type, file, path, false) #if @store.nil?
 		@model = Redland::Model.new @store
 		@query_language = 'sparql'
 	end
@@ -74,9 +71,10 @@ class RedlandAdapter; implements AbstractAdapter
 		end
 	
 		begin
-      # TODO: disabled context temporarily, does not work properly in Redland
-      @model.add(wrap(s), wrap(p), wrap(o))
-    rescue Redland::RedlandError => e
+      		# TODO: disabled context temporarily, does not work properly in Redland
+      		@model.add(wrap(s), wrap(p), wrap(o))
+      
+    	rescue Redland::RedlandError => e
 			str_error = "Redland error in model.add: #{e.message}"
 			raise(StatementAdditionRedlandError, str_error)
 		end

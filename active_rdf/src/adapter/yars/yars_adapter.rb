@@ -106,7 +106,7 @@ class YarsAdapter; implements AbstractAdapter
 	# qs is an n3 query, e.g. '<> ql:select { ?s ?p ?o . } ; ql:where { ?s ?p ?o . } .'
 	def query(qs)
 		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
-		$logger.debug "querying yars in context #@context:\n" + qs
+		$logger.debug "querying yars in context #@context" 
 		
 		header = { 'Accept' => 'application/rdf+n3' }
 		response = yars.get("/#{context}?q=#{CGI.escape(qs)}", header)

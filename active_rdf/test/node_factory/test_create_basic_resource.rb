@@ -20,20 +20,18 @@
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'active_rdf/test/adapter/yars/manage_yars_db'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestNodeFactoryBasicResource < Test::Unit::TestCase
 	def setup
 		case DB
 		when :yars
+			NodeFactory.connection(:adapter => :yars, :host => DB_HOST, :context => 'test_create_person')
+			require 'active_rdf/test/adapter/yars/manage_yars_db'
 			setup_yars('test_create_person')
-			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_create_person' }
-			@connection = NodeFactory.connection(params)
+
 		when :redland
-			setup_redland
-			params = { :adapter => :redland }
-			@connection = NodeFactory.connection(params)
+			NodeFactory.connection(:adapter => :redland, :location => :memory, :construct_class_model => false)
+
 		else
 			raise(StandardError, "Unknown DB type : #{DB}")
 		end
@@ -43,10 +41,6 @@ class TestNodeFactoryBasicResource < Test::Unit::TestCase
 		case DB
 		when :yars
 			delete_yars('test_create_person')
-		when :redland
-			delete_redland
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
 		end	
 	end
 

@@ -15,14 +15,16 @@
 # == Copyright
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
-#
-require "#{File.dirname(__FILE__)}/manage_redland_db"
+
+require 'active_rdf'
+require 'active_rdf/test/common'
+require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestRedlandAdapterAdd < Test::Unit::TestCase
 
 	def setup
-		params = { :adapter => :redland }
-		@connection = NodeFactory.connection(params)
+		setup_connection
+		@connection = NodeFactory.connection
 	end
 	
 	def teardown
@@ -110,4 +112,5 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 			@connection.add(subject, predicate, object)
 		}
 	end
+
 end

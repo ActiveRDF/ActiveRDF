@@ -21,6 +21,7 @@
 #
 
 require 'logger'
+require 'tmpdir'
 require 'activerdf_exceptions'
 require 'core/literal'
 require 'core/resource'
@@ -44,7 +45,7 @@ class NodeFactory
 	@@current_connection = nil
 	
 	# Root context hash key
-	ROOT_CONTEXT = 'root'
+	ROOT_CONTEXT = ''
 	
 #----------------------------------------------#
 #               PUBLIC METHODS                 #
@@ -52,45 +53,57 @@ class NodeFactory
 	
 public
 
-	# Initialise cache and connection to data source.
-	# If no parameter given, we return the previous instantiated connection is
-	# returned. A new connection is created for every context.
-	# If no context is given, the root context is used by default.
+	# default settings for undefined parameters
+	def self.default_parameters
+		return 	{
+				:cache_server => :memory,
+				:host => 'localhost',
+				:adapter => :yars,
+				:port => 8080,
+				:context => ROOT_CONTEXT,
+				:construct_class_model => true,
+				:construct_schema => false,
+				:proxy => nil,
+				:logger => Dir.tmpdir + '/activerdf.log',
+				:logger_level => Logger::FATAL
+				}
+	end
+
+	# Initialise cache and connection to data source.  If no parameter given, we 
+	# return the previous instantiated connection. 
 	#
-	# Hash of parameters for cache:
-	# * +:cache_server+ => HOST or :memory
+	# Available parameters, possible values and default values
+	# * +:adapter+ => :yars, :redland, :sparql, :jena (default :yars)
+	# * +:construct_class_model+ => boolean (default true)
+	# * +:construct_schema+ => boolean (default false)
+	# * +:cache_server+ => 'host-url' or :memory (default :memory)
+	# * +:proxy+ => 'proxy-url' or ProxyClass (default nil)
+	# * +:logger+ => File (default tmpdir/activerdf.log)
+	# * +:logger_level+ => Logger::Level (default Logger::FATAL)
+	#
 	# Hash of parameters for adapter yars:
-	# * +:adapter+ => :yars
 	# * +:host+ => Host of the yars server
-	# * +:port+ => Listen port of the yars server, by default 8080
+	# * +:port+ => y default 8080
+	# * +:context+ => 'context-url', by default the root context
 	# Hash of parameters for adapter redland:
-	# * +:adapter+ => :redland
-	# * +:location+ => path to file or :memory, by default /tmp/test-store
-	# For all adapter:
-	# * +:context+ => CONTEXT, by default the root context
-	def self.connection(params = nil)
-		if params.nil?
-			raise(ConnectionError, 'no parameters defined') if @@current_connection.nil?
+	# * +:location+ => 'file-path' or :memory (default /tmp/test-store)
+	def self.connection(params = {})
+    
+		# if no parameters given, and connection already established earlier,
+		# return that connection
+		if params.empty? and not @@current_connection.nil?
 			return @@current_connection
 		end
 
-		# TODO: add logger
-		# use default settings for undefined parameters
-		default_parameters = { :cache_server => :memory, :host => 'localhost', :adapter => :yars, :port => 
-			8080, :context => '', :construct_class_model => true, :construct_schema => false, :proxy => nil}
+		# use default parameters for the unspecified parameters
 		params = default_parameters.merge(params)
-			
-		# setup logger
-		if params[:logger]
-			$logger = Logger.new(params[:logger]) if $logger.nil?
-			$logger.level = params[:log_level] || Logger::DEBUG
-		else
-			$logger = Logger.new STDOUT
-			$logger.level = Logger::FATAL
-		end
+		
+		# setup the logger	
+		$logger = Logger.new params[:logger]
+ 		$logger.level = params[:logger_level]		
     
 		# Initialize cache system
-    init_cache(params[:cache_server] || params[:host])
+ 		init_cache(params[:cache_server] || params[:host])
 		
 		# Initialize DB adapter
 		connection = init_adapter(params)
@@ -100,25 +113,48 @@ public
 		
 		return connection
 	end
-	
+  
+	def self.correct_adapter_for_context(context, adapter)
+		if @@connections.include?(context)
+			case adapter
+			when :redland
+				@@connections[context].class.name == 'RedlandAdapter'
+			when :yars
+				@@connections[context].class.name == 'YarsAdapter'
+			else
+				false
+			end
+		else
+			false
+		end
+	end
+
 	# Initialize the DB adapter. Instantiate the connection and save it in the
 	# connection hash.
 	def self.init_adapter(params)
-		context = params[:context] || ROOT_CONTEXT
-		return @@connections[context] unless @@connections[context].nil?
-	
+		context = params[:context]
+    
+		# if we already have a connection for that context and it is the right
+		# adapter type, return it
+		if correct_adapter_for_context(params[:context], params[:adapter])
+			return @@connections[context] unless @@connections[context].nil?
+		end
+
 		case params[:adapter]
 		when :yars
 			$logger.debug 'loading YARS adapter'
 			require 'adapter/yars/yars_adapter'
+			
 			begin 
 				connection = YarsAdapter.new(params)
 			rescue YarsError => e
-				raise ConnectionError, e.message
+				raise(ConnectionError, e.message)
 			end
+			
 		when :redland
 			$logger.debug 'loading Redland adapter'
 			require 'adapter/redland/redland_adapter'
+			
 			connection = RedlandAdapter.new(params)
 		else
 			raise(ConnectionError, 'invalid adapter')
@@ -168,14 +204,13 @@ public
 	# Selects a context to use by default. Invoke multiple times to
 	# continuously change context of following data manipulations.
 	# If the parameter is nil, use the root context.
-	def self.select_context(context = nil)
+	def self.select_context(context = ROOT_CONTEXT)
 		raise(ConnectionError, 'No parameter connection given. Cannot select a context.') if @@default_host_parameters.empty?
 
 		$logger.info "changing to context #{context}"
 
 		@@default_host_parameters[:context] = context
 
-		context = ROOT_CONTEXT if context.nil?
 		if @@connections[context].nil?
 			@@current_connection = init_adapter(@@default_host_parameters)
 		else
@@ -188,13 +223,13 @@ public
 	
 	def self.get_contexts(params)
 		case params[:adapter]
-		when :yars
+		when :yars      
 			connection = YarsAdapter.new(params.merge(:context => nil))
 			qs = <<EOF
 			@prefix yars: <http://sw.deri.org/2004/06/yars#> . 
 			@prefix ql: <http://www.w3.org/2004/12/ql#> . 
  
-			<>  ql:select { (?c).  }; 
+			<>  ql:distinct { (?c).  }; 
 					ql:where { { ?s ?p ?o .} yars:context ?c . } . 
 EOF
 			return connection.query(qs)
@@ -363,15 +398,15 @@ EOF
 	def self.clear
 		#$logger.debug 'clearing the cache'
 
-		require 'rubygems'
-		require 'memcache'
-		
-		case @@cache
-		when Hash
+		case @@cache.class.name
+		when 'Hash'
 			@@cache.clear
-		when MemCache
+		when 'MemCache'
+			require 'rubygems'
+			require 'memcache'
 			@@cache.flush_all
 		end
+
 		@@default_host_parameters = {}
 		@@connections = {}
 		@@current_connection = nil
@@ -475,8 +510,10 @@ end
 
 class IdentifiedResource
 	def to_class_name
-		class_name = local_part.gsub(/\/(.?)/) { "::" + $1.upcase }.gsub(/(^|_|-)(.)/) { $2.upcase }
-		case class_name
+    # converting under_score_separators into CamelCase
+		class_name = local_part.gsub(/(_|-)(.)/) { $2.upcase }
+    
+    case class_name
 		when 'Class'
 			'RdfsClass'
 		when 'Property'

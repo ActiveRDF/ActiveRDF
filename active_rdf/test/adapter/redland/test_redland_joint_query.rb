@@ -17,18 +17,22 @@
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
 
-require "#{File.dirname(__FILE__)}/manage_redland_db"
+require 'active_rdf'
+require 'active_rdf/test/common'
+require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestRedlandAdapterJointQuery < Test::Unit::TestCase
 
 	def setup
-		setup_redland
-		params = { :adapter => :redland }
-		NodeFactory.connection(params)
+		setup_connection
+
+		parser = Redland::Parser.new
+		model = NodeFactory.connection.model
+		dataset = File.read "#{File.dirname(__FILE__)}/../../test_set_person.rdf"
+		parser.parse_string_into_model(model,dataset,'uri://test-set-activerdf/')
 	end
 	
 	def teardown
-		delete_redland
 	end
 	
 	def test_A_query_subject_with_joint_resource_object

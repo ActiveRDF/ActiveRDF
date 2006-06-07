@@ -108,9 +108,9 @@ module AttributesContainer
 			initialize_attributes
 		end
 		
-		# If we have just loaded the attributes, _attributes[attr_name.to_s] == nil
-		attribute = _attributes[attr_name.to_s].nil? ? nil : _attributes[attr_name.to_s][0]
-		
+		# load attribute value for this attribute
+		attribute = send(attr_name)
+
 		if attribute.nil?
 				false
 		elsif attribute.kind_of?(Literal) && attribute.value == 0

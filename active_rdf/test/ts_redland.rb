@@ -26,7 +26,7 @@ require 'test/unit/testsuite'
 require 'test/unit/ui/console/testrunner'
 
 # NodeFactory Tests
-require 'active_rdf/test/node_factory/test_initialisation_connection'
+require 'active_rdf/test/node_factory/test_redland_connection'
 require 'active_rdf/test/node_factory/test_create_literal'
 require 'active_rdf/test/node_factory/test_create_basic_resource'
 require 'active_rdf/test/node_factory/test_create_identified_resource_with_unknown_type'

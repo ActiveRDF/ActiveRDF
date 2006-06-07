@@ -26,12 +26,13 @@ require 'active_rdf'
 
 class TestQueryEngine < Test::Unit::TestCase
 
+  ## TODO: write query engine tests
+
 	def setup	 
-		$logger.level = Logger::DEBUG
-		NodeFactory.connection(:adapter => :yars, :host => '140.203.154.246', :port => 8080, :context => 'citeseer', :cache_server => :memory)
-		@rdfs_subclass = NamespaceFactory.get :rdfs_subclass
-		@rdf_type = NamespaceFactory.get :rdf_type
-		@res_publication = NodeFactory.create_basic_resource 'http://m3pe.org/activerdf/citeseer#Publication'
+		NodeFactory.connection(:adapter => :yars, :host => 'browserdf.org', :cache_server => :memory)
+#		@rdfs_subclass = NamespaceFactory.get :rdfs_subclass
+#		@rdf_type = NamespaceFactory.get :rdf_type
+#		@res_publication = NodeFactory.create_basic_resource 'http://m3pe.org/activerdf/citeseer#Publication'
 	end
 	
 #	def test_A_generate_sparql
@@ -164,16 +165,16 @@ END_OF_STRING
 		assert_equal(query_waiting, qe.generate_ntriples)
 	end
 	
-	def test_I_keyword_search
-		qe = QueryEngine.new
-		qe.add_binding_triple(:s, :p, :o)
-		qe.add_condition(:s, :p, :o)
-		qe.add_keyword(:o, 'Bernhard')
-		
-		results = qe.execute
-		assert_not_nil(results)
-		assert_equal(30, results.size)
-	end
+#	def test_I_keyword_search
+#		qe = QueryEngine.new
+#		qe.add_binding_triple(:s, :p, :o)
+#		qe.add_condition(:s, :p, :o)
+#		qe.add_keyword(:o, 'Bernhard')
+#		
+#		results = qe.execute
+#		assert_not_nil(results)
+#		assert_equal(30, results.size)
+#	end
 	
 
 end

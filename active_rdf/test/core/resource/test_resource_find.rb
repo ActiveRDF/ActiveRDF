@@ -50,7 +50,7 @@ class TestResourceFind < Test::Unit::TestCase
 	
 	def test_C_find_predicate
 		class_uri = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/Person')
-		predicates = Resource.find({ NamespaceFactory.get(:rdfs_domain) => class_uri })
+		predicates = Resource.find({ NamespaceFactory.get(:rdfs, 'domain') => class_uri })
 		assert_not_nil(predicates)
 		assert_instance_of(Array, predicates)
 		assert_equal(3, predicates.size)

@@ -17,28 +17,35 @@
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
 
-require "#{File.dirname(__FILE__)}/manage_redland_db"
+require 'active_rdf'
+require 'active_rdf/test/common'
+require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestRedlandAdapter < Test::Unit::TestCase
+	def setup
+		setup_connection
+	end
+
+	def teardown
+		delete_redland
+	end
 
 	def test_A_initialize
-		params = { :adapter => :redland }
-		@connection = NodeFactory.connection(params)
+		params = { :adapter => :redland, :location => :memory }
+		connection = NodeFactory.connection
 		
-		assert_not_nil(@connection)
-		assert_kind_of(AbstractAdapter, @connection)
-		assert_instance_of(RedlandAdapter, @connection)
-		
-		delete_redland
+		assert_not_nil(connection)
+		assert_kind_of(AbstractAdapter, connection)
+		assert_instance_of(RedlandAdapter, connection)
 	end
 	
 	def test_B_initialize_with_location
 		params = { :adapter => :redland, :location => '/tmp/test-store-2' }
-		@connection = NodeFactory.connection(params)
+		connection = NodeFactory.connection(params)
 		
-		assert_not_nil(@connection)
-		assert_kind_of(AbstractAdapter, @connection)
-		assert_instance_of(RedlandAdapter, @connection)
+		assert_not_nil(connection)
+		assert_kind_of(AbstractAdapter, connection)
+		assert_instance_of(RedlandAdapter, connection)
 		
 		assert(File.exists?('/tmp/test-store-2-po2s.db'))
 		
@@ -47,25 +54,25 @@ class TestRedlandAdapter < Test::Unit::TestCase
 
 	def test_C_initialize_with_location_in_memory
 		params = { :adapter => :redland, :location => :memory }
-		@connection = NodeFactory.connection(params)
+		connection = NodeFactory.connection(params)
 		
-		assert_not_nil(@connection)
-		assert_kind_of(AbstractAdapter, @connection)
-		assert_instance_of(RedlandAdapter, @connection)
+		assert_not_nil(connection)
+		assert_kind_of(AbstractAdapter, connection)
+		assert_instance_of(RedlandAdapter, connection)
 	end
 	
 	def test_D_save
-		params = { :adapter => :redland }
-		@connection = NodeFactory.connection(params)
+		params = { :adapter => :redland, :location => :memory }
+		connection = NodeFactory.connection(params)
 		
 		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
-		@connection.add(subject, predicate, object)
+		connection.add(subject, predicate, object)
 		
 		assert_nothing_raised(RedlandAdapterError) {
-			@connection.save
+			connection.save
 		}
 		
 		delete_redland
