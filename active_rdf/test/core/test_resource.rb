@@ -1,6 +1,6 @@
 # = test_resource.rb
 #
-# Unit Test of Resource
+# Unit Test of Resource instances
 #
 # == Project
 #
@@ -18,50 +18,52 @@
 #
 require 'test/unit'
 require 'active_rdf'
-require 'active_rdf/test/adapter/yars/manage_yars_db'
+require 'active_rdf/test/common'
 
-class A < IdentifiedResource
-	set_class_uri 'http://test/A'
+class Person < IdentifiedResource
+  setup_any
+  set_class_uri 'http://test/Person'
 end
+
+TempLocation = "#{Dir.tmpdir}/test"
 	
 class TestResource < Test::Unit::TestCase
 	def setup
-		setup_yars 'test_resource'
-		NodeFactory.connection :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource'
+		setup_any
 	end
 
 	def teardown
-		delete_yars 'test_resource'
+		delete_any
 	end
 
 	def test_add_predicate_identified_resource
 		p = IdentifiedResource.create 'http://test/test'
-		assert_nothing_raised { A.add_predicate p }
+		assert_nothing_raised { Person.add_predicate p }
 
-		assert A.predicates.include?('test')
-		assert_kind_of IdentifiedResource, A.predicates['test'] 
-		assert_equal 'http://test/test', A.predicates['test'].uri
+		assert Person.predicates.include?('test')
+		assert_kind_of IdentifiedResource, Person.predicates['test'] 
+		assert_equal 'http://test/test', Person.predicates['test'].uri
 	end
 	
 	def test_add_predicate_to_lowerclass
-		assert_nothing_raised { A.add_predicate 'http://test/test' }
+		assert_nothing_raised { Person.add_predicate 'http://test/test' }
 
-		assert A.predicates.include?('test')
-		assert_kind_of IdentifiedResource, A.predicates['test'] 
-		assert_equal 'http://test/test', A.predicates['test'].uri
+		assert Person.predicates.include?('test')
+		assert_kind_of IdentifiedResource, Person.predicates['test'] 
+		assert_equal 'http://test/test', Person.predicates['test'].uri
 	end
 
 	def test_added_predicate_adds_schema_data
-		A.add_predicate 'http://test/test'
+		Person.add_predicate 'http://test/test'
 		p = IdentifiedResource.create 'http://test/test'
 
 		# TODO implement
 		# assert all_predicates.include?(p)
 	end
 
-	def test_a_use_added_predicate
-		A.add_predicate 'http://test/test'
-		c = A.new 'c'
+	def test_use_added_predicate
+		Person.add_predicate 'http://test/test'
+		c = Person.new 'c'
 
 		assert_nothing_raised { c.test }
 		assert_nil c.test
@@ -69,21 +71,34 @@ class TestResource < Test::Unit::TestCase
 		assert_equal 'test-value', c.test
 		assert_nothing_raised { c.save }
 	end
+  
+  
+  ## TODO: enable after we get either YARS with delete working, or Redland with save!
+#	def test_load_added_predicate
+#    # we cannot run this test in memory
+#    # TODO: change setup_yars to setup_any (need to fix redland saving)
+#    setup_yars
+#  
+#		Person.add_predicate 'http://test/test'
+#		eyal = Person.create 'eyal-uri'
+#		eyal.test = 'test-value'
+#		eyal.save
+#
+#    # clear the cache, reopen the connection
+#		NodeFactory.clear
+#    setup_yars
+#		
+##    eyal2 = Person.create 'eyal-uri'
+##    
+##    # assert we have a different object, but with equal values
+##		assert_not_equal eyal.object_id, eyal2.object_id
+##		assert_equal eyal, eyal2
+##		assert_equal eyal2.test, 'test-value'
+#    
+#    delete_yars
+#	end
 
-	def test_b_use_load_added_predicate
-		A.add_predicate 'http://test/test'
-		c = A.new 'c'
-		c.test = 'test-value'
-		c.save
-
-		NodeFactory.clear
-		d = A.new 'c'
-		assert_not_equal c.object_id, d.object_id
-		assert_equal c,d
-		assert_equal 'test-value', d.test
-	end
-
-	def test_add_predicate_collision
+	def test_predicate_collision
 		assert_nothing_raised { IdentifiedResource.add_predicate 'http://test/test' }
 		assert_nothing_raised { IdentifiedResource.add_predicate 'http://test/test' }
 		assert_raise(ActiveRdfError) { IdentifiedResource.add_predicate 'http://othernamespace/test' }

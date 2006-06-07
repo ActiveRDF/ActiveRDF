@@ -19,12 +19,11 @@
 
 require 'active_rdf'
 require 'active_rdf/test/common'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 
 	def setup
-		setup_connection
+		setup_redland
 
 		parser = Redland::Parser.new
 		model = NodeFactory.connection.model
@@ -33,6 +32,7 @@ class TestRedlandAdapterBasicQuery < Test::Unit::TestCase
 	end
 	
 	def teardown
+    NodeFactory.clear
 	end
 	
 	def test_A_query_all

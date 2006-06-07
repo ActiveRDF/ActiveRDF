@@ -18,17 +18,15 @@
 
 require 'active_rdf'
 require 'active_rdf/test/common'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestRedlandAdapterAdd < Test::Unit::TestCase
 
 	def setup
-		setup_connection
-		@connection = NodeFactory.connection
+    @connection = setup_redland
 	end
 	
 	def teardown
-		delete_redland
+    NodeFactory.clear
 	end
 
 	def test_1_add_triples_error_object_nil

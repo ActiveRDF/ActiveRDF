@@ -19,13 +19,13 @@
 
 require 'active_rdf'
 require 'active_rdf/test/common'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
+#require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestRedlandAdapterJointQuery < Test::Unit::TestCase
 
 	def setup
-		setup_connection
-
+		setup_redland
+    
 		parser = Redland::Parser.new
 		model = NodeFactory.connection.model
 		dataset = File.read "#{File.dirname(__FILE__)}/../../test_set_person.rdf"
@@ -33,7 +33,8 @@ class TestRedlandAdapterJointQuery < Test::Unit::TestCase
 	end
 	
 	def teardown
-	end
+	   NodeFactory.clear
+  end
 	
 	def test_A_query_subject_with_joint_resource_object
 		qs = query_test_A

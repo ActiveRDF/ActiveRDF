@@ -53,6 +53,7 @@ class NodeFactory
 	
 public
 
+<<<<<<< TREE
 	# default settings for undefined parameters
 	def self.default_parameters
 		return 	{
@@ -68,6 +69,13 @@ public
 				:logger_level => Logger::FATAL
 				}
 	end
+=======
+  # default settings for undefined parameters
+  def self.default_parameters
+    return { :cache_server => :memory, :host => 'localhost', :adapter => :yars, :port => 8080, :context => ROOT_CONTEXT, :construct_class_model => true, :construct_schema => false, :proxy => nil, :logger => Dir.tmpdir + '/activerdf.log', :logger_level => Logger::FATAL }
+  end
+    
+>>>>>>> MERGE-SOURCE
 
 	# Initialise cache and connection to data source.  If no parameter given, we 
 	# return the previous instantiated connection. 
@@ -260,9 +268,8 @@ EOF
 				resources[uri]
 			end
 			
-		rescue MemCache::MemCacheError
-			$logger.debug "ArgumentError in CREATE_BASIC_RESOURCE :" + $!
-			raise
+		rescue StandardError => e
+			raise ActiveRdfError, "cache problem: #{e.message}"
 		end	
 	end
 		

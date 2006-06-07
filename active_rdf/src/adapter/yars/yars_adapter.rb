@@ -38,8 +38,8 @@ class YarsAdapter; implements AbstractAdapter
 		end
 	
 		@host = params[:host]
-		@port = params[:port]
-		@context = params[:context]
+		@port = params[:port] || 8080
+		@context = params[:context] || ''
 		@query_language = 'n3'
 
 		# We don't open the connection yet but let each HTTP method open and close 

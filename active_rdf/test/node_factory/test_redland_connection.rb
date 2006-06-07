@@ -33,10 +33,6 @@ class TestRedlandConnection < Test::Unit::TestCase
 	end
   
   def test_same_instance
-		connection1 = NodeFactory.connection :adapter => :redland
-		connection2 = NodeFactory.connection :adapter => :redland
-    assert_same connection1, connection2
-
 		connection3 = NodeFactory.connection :adapter => :redland, :location => :memory
 		connection4 = NodeFactory.connection :adapter => :redland, :location => :memory
     assert_same connection3, connection4

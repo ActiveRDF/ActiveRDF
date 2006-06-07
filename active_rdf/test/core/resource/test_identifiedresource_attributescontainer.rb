@@ -20,30 +20,17 @@
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'active_rdf/test/adapter/yars/manage_yars_db'
+require 'active_rdf/test/common'
 
 class TestAttributesContainer < Test::Unit::TestCase
 
 	def setup
-		case DB
-		when :yars
-			setup_yars('test_attribute_container')
-			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_attribute_container' }
-			@connection = NodeFactory.connection(params)
-      
-    when :redland
-			@connection = NodeFactory.connection( :adapter => :redland, :location => :memory )
-    else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end
+		setup_any
     require 'active_rdf/test/node_factory/person'
 	end
 	
 	def teardown
-		case DB
-		when :yars
-			delete_yars('test_attribute_container')
-    end
+		delete_any
 	end
 	
 	def test_A_create_person_and_save_without_attributes
@@ -239,11 +226,12 @@ class TestAttributesContainer < Test::Unit::TestCase
 		person.name = ""
 		person.age = 0
 		
-		assert(!person.query_attribute(:name))
-		assert(!person.query_attribute(:age))
+		assert(person.name?)
+		assert(person.age?)
 		
-		person.name = false
-		assert(!person.query_attribute(:name))
+    # TODO: when we have implemented literal datatypes, person.age shoud be a boolean
+    assert_kind_of String, person.name
+    assert_kind_of String, person.age
 	end
 	
 	def test_K_update_attribute_error_with_unknown_attribute

@@ -20,7 +20,7 @@
 require 'active_rdf'
 require 'adapter/redland/redland_adapter'
 require 'active_rdf/test/common'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
+#require 'active_rdf/test/adapter/redland/manage_redland_db'
 
 class TestRedlandAdapterRemove < Test::Unit::TestCase
 
@@ -30,6 +30,7 @@ class TestRedlandAdapterRemove < Test::Unit::TestCase
 	end
 	
 	def teardown
+    NodeFactory.clear
 	end
 	
 	def test_A_remove_triples_error_object_not_node

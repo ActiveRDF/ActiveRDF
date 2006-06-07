@@ -111,23 +111,7 @@ module AttributesContainer
 		# load attribute value for this attribute
 		attribute = send(attr_name)
 
-		if attribute.nil?
-				false
-		elsif attribute.kind_of?(Literal) && attribute.value == 0
-				false
-		elsif attribute.kind_of?(Literal) && attribute.value == "0"
-				false
-		elsif attribute.kind_of?(Literal) && attribute.value.empty?
-				false
-		elsif attribute.kind_of?(Literal) && attribute.value == false
-				false
-		elsif attribute.kind_of?(Literal) && attribute.value == "f"
-				false
-		elsif attribute.kind_of?(Literal) && attribute.value == "false"
-				false
-		else
-				true
-		end
+		return !attribute.nil?
 	end
 
 	# Get the list of dynamic attributes
