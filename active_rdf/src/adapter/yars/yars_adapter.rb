@@ -37,7 +37,7 @@ class YarsAdapter; implements AbstractAdapter
 			raise(YarsError, "In #{__FILE__}:#{__LINE__}, Yars adapter initialisation error. Parameters are nil.")
 		end
 	 
-    @adapter_type = :yars
+		@adapter_type = :yars
 		@host = params[:host]
 		@port = params[:port] || 8080
 		@context = params[:context] || ''
@@ -51,9 +51,9 @@ class YarsAdapter; implements AbstractAdapter
 		if proxy=params[:proxy]
 			proxy = Net::HTTP.Proxy(proxy) if (proxy.is_a? String and not proxy.empty?)
 			raise YarsError, "provided proxy is not a valid Net::HTTP::Proxy" unless (proxy.is_a?(Class) and proxy.ancestors.include?(Net::HTTP))
-			@yars = proxy.new(host,port)
+			@yars = proxy.new(host, port)
 		else
-			@yars = Net::HTTP.new(host,port)
+			@yars = Net::HTTP.new(host, port)
 		end
 
 		$logger.debug("opened YARS connection on http://#{yars.address}:#{yars.port}/#{context}")
@@ -116,13 +116,13 @@ class YarsAdapter; implements AbstractAdapter
 		response = response.body
 		
 		$logger.debug "parsing YARS response"
-		parse_yars_query_result response
+		return parse_yars_query_result(response)
 	end
 
 	# Delete a triple. Generate a query and call the delete method of Yars.
 	# If an argument is nil, it becomes a wildcard.
 	def remove(s, p, o)
-		verify_input_type s,p,o
+		#verify_input_type(s, p, o)
     
 		qe = QueryEngine.new
 		
@@ -134,7 +134,8 @@ class YarsAdapter; implements AbstractAdapter
 		qe.add_binding_triple(s, p, o)
 		qe.add_condition(s, p, o)
 		
-		delete(qe.generate)
+		qs = qe.generate
+		delete(qs)
 	end
 
 	# Synchronise the model. For Yars, it isn't necessary. Just return true.
@@ -146,16 +147,16 @@ class YarsAdapter; implements AbstractAdapter
 #               PRIVATE METHODS                #
 #----------------------------------------------#
 	
-	private
+private
 
-  # Verification of type
-  def verify_input_type(s,p,o)
-    if (!s.nil? and !s.kind_of?(Resource)) or
-       (!p.nil? and !p.kind_of?(Resource)) or
-       (!o.nil? and !o.kind_of?(Node))
-      raise(ActiveRdfError, 'wrong type received for removal')
-    end
-  end
+	# Verification of type
+	def verify_input_type(s,p,o)
+		if (!s.nil? and !s.kind_of?(Resource)) or
+		   (!p.nil? and !p.kind_of?(Resource)) or
+		   (!o.nil? and !o.kind_of?(Node))
+			raise(ActiveRdfError, 'wrong type received for removal')
+		end
+	end
 	
 	# Add data (string of ntriples) to database
 	#
@@ -167,7 +168,7 @@ class YarsAdapter; implements AbstractAdapter
 		$logger.debug 'Yars intance = ' + yars.to_s
 		
 		$logger.debug "putting data to yars (in context #{'/'+context}): #{data}"
-		response = yars.put('/'+context, data, header)
+		response = yars.put('/' + context, data, header)
 		
 		$logger.debug 'PUT - response from yars: ' + response.message
 		
@@ -178,8 +179,8 @@ class YarsAdapter; implements AbstractAdapter
 	# qs is an n3 query, e.g. '<> ql:select {?s ?p ?o . }; ql:where {?s ?p ?o . } .'
 	def delete(qs)
 		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
-		$logger.debug 'DELETE - query: ' + qs
-		response = yars.delete(@context + '?q=' + CGI.escape(qs))
+		$logger.debug "DELETE in context #{@context} - query: #{qs}"
+		response = yars.delete("/#{@context}?q=" + CGI.escape(qs))
 		$logger.debug 'DELETE - response from yars: ' + URI.decode(response.message)
 		return response.instance_of?(Net::HTTPOK)
 	end
