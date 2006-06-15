@@ -24,7 +24,7 @@ require 'adapter/yars/yars_adapter'
 class TestYarsAdapter < Test::Unit::TestCase
 
 	def test_A_initialize
-    adapter = setup_yars
+		adapter = setup_yars
 		assert_not_nil(adapter)
 		assert_kind_of(AbstractAdapter, adapter)
 		assert_instance_of(YarsAdapter, adapter)

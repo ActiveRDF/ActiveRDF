@@ -27,14 +27,14 @@ class TestAdapterRemove < Test::Unit::TestCase
 	end
 	
 	def teardown
-    delete_any
+		delete_any
 	end
 	
 	def test_remove_triples_without_nodes
 		
 		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
-    object = NodeFactory.create_identified_resource('http://m3pe.org/object')
+		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
 		assert_raise(ActiveRdfError) { @adapter.remove(subject, predicate, 'test') }
 		assert_raise(ActiveRdfError) { @adapter.remove(subject, 'test', object) }
@@ -65,8 +65,8 @@ class TestAdapterRemove < Test::Unit::TestCase
 		@adapter.add(subject1, predicate, object)
 		@adapter.add(subject2, predicate, object)
 		
-    assert_delete(nil, predicate, object)
-    assert_delete(nil, predicate, object)	
+		assert_delete(nil, predicate, object)
+		assert_delete(nil, predicate, object)	
     
 		predicate1 = NodeFactory.create_identified_resource('http://m3pe.org/predicate1')
 		object1 = NodeFactory.create_identified_resource('http://m3pe.org/object')
@@ -77,14 +77,16 @@ class TestAdapterRemove < Test::Unit::TestCase
 		@adapter.add(subject1, predicate2, object2)		
 		assert_delete(subject1, nil, nil)
 	  
-    @adapter.add(subject1, predicate, object)
-    @adapter.add(subject2, predicate, object)    
-    assert_delete(nil, nil, nil)
-  end
+		@adapter.add(subject1, predicate, object)
+		@adapter.add(subject2, predicate, object)    
+		assert_delete(nil, nil, nil)
+	end
 
-  private 
-  def assert_delete(s,p,o)
-    assert @adapter.remove(s,p,o)
-    # TODO: assert triples indeed deleted  
-  end
+private 
+
+	def assert_delete(s,p,o)
+		assert @adapter.remove(s,p,o)
+		# TODO: assert triples indeed deleted  
+	end
+
 end
