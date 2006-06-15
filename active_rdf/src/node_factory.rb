@@ -65,7 +65,7 @@ public
 				:construct_schema => false,
 				:proxy => nil,
 				:logger => Dir.tmpdir + '/activerdf.log',
-				:logger_level => Logger::FATAL
+				:logger_level => Logger::DEBUG
 				}
 	end
 
@@ -488,19 +488,19 @@ class IdentifiedResource
     # converting under_score_separators into CamelCase
 		class_name = local_part.gsub(/(_|-)(.)/) { $2.upcase }
     
-    case class_name
-		when 'Class'
-			'RdfsClass'
-		when 'Property'
-			'RdfProperty'
-		when 'Resource'
-			'IdentifiedResource'
-		when ''
-			raise ActiveRdfError, "empty class name #{self}"
-		else
-			class_name
+	    case class_name
+			when 'Class'
+				'RdfsClass'
+			when 'Property'
+				'RdfProperty'
+			when 'Resource'
+				'IdentifiedResource'
+			when ''
+				raise ActiveRdfError, "empty class name #{self}"
+			else
+				class_name
+			end
 		end
-	end
 
 	def to_method_name
 		local_part.underscore.gsub('-','_')
