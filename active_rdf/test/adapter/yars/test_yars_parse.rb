@@ -16,7 +16,10 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-require "#{File.dirname(__FILE__)}/manage_yars_db"
+require 'test/unit'
+require 'active_rdf'
+require 'active_rdf/test/common'
+require 'adapter/yars/yars_adapter'
 
 class YarsAdapter
 	def public_match_object s
@@ -31,11 +34,14 @@ class YarsAdapter
 end
 
 class TestYarsAdapter < Test::Unit::TestCase
-	DB_HOST = 'opteron'
 	def setup
+    setup_yars
 		@adapter = YarsAdapter.new
-		NodeFactory.connection :adapter => :yars, :host => DB_HOST
 	end
+ 
+  def teardown
+    delete_yars
+  end
 
 	def test_uri_parse
 		assert_kind_of IdentifiedResource, @adapter.public_match_object('<abc>')
@@ -71,7 +77,7 @@ class TestYarsAdapter < Test::Unit::TestCase
 		assert_equal '', @adapter.public_match_object('""').value
 		assert_equal 'literal', @adapter.public_match_object('"literal"').value
 		assert_equal 'urn:test', @adapter.public_match_object('"urn:test"').value
-		assert_equal 'te\"st', @adapter.public_match_object('"te\"st"').value
+		assert_equal 'te"st', @adapter.public_match_object('"te\"st"').value
 
 		assert_raise(NTriplesParsingYarsError) do @adapter.public_match_object('') end
 		assert_raise(NTriplesParsingYarsError) do @adapter.public_match_object('"abc') end
@@ -82,9 +88,11 @@ class TestYarsAdapter < Test::Unit::TestCase
 		# substring as literal value.
 		#assert_raise(NTriplesParsingYarsError) do @adapter.public_match_object('"abc\"') end
 		#assert_raise(NTriplesParsingYarsError) do @adapter.public_match_object('"\"') end
-		assert_equal 'abc\\',@adapter.public_match_object('"abc\"').value
-		assert_equal 'abc\\',@adapter.public_match_object('"abc\"defaeu').value
-		assert_equal '\\',@adapter.public_match_object('"\"').value
+		assert_equal 'abc',@adapter.public_match_object('"abc\"').value
+		assert_equal 'abc',@adapter.public_match_object('"abc\"defaeu').value
+		assert_equal '',@adapter.public_match_object('"\"').value
+    
+    # TODO: are the last three ones really correct? I think escapes should work differently
 	end
 
 end

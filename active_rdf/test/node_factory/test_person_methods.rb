@@ -19,49 +19,33 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'node_factory'
-require 'active_rdf/test/adapter/yars/manage_yars_db'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
+require 'active_rdf/test/common'
 
 class TestNodeFactoryPerson < Test::Unit::TestCase
 
 	def setup
-		case DB
-		when :yars
-			setup_yars('test_create_person')
-			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_create_person' }
-			@connection = NodeFactory.connection(params)
-		when :redland
-			setup_redland
-			params = { :adapter => :redland }
-			@connection = NodeFactory.connection(params)
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end
+		setup_any
     require 'active_rdf/test/node_factory/person'
 	end
 	
 	def teardown
-		case DB
-		when :yars
-			delete_yars('test_create_person')
-		when :redland
-			delete_redland
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end	
+		delete_any
 	end
 
-	def test_A_verify_literal_attributes
-		person = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_7')
+	def test_verify_literal_attributes
+    return unless load_test_data
+    
+    person = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_7')
 		assert_equal('23', person['age'].value)
 		assert_equal('renaud', person['name'].value)
 		assert_equal('23', person.age)
 		assert_equal('renaud', person.name)
 	end
 	
-	def test_B_verify_resource_attributes
-		person = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_7')
+	def test_verify_resource_attributes
+	  return unless load_test_data
+    
+  	person = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_7')
 		other_person = person.knows
 		assert_not_nil(other_person)
 		assert_kind_of(Person, other_person)
@@ -74,7 +58,9 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 		assert_equal(renaud, person)
 	end
 	
-	def test_C_verify_multiple_resource_attributes
+	def test_verify_multiple_resource_attributes
+    return unless load_test_data
+    
 		regis = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_10')
 		other_persons = regis.knows
 		assert_not_nil(other_persons)
@@ -84,7 +70,9 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 		end
 	end
 	
-	def test_D_modify_an_literal_attribute
+	def test_modify_an_literal_attribute
+    return unless load_test_data
+    
 		regis = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_10')
 		new_age = Kernel.rand(50)
 		regis.age = new_age
@@ -112,13 +100,17 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 #	
 #	end
 	
-	def test_H_try_to_modify_uri
+	def test_try_to_modify_uri
+    return unless load_test_data
+    
 		eyal = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_8')
 		eyal.uri = 'http://false_uri'
 		assert_equal('http://m3pe.org/activerdf/test/test_set_Instance_8', eyal.uri)
 	end
 	
-	def test_I_create_and_delete_new_person
+	def test_create_and_delete_new_person
+    return unless load_test_data
+    
 		new_person = Person.create('http://m3pe.org/activerdf/test/new_person')
 		assert_not_nil(new_person)
 		assert_instance_of(Person, new_person)
@@ -129,7 +121,9 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 		assert_nil(NodeFactory.resources['http://m3pe.org/activerdf/test/new_person'])
 	end
 	
-	def test_J_find_persons
+	def test_find_persons
+    return unless load_test_data
+    
 		persons = Person.find
 		assert_not_nil(persons)
 		assert_equal(4, persons.size)
@@ -138,7 +132,9 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 		end
 	end
 	
-	def test_K_dynamic_find_method_on_person
+	def test_dynamic_find_method_on_person
+    return unless load_test_data
+    
 		renaud = Person.find_by_name('renaud').first
 		assert_not_nil(renaud)
 		assert_instance_of(Person, renaud)
@@ -157,7 +153,9 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 		assert_equal(renaud, renaud3)
 	end
 	
-	def test_L_dynamic_find_method_with_resource_attribute_on_person
+	def test_dynamic_find_method_with_resource_attribute_on_person
+    return unless load_test_data
+    
 		audrey = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_9')
 		persons = Person.find_by_knows(audrey)
 		assert_not_nil(persons)
@@ -168,7 +166,9 @@ class TestNodeFactoryPerson < Test::Unit::TestCase
 		end
 	end
 	
-	def test_M_dynamic_find_method_with_multiple_resource_attributes_on_person
+	def test_dynamic_find_method_with_multiple_resource_attributes_on_person
+    return unless load_test_data
+    
 		audrey = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_9')
 		renaud = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_7')
 		regis = Person.find_by_knows([audrey, renaud]).first

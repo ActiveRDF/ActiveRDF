@@ -44,3 +44,6 @@
 <http://m3pe.org/activerdf/test/test_set_Instance_9> <http://m3pe.org/activerdf/test/name> "audrey" .
 <http://m3pe.org/activerdf/test/test_set_Instance_9> <http://www.w3.org/2000/01/rdf-schema#label> "test_set_Instance_9" .
 <http://m3pe.org/activerdf/test/test_set_Instance_9> <http://m3pe.org/activerdf/test/knows> <http://m3pe.org/activerdf/test/test_set_Instance_7> .
+<http://m3pe.org/subject> <http://m3pe.org/predicate1> "42".
+<http://m3pe.org/subject> <http://m3pe.org/predicate2> <http://m3pe.org/object2>.
+<http://m3pe.org/subject> <http://m3pe.org/predicate3> "".

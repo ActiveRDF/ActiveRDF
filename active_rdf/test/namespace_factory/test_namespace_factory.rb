@@ -24,32 +24,15 @@
 require 'test/unit'
 require 'active_rdf'
 require 'namespace_factory'
+require 'active_rdf/test/common'
 
 class TestNamespaceFactory < Test::Unit::TestCase
 	def setup
-		case DB
-		when :yars
-			setup_yars('test_namespace')
-			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_namespace' }
-			@connection = NodeFactory.connection(params)
-		when :redland
-			setup_redland
-			params = { :adapter => :redland }
-			@connection = NodeFactory.connection(params)
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end
+		setup_any
 	end
 	
 	def teardown
-		case DB
-		when :yars
-			delete_yars('test_namespace')
-		when :redland
-			delete_redland
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end	
+		delete_any
 	end
 
   def test_add_namespace
@@ -61,7 +44,7 @@ class TestNamespaceFactory < Test::Unit::TestCase
     assert_raise(NamespaceFactoryError) { NamespaceFactory.get(:abc,:cde) }
   end
   
-	def test_2_load_namespace
+	def test_load_namespace
 		rdf_type = NamespaceFactory.get(:rdf, :type)
 		assert_not_nil(rdf_type)
 		assert(rdf_type.instance_of?(IdentifiedResource))

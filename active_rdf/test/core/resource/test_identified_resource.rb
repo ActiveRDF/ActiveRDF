@@ -20,36 +20,19 @@
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
+require 'active_rdf/test/common'
 
 class TestIdentifiedResource < Test::Unit::TestCase
 
 	def setup
-		case DB
-		when :yars
-			setup_yars('test_identified_resource')
-			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_identified_resource' }
-			@connection = NodeFactory.connection(params)
-		when :redland
-			setup_redland
-			params = { :adapter => :redland }
-			@connection = NodeFactory.connection(params)
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end
+		setup_any
 	end
 	
 	def teardown
-		case DB
-		when :yars
-			delete_yars('test_identified_resource')
-		when :redland
-			delete_redland
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end	
+		delete_any
 	end
 	
-	def test_A_classuri_on_class_level
+	def test_classuri_on_class_level
 		class_uri = IdentifiedResource.class_URI
 		assert_not_nil(class_uri)
 		assert_kind_of(IdentifiedResource, class_uri)
@@ -62,7 +45,7 @@ class TestIdentifiedResource < Test::Unit::TestCase
 		assert_equal a,b
 	end
 	
-	def test_B_classuri_on_instance_level
+	def test_classuri_on_instance_level
 		resource = IdentifiedResource.new('http://m3pe.org/activerdf/test/identifiedresource')
 		class_uri = resource.class_URI
 		assert_not_nil(class_uri)

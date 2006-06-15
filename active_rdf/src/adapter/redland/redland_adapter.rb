@@ -44,6 +44,7 @@ class RedlandAdapter; implements AbstractAdapter
 			raise RedlandAdapterError, "no location specified for Redland adapter"
 		end
 		
+    @adapter_type = :redland
 		@context = params[:context]
 		@store = Redland::HashStore.new(type, file, path, false) #if @store.nil?
 		@model = Redland::Model.new @store
@@ -61,13 +62,13 @@ class RedlandAdapter; implements AbstractAdapter
 		# Verification of nil object
 		if s.nil? or p.nil? or o.nil?
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : nil received."
-			raise(StatementAdditionRedlandError, str_error)		
+			raise(ActiveRdfError, str_error)		
 		end
 		
 		# Verification of type
 		if !s.kind_of?(Resource) or !p.kind_of?(Resource) or !o.kind_of?(Node)
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : wrong type received."
-			raise(StatementAdditionRedlandError, str_error)		
+			raise(ActiveRdfError, str_error)		
 		end
 	
 		begin
@@ -76,7 +77,7 @@ class RedlandAdapter; implements AbstractAdapter
       
     	rescue Redland::RedlandError => e
 			str_error = "Redland error in model.add: #{e.message}"
-			raise(StatementAdditionRedlandError, str_error)
+			raise(ActiveRdfError, str_error)
 		end
 		
 		# Synchronise the model
@@ -99,32 +100,26 @@ class RedlandAdapter; implements AbstractAdapter
 			 (!p.nil? and !p.kind_of?(Resource)) or
 			 (!o.nil? and !o.kind_of?(Node))
 			str_error = "In #{__FILE__}:#{__LINE__}, error during removal of statement : wrong type received."
-			raise(StatementRemoveRedlandError, str_error)		
+			raise(ActiveRdfError, str_error)		
 		end
-
-		# Find all statement and remove them
-		counter = 0
-    
+	   
     # TODO: disabled context temporarily, does not work properly in Redland
 		@model.find(wrap(s), wrap(p), wrap(o)) { |_s, _p, _o|
 			# Redland::Model::delete return 0 if delete succesfully the statement
 			if @model.delete(_s, _p, _o) != 0
 				str_error = "In #{__FILE__}:#{__LINE__}, error during removal of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
-				raise(StatementRemoveRedlandError, str_error)
+				raise(ActiveRdfError, str_error)
 			end
-			counter += 1
 		}
 		
 		# Synchronise the model
 		save
-		
-		return counter
 	end
 
 	# Synchronise the model to the model implementation.
 	def save
 		# Redland::librdf_model_sync return nil if sync succesfully the model
-		raise(RedlandAdapterError, 'Model save failed.') unless Redland::librdf_model_sync(@model.model).nil?
+    Redland::librdf_model_sync(@model.model).nil? 
 	end
 
 	# Query the Redland data storage

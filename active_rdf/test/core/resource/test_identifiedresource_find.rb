@@ -19,36 +19,36 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'node_factory'
-require 'active_rdf/test/adapter/yars/manage_yars_db'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
+require 'active_rdf/test/common'
 
 class TestIdentifiedResourceFind < Test::Unit::TestCase
 
 	def setup
-		init_db
+		setup_any
 	end
 	
 	def teardown
-		clean_db
+		delete_any
 	end
 	
-	def test_A_empty_db
-		clean_db
-		init_empty_db
-		
-		results = IdentifiedResource.find
-		assert results.empty?
+	def test_empty_db		
+		assert IdentifiedResource.find.empty?    
+    assert Resource.find.empty?
 	end
 	
-	def test_B_find_all
+	def test_find_all    
+    return unless load_test_data
 		results = IdentifiedResource.find
 		assert_not_nil(results)
 		assert_instance_of(Array, results)
-		assert_equal(11, results.size)
+		assert_equal(12, results.size)
+    
+    results2 = Resource.find
+    assert_equal results2, results
 	end
 	
-	def test_C_find_predicate
+	def test_find_predicate
+    return unless load_test_data
 		class_uri = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/Person')
 		predicates = IdentifiedResource.find({ NamespaceFactory.get(:rdfs, 'domain') => class_uri })
 		assert_not_nil(predicates)
@@ -59,7 +59,8 @@ class TestIdentifiedResourceFind < Test::Unit::TestCase
 		end
 	end
 	
-	def test_D_find_resource_knows_instance_9
+	def test_find_resource_knows_instance_9
+    return unless load_test_data
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/knows')
 		object = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_9')
 		subjects = IdentifiedResource.find({predicate => object})
@@ -71,7 +72,8 @@ class TestIdentifiedResourceFind < Test::Unit::TestCase
 		end
 	end
 	
-	def test_E_find_resource_with_two_conditions
+	def test_find_resource_with_two_conditions
+    return unless load_test_data
 		predicate1 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/knows')
 		object1 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/test_set_Instance_9')
 		predicate2 = NodeFactory.create_identified_resource('http://m3pe.org/activerdf/test/name')
@@ -81,47 +83,6 @@ class TestIdentifiedResourceFind < Test::Unit::TestCase
 		assert_not_nil(subject)
 		assert_kind_of(Resource, subject)
 		assert_equal('http://m3pe.org/activerdf/test/test_set_Instance_7', subject.uri)
-	end
-
-	private
-	
-	def init_db
-		case DB
-		when :yars
-			setup_yars('test_resource_find')
-			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource_find' }
-			@connection = NodeFactory.connection(params)
-		when :redland
-			setup_redland
-			params = { :adapter => :redland }
-			@connection = NodeFactory.connection(params)
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end	
-	end
-	
-	def init_empty_db
-		case DB
-		when :yars
-			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_resource_find' }
-			@connection = NodeFactory.connection(params)
-		when :redland
-			params = { :adapter => :redland }
-			@connection = NodeFactory.connection(params)
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end	
-	end
-	
-	def clean_db
-		case DB
-		when :yars
-			delete_yars('test_resource_find')
-		when :redland
-			delete_redland
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end	
 	end
 	
 end

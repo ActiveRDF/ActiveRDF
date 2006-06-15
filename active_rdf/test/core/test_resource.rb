@@ -74,29 +74,31 @@ class TestResource < Test::Unit::TestCase
   
   
   ## TODO: enable after we get either YARS with delete working, or Redland with save!
-#	def test_load_added_predicate
-#    # we cannot run this test in memory
-#    # TODO: change setup_yars to setup_any (need to fix redland saving)
-#    setup_yars
-#  
-#		Person.add_predicate 'http://test/test'
-#		eyal = Person.create 'eyal-uri'
-#		eyal.test = 'test-value'
-#		eyal.save
-#
-#    # clear the cache, reopen the connection
-#		NodeFactory.clear
-#    setup_yars
-#		
-##    eyal2 = Person.create 'eyal-uri'
-##    
-##    # assert we have a different object, but with equal values
-##		assert_not_equal eyal.object_id, eyal2.object_id
-##		assert_equal eyal, eyal2
-##		assert_equal eyal2.test, 'test-value'
-#    
-#    delete_yars
-#	end
+	def test_load_added_predicate
+    # we cannot run this test in memory
+    # TODO: change setup_redland to setup_any (need to fix YARS delete)
+    return unless $adapters.include?(:redland)
+    NodeFactory.clear
+    setup_redland('/tmp/test-save')
+    Person.add_predicate 'http://test/test'
+    
+    uri = 'http://m3pe.org/eyal'
+		eyal = Person.create uri
+		eyal.test = 'test-value'
+		eyal.save
+
+    # clear the cache, reopen the connection
+		NodeFactory.clear
+    con = setup_redland('/tmp/test-save')
+    eyal2 = Person.create uri    
+    
+    # assert we have a different object, but with equal values
+		assert_not_equal eyal.object_id, eyal2.object_id
+		assert_equal eyal, eyal2
+		assert_equal eyal2.test, 'test-value'
+
+    delete_redland('/tmp/test-save')
+	end
 
 	def test_predicate_collision
 		assert_nothing_raised { IdentifiedResource.add_predicate 'http://test/test' }

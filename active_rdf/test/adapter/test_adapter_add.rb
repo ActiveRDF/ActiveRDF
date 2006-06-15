@@ -22,11 +22,11 @@ require 'active_rdf/test/common'
 class TestRedlandAdapterAdd < Test::Unit::TestCase
 
 	def setup
-    @connection = setup_redland
+    setup_any
 	end
 	
 	def teardown
-    NodeFactory.clear
+    delete_any
 	end
 
 	def test_1_add_triples_error_object_nil
@@ -34,8 +34,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
-		assert_raise(StatementAdditionRedlandError) {
-			@connection.add(subject, predicate, nil)
+		assert_raise(ActiveRdfError) {
+			NodeFactory.connection.add(subject, predicate, nil)
 		}
 	end
 	
@@ -44,8 +44,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
 		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
-		assert_raise(StatementAdditionRedlandError) {
-			@connection.add(subject, nil, object)
+		assert_raise(ActiveRdfError) {
+			NodeFactory.connection.add(subject, nil, object)
 		}
 	end
 	
@@ -54,8 +54,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
-		assert_raise(StatementAdditionRedlandError) {
-			@connection.add(nil, predicate, object)
+		assert_raise(ActiveRdfError) {
+			NodeFactory.connection.add(nil, predicate, object)
 		}
 	end
 	
@@ -64,8 +64,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
-		assert_raise(StatementAdditionRedlandError) {
-			@connection.add(subject, predicate, 'test')
+		assert_raise(ActiveRdfError) {
+			NodeFactory.connection.add(subject, predicate, 'test')
 		}
 	end
 	
@@ -74,8 +74,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
 		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
-		assert_raise(StatementAdditionRedlandError) {
-			@connection.add(subject, 'test', object)
+		assert_raise(ActiveRdfError) {
+			NodeFactory.connection.add(subject, 'test', object)
 		}
 	end
 	
@@ -84,8 +84,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		
-		assert_raise(StatementAdditionRedlandError) {
-			@connection.add('test', predicate, object)
+		assert_raise(ActiveRdfError) {
+			NodeFactory.connection.add('test', predicate, object)
 		}
 	end
 	
@@ -95,8 +95,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_literal('42', 'xsd:integer')
 		
-		assert_nothing_raised(StatementAdditionRedlandError) {
-			@connection.add(subject, predicate, object)
+		assert_nothing_raised(ActiveRdfError) {
+			NodeFactory.connection.add(subject, predicate, object)
 		}
 	end
 	
@@ -106,8 +106,8 @@ class TestRedlandAdapterAdd < Test::Unit::TestCase
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
-		assert_nothing_raised(StatementAdditionRedlandError) {
-			@connection.add(subject, predicate, object)
+		assert_nothing_raised(ActiveRdfError) {
+			NodeFactory.connection.add(subject, predicate, object)
 		}
 	end
 

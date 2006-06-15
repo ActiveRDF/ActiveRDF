@@ -113,33 +113,14 @@ public
 		
 		return connection
 	end
-  
-	def self.correct_adapter_for_context(context, adapter)
-		if @@connections.include?(context)
-			case adapter
-			when :redland
-				@@connections[context].class.name == 'RedlandAdapter'
-			when :yars
-				@@connections[context].class.name == 'YarsAdapter'
-			else
-				false
-			end
-		else
-			false
-		end
-	end
 
 	# Initialize the DB adapter. Instantiate the connection and save it in the
 	# connection hash.
 	def self.init_adapter(params)
-		context = params[:context]
-    
-		# if we already have a connection for that context and it is the right
-		# adapter type, return it
-		if correct_adapter_for_context(params[:context], params[:adapter])
-			return @@connections[context] unless @@connections[context].nil?
-		end
 
+    	# if we already have a connection for that parameters, return it
+    	return @@connections[params.to_a] if @@connections.include?(params.to_a)
+    	
 		case params[:adapter]
 		when :yars
 			$logger.debug 'loading YARS adapter'
@@ -161,7 +142,7 @@ public
 		end
 
 		# saving the connection into connection_pool
-		@@connections[context] = connection
+		@@connections[params.to_a] = connection
 		
 		# Update the current connection
 		@@current_connection = connection
@@ -209,15 +190,10 @@ public
 
 		$logger.info "changing to context #{context}"
 
-		@@default_host_parameters[:context] = context
-
-		if @@connections[context].nil?
-			@@current_connection = init_adapter(@@default_host_parameters)
-		else
-			@@current_connection = @@connections[context]
-		end
-		$logger.debug "available connections: #@@connections"
-
+		params = @@default_host_parameters.merge!({:context => context})
+    
+		@@current_connection = @@connections[params.to_a] || init_adapter(params)
+    
 		return @@current_connection
 	end
 	

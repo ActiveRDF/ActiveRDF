@@ -19,8 +19,7 @@
 
 require 'active_rdf'
 require 'active_rdf/test/common'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
 
-class TestRedlandAdapterContextQuery < Test::Unit::TestCase
-	# TODO: add redland support for contexts
-end
+#class TestRedlandAdapterContextQuery < Test::Unit::TestCase
+#	# TODO: add redland support for contexts
+#end

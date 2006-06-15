@@ -16,13 +16,15 @@
 #
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 #
-
-require "#{File.dirname(__FILE__)}/manage_yars_db"
+require 'test/unit'
+require 'active_rdf'
+require 'active_rdf/test/common'
+require 'adapter/yars/yars_adapter'
 
 class TestYarsAdapter < Test::Unit::TestCase
 
 	def test_A_initialize
-		adapter = YarsAdapter.new({ :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test' })
+    adapter = setup_yars
 		assert_not_nil(adapter)
 		assert_kind_of(AbstractAdapter, adapter)
 		assert_instance_of(YarsAdapter, adapter)
@@ -42,7 +44,7 @@ class TestYarsAdapter < Test::Unit::TestCase
 	end
 
 	def test_query_string_escaped
-		adapter = YarsAdapter.new({ :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test' })
+		adapter = setup_yars
 		s = '@prefix ql: <http://www.w3.org/2004/12/ql#> .  <> ql:select { ?s ?p ?o . };
 			ql:where { ?s ?p ";/?:@&=+$,\\[\\]" . } .'
 		assert_nothing_raised { adapter.query s }

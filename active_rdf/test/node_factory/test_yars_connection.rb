@@ -20,73 +20,67 @@
 require 'test/unit'
 require 'active_rdf'
 require 'node_factory'
-require 'active_rdf/test/adapter/yars/manage_yars_db'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
 require 'active_rdf/test/common'
 
 class TestYarsConnection < Test::Unit::TestCase
-	Default_parameters = { :adapter => DB, :host => DB_HOST, :portr => 8080, :context => TestContext }
-
 	def setup
-		setup_yars TestContext
+		setup_yars
 	end
 
 	def teardown
-		delete_yars TestContext
+		delete_yars
 	end
 
 	def test_simple_connections
     # you can open connection with default values, but to construct the class model a YARS instance needs to be running locally, therefore we disable class model construction
 		assert_nothing_raised { NodeFactory.connection :construct_class_model => false}
-		assert_nothing_raised { NodeFactory.connection :adapter => DB, :host => DB_HOST, :port => 8080 }
-		assert_nothing_raised { NodeFactory.connection :construct_class_model => false, :context => TestContext }
-		assert_nothing_raised { NodeFactory.connection :adapter => DB, :host => DB_HOST, :port => 8080, :context => TestContext }
+		assert_nothing_raised { NodeFactory.connection :adapter => :yars, :host => $yars_host, :port => 8080 }
+		assert_nothing_raised { NodeFactory.connection :construct_class_model => false, :context => $yars_context }
+		assert_nothing_raised { NodeFactory.connection :adapter => :yars, :host => $yars_host, :port => 8080, :context => $yars_context }
 	end
 
 	def test_init
-		assert_nothing_raised { NodeFactory.connection(:context => TestContext, :construct_class_model => false) }
-    assert_nothing_raised { NodeFactory.connection :host => DB_HOST, :adapter => DB, :context => TestContext}
-		assert_nothing_raised { NodeFactory.connection :adapter => :yars, :host => DB_HOST}
+		assert_nothing_raised { NodeFactory.connection(:context => $yars_context, :construct_class_model => false) }
+    assert_nothing_raised { NodeFactory.connection :host => $yars_host, :adapter => :yars, :context => $yars_context}
+		assert_nothing_raised { NodeFactory.connection :adapter => :yars, :host => $yars_host}
 		assert_nothing_raised { NodeFactory.connection}
 	end
 
   def test_same_instance
-    connection1 = NodeFactory.connection :adapter => :yars, :location => DB_HOST, :construct_class_model => false
-    connection2 = NodeFactory.connection :adapter => :yars, :location => DB_HOST, :construct_class_model => false
+    connection1 = NodeFactory.connection :adapter => :yars, :location => $yars_host, :construct_class_model => false
+    connection2 = NodeFactory.connection :adapter => :yars, :location => $yars_host, :construct_class_model => false
     assert_same connection1, connection2
   end
 
 ## disabling context test...because it is very slow!
 #  def test_get_all_contexts
-#	  NodeFactory.connection :host => DB_HOST
-#		assert_nothing_raised {contexts = NodeFactory.get_contexts :adapter => DB, :host => DB_HOST, :port => 8080}
+#	  NodeFactory.connection :host => $yars_host
+#		assert_nothing_raised {contexts = NodeFactory.get_contexts :adapter => :yars, :host => $yars_host, :port => 8080}
 #		assert_not_nil contexts
 #	end
 
 	def test_switch_context
-		assert_nothing_raised { NodeFactory.connection :construct_class_model => false}
-		assert_nothing_raised { NodeFactory.connection :adapter => DB, :host => DB_HOST, :port => 8080, :context => TestContext}
-    assert NodeFactory.connection.host == DB_HOST
-    assert NodeFactory.connection.context == TestContext
+    NodeFactory.connection(:adapter => :yars, :host => $yars_host, :context => $yars_context, :construct_class_model => false)
 
     # if changing context without explicitly setting a new host, keep the old host
-    NodeFactory.select_context  'abcde'
-    assert NodeFactory.connection.host == DB_HOST
-    assert NodeFactory.connection.context == 'abcde'
-
-		assert_nothing_raised { NodeFactory.select_context TestContext}
+    con = NodeFactory.select_context 'abcde'
+    assert_equal con.host, $yars_host
+    assert_equal con.context, 'abcde'
+    assert_equal con, NodeFactory.connection
+    
+		assert_nothing_raised { NodeFactory.select_context $yars_context}
 		assert_nothing_raised { NodeFactory.select_context 'another-context'}
 
 		assert_kind_of YarsAdapter, NodeFactory.connection
-    assert NodeFactory.connection.context == 'another-context'
+    assert_equal NodeFactory.connection.context, 'another-context'
 
 		# open connection, then change context
 		assert_nothing_raised do
-			NodeFactory.connection :host => DB_HOST, :port => 8080, :adapter => DB
-			NodeFactory.select_context TestContext
+			NodeFactory.connection :host => $yars_host, :port => 8080, :adapter => :yars
+			NodeFactory.select_context $yars_context
 		end	
 
-		assert NodeFactory.connection.context == TestContext 
+		assert_equal NodeFactory.connection.context, $yars_context 
 	end
 
   def test_default_parameters
@@ -100,8 +94,8 @@ class TestYarsConnection < Test::Unit::TestCase
 
 #  # TODO: implement find within single context
 #	def test_find_in_context
-#		assert_nothing_raised { NodeFactory.connection :adapter => DB, :host => DB_HOST, :port => 8080, :context => TestContext  }
-#		assert_nothing_raised { NodeFactory.connection :host => DB_HOST, :context => 'cia' }
+#		assert_nothing_raised { NodeFactory.connection :adapter => :yars, :host => $yars_host, :port => 8080, :context => $yars_context  }
+#		assert_nothing_raised { NodeFactory.connection :host => $yars_host, :context => 'cia' }
 #		
 #    resources_in_cia = IdentifiedResource.find :context => 'cia'
 #		resources_in_fbi = IdentifiedResource.find :context => 'fbi'
@@ -112,9 +106,11 @@ class TestYarsConnection < Test::Unit::TestCase
 #		assert (not all_resources.eql?(resources_in_cia))
 #	end
 
+  Default_parameters = { :adapter => :yars, :host => $yars_host, :port => 8080, :context => $yars_context }
+  
 	def test_empty_proxy
 		# TODO: verify querying over proxy server
-		assert_raise(ConnectionError){ NodeFactory.connection Default_parameters.merge(:proxy => '') }
+  	assert_raise(ConnectionError){ NodeFactory.connection Default_parameters.merge(:proxy => '') }
 	end
 
 	def test_proxy_server_address

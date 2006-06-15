@@ -216,18 +216,16 @@ class TestAttributesContainer < Test::Unit::TestCase
 	def test_J_query_attribute
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
 		
-		assert(!person.query_attribute(:name))
-		assert(!person.query_attribute('name'))
-		assert(!person.query_attribute(:age))
-		assert(!person.query_attribute('age'))
-		assert(!person.query_attribute(:knows))
-		assert(!person.query_attribute('knows'))
-		
+    assert !person.name?
+    assert !person.age?
+    assert !person.knows?
+    
 		person.name = ""
 		person.age = 0
 		
-		assert(person.name?)
-		assert(person.age?)
+		assert person.name?
+		assert person.age?
+    assert !person.knows?
 		
     # TODO: when we have implemented literal datatypes, person.age shoud be a boolean
     assert_kind_of String, person.name

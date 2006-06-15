@@ -1,68 +1,150 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<!DOCTYPE rdf:RDF [
-	 <!ENTITY rdf 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'>
-	 <!ENTITY a 'http://protege.stanford.edu/system#'>
-	 <!ENTITY rdf_ 'http://m3pe.org/activerdf/test/'>
-	 <!ENTITY rdfs 'http://www.w3.org/2000/01/rdf-schema#'>
-]>
-<rdf:RDF xmlns:rdf="&rdf;"
-	 xmlns:rdf_="&rdf_;"
-	 xmlns:a="&a;"
-	 xmlns:rdfs="&rdfs;">
-<rdfs:Class rdf:about="&rdf_;Person"
-	 rdfs:label="Person">
-	<rdfs:subClassOf rdf:resource="&rdfs;Resource"/>
-</rdfs:Class>
-<rdf:Property rdf:about="&rdf_;age"
-	 rdfs:label="age">
-	<rdfs:domain rdf:resource="&rdf_;Person"/>
-	<rdfs:range rdf:resource="&rdfs;Literal"/>
-</rdf:Property>
-<rdf:Property rdf:about="&rdf_;knows"
-	 rdfs:label="knows">
-	<rdfs:domain rdf:resource="&rdf_;Person"/>
-	<rdfs:range rdf:resource="&rdfs;Resource"/>
-</rdf:Property>
-<rdf:Property rdf:about="&rdf_;name"
-	 rdfs:label="name">
-	<rdfs:domain rdf:resource="&rdf_;Person"/>
-	<rdfs:range rdf:resource="&rdfs;Literal"/>
-</rdf:Property>
-
-<rdf_:Person rdf:about="&rdf_;test_set_Instance_10"
-	 rdf_:age="45"
-	 rdf_:name="regis"
-	 rdfs:label="test_set_Instance_10">
-	<rdf_:knows rdf:resource="&rdf_;test_set_Instance_10"/>
-	<rdf_:knows rdf:resource="&rdf_;test_set_Instance_7"/>
-	<rdf_:knows rdf:resource="&rdf_;test_set_Instance_9"/>
-</rdf_:Person>
-<a:_pal_constraint rdf:about="&rdf_;test_set_Instance_4"
-	 a:_pal_name="renaud"
-	 rdfs:label="renaud"/>
-<a:_pal_constraint rdf:about="&rdf_;test_set_Instance_5"
-	 a:_pal_name="eyal"
-	 rdfs:label="eyal"/>
-<a:_pal_constraint rdf:about="&rdf_;test_set_Instance_6"
-	 a:_pal_name="audrey"
-	 rdfs:label="audrey"/>
-<rdf_:Person rdf:about="&rdf_;test_set_Instance_7"
-	 rdf_:age="23"
-	 rdf_:name="renaud"
-	 rdfs:label="test_set_Instance_7">
-	<rdf_:knows rdf:resource="&rdf_;test_set_Instance_9"/>
-</rdf_:Person>
-<rdf_:Person rdf:about="&rdf_;test_set_Instance_8"
-	 rdf_:age="25"
-	 rdf_:name="eyal"
-	 rdfs:label="test_set_Instance_8">
-	<rdf_:knows rdf:resource="&rdf_;test_set_Instance_7"/>
-</rdf_:Person>
-<rdf_:Person rdf:about="&rdf_;test_set_Instance_9"
-	 rdf_:age="19"
-	 rdf_:name="audrey"
-	 rdfs:label="test_set_Instance_9">
-	<rdf_:knows rdf:resource="&rdf_;test_set_Instance_7"/>
-</rdf_:Person>
-
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/Person">
+    <rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Class"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/Person">
+    <ns0:label xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#">Person</ns0:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/Person">
+    <ns0:subClassOf xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#" rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/age">
+    <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/age">
+    <ns0:label xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#">age</ns0:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/age">
+    <ns0:domain xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#" rdf:resource="http://m3pe.org/activerdf/test/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/age">
+    <ns0:range xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#" rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/knows">
+    <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/knows">
+    <ns0:label xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#">knows</ns0:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/knows">
+    <ns0:domain xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#" rdf:resource="http://m3pe.org/activerdf/test/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/knows">
+    <ns0:range xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#" rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/name">
+    <rdf:type rdf:resource="http://www.w3.org/1999/02/22-rdf-syntax-ns#Property"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/name">
+    <ns0:label xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#">name</ns0:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/name">
+    <ns0:domain xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#" rdf:resource="http://m3pe.org/activerdf/test/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/name">
+    <ns0:range xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#" rdf:resource="http://www.w3.org/2000/01/rdf-schema#Literal"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_10">
+    <rdf:type rdf:resource="http://m3pe.org/activerdf/test/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_10">
+    <ns0:age xmlns:ns0="http://m3pe.org/activerdf/test/">45</ns0:age>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_10">
+    <ns0:name xmlns:ns0="http://m3pe.org/activerdf/test/">regis</ns0:name>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_10">
+    <ns0:label xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#">test_set_Instance_10</ns0:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_10">
+    <ns0:knows xmlns:ns0="http://m3pe.org/activerdf/test/" rdf:resource="http://m3pe.org/activerdf/test/test_set_Instance_10"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_10">
+    <ns0:knows xmlns:ns0="http://m3pe.org/activerdf/test/" rdf:resource="http://m3pe.org/activerdf/test/test_set_Instance_7"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_10">
+    <ns0:knows xmlns:ns0="http://m3pe.org/activerdf/test/" rdf:resource="http://m3pe.org/activerdf/test/test_set_Instance_9"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_4">
+    <rdf:type rdf:resource="http://protege.stanford.edu/system#_pal_constraint"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_4">
+    <ns0:_pal_name xmlns:ns0="http://protege.stanford.edu/system#">renaud</ns0:_pal_name>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_4">
+    <ns0:label xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#">renaud</ns0:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_5">
+    <rdf:type rdf:resource="http://protege.stanford.edu/system#_pal_constraint"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_5">
+    <ns0:_pal_name xmlns:ns0="http://protege.stanford.edu/system#">eyal</ns0:_pal_name>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_5">
+    <ns0:label xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#">eyal</ns0:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_6">
+    <rdf:type rdf:resource="http://protege.stanford.edu/system#_pal_constraint"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_6">
+    <ns0:_pal_name xmlns:ns0="http://protege.stanford.edu/system#">audrey</ns0:_pal_name>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_6">
+    <ns0:label xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#">audrey</ns0:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_7">
+    <rdf:type rdf:resource="http://m3pe.org/activerdf/test/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_7">
+    <ns0:age xmlns:ns0="http://m3pe.org/activerdf/test/">23</ns0:age>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_7">
+    <ns0:name xmlns:ns0="http://m3pe.org/activerdf/test/">renaud</ns0:name>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_7">
+    <ns0:label xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#">test_set_Instance_7</ns0:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_7">
+    <ns0:knows xmlns:ns0="http://m3pe.org/activerdf/test/" rdf:resource="http://m3pe.org/activerdf/test/test_set_Instance_9"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_8">
+    <rdf:type rdf:resource="http://m3pe.org/activerdf/test/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_8">
+    <ns0:age xmlns:ns0="http://m3pe.org/activerdf/test/">25</ns0:age>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_8">
+    <ns0:name xmlns:ns0="http://m3pe.org/activerdf/test/">eyal</ns0:name>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_8">
+    <ns0:label xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#">test_set_Instance_8</ns0:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_8">
+    <ns0:knows xmlns:ns0="http://m3pe.org/activerdf/test/" rdf:resource="http://m3pe.org/activerdf/test/test_set_Instance_7"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_9">
+    <rdf:type rdf:resource="http://m3pe.org/activerdf/test/Person"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_9">
+    <ns0:age xmlns:ns0="http://m3pe.org/activerdf/test/">19</ns0:age>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_9">
+    <ns0:name xmlns:ns0="http://m3pe.org/activerdf/test/">audrey</ns0:name>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_9">
+    <ns0:label xmlns:ns0="http://www.w3.org/2000/01/rdf-schema#">test_set_Instance_9</ns0:label>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/activerdf/test/test_set_Instance_9">
+    <ns0:knows xmlns:ns0="http://m3pe.org/activerdf/test/" rdf:resource="http://m3pe.org/activerdf/test/test_set_Instance_7"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/subject">
+    <ns0:predicate1 xmlns:ns0="http://m3pe.org/">42</ns0:predicate1>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/subject">
+    <ns0:predicate2 xmlns:ns0="http://m3pe.org/" rdf:resource="http://m3pe.org/object2"/>
+  </rdf:Description>
+  <rdf:Description rdf:about="http://m3pe.org/subject">
+    <ns0:predicate3 xmlns:ns0="http://m3pe.org/"></ns0:predicate3>
+  </rdf:Description>
 </rdf:RDF>

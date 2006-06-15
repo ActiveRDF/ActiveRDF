@@ -20,40 +20,23 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'node_factory'
-require 'active_rdf/test/adapter/yars/manage_yars_db'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
+require 'active_rdf/test/common'
 
 class TestResourceEquality < Test::Unit::TestCase
-	def setup
-		case DB
-		when :yars
-			setup_yars('test_create_person')
-			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_create_person' }
-			@connection = NodeFactory.connection(params)
-		when :redland
-			setup_redland
-			params = { :adapter => :redland }
-			@connection = NodeFactory.connection(params)
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end
-	end
-
-	def teardown
-		case DB
-		when :yars
-			delete_yars('test_create_person')
-		when :redland
-			delete_redland
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end	
-	end
-
+  def setup 
+    setup_any
+  end
+  
+  def teardown
+    delete_any
+  end
+  
 	def test_equality
 		a = NodeFactory.create_basic_resource('http://m3pe.org/basicresource')
+    NodeFactory.clear
+    setup_any
 		b = NodeFactory.create_basic_resource('http://m3pe.org/basicresource')
+
 		assert a.object_id != b.object_id
 		assert_equal a,b
 		assert a == b

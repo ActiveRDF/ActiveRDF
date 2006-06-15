@@ -18,47 +18,26 @@
 #
 require 'test/unit'
 require 'active_rdf'
-require 'node_factory'
-require 'active_rdf/test/adapter/yars/manage_yars_db'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
+require 'active_rdf/test/common'
 
 class TestIdentifiedResourceCreate < Test::Unit::TestCase
 
 	def setup
-		case DB
-		when :yars
-			setup_yars('test_identifiedresource_create')
-			params = { :adapter => :yars, :host => DB_HOST, :port => 8080, :context => 'test_identifiedresource_create' }
-			@connection = NodeFactory.connection(params)
-		when :redland
-			setup_redland
-			params = { :adapter => :redland }
-			@connection = NodeFactory.connection(params)
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end
-   
+		setup_any
     require 'active_rdf/test/node_factory/person'
 	end
 	
 	def teardown
-		case DB
-		when :yars
-			delete_yars('test_identifiedresource_create')
-		when :redland
-			delete_redland
-		else
-			raise(StandardError, "Unknown DB type : #{DB}")
-		end	
+		delete_any
 	end
 
-	def test_A_create_identified_resource
+	def test_create_identified_resource
 		ir = IdentifiedResource.create('http://m3pe.org/activerdf/test/identifiedresource')
 		assert_not_nil(ir)
 		assert_instance_of(IdentifiedResource, ir)
 	end
 	
-	def test_B_create_two_times_same_identified_resource
+	def test_create_two_times_same_identified_resource
 		ir = IdentifiedResource.create('http://m3pe.org/activerdf/test/identifiedresource')
 		assert_not_nil(ir)
 		assert_instance_of(IdentifiedResource, ir)
@@ -66,7 +45,7 @@ class TestIdentifiedResourceCreate < Test::Unit::TestCase
 		assert_equal(ir, ir2)
 	end
 	
-	def test_C_create_person
+	def test_create_person
 		person = Person.create('http://m3pe.org/activerdf/test/new_person')
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
@@ -74,7 +53,7 @@ class TestIdentifiedResourceCreate < Test::Unit::TestCase
 		assert(Resource.exists?(person))
 	end
 	
-	def test_D_create_person
+	def test_create_person
 		person = Person.create('http://m3pe.org/activerdf/test/new_person2')
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
@@ -82,7 +61,8 @@ class TestIdentifiedResourceCreate < Test::Unit::TestCase
 		assert(Person.exists?(person))
 	end
 	
-	def test_D_load_person
+	def test_load_person
+    return unless load_test_data
 		regis = Person.create('http://m3pe.org/activerdf/test/test_set_Instance_10')
 		assert_not_nil(regis)
 		assert_instance_of(Person, regis)
@@ -90,7 +70,8 @@ class TestIdentifiedResourceCreate < Test::Unit::TestCase
 		assert_equal('45', regis.age)
 	end
 	
-	def test_E_load_person_throught_identified_resource
+	def test_load_person_via_identified_resource
+    return unless load_test_data
 		regis = IdentifiedResource.create('http://m3pe.org/activerdf/test/test_set_Instance_10')
 		assert_not_nil(regis)
 		assert_instance_of(Person, regis)

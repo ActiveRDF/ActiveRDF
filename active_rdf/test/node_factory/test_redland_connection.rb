@@ -19,17 +19,15 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'node_factory'
-require 'active_rdf/test/adapter/redland/manage_redland_db'
-require 'tmpdir'
+require 'active_rdf/test/common'
+require 'adapter/redland/redland_exceptions'
 
 class TestRedlandConnection < Test::Unit::TestCase
-	Default_parameters = { :adapter => :redland, :location => :memory }
 
 	def test_simple_connections
 		assert_nothing_raised { NodeFactory.connection :adapter => :redland, :location => :memory, :construct_class_model => false }
 		assert_nothing_raised { NodeFactory.connection :adapter => :redland, :location => :memory }
-		assert_nothing_raised { NodeFactory.connection :adapter => :redland }
+		assert_raise(RedlandAdapterError) { NodeFactory.connection :adapter => :redland }
 	end
   
   def test_same_instance
@@ -40,8 +38,8 @@ class TestRedlandConnection < Test::Unit::TestCase
 
 #  # TODO: implement find within single context
 #	def test_find_in_context
-#		assert_nothing_raised { NodeFactory.connection :adapter => DB, :host => DB_HOST, :port => 8080, :context => TestContext  }
-#		assert_nothing_raised { NodeFactory.connection :host => DB_HOST, :context => 'cia' }
+#		assert_nothing_raised { setup_redland }
+#		assert_nothing_raised { setup_redland with other context }
 #		
 #    resources_in_cia = IdentifiedResource.find :context => 'cia'
 #		resources_in_fbi = IdentifiedResource.find :context => 'fbi'

@@ -23,13 +23,14 @@
 
 require 'test/unit'
 require 'active_rdf'
+require 'active_rdf/test/common'
 
 class TestQueryEngine < Test::Unit::TestCase
 
   ## TODO: write query engine tests
 
 	def setup	 
-		NodeFactory.connection(:adapter => :yars, :host => 'browserdf.org', :cache_server => :memory)
+		setup_any
 #		@rdfs_subclass = NamespaceFactory.get :rdfs_subclass
 #		@rdf_type = NamespaceFactory.get :rdf_type
 #		@res_publication = NodeFactory.create_basic_resource 'http://m3pe.org/activerdf/citeseer#Publication'

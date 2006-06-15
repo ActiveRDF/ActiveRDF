@@ -36,7 +36,8 @@ class YarsAdapter; implements AbstractAdapter
 		if params.nil?
 			raise(YarsError, "In #{__FILE__}:#{__LINE__}, Yars adapter initialisation error. Parameters are nil.")
 		end
-	
+	 
+    @adapter_type = :yars
 		@host = params[:host]
 		@port = params[:port] || 8080
 		@context = params[:context] || ''
@@ -68,19 +69,16 @@ class YarsAdapter; implements AbstractAdapter
 		# Verification of nil object
 		if s.nil? or p.nil? or o.nil?
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : nil received."
-			raise(StatementAdditionYarsError, str_error)		
+			raise(ActiveRdfError, str_error)		
 		end
 				
 		# Verification of type
 		if !s.kind_of?(Resource) or !p.kind_of?(Resource) or !o.kind_of?(Node)
 			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : wrong type received."
-			raise(StatementAdditionYarsError, str_error)		
+			raise(ActiveRdfError, str_error)		
 		end
 		
-		if !put("#{wrap(s)} #{wrap(p)} #{wrap(o)} .")
-			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
-			raise(StatementAdditionYarsError, str_error)
-		end
+		put("#{wrap(s)} #{wrap(p)} #{wrap(o)} .")
 	end
 
 	# queries the RDF database and only counts the results
@@ -119,33 +117,13 @@ class YarsAdapter; implements AbstractAdapter
 		
 		$logger.debug "parsing YARS response"
 		parse_yars_query_result response
-
-		# disabling CURL again, not an optimisation
-		#case method
-		#when :curl
-		#	curl_string = "curl -s -H \"Accept: application/rdf+n3\" \"http://#{@host}:#{@port}#{@context}?q=#{CGI.escape(qs)}\""
-		#	$logger.debug "Sending CURL command: #{curl_string}"
-		#	response = `#{curl_string}`
-		#when :net
-		#end
 	end
 
 	# Delete a triple. Generate a query and call the delete method of Yars.
 	# If an argument is nil, it becomes a wildcard.
-	#
-	# Arguments:
-	# * +s+ [<tt>Resource</tt>]: The subject of the triple to delete
-	# * +p+ [<tt>Resource</tt>]: The predicate of the triple to delete
-	# * +o+ [<tt>Node</tt>]: The object of the triple to delete
 	def remove(s, p, o)
-		# Verification of type
-		if (!s.nil? and !s.kind_of?(Resource)) or
-			 (!p.nil? and !p.kind_of?(Resource)) or
-			 (!o.nil? and !o.kind_of?(Node))
-			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : wrong type received."
-			raise(StatementRemoveYarsError, str_error)		
-		end
-
+		verify_input_type s,p,o
+    
 		qe = QueryEngine.new
 		
 		s = s.nil? ? :s : s
@@ -156,10 +134,7 @@ class YarsAdapter; implements AbstractAdapter
 		qe.add_binding_triple(s, p, o)
 		qe.add_condition(s, p, o)
 		
-		if !delete(qe.generate)
-			str_error = "In #{__FILE__}:#{__LINE__}, error during removal of statement (#{s.to_s}, #{p.to_s}, #{o.to_s})."
-			raise(StatementRemoveYarsError, str_error)
-		end
+		delete(qe.generate)
 	end
 
 	# Synchronise the model. For Yars, it isn't necessary. Just return true.
@@ -172,6 +147,15 @@ class YarsAdapter; implements AbstractAdapter
 #----------------------------------------------#
 	
 	private
+
+  # Verification of type
+  def verify_input_type(s,p,o)
+    if (!s.nil? and !s.kind_of?(Resource)) or
+       (!p.nil? and !p.kind_of?(Resource)) or
+       (!o.nil? and !o.kind_of?(Node))
+      raise(ActiveRdfError, 'wrong type received for removal')
+    end
+  end
 	
 	# Add data (string of ntriples) to database
 	#

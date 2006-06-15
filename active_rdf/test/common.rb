@@ -1,10 +1,11 @@
 require 'active_rdf'
 
-$adapters = [:redland]
+$adapters = [:yars,:redland]
 $yars_host = 'browserdf.org'
+$yars_port = 8080
 $yars_context = 'test'
 
-$run_tests = ['resource', 'literal']
+#$run_tests = ['resource', 'literal']
 
 def setup_redland(location = :memory)
 	NodeFactory.connection :adapter => :redland, :location => location, :cache_server => :memory, :construct_class_model => false
@@ -19,11 +20,11 @@ def setup_yars
 end
 
 def delete_yars
+  # TODO: fix to work without java API
   require 'adapter/yars/yars_adapter'
-  yars = YarsAdapter.new :host => $yars_host, :context => $yars_context
-  ##yars.yars.set_debug_output STDOUT
-  # remove all triples from yars repository
-  yars.remove(nil,nil,nil)
+  `java -jar #{File.dirname(__FILE__)}/adapter/yars/yars-api-current.jar -d -u http://#$yars_host:#$yars_port/#$yars_context #{File.dirname(__FILE__)}/delete_all.nt`
+#  yars = YarsAdapter.new :host => $yars_host, :context => $yars_context
+#  yars.remove(nil,nil,nil)
 end
 
 def setup_any(location = :memory)
@@ -37,9 +38,21 @@ def setup_any(location = :memory)
 end
 
 def delete_any   
-  if $adapters.include?(:yars)
+  if NodeFactory.connection.class.name == 'YarsAdapter'
     delete_yars
   # other adapters run in memory
   end
   NodeFactory.clear
+end
+
+def load_test_data
+  case NodeFactory.connection.adapter_type
+  when :yars
+    `java -jar #{File.dirname(__FILE__)}/adapter/yars/yars-api-current.jar -p -u http://#$yars_host:#$yars_port/#$yars_context #{File.dirname(__FILE__)}/test_set_person.nt`    
+  when :redland
+    parser = Redland::Parser.new
+    model = NodeFactory.connection.model
+    dataset = File.read "#{File.dirname(__FILE__)}/test_set_person.rdf"
+    parser.parse_string_into_model(model,dataset,'uri://test-set-activerdf/')
+  end
 end
