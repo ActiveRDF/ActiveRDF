@@ -23,24 +23,22 @@ require 'adapter/yars/yars_adapter'
 
 class TestYarsAdapter < Test::Unit::TestCase
 
-	def test_A_initialize
+	def test_initialize
 		adapter = setup_yars
 		assert_not_nil(adapter)
 		assert_kind_of(AbstractAdapter, adapter)
 		assert_instance_of(YarsAdapter, adapter)
 	end
 	
-	def test_B_initialise_with_no_parameters
+	def test_initialise_without_parameters
 		adapter = YarsAdapter.new
 		assert_not_nil(adapter)
 		assert_kind_of(AbstractAdapter, adapter)
 		assert_instance_of(YarsAdapter, adapter)
 	end
 	
-	def test_C_error_initialise_with_nil_parameter
-		assert_raise(YarsError) {
-			adapter = YarsAdapter.new(nil)
-		}
+	def test_error_initialise_with_nil_parameter
+		assert_raise(YarsError) { adapter = YarsAdapter.new(nil) }
 	end
 
 	def test_query_string_escaped
@@ -48,6 +46,5 @@ class TestYarsAdapter < Test::Unit::TestCase
 		s = '@prefix ql: <http://www.w3.org/2004/12/ql#> .  <> ql:select { ?s ?p ?o . };
 			ql:where { ?s ?p ";/?:@&=+$,\\[\\]" . } .'
 		assert_nothing_raised { adapter.query s }
-	end
-	
+	end	
 end

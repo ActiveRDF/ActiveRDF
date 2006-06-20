@@ -52,20 +52,6 @@ class TestRedlandAdapter < Test::Unit::TestCase
 			redland_files = 'test-redland-*.db'
 			assert Dir.glob(redland_files).size == 4
 			FileUtils.rm Dir.glob(redland_files)
-		end
-		
-	end
-
-	def test_save
-		subject = NodeFactory.create_identified_resource('http://m3pe.org/subject')
-		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
-		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
-		
-		@connection.add(subject, predicate, object)
-		
-		assert_nothing_raised(RedlandAdapterError) { @connection.save }
-
-		# todo: assert saved attributes are really saved
-		##assert IdentifiedResource.create('http://m3pe.org/subject').
+		end		
 	end
 end

@@ -1,50 +1,57 @@
 require 'active_rdf'
-
+require 'tmpdir'
+require 'fileutils'
+	
 $adapters = [:yars,:redland]
 $yars_host = 'browserdf.org'
 $yars_port = 8080
 $yars_context = 'test'
+$temp_location = "#{Dir.tmpdir}/test"
 
-#$run_tests = ['resource', 'literal']
-
-def setup_redland(location = :memory)
-	NodeFactory.connection :adapter => :redland, :location => location, :cache_server => :memory, :construct_class_model => false
+# setup data with various adapters
+def setup_any(location = :memory)
+  if $adapters.include?(:redland)
+    setup_redland(location)
+  elsif $adapters.include?(:yars)
+    setup_yars
+  else
+    raise StandardError, 'no suitable adapter found for test'
+  end
 end
 
-def delete_redland(location = :memory)
-  # TODO
+def setup_redland(location = :memory)
+  NodeFactory.connection :adapter => :redland, :location => location, :cache_server => :memory, :construct_class_model => false
 end
 
 def setup_yars
   NodeFactory.connection :adapter => :yars, :host => $yars_host, :context => $yars_context, :cache_server => :memory, :construct_class_model => false
 end
 
+# delete data with various adapters
+def delete_any(location = nil)
+  case NodeFactory.connection.adapter_type
+  when :yars
+    delete_yars
+  when :redland
+	  # only delete if redland does not run in memory
+  	delete_redland(location) unless location.nil? 
+	end
+  NodeFactory.clear
+end
+
+def delete_redland(location = :memory)
+  FileUtils.rm Dir.glob(location + '-*.db')
+end
+
 def delete_yars
   # TODO: fix to work without java API
   require 'adapter/yars/yars_adapter'
   `java -jar #{File.dirname(__FILE__)}/adapter/yars/yars-api-current.jar -d -u http://#$yars_host:#$yars_port/#$yars_context #{File.dirname(__FILE__)}/delete_all.nt`
-#  yars = YarsAdapter.new :host => $yars_host, :context => $yars_context
-#  yars.remove(nil,nil,nil)
+  #  yars = YarsAdapter.new :host => $yars_host, :context => $yars_context
+  #  yars.remove(nil,nil,nil)
 end
 
-def setup_any(location = :memory)
-  if $adapters.include?(:redland)
-     setup_redland(location)
-  elsif $adapters.include?(:yars)
-     setup_yars
-  else
-     raise StandardError, 'no suitable adapter found for test'
-  end
-end
-
-def delete_any   
-  if NodeFactory.connection.class.name == 'YarsAdapter'
-    delete_yars
-  # other adapters run in memory
-  end
-  NodeFactory.clear
-end
-
+# load test dataset with various adapters
 def load_test_data
   case NodeFactory.connection.adapter_type
   when :yars

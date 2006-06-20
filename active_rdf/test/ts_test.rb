@@ -11,15 +11,15 @@ Find.find(File.dirname(File.expand_path(__FILE__))) do |path|
       next
     end
   else
-		if path =~ /test_(.*).rb$/
+    if path =~ /test_(.*).rb$/
       case $1
       when /.*yars.*/
-				require path if $adapters.include?(:yars)
+        require path if $adapters.include?(:yars)
       when /.*redland.*/
-				require path if $adapters.include?(:redland)
+        require path if $adapters.include?(:redland)
       when /(.*)/ # else
-        require path #if $run_tests.any? {|test| $1 =~ /.*#{test}.*/ }
+        require path
       end
-		end
+    end
   end
 end

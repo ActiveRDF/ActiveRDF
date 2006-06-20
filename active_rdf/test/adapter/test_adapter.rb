@@ -33,7 +33,8 @@ class TestAdapter < Test::Unit::TestCase
 		assert adapter.respond_to?(:add)
 		assert adapter.respond_to?(:remove)
 		assert adapter.respond_to?(:save)		
-		assert adapter.respond_to?(:query)		
+		assert adapter.respond_to?(:query)	
+		assert adapter.respond_to?(:query_count)	
 	end
 	
 	def test_adding

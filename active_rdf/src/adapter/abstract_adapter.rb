@@ -26,15 +26,29 @@ module AbstractAdapter
 	attr_reader :context
   attr_reader :adapter_type
 	
-	# Abstract method to be implemented in subclasses.
-	#
-	# * query(qs)
-	# +qs+ [<tt>String</tt>]: query string
-	# * add(s,p,o) and remove(s,p,o)
-	# +s+ [<tt>Resource</tt>]: triple subject
-	# +p+ [<tt>Resource</tt>]: triple predicate
-	# +o+ [<tt>Node</tt>]: triple object
-	# * save : no argument
-	abstract :query, :add, :remove, :save
+	abstract :query, :add, :remove, :save, :query_count
 
+	# adds triple to datamodel, raises ActiveRdfError if adding fails
+	def add!(s,p,o)
+		add(s,p,o) || raise(ActiveRdfError)
+	end
+
+	# remove triple from datamodel, raises ActiveRdfError if deletion fails
+	def remove!(s,p,o)
+		remove(s,p,o) || raise(ActiveRdfError)
+	end
+
+	# save data, raises ActiveRdfError if saving fails
+	def save!
+		save || raise(ActiveRdfError)
+	end
+
+	# query datastore, raises ActiveRdfError if querying fails
+	def query! qs
+		query(qs) || raise(ActiveRdfError)
+	end
+
+	def query_count! qs
+		query_count(qs) || raise(ActiveRdfError)
+	end
 end

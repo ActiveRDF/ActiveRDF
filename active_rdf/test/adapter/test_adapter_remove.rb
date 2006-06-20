@@ -36,9 +36,9 @@ class TestAdapterRemove < Test::Unit::TestCase
 		predicate = NodeFactory.create_identified_resource('http://m3pe.org/predicate')
 		object = NodeFactory.create_identified_resource('http://m3pe.org/object')
 		
-		assert_raise(ActiveRdfError) { @adapter.remove(subject, predicate, 'test') }
-		assert_raise(ActiveRdfError) { @adapter.remove(subject, 'test', object) }
-		assert_raise(ActiveRdfError) { @adapter.remove('test', predicate, object)	}
+		assert_raise(ActiveRdfError) { @adapter.remove!(subject, predicate, 'test') }
+		assert_raise(ActiveRdfError) { @adapter.remove!(subject, 'test', object) }
+		assert_raise(ActiveRdfError) { @adapter.remove!('test', predicate, object)	}
 	end
 	
 	def test_remove_non_existing_triples
@@ -82,11 +82,23 @@ class TestAdapterRemove < Test::Unit::TestCase
 		assert_delete(nil, nil, nil)
 	end
 
-private 
+	private 
 
 	def assert_delete(s,p,o)
 		assert @adapter.remove(s,p,o)
-		# TODO: assert triples indeed deleted  
+		
+		# verify if deletion worked
+		s = :s if s.nil?
+		p = :p if p.nil?
+		o = :o if o.nil?
+		
+		qe = QueryEngine.new
+		qe.add_binding_variables :o
+		qe.add_condition s,p,:o
+		objects = qe.execute
+		
+		# querying for all objects s,p,o and verifying that the deleted object is not included in results
+		assert !objects.include?(o)
 	end
 
 end

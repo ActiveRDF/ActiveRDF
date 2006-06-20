@@ -24,8 +24,6 @@ class Person < IdentifiedResource
   setup_any
   set_class_uri 'http://test/Person'
 end
-
-TempLocation = "#{Dir.tmpdir}/test"
 	
 class TestResource < Test::Unit::TestCase
 	def setup
@@ -37,8 +35,8 @@ class TestResource < Test::Unit::TestCase
 	end
 
 	def test_add_predicate_identified_resource
-		p = IdentifiedResource.create 'http://test/test'
-		assert_nothing_raised { Person.add_predicate p }
+		test_predicate = IdentifiedResource.create 'http://test/test'
+		assert_nothing_raised { Person.add_predicate test_predicate }
 
 		assert Person.predicates.include?('test')
 		assert_kind_of IdentifiedResource, Person.predicates['test'] 
@@ -72,14 +70,10 @@ class TestResource < Test::Unit::TestCase
 		assert_nothing_raised { c.save }
 	end
   
-  
-  ## TODO: enable after we get either YARS with delete working, or Redland with save!
-	def test_load_added_predicate
-    # we cannot run this test in memory
-    # TODO: change setup_redland to setup_any (need to fix YARS delete)
-    return unless $adapters.include?(:redland)
+ 	def test_load_added_predicate
+    # we cannot run this test in memory: setup in temporary location
     NodeFactory.clear
-    setup_redland('/tmp/test-save')
+    setup_any($temp_location)
     Person.add_predicate 'http://test/test'
     
     uri = 'http://m3pe.org/eyal'
@@ -87,17 +81,21 @@ class TestResource < Test::Unit::TestCase
 		eyal.test = 'test-value'
 		eyal.save
 
-    # clear the cache, reopen the connection
+    # clear the cache, reopen the connection to same temporary location
 		NodeFactory.clear
-    con = setup_redland('/tmp/test-save')
+    setup_any($temp_location)
     eyal2 = Person.create uri    
     
     # assert we have a different object, but with equal values
 		assert_not_equal eyal.object_id, eyal2.object_id
 		assert_equal eyal, eyal2
-		assert_equal eyal2.test, 'test-value'
+		assert_equal 'test-value', eyal2.test
 
-    delete_redland('/tmp/test-save')
+		# removing our temporary files
+    delete_any($temp_location)
+    
+    # need to initialise connection again, because otherwise delete_any will fail in teardown
+    setup_any
 	end
 
 	def test_predicate_collision

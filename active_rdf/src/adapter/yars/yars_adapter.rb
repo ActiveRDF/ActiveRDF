@@ -59,31 +59,30 @@ class YarsAdapter; implements AbstractAdapter
 		$logger.debug("opened YARS connection on http://#{yars.address}:#{yars.port}/#{context}")
 	end
 
-	# Add the triple s,p,o in the database.
-	#
-	# Arguments:
-	# * +s+ [<tt>Resource</tt>]: Subject of triples
-	# * +p+ [<tt>Resource</tt>]: Predicate of triples
-	# * +o+ [<tt>Node</tt>]: Object of triples. Can be a _Literal_ or a _Resource_
+	# Adds triple (subject, predicate, object) to the datamodel, returns true/false 
+	# indicating success.  Subject and predicate should be Resources, object 
+	# should be a Node.
 	def add(s, p, o)
-		# Verification of nil object
-		if s.nil? or p.nil? or o.nil?
-			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : nil received."
-			raise(ActiveRdfError, str_error)		
-		end
-				
-		# Verification of type
-		if !s.kind_of?(Resource) or !p.kind_of?(Resource) or !o.kind_of?(Node)
-			str_error = "In #{__FILE__}:#{__LINE__}, error during addition of statement : wrong type received."
-			raise(ActiveRdfError, str_error)		
-		end
+		# verify input
+		return false if s.nil? or p.nil? or o.nil?
+		return false if !s.kind_of?(Resource) or !p.kind_of?(Resource) or !o.kind_of?(Node)
 		
-		put("#{wrap(s)} #{wrap(p)} #{wrap(o)} .")
+		# upload data to yars
+		header = { 'Content-Type' => 'application/rdf+n3' }
+		data = "#{wrap(s)} #{wrap(p)} #{wrap(o)} ."
+		
+		$logger.debug "putting data to yars (in context #{'/'+context}): #{data}"
+		response = yars.put('/' + context, data, header)
+		
+		# verify response
+		$logger.debug 'PUT - response from yars: ' + response.message
+		response.instance_of?(Net::HTTPCreated)
 	end
 
 	# queries the RDF database and only counts the results
+	# returns result size or false (on error)
 	def query_count(qs)
-		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
+		false if qs.nil?
 		$logger.debug "querying count yars in context #@context:\n" + qs
 		
 		header = { 'Accept' => 'application/rdf+n3' }
@@ -91,39 +90,35 @@ class YarsAdapter; implements AbstractAdapter
 		
 		# If no content, we return an empty array
 		return 0 if response.is_a?(Net::HTTPNoContent)
-
-		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, bad request: " + qs) unless response.is_a?(Net::HTTPOK)
-		response = response.body
+		return false unless response.is_a?(Net::HTTPOK)
 		
 		# returns number of results
-		return response.count("\n")
+		return response.body.count("\n")
 	end
 
-	# query the RDF database
-	#
-	# qs is an n3 query, e.g. '<> ql:select { ?s ?p ?o . } ; ql:where { ?s ?p ?o . } .'
+	# query datastore with query string (n3ql), returns array with query results
 	def query(qs)
-		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, query string nil.") if qs.nil?
-		$logger.debug "querying yars in context #@context" 
+		return false if qs.nil?
 		
 		header = { 'Accept' => 'application/rdf+n3' }
 		response = yars.get("/#{context}?q=#{CGI.escape(qs)}", header)
 		
-		# If no content, we return an empty array
-		return Array.new if response.is_a?(Net::HTTPNoContent)
+		# return empty array if no content
+		return [] if response.is_a?(Net::HTTPNoContent)
 
-		raise(QueryYarsError, "In #{__FILE__}:#{__LINE__}, bad request #{response.inspect}: " + qs) unless response.is_a?(Net::HTTPOK)
-		response = response.body
-		
-		$logger.debug "parsing YARS response"
-		return parse_yars_query_result(response)
+		# return false unless HTTP OK returned
+		return false unless response.is_a?(Net::HTTPOK)
+
+		parse_yars_query_result(response.body)
 	end
 
-	# Delete a triple. Generate a query and call the delete method of Yars.
-	# If an argument is nil, it becomes a wildcard.
+	# deletes triple, nil arguments treated as wildcards. Returns true/false 
+	# indicating success.
 	def remove(s, p, o)
-		#verify_input_type(s, p, o)
-    
+		return false if !s.nil? and !s.kind_of?(Resource)
+		return false if !p.nil? and !p.kind_of?(Resource)
+		return false if !o.nil? and !o.kind_of?(Node)
+
 		qe = QueryEngine.new
 		
 		s = s.nil? ? :s : s
@@ -138,8 +133,10 @@ class YarsAdapter; implements AbstractAdapter
 		delete(qs)
 	end
 
-	# Synchronise the model. For Yars, it isn't necessary. Just return true.
+	# save data into RDF store, return true/false indicating success
 	def save
+		# the YARS adapter already saves all actions into the datastore directly, so 
+		# this method does not do anything
 		true
 	end
 
@@ -158,23 +155,6 @@ private
 		end
 	end
 	
-	# Add data (string of ntriples) to database
-	#
-	# Arguments:
-	# * +data+ [<tt>String</tt>]: NTriples to add
-	def put(data)
-		header = { 'Content-Type' => 'application/rdf+n3' }
-		
-		$logger.debug 'Yars intance = ' + yars.to_s
-		
-		$logger.debug "putting data to yars (in context #{'/'+context}): #{data}"
-		response = yars.put('/' + context, data, header)
-		
-		$logger.debug 'PUT - response from yars: ' + response.message
-		
-		return response.instance_of?(Net::HTTPCreated)
-	end
-
 	# Delete results of query string from database
 	# qs is an n3 query, e.g. '<> ql:select {?s ?p ?o . }; ql:where {?s ?p ?o . } .'
 	def delete(qs)
