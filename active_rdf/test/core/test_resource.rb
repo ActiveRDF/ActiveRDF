@@ -60,7 +60,7 @@ class TestResource < Test::Unit::TestCase
     # loading test dataset into model
     parser = Redland::Parser.new
     model = NodeFactory.connection.model
-    dataset = File.read "#{File.dirname(__FILE__)}/../../test_set_person.rdf"
+    dataset = File.read "#{File.dirname(__FILE__)}/../test_set_person.rdf"
     parser.parse_string_into_model(model,dataset,'uri://test-set-activerdf/')
     
     # verifying predicates are correctly loaded
