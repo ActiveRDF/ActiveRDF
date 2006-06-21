@@ -90,7 +90,7 @@ class Resource; implements Node
 		# results is not allowed to be nil, we should throw an AdapterError then 
 
 		if (results.nil? or not results.kind_of? Array)
-			raise(AdapterError,"Unexpected result in #{__FILE__}:#{__LINE__}") 
+			raise(AdapterError,"Unexpected result in #{__FILE__}:#{__LINE__} #{results.class}") 
 		end
 		results
 	end

@@ -137,7 +137,12 @@ public
 			require 'adapter/redland/redland_adapter'
 			
 			connection = RedlandAdapter.new(params)
+		when :sparql
+			$logger.debug 'loading SPARQL adapter'
+			require 'adapter/sparql/sparql_adapter'
+			connection = SparqlAdapter.new(params)
 		else
+		
 			raise(ConnectionError, 'invalid adapter')
 		end
 

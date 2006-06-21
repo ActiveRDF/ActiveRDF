@@ -2,7 +2,7 @@ require 'active_rdf'
 require 'tmpdir'
 require 'fileutils'
 	
-$adapters = [:yars,:redland]
+$adapters = [:redland,:yars,:sparql]
 $yars_host = 'browserdf.org'
 $yars_port = 8080
 $yars_context = 'test'
@@ -63,3 +63,4 @@ def load_test_data
     parser.parse_string_into_model(model,dataset,'uri://test-set-activerdf/')
   end
 end
+
