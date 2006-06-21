@@ -179,8 +179,8 @@ class QueryEngine
 	# Generate a Sparql query. Return the query string.
 	# Take only the array of binding variables.
 	def generate_sparql
-		raise(BindingVariableError, "In #{__FILE__}:#{__LINE__}, SPARQL doesn't support binding triple.") if @binding_triple
-		raise(WrongTypeQueryError, "In #{__FILE__}:#{__LINE__}, SPARQL doesn't support counting triples.") if @count_variables
+		raise ActiveRdfError, 'SPARQL does not support binding triple' if @binding_triple
+		raise ActiveRdfError, 'SPARQL does not support counting triples' if @count_variables
 
 		require 'query_generator/sparql_generator.rb'
 		return SparqlQueryGenerator.generate(@bindings, @conditions, @keywords, @order)
