@@ -1,12 +1,12 @@
 ==ActiveRDF
 ActiveRDF is a library for accessing RDF data from Ruby programs.
-See http://activerdf.m3pe.org for more information.
+See http://activerdf.org for more information.
 
 ==License
-GPL, see GPL.txt
+LGPL, see lgpl.txt
 
 ==Version
-0.2-trunk (you are running a development version!)
+0.2
 
 ==Installation
 1. put this whole directory in your Ruby library path, e.g. /usr/lib/ruby/1.8/activerdf.
@@ -15,7 +15,11 @@ GPL, see GPL.txt
 ==Usage
 1. require 'active_rdf' in your Ruby file, or
 2. look at the Unit tests to get an idea,  or
-3. read the manual on http://activerdf.m3pe.org
+3. read the Wiki on http://sw.deri.org/wiki/ActiveRDF
+
+==Running tests
+1. modify test/common.rb to suit your situation (adapters to be tested)
+2. run test/ts_test.rb (it will automatically load and run all selected tests)
 
 ==Problems
 See the log file activerdf.log in your temp directory (e.g /tmp or c:\windows\temp).
@@ -50,6 +54,7 @@ Put the following in config/environment.rb
 ==Authors
 Eyal Oren <first.last@deri.org>
 Renaud Delbru <first.last@deri.org>
+Sebastian Gerke <first.last@deri.org>
 
 ==Date
-...
+2006-06-22

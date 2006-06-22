@@ -33,7 +33,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		delete_any
 	end
 	
-	def test_A_create_person_and_save_without_attributes
+	def test_create_person_and_save_without_attributes
 		person = Person.create('http://m3pe.org/activerdf/test/new_person')
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
@@ -41,7 +41,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		assert(Resource.exists?(person))
 	end
 	
-	def test_B_create_person_and_save_with_attributes
+	def test_create_person_and_save_with_attributes
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
@@ -59,7 +59,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		assert(Resource.exists?(person))
 	end
 	
-	def test_C_attribute_accessors
+	def test_attribute_accessors
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
 		person2 = Person.create('http://m3pe.org/activerdf/test/new_person_3')
 		
@@ -83,7 +83,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		assert_equal('person 3', person['knows'].name)
 	end
 	
-	def test_D_update_attributes_with_symbol
+	def test_update_attributes_with_symbol
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
@@ -106,7 +106,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		assert_equal(person2.object_id, person['knows'].object_id)
 	end
 	
-	def test_E_update_attributes_with_string
+	def test_update_attributes_with_string
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
@@ -131,7 +131,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		assert_equal(person2.object_id, person['knows'].object_id)
 	end
 	
-	def test_F_write_multiple_resource_attributes
+	def test_write_multiple_resource_attributes
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
 
 		person2 = Person.create('http://m3pe.org/activerdf/test/new_person_3')
@@ -151,7 +151,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		end
 	end
 	
-	def test_G_update_multiple_resource_attributes
+	def test_update_multiple_resource_attributes
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
 
 		person2 = Person.create('http://m3pe.org/activerdf/test/new_person_3')
@@ -174,7 +174,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		end
 	end
 	
-	def test_H_remove_value_of_attribute
+	def test_remove_value_of_attribute
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
@@ -193,7 +193,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		assert_equal(nil, person['knows'])		
 	end
 	
-	def test_I_remove_value_of_attribute_with_update
+	def test_remove_value_of_attribute_with_update
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
@@ -213,7 +213,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		assert_equal(nil, person['knows'])			
 	end
 	
-	def test_J_query_attribute
+	def test_query_attribute
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
 		
     assert !person.name?
@@ -232,7 +232,7 @@ class TestAttributesContainer < Test::Unit::TestCase
     assert_kind_of String, person.age
 	end
 	
-	def test_K_update_attribute_error_with_unknown_attribute
+	def test_update_attribute_error_with_unknown_attribute
 		person = Person.create('http://m3pe.org/activerdf/test/new_person_2')
 	
 		attributes = { :unknown_attribute => 'test unknown attribute' }
@@ -241,7 +241,7 @@ class TestAttributesContainer < Test::Unit::TestCase
 		}
 	end
 	
-	def test_L_update_attributes_with_empty_string
+	def test_update_attributes_with_empty_string
 		person = Person.create('http://m3pe.org/activerdf/test/new_person')
 		assert_not_nil(person)
 		assert_instance_of(Person, person)
@@ -258,5 +258,10 @@ class TestAttributesContainer < Test::Unit::TestCase
 		assert_equal('42', person['age'].value)
 		assert_equal('', person['name'].value)
 	end
-
+	
+	def test_saving_resource_into_empty_store
+		eyal = Person.create 'http://eyaloren.org'
+		eyal.name = 'eyal'
+		assert_nothing_raised { eyal.save }
+	end
 end
