@@ -7,6 +7,7 @@ $yars_host = 'browserdf.org'
 $yars_port = 8080
 $yars_context = 'test'
 $temp_location = "#{Dir.tmpdir}/test"
+$log_level = Logger::INFO
 
 # setup data with various adapters
 def setup_any(location = :memory)
@@ -20,11 +21,11 @@ def setup_any(location = :memory)
 end
 
 def setup_redland(location = :memory)
-  NodeFactory.connection :adapter => :redland, :location => location, :cache_server => :memory, :construct_class_model => false
+  NodeFactory.connection :adapter => :redland, :location => location, :cache_server => :memory, :construct_class_model => false, :log_level => $log_level
 end
 
 def setup_yars
-  NodeFactory.connection :adapter => :yars, :host => $yars_host, :context => $yars_context, :cache_server => :memory, :construct_class_model => false
+  NodeFactory.connection :adapter => :yars, :host => $yars_host, :context => $yars_context, :cache_server => :memory, :construct_class_model => false, :log_level => $log_level
 end
 
 # delete data with various adapters

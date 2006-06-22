@@ -5,11 +5,12 @@ require 'adapter/sparql/sparql_adapter'
 
 class TestSparqlJson < Test::Unit::TestCase
 	def setup		
-		NodeFactory.connection(:construct_class_model => false, :adapter => :sparql, :host => 'm3pe.org', :port => 2020 , :context => 'books', :result_format => :json, :logger_level => Logger::DEBUG)
+		NodeFactory.connection(:construct_class_model => false, :adapter => :sparql, :host => 'm3pe.org', :port => 2020 , :context => 'books', :result_format => :json)
 		@qe = QueryEngine.new
 	end
 	
 	def teardown
+		delete_any
 	end	
 	
 	def test_spo

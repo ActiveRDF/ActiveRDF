@@ -65,7 +65,7 @@ public
 				:construct_schema => false,
 				:proxy => nil,
 				:logger => Dir.tmpdir + '/activerdf.log',
-				:logger_level => Logger::DEBUG
+				:logger_level => Logger::INFO
 				}
 	end
 
@@ -107,7 +107,7 @@ public
 		
 		# Initialize DB adapter
 		connection = init_adapter(params)
-		
+
 		# Save the parameter
 		@@default_host_parameters = params
 		
@@ -116,33 +116,32 @@ public
 
 	# Initialize the DB adapter. Instantiate the connection and save it in the
 	# connection hash.
-	def self.init_adapter(params)
-
-    	# if we already have a connection for that parameters, return it
-    	return @@connections[params.to_a] if @@connections.include?(params.to_a)
+	def self.init_adapter(params)			
+			# if we already have a connection for that parameters, return it
+			if @@connections.include?(params.to_a)
+    		found = @@connections[params.to_a]
+    		@@current_connection = found
+    		return found
+    	end
     	
 		case params[:adapter]
 		when :yars
 			$logger.debug 'loading YARS adapter'
-			require 'adapter/yars/yars_adapter'
-			
+			require 'adapter/yars/yars_adapter'			
 			begin 
 				connection = YarsAdapter.new(params)
 			rescue YarsError => e
 				raise(ConnectionError, e.message)
-			end
-			
+			end			
 		when :redland
 			$logger.debug 'loading Redland adapter'
-			require 'adapter/redland/redland_adapter'
-			
+			require 'adapter/redland/redland_adapter'			
 			connection = RedlandAdapter.new(params)
 		when :sparql
 			$logger.debug 'loading SPARQL adapter'
 			require 'adapter/sparql/sparql_adapter'
 			connection = SparqlAdapter.new(params)
-		else
-		
+		else		
 			raise(ConnectionError, 'invalid adapter')
 		end
 

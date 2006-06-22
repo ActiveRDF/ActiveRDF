@@ -22,7 +22,6 @@ require 'adapter/abstract_adapter'
 
 class SparqlAdapter  
   def parse_sparql_query_result_json(query_result)
-    require 'rubygems'
     require 'json'
     
     parsed_object = JSON.parse(query_result)

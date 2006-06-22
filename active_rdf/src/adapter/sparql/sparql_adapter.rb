@@ -18,8 +18,9 @@
 #
 
 require 'net/http'
-require 'uri'
+#TODO: do we need this? require 'uri'
 require 'cgi'
+require 'active_rdf'
 require 'adapter/abstract_adapter'
 require 'adapter/sparql/sparql_tools'
 
@@ -35,6 +36,7 @@ class SparqlAdapter; implements AbstractAdapter
 		@context = params[:context]
 		@result_format = params[:result_format]
 		@query_language = 'sparql'
+		@adapter_type = :sparql
 		
 		raise ActiveRdfError, "Result format #@result_format unsupported" unless (@result_format == :xml or @result_format == :json)
 		
@@ -62,21 +64,11 @@ class SparqlAdapter; implements AbstractAdapter
 		false
 	end
 	
-	# TODO: Sebastian, does this really work for SPARQL results? Lines do not represent triples or do they?
 	# queries the RDF database and only counts the results
 	def query_count(qs)
+		# TODO: implement smarter count (without parsing) when we figure out how...
 		return false if qs.nil?
-		$logger.debug "querying count sparql\n" + qs
-		
-		header = { 'Accept' => 'application/sparql-results+json' }
-		response = sparql.get("/#{context}?query=#{CGI.escape(qs)}", header)
-		
-		# If no content, we return an empty array
-		return 0 if response.is_a?(Net::HTTPNoContent)		
-		return false unless response.is_a?(Net::HTTPOK)
-		
-		# returns number of results
-		return response.body.count("\n")
+		query(qs).size
 	end
 	
 	# query datastore with query string (SPARQL), returns array with query results
@@ -99,14 +91,13 @@ class SparqlAdapter; implements AbstractAdapter
 		return false unless response.is_a?(Net::HTTPOK)
 		response = response.body
 		
-		$logger.debug "response is: #{response}"
+		$logger.info "response is: #{response}"
 		$logger.debug "parsing Sparql response"
 		
 		case result_format
 		when :json
 			result = parse_sparql_query_result_json response
 		when :xml
-			# TODO: was this a bug? it said when :json
 			result = parse_sparql_query_result_xml response
 		end
 		

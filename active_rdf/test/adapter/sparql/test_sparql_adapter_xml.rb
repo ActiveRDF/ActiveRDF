@@ -3,7 +3,7 @@ require 'active_rdf'
 require 'active_rdf/test/common'
 require 'adapter/sparql/sparql_adapter'
 
-class TestSparqlJson < Test::Unit::TestCase
+class TestSparqlXML < Test::Unit::TestCase
 	
 	def setup
 		NodeFactory.connection(:construct_class_model => false, :adapter => :sparql, :host => 'my.opera.com', :port => 80 , :context => 'community/sparql/sparql', :result_format => :xml)
@@ -11,6 +11,7 @@ class TestSparqlJson < Test::Unit::TestCase
 	end
 	
 	def teardown
+		delete_any
 	end
 	
 	def test_sp
