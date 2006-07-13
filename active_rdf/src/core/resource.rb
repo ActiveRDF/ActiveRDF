@@ -128,17 +128,16 @@ class Resource; implements Node
 			qe.add_condition(:s, :p, :o)
 		else
 			conditions.each do |pred, obj|
-				qe.add_condition(:s, pred, obj)
+				qe.add_condition :s, pred, obj
 			end
 		end
 		
 		qe.activate_keyword_search if options[:keyword_search]
-		
 		results = qe.execute
 
 		# results is not allowed to be nil, we should throw an AdapterError then 
 		if (results.nil? or not results.kind_of? Array)
-			raise(AdapterError,"Unexpected result in #{__FILE__}:#{__LINE__}") 
+			raise(AdapterError,"Adapter should return Array, instead: #{results}") 
 		end
 		results
 	end

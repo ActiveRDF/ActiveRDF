@@ -1,6 +1,6 @@
+require 'rubygems' # bug in interplay between redland/yars/rubygems: we thus load rubygems here, before redland is loaded
 require 'active_rdf'
 require 'active_rdf/test/common'
-require 'rubygems' # bug in interplay between redland/yars/rubygems: we thus load rubygems here, before redland is loaded
 
 require 'find'
 Find.find(File.dirname(File.expand_path(__FILE__))) do |path|
@@ -20,6 +20,8 @@ Find.find(File.dirname(File.expand_path(__FILE__))) do |path|
         require path if $adapters.include?(:redland)
       when /.*sparql.*/
 				require path if $adapters.include?(:sparql)
+      when /.*sesame.*/
+				require path if $adapters.include?(:sesame)
       else
         require path
       end

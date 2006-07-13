@@ -39,7 +39,7 @@ class TestAdapter < Test::Unit::TestCase
 	
 	def test_adding
 		adapter = NodeFactory.connection
-		n = IdentifiedResource.new 'abc'
+		n = IdentifiedResource.new 'http://abc'
 		
 		assert !adapter.add(nil,nil,nil)
 		assert_raise(ActiveRdfError) { adapter.add!(nil,nil,nil) }
@@ -50,7 +50,7 @@ class TestAdapter < Test::Unit::TestCase
 	
 	def test_removal
 		adapter = NodeFactory.connection
-		n = IdentifiedResource.new 'abc'
+		n = IdentifiedResource.new 'http://abc'
 		
 		# removal should fail, given wrong input
 		assert !adapter.remove('abc',n,n)
@@ -92,12 +92,12 @@ class TestAdapter < Test::Unit::TestCase
 		qe.add_binding_variables :s
 		qe.add_condition :s,:p,:o
 		qs = qe.generate
-		
+		$logger.info "Trying to count #{qs}"
 		assert_equal adapter.query_count(qs), 0
 		assert_nothing_raised { adapter.query_count('') }
 		assert_raise(ActiveRdfError) { adapter.query_count!('') } 
 		
-		n = IdentifiedResource.new 'abc'
+		n = IdentifiedResource.new 'http://abc'
 		adapter.add(n,n,n)		
 		assert_equal adapter.query_count(qs), 1		
 	end

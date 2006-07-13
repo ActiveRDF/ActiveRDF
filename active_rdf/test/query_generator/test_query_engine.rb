@@ -32,7 +32,7 @@ class TestQueryEngine < Test::Unit::TestCase
 		qe = QueryEngine.new
 		qe.add_binding_variables :s
 		qe.add_condition :s, :p, :o
-		query = "SELECT DISTINCT ?s \n\nWHERE {\n\t ?s ?p ?o\n}\n\n"
+		query = "SELECT DISTINCT ?s \n\nWHERE {\n\t ?s ?p ?o . \n\n}\n\n"
 		assert_equal query, qe.generate_sparql
 	end
 
@@ -61,7 +61,8 @@ SELECT DISTINCT ?s ?p ?o
 WHERE {
 	 ?x <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://m3pe.org/activerdf/citeseer#Publication> . 
 	 ?s <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?x . 
-	 ?s ?p ?o
+	 ?s ?p ?o . 
+
 }
 
 EOF

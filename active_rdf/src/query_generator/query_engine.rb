@@ -144,10 +144,14 @@ class QueryEngine
 	def add_condition(subject, predicate, object)
 		$logger.debug "adding condition: #{subject} #{predicate} #{object}"
 		@conditions = Array.new if @conditions.nil?
-		if @related_resource.nil?
-			@conditions << [subject, predicate, object]
-		else
-			@conditions << [subject, convert_predicate(predicate), object]
+		
+		object = [object] unless object.kind_of?(Array)
+		object.each do |obj|
+			if @related_resource.nil?
+				@conditions << [subject, predicate, obj]
+			else
+				@conditions << [subject, convert_predicate(predicate), obj]
+			end
 		end
 		$logger.debug "added condition: #{subject} #{predicate} #{object}"
 	end

@@ -125,7 +125,7 @@ class TestResource < Test::Unit::TestCase
 
 	def test_use_added_predicate
 		Person.add_predicate 'http://test/test'
-		c = Person.new 'c'
+		c = Person.new 'uri:c'
 
 		assert_nothing_raised { c.test }
 		assert_nil c.test

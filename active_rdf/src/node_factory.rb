@@ -141,6 +141,10 @@ public
 			$logger.debug 'loading SPARQL adapter'
 			require 'adapter/sparql/sparql_adapter'
 			connection = SparqlAdapter.new(params)
+		when :sesame
+			$logger.debug 'loading Sesame adapter'
+			require 'adapter/sesame/sesame_adapter'
+			connection = SesameAdapter.new(params)
 		else		
 			raise(ConnectionError, 'invalid adapter')
 		end

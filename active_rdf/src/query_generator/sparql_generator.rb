@@ -61,31 +61,21 @@ class SparqlQueryGenerator < AbstractQueryGenerator
 	# Return :
 	# * [<tt>String</tt>] Where clause of the Sparql query
 	def self.where(conditions)
-		# Init where template
-		where_template = String.new
-		# Init counter
-		nb_conditions = conditions.size
-		i = 0
+		where = String.new
 
 		conditions.each do |s, p, o|
-	  		# Counter incrementation
-			i += 1
-
 			subject = convert_subject(s)
 			predicate = convert_predicate(p)
-			if o.kind_of?(Array)
-				o.each { |resource| 
-					object = convert_object(resource)
-	  				where_template << "\t #{subject} #{predicate} #{object} . \n" if (i != nb_conditions)
-	  				where_template << "\t #{subject} #{predicate} #{object}" if (i == nb_conditions)
-				}
-			else
-				object = convert_object(o)
-	  			where_template << "\t #{subject} #{predicate} #{object} . \n" if (i != nb_conditions)
-	  			where_template << "\t #{subject} #{predicate} #{object}" if (i == nb_conditions)
-			end
+			
+			# transforming o into Array
+			o = [o] unless o.kind_of?(Array)			
+			# and iterate through it transparently to construct the where clause
+			o.each do |resource| 
+				object = convert_object(resource)
+ 				where << "\t #{subject} #{predicate} #{object} . \n"
+	 		end
 		end
-		return where_template
+		return where
 	end
 	
 	# Add keywords search conditions.
