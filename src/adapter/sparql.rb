@@ -136,8 +136,7 @@ class SparqlAdapter
     when 'uri'
       RDFS::Resource.lookup(value)
     when 'bnode'
-      RDFS::Resource.lookup(value)
-      #raise(ActiveRdfError, "blank node not implemented.")
+      raise(ActiveRdfError, "blank node not implemented.")
     when 'literal','typed-literal'
       value.to_s
     end
