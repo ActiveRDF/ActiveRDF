@@ -1,0 +1,53 @@
+all objects are completely empty studs: they carry no state at all
+	* data lookup -> database select query
+	* data setting -> database update query
+	* method lookup (eyal.methods) -> select ?p where eyal ?t ?c and ?p domain ?c
+	* class lookup (eyal.class) -> select ?c where eyal ?t ?c
+ 
+challenge:
+	* how to cast object into (one-more) class(es) after class lookup
+	* how to enable class-based code, e.g. Person.to_s
+	* allowing people to describe and extend certain classes:
+		class Person
+		  class_uri http://foaf/Person
+		  def birthday
+		   "don't know"
+		  end
+	  end
+  * enable object invocation based on their class, e.g. eyal.birthday
+  	- figure out that eyal is a Person
+  	- use birthday from Person
+  	solution:
+  	
+  	(in Resource) 
+  	def method_missing(method, *args)
+  		# we are invoked with 'method' but we don't provide that method (yet)
+  		# simple approach: look in all classes of which we are member, 
+  		# and use the first one to provide the method
+  		# which classes do we belong to?
+  		klasses = lookup_own_types
+  		klasses.each do |klass|
+  			# if any of our klasses includes the method, add it and invoke it
+  			if klass.methods.include?(method)
+  				# TODO: incorrect syntax, figure out how to inject code into existing ruby object
+  				self.inject(method)
+  				self.send(method,*args)
+  			end
+  		end
+  		
+  		# method not found in any of our classes
+  		super
+  	end
+  	
+	* construct Ruby class for RDFS class (instead of just Resource), 
+	e.g. Resource.lookup(http://foaf/Person) should return the Person class
+	and after that the Person class should be known
+	
+	* allow Person.find_by_firstname
+	challenge: when do we construct the Person class?
+	1. at program startup we construct all classes (from RDFS class)
+	- not transparent empty proxy, now we do maintain state (we know which classes exist), if changes in database we're out-of-date
+	2. when needed we figure out which classes exist
+	- difficult, need to catch some ClassUnknown error, and divert it
+	- difficult to integrate with requirement to allow people to actually write and extend the Person class
+	

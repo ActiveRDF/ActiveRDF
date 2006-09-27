@@ -1,0 +1,15 @@
+* all activerdf ruby objects are empty proxies (studs)
+
+* object property values can change on the fly ---> no caching
+* objects can belong to multiple classes ---> roll our own class mechanism
+* object membership can change on-the-fly (do we?) ---> no class-membership caching
+
+* want to use dynamic method typing, e.g.
+class Person
+  def to_s
+    firstname + ' ' + lastname
+  end
+end
+  so we need real class membership, e.g. eyal.class ---> Person 
+  (but figure out when Ruby determines class membership, maybe we can
+  overwrite Resource.class to look into the database all the time)
