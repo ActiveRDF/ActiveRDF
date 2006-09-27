@@ -26,7 +26,7 @@ class SparqlAdapter
 		@context = params[:context] || 'books'
 		@result_format = params[:result_format] || :json
 		
-		raise ActiveRdfError, "Result format unsupported" unless (@result_format == :xml or @result_format == :json)
+		raise ActiveRdfError, "Result format unsupported" unless (@result_format == :xml or @result_format == :json or @result_format == :sparql_xml)
 		
 		# We don't open the connection yet but let each HTTP method open and close 
 		# it individually. It would be more efficient to pipeline methods, and keep 
@@ -47,19 +47,21 @@ class SparqlAdapter
 			header = { 'accept' => 'application/sparql-results+json' }
 		when :xml
 			header = { 'accept' => 'application/rdf+xml' }
+		when :sparql_xml
+		  header = { 'accept' => 'application/sparql-results+xml' }
 		end
-		
 		response = @sparql.get("/#{@context}?query=#{CGI.escape(qs)}", header)
 		# If no content, we return an empty array
 		return Array.new if response.is_a?(Net::HTTPNoContent)
 		return false unless response.is_a?(Net::HTTPOK)
 		response = response.body
-		
 		results = case @result_format
 		when :json
 			parse_sparql_query_result_json response
 		when :xml
 			parse_sparql_query_result_xml response
+		when :sparql_xml
+		  parse_sparql_query_result_xml response
 		end
 		
 		if block_given?
