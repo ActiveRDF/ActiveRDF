@@ -38,7 +38,7 @@ class SparqlAdapter
 	
 	# query datastore with query string (SPARQL), returns array with query results
 	def query(query)
-		qs = Query2SPARQL.instance.translate(query)
+		qs = Query2SPARQL.translate(query)
 		clauses = query.select_clauses.size
 		
 		# initialising HTTP header

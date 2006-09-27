@@ -17,30 +17,30 @@ class TestObjectCreation < Test::Unit::TestCase
 		rdftype = RdfType
 		rdfsresource = RdfsResource
 
-		assert_equal rdftype, Namespace.instance.expand(:rdf, :type)
-		assert_equal rdftype, Namespace.instance.expand(:rdf, 'type')
-		assert_equal rdftype, Namespace.instance.expand('rdf', :type)
-		assert_equal rdftype, Namespace.instance.expand('rdf', 'type')
+		assert_equal rdftype, Namespace.expand(:rdf, :type)
+		assert_equal rdftype, Namespace.expand(:rdf, 'type')
+		assert_equal rdftype, Namespace.expand('rdf', :type)
+		assert_equal rdftype, Namespace.expand('rdf', 'type')
 
-		assert_equal rdfsresource, Namespace.instance.expand(:rdfs, :Resource)
-		assert_equal rdfsresource, Namespace.instance.expand(:rdfs, 'Resource')
-		assert_equal rdfsresource, Namespace.instance.expand('rdfs', :Resource)
-		assert_equal rdfsresource, Namespace.instance.expand('rdfs', 'Resource')
+		assert_equal rdfsresource, Namespace.expand(:rdfs, :Resource)
+		assert_equal rdfsresource, Namespace.expand(:rdfs, 'Resource')
+		assert_equal rdfsresource, Namespace.expand('rdfs', :Resource)
+		assert_equal rdfsresource, Namespace.expand('rdfs', 'Resource')
 	end
 
 	def test_default_ns_lookup
 		rdftype = RDFS::Resource.lookup RdfType
 		rdfsresource = RDFS::Resource.lookup RdfsResource
 
-		assert_equal rdftype, Namespace.instance.lookup(:rdf, :type)
-		assert_equal rdfsresource, Namespace.instance.lookup(:rdfs, :Resource)
+		assert_equal rdftype, Namespace.lookup(:rdf, :type)
+		assert_equal rdfsresource, Namespace.lookup(:rdfs, :Resource)
 	end
 
 	def test_find_prefix
-		assert_equal :rdf, Namespace.instance.prefix(Namespace.instance.lookup(:rdf, :type))
-		assert_equal :rdf, Namespace.instance.prefix(Namespace.instance.expand(:rdf, :type))
+		assert_equal :rdf, Namespace.prefix(Namespace.lookup(:rdf, :type))
+		assert_equal :rdf, Namespace.prefix(Namespace.expand(:rdf, :type))
 
-		assert_equal :rdfs, Namespace.instance.prefix(Namespace.instance.lookup(:rdfs, :Resource))
-		assert_equal :rdfs, Namespace.instance.prefix(Namespace.instance.expand(:rdfs, :Resource))
+		assert_equal :rdfs, Namespace.prefix(Namespace.lookup(:rdfs, :Resource))
+		assert_equal :rdfs, Namespace.prefix(Namespace.expand(:rdfs, :Resource))
 	end
 end

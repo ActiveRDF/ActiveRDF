@@ -28,7 +28,7 @@ class RedlandAdapter
 	
 	# yields query results (as many as requested in select clauses) executed on data source
 	def query(query)
-		qs = Query2SPARQL.instance.translate(query)
+		qs = Query2SPARQL.translate(query)
 		clauses = query.select_clauses.size
 		redland_query = Redland::Query.new(qs, 'sparql')
 		query_results = @model.query_execute(redland_query)

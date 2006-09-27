@@ -16,6 +16,14 @@ $: << File.dirname(File.expand_path(file))
 class ActiveRdfError < StandardError
 end
 
+
+class Module
+  def bool_accessor *syms
+    attr_accessor *syms
+    syms.each { |sym| alias_method "#{sym}?", sym }
+    remove_method *syms
+  end
+end 
 # load standard classes that need to be loaded at startup
 require 'objectmanager/resource'
 require 'objectmanager/namespace'

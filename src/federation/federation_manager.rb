@@ -48,7 +48,10 @@ class FederationManager
   			else
   			 union			
   			end
+  		else
+  		  union
   		end
+  		
 		end
 	end
 end

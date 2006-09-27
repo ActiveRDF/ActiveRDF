@@ -1,19 +1,40 @@
 # represent a query on a datasource, abstract representation of SPARQL features
 # is passed to federation/adapter for execution on data
+require 'active_rdf'
 require 'federation/federation_manager'
+
+# TODO: change internal code to use 'distinct' instead of select
+# TODO: change sparql translator to deal with distinct
 class Query	
 	attr_reader :select_clauses, :where_clauses
+	bool_accessor :distinct, :ask, :select
+	
 	def initialize
+	  distinct = false
 		@select_clauses = []
-		@where_clauses = []
+		@where_clauses = []		
 	end
 	
 	def select *s
+	  @select = true
 		s.each do |e|
 			@select_clauses << parametrise(e)
 		end
 		self
 	end
+	
+	def ask
+	  @ask = true
+	  self
+	end
+	
+	def distinct *s	
+	  @distinct = true
+	  select(*s)
+	end
+	
+	alias_method :select_distinct, :distinct
+	
 	
 	def where s,p,o
 		@where_clauses << [s,p,o].collect{|arg| parametrise(arg)}
@@ -36,6 +57,11 @@ class Query
 		else
 			FederationManager.instance.query(self, options)
 		end
+	end
+	
+	def to_s
+	  require 'queryengine/query2sparql'
+	  Query2SPARQL.translate(self)
 	end
 	
 	private

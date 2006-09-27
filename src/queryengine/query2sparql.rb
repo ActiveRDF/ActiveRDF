@@ -2,13 +2,21 @@
 require 'singleton'
 
 class Query2SPARQL
-	include Singleton
-	def translate(query)
-		str = ""
-		str << "SELECT DISTINCT #{query.select_clauses.join(' ')} "
-		
-		# concatenate each where clause using space (e.g. 's p o')
-		# and concatenate the clauses using dot, e.g. 's p o . s2 p2 o2 .'		
-		str << "WHERE { #{query.where_clauses.collect{|w| w.join(' ')}.join('. ')} .}"
+	def self.translate(query)
+	  str = ""
+	  if query.select?
+	    distinct = query.distinct? ? "DISTINCT " : ""
+  		str << "SELECT #{distinct}#{query.select_clauses.join(' ')} "
+  		str << "WHERE { #{where_clauses(query)} }"
+	  elsif query.ask?
+	    str << "ASK { #{where_clauses(query)} }" 
+	  end
+	end
+	
+	private
+	# concatenate each where clause using space (e.g. 's p o')
+	# and concatenate the clauses using dot, e.g. 's p o . s2 p2 o2 .'		
+	def self.where_clauses(query)
+	  "#{query.where_clauses.collect{|w| w.join(' ')}.join('. ')} ."
 	end
 end

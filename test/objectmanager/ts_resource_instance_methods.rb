@@ -8,7 +8,7 @@ require 'adapter/sparql_adapter'
 class TestResourceInstanceMethods < Test::Unit::TestCase
 	def setup
 		ConnectionPool.instance.add_data_source(:type => :sparql, :context => 'persons')
-		Namespace.instance.register(:ar, 'http://activerdf.org/test/')
+		Namespace.register(:ar, 'http://activerdf.org/test/')
 		@eyal = RDFS::Resource.lookup 'http://activerdf.org/test/eyal'
 	end
 	
