@@ -1,4 +1,0 @@
-@prefix ql: <http://www.w3.org/2004/12/ql#> .
-<>
-	ql:distinct { ?s ?p ?o .  };
-	ql:where { ?s ?p ?o .  } .

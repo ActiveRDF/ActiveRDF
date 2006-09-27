@@ -1,1 +1,0 @@
-<> <http://www.w3.org/2004/12/ql#select> { ?s ?p ?o . }; <http://www.w3.org/2004/12/ql#where> { ?s ?p ?o . } .
