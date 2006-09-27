@@ -26,7 +26,8 @@ class SparqlAdapter
 		@context = params[:context] || 'books'
 		@result_format = params[:result_format] || :json
 		
-		raise ActiveRdfError, "Result format unsupported" unless (@result_format == :xml or @result_format == :json or @result_format == :sparql_xml)
+		known_formats = [:xml, :json, :sparql_xml]
+		raise ActiveRdfError, "Result format unsupported" unless known_formats.include?(@result_format)
 		
 		# We don't open the connection yet but let each HTTP method open and close 
 		# it individually. It would be more efficient to pipeline methods, and keep 
