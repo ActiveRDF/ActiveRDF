@@ -12,7 +12,7 @@ class ObjectManager < Hash
 	# before so no class was created for it)
 	def self.construct_classes
 		# find all rdf:types and construct class for each of them
-		q = Query.new.select(:t).where(:s,Namespace.lookup(:rdf,:type),:t)
+		q = Query.new.distinct(:t).where(:s,Namespace.lookup(:rdf,:type),:t)
 		q.execute do |t|
 			get_class(t)
 		end

@@ -4,7 +4,6 @@ require 'active_rdf'
 require 'federation/federation_manager'
 
 # TODO: change internal code to use 'distinct' instead of select
-# TODO: change sparql translator to deal with distinct
 class Query	
 	attr_reader :select_clauses, :where_clauses
 	bool_accessor :distinct, :ask, :select

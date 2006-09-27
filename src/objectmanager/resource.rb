@@ -49,7 +49,7 @@ module RDFS
 		# predicates for this resource)
 		def Resource.predicates
 			domain = Namespace.lookup(:rdfs, 'domain')			
-			Query.new.select(:p).where(:p, domain, lookup(@@class_uri)).execute || []
+			Query.new.distinct(:p).where(:p, domain, lookup(@@class_uri)).execute || []
 		end
 
 		# manages invocations such as Person.find_by_name
@@ -66,7 +66,7 @@ module RDFS
 				possible_predicates = self.predicates
 
 				# build query looking for all resources with the given parameters
-				query = Query.new.select(:s)
+				query = Query.new.distinct(:s)
 
 				# add where clause for each attribute-value pair,
 				# looking into possible_predicates to figure out
@@ -119,7 +119,7 @@ module RDFS
 					# found a property invocation of eyal: option 1) or 2)
 					# query execution will return either the value for the predicate (1)
 					# or nil (2)
-					return Query.new.select(:o).where(self,pred,:o).execute
+					return Query.new.distinct(:o).where(self,pred,:o).execute
 				end
 			end
 
@@ -155,7 +155,7 @@ module RDFS
 		def predicates
 			type = Namespace.lookup(:rdf, 'type')
 			domain = Namespace.lookup(:rdfs, 'domain')
-			Query.new.select(:p).where(self,type,:t).where(:p, domain, :t).execute || []
+			Query.new.distinct(:p).where(self,type,:t).where(:p, domain, :t).execute || []
 		end
 
 		# returns all rdf:types of this resource
@@ -166,7 +166,7 @@ module RDFS
 			# if we dont know it, we return Resource (as toplevel)
 			# this should in theory actually never happen (since any node is a rdfs:Resource)
 			# but could happen if the subject is unknown to the database
-			Query.new.select(:t).where(self,type,:t).execute(:flatten => false) || [Namespace.lookup(:rdfs,"Resource")]
+			Query.new.distinct(:t).where(self,type,:t).execute(:flatten => false) || [Namespace.lookup(:rdfs,"Resource")]
 		end	
 
 		# returns uri of resource, can be overridden in subclasses

@@ -31,7 +31,7 @@ class TestObjectCreation < Test::Unit::TestCase
 		test = RDFS::Resource.lookup 'test'
 		
 		adapter.add(eyal, age, test)
-		result = Query.new.select(:s).where(:s, :p, :o).execute
+		result = Query.new.distinct(:s).where(:s, :p, :o).execute
 
 		assert_instance_of RDFS::Resource, result
 		assert_equal 'eyaloren.org', result.uri
@@ -49,7 +49,7 @@ class TestObjectCreation < Test::Unit::TestCase
 		adapter1.add(eyal, age, test)
 		adapter2.add(eyal, age, test2)
 		
-		results = Query.new.select(:s, :p, :o).where(:s, :p, :o).execute
+		results = Query.new.distinct(:s, :p, :o).where(:s, :p, :o).execute
 		assert_equal 2, results.size
 		assert_instance_of RDFS::Resource, results[0][0]
 		
