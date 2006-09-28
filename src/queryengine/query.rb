@@ -3,7 +3,6 @@
 require 'active_rdf'
 require 'federation/federation_manager'
 
-# TODO: change internal code to use 'distinct' instead of select
 class Query	
 	attr_reader :select_clauses, :where_clauses
 	bool_accessor :distinct, :ask, :select

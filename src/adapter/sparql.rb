@@ -148,7 +148,7 @@ class SparqlAdapter
     when 'uri'
       RDFS::Resource.new(value)
     when 'bnode'
-      raise(ActiveRdfError, "blank node not implemented.")
+      nil
     when 'literal','typed-literal'
       value.to_s
     end

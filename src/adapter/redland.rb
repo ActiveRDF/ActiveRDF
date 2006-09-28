@@ -89,8 +89,7 @@ class RedlandAdapter
 	 	# redland results are set that needs to be iterated
 	 	while not query_results.finished?
 	 		# we collect the bindings in each row and add them to results
-	 		results << (0..number_bindings-1).collect do |i|
-	 		
+	 		results << (0..number_bindings-1).collect do |i|	 		
 	 			# node is the query result for one binding
 	 			node = query_results.binding_value(i)
 
@@ -98,8 +97,11 @@ class RedlandAdapter
  				if node.literal?
  					# for literal nodes we just return the value
  					node.to_s
- 				else
- 				 	# TODO manage blank nodes 				
+ 				elsif node.blank?
+ 				  # blank nodes we ignore
+ 				  nil
+			  else
+ 				 	# other nodes are rdfs:resources
  					RDFS::Resource.new(node.uri.to_s)
 	 			end
 	 		end
