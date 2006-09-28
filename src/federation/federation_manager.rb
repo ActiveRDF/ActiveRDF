@@ -1,6 +1,5 @@
 # manages the federation of datasources
 # distributes queries to right datasources and merges their results
-require 'set'
 require 'federation/connection_pool'
 class FederationManager
 	include Singleton
@@ -25,14 +24,14 @@ class FederationManager
 			end
 		else
 			# build Array of results from all sources
-			results = @@pool.read_adapters.collect { |source| source.query(q) }
+			# TODO: write test for sebastian's select problem 
+			# (without distinct, should get duplicates, they 
+			# were filtered out when doing results.union)
+			results = []
+			@@pool.read_adapters.each { |source| results << source.query(q) }
 			
 			# filter the empty results
 			results.reject {|ary| ary.empty? }
-			
-			# give the union of results
-			union = []
-			results.each { |res| union += res }
 
 			# remove duplicate results from multiple 
 			# adapters if asked for distinct query
@@ -42,20 +41,20 @@ class FederationManager
 						
 			# flatten results array if only one select clause
 			# to prevent unnecessarily nested array [[eyal],[renaud],...]
-			union.flatten! if q.select_clauses.size == 1
+			results.flatten! if q.select_clauses.size == 1
 			
 			# and remove array (return single value) unless asked not to 
 			if options[:flatten]
-  			case union.size
+  			case results.size
   			when 0
   			 nil
   			when 1
-  			 union.first
+  			 results.first
   			else
-  			 union			
+  			 results			
   			end
   		else
-  		  union
+  		  results 
   		end
   		
 		end

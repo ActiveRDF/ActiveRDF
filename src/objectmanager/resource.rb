@@ -4,7 +4,6 @@
 # (eyal.class ...Person)
 
 # TODO: add unit test to validate class construction and queries on them
-# TODO: add Person.find_all
 
 require 'objectmanager/object_manager' 
 require 'objectmanager/namespace'
