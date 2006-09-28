@@ -1,6 +1,6 @@
 require 'test/unit'
 require 'active_rdf'
-require 'adapter/redland_adapter'
+require 'adapter/redland'
 require 'federation/federation_manager'
 # require 'active_rdf/test/common'
 

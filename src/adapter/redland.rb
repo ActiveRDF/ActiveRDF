@@ -7,9 +7,6 @@ require 'rdf/redland'
 class RedlandAdapter
 	ConnectionPool.instance.register_adapter(:redland,self)
 	
-	# TODO: manage context? 
-	# attr_reader :model, :store, :query_language, :context
-
 	# instantiate connection to Redland database
 	def initialize(params = {})
 
@@ -39,7 +36,7 @@ class RedlandAdapter
 
 		# convert the result to array
 		results = query_result_to_array(query_results) 
-			
+		
 		# we want to write here: 
 		# results.each do |c1, c2, c3, ...| 
 		# 	yield c1, c2, c3, ...
@@ -60,16 +57,13 @@ class RedlandAdapter
 	end
 	
 	# add triple to datamodel
-	# TODO: rewrite, just copied from old code
 	def add(s, p, o)
 		# verify input
 		return false if s.nil? or p.nil? or o.nil?
 		return false if !s.kind_of?(RDFS::Resource) or !p.kind_of?(RDFS::Resource)
 	
 		begin
-		  # TODO: disabled context temporarily, does not work properly in Redland
-			@model.add(wrap(s), wrap(p), wrap(o))
-		  
+		 @model.add(wrap(s), wrap(p), wrap(o))		  
 		rescue Redland::RedlandError => e
 		  return false
 		end		
@@ -106,7 +100,7 @@ class RedlandAdapter
  					node.to_s
  				else
  				 	# TODO manage blank nodes 				
- 					RDFS::Resource.lookup(node.uri.to_s)
+ 					RDFS::Resource.new(node.uri.to_s)
 	 			end
 	 		end
 	 		# iterate through result set

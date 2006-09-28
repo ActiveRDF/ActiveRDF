@@ -29,8 +29,8 @@ class TestObjectCreation < Test::Unit::TestCase
 	end
 
 	def test_default_ns_lookup
-		rdftype = RDFS::Resource.lookup RdfType
-		rdfsresource = RDFS::Resource.lookup RdfsResource
+		rdftype = RDFS::Resource.new RdfType
+		rdfsresource = RDFS::Resource.new RdfsResource
 
 		assert_equal rdftype, Namespace.lookup(:rdf, :type)
 		assert_equal rdfsresource, Namespace.lookup(:rdfs, :Resource)

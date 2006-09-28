@@ -16,7 +16,7 @@ class TestObjectCreation < Test::Unit::TestCase
 	
 		query = Query.new
 		query.select(:s)
-		query.where(:s, RDFS::Resource.lookup('predicate'), '30')
+		query.where(:s, RDFS::Resource.new('predicate'), '30')
 		
 		generated = Query2SPARQL.translate(query)
 		expected = "SELECT ?s WHERE { ?s <predicate> \"30\" . }"
@@ -24,8 +24,8 @@ class TestObjectCreation < Test::Unit::TestCase
 		
 		query = Query.new
 		query.select(:s)
-		query.where(:s, RDFS::Resource.lookup('foaf:age'), :a)
-		query.where(:a, RDFS::Resource.lookup('rdf:type'), RDFS::Resource.lookup('xsd:int'))
+		query.where(:s, RDFS::Resource.new('foaf:age'), :a)
+		query.where(:a, RDFS::Resource.new('rdf:type'), RDFS::Resource.new('xsd:int'))
 		generated = Query2SPARQL.translate(query)
 		expected = "SELECT ?s WHERE { ?s <foaf:age> ?a. ?a <rdf:type> <xsd:int> . }"
 		assert_equal expected, generated

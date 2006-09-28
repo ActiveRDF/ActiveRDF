@@ -62,7 +62,6 @@ class ConnectionPool
 	
 	# adapter-types can register themselves with connection pool by 
 	# indicating which adapter-type they are
-	# TODO: necessary?
 	def register_adapter(type, klass)
 		@@registered_adapter_types[type] = klass
 	end

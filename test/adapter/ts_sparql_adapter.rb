@@ -1,6 +1,6 @@
 require 'test/unit'
 require 'active_rdf'
-require 'adapter/sparql_adapter'
+require 'adapter/sparql'
 require 'federation/federation_manager'
 require 'queryengine/query'
 # require 'active_rdf/test/common'
@@ -26,7 +26,7 @@ class TestObjectCreation < Test::Unit::TestCase
 	def test_simple_query
 		adapter = ConnectionPool.instance.add_data_source(:type => :sparql)
 		
-		title = RDFS::Resource.lookup('http://purl.org/dc/elements/1.1/title')
+		title = RDFS::Resource.new('http://purl.org/dc/elements/1.1/title')
 		result = Query.new.select(:b).where(:b, title, :t).execute.first
 
 		assert_instance_of RDFS::Resource, result
@@ -36,10 +36,10 @@ class TestObjectCreation < Test::Unit::TestCase
 #		adapter1 = ConnectionPool.instance.add_data_source(:type => :redland)
 #		adapter2 = ConnectionPool.instance.add_data_source(:type => :redland, :fake_symbol_to_get_unique_adapter => true)
 #		
-#		eyal = RDFS::Resource.lookup 'eyaloren.org'
-#		age = RDFS::Resource.lookup 'foaf:age'
-#		test = RDFS::Resource.lookup 'test'
-#		test2 = RDFS::Resource.lookup 'test2'
+#		eyal = RDFS::Resource.new 'eyaloren.org'
+#		age = RDFS::Resource.new 'foaf:age'
+#		test = RDFS::Resource.new 'test'
+#		test2 = RDFS::Resource.new 'test2'
 #		
 #		adapter1.add(eyal, age, test)
 #		adapter2.add(eyal, age, test2)
@@ -56,9 +56,9 @@ class TestObjectCreation < Test::Unit::TestCase
 #	def test_query_with_block
 #		adapter = ConnectionPool.instance.add_data_source(:type => :redland)
 #		
-#		eyal = RDFS::Resource.lookup 'eyaloren.org'
-#		age = RDFS::Resource.lookup 'foaf:age'
-#		test = RDFS::Resource.lookup 'test'
+#		eyal = RDFS::Resource.new 'eyaloren.org'
+#		age = RDFS::Resource.new 'foaf:age'
+#		test = RDFS::Resource.new 'test'
 #		
 #		adapter.add(eyal, age, test)
 #		Query.new.select(:s,:p).where(:s,:p,:o).execute do |s,p|
@@ -70,11 +70,11 @@ class TestObjectCreation < Test::Unit::TestCase
 #  def test_person_data
 #    ConnectionPool.instance.add_data_source :type => :redland, :location => 'test/test-person'
 #    
-#    eyal = RDFS::Resource.lookup 'http://activerdf.org/test/eyal'
-#    eye = RDFS::Resource.lookup 'http://activerdf.org/test/eye'
-#    type = RDFS::Resource.lookup 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
-#    person = RDFS::Resource.lookup 'http://activerdf.org/test/Person'
-#    resource = RDFS::Resource.lookup 'http://www.w3.org/2000/01/rdf-schema#RDFS::Resource'
+#    eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
+#    eye = RDFS::Resource.new 'http://activerdf.org/test/eye'
+#    type = RDFS::Resource.new 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+#    person = RDFS::Resource.new 'http://activerdf.org/test/Person'
+#    resource = RDFS::Resource.new 'http://www.w3.org/2000/01/rdf-schema#Resource'
 #    
 #    color = Query.new.select(:o).where(eyal, eye,:o).execute
 #    assert 'blue', color

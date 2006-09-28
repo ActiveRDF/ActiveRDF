@@ -1,6 +1,6 @@
 require 'test/unit'
 require 'active_rdf'
-require 'adapter/redland_adapter'
+require 'adapter/redland'
 require 'federation/federation_manager'
 require 'queryengine/query'
 # require 'active_rdf/test/common'
@@ -26,9 +26,9 @@ class TestObjectCreation < Test::Unit::TestCase
 	def test_simple_query
 		adapter = ConnectionPool.instance.add_data_source(:type => :redland)
 
-		eyal = RDFS::Resource.lookup 'eyaloren.org'
-		age = RDFS::Resource.lookup 'foaf:age'
-		test = RDFS::Resource.lookup 'test'
+		eyal = RDFS::Resource.new 'eyaloren.org'
+		age = RDFS::Resource.new 'foaf:age'
+		test = RDFS::Resource.new 'test'
 		
 		adapter.add(eyal, age, test)
 		result = Query.new.distinct(:s).where(:s, :p, :o).execute
@@ -41,29 +41,30 @@ class TestObjectCreation < Test::Unit::TestCase
 		adapter1 = ConnectionPool.instance.add_data_source(:type => :redland)
 		adapter2 = ConnectionPool.instance.add_data_source(:type => :redland, :fake_symbol_to_get_unique_adapter => true)
 		
-		eyal = RDFS::Resource.lookup 'eyaloren.org'
-		age = RDFS::Resource.lookup 'foaf:age'
-		test = RDFS::Resource.lookup 'test'
-		test2 = RDFS::Resource.lookup 'test2'
+		eyal = RDFS::Resource.new 'eyaloren.org'
+		age = RDFS::Resource.new 'foaf:age'
+		test = RDFS::Resource.new 'test'
+		test2 = RDFS::Resource.new 'test2'
 		
 		adapter1.add(eyal, age, test)
 		adapter2.add(eyal, age, test2)
+    
+    # assert only one distinct subject is found (same one in both adapters)
+		assert_equal 1, Query.new.distinct(:s).where(:s, :p, :o).execute(:flatten=>false).size
 		
-		results = Query.new.distinct(:s, :p, :o).where(:s, :p, :o).execute
+		# assert two distinct objects are found
+		results = Query.new.distinct(:o).where(:s, :p, :o).execute
 		assert_equal 2, results.size
-		assert_instance_of RDFS::Resource, results[0][0]
-		
-		literals = [results[0][2].uri, results[1][2].uri]
-		assert literals.include?('test')
-		assert literals.include?('test2')
+
+		results.all? {|result| assert result.instance_of?(RDFS::Resource) }
 	end
 	
 	def test_query_with_block
 		adapter = ConnectionPool.instance.add_data_source(:type => :redland)
 		
-		eyal = RDFS::Resource.lookup 'eyaloren.org'
-		age = RDFS::Resource.lookup 'foaf:age'
-		test = RDFS::Resource.lookup 'test'
+		eyal = RDFS::Resource.new 'eyaloren.org'
+		age = RDFS::Resource.new 'foaf:age'
+		test = RDFS::Resource.new 'test'
 		
 		adapter.add(eyal, age, test)
 		Query.new.select(:s,:p).where(:s,:p,:o).execute do |s,p|
@@ -74,19 +75,20 @@ class TestObjectCreation < Test::Unit::TestCase
 	
   def test_person_data
     ConnectionPool.instance.add_data_source :type => :redland, :location => 'test/test-person'
-    
-    eyal = RDFS::Resource.lookup 'http://activerdf.org/test/eyal'
-    eye = RDFS::Resource.lookup 'http://activerdf.org/test/eye'
-    type = RDFS::Resource.lookup 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
-    person = RDFS::Resource.lookup 'http://activerdf.org/test/Person'
-    resource = RDFS::Resource.lookup 'http://www.w3.org/2000/01/rdf-schema#RDFS::Resource'
+    Namespace.register(:test, 'http://activerdf.org/test/')
+        
+    eyal = Namespace.lookup(:test, :eyal)
+    eye = Namespace.lookup(:test, :eye)
+		person = Namespace.lookup(:test, :Person)
+    type = Namespace.lookup(:rdf, :type)
+    resource = Namespace.lookup(:rdfs,:resource)
     
     color = Query.new.select(:o).where(eyal, eye,:o).execute
     assert 'blue', color
     assert_instance_of String, color
     
-    types = Query.new.select(:o).where(eyal, type, :o).execute
-    assert types.include?(person)
-    assert types.include?(resource)
+    ObjectManager.construct_classes
+    assert eyal.instance_of?(TEST::Person)
+    assert eyal.instance_of?(RDFS::Resource)
   end
 end

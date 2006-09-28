@@ -18,13 +18,12 @@ class SparqlAdapter
 	end
 	
 	# Instantiate the connection with the SPARQL Endpoint.
-	def initialize(params = {})
-		raise(ActiveRdfError, 'SPARQL adapter initialised with nil parameters') if params.nil?
-		
+	def initialize(params = {})	
 		@host = params[:host] || 'm3pe.org'
-		@port = params[:port] || 2020
-		@context = params[:context] || 'books'
-		@result_format = params[:result_format] || :json
+		@path = params[:path] || 'repositories/'
+		@port = params[:port] || 8080
+		@context = params[:context] || 'test-people'
+		@result_format = params[:result_format] || :sparql_xml
 		
 		known_formats = [:xml, :json, :sparql_xml]
 		raise ActiveRdfError, "Result format unsupported" unless known_formats.include?(@result_format)
@@ -42,27 +41,20 @@ class SparqlAdapter
 		qs = Query2SPARQL.translate(query)
 		clauses = query.select_clauses.size
 		
-		# initialising HTTP header
-		case @result_format
-		when :json
-			header = { 'accept' => 'application/sparql-results+json' }
-		when :xml
-			header = { 'accept' => 'application/rdf+xml' }
-		when :sparql_xml
-		  header = { 'accept' => 'application/sparql-results+xml' }
-		end
-		response = @sparql.get("/#{@context}?query=#{CGI.escape(qs)}", header)
-		# If no content, we return an empty array
-		return Array.new if response.is_a?(Net::HTTPNoContent)
-		return false unless response.is_a?(Net::HTTPOK)
-		response = response.body
+		# sending query to sparql endpoint
+		response = @sparql.get("/#{@path}#{@context}?query=#{CGI.escape(qs)}", header(query))
+
+		# if no content returned or if something went wrong 
+		# we return an empty array
+		return [] if response.is_a?(Net::HTTPNoContent)
+		return [] unless response.is_a?(Net::HTTPOK)
+		
+		# we parse content depending on the result format
 		results = case @result_format
 		when :json
-			parse_sparql_query_result_json response
-		when :xml
-			parse_sparql_query_result_xml response
-		when :sparql_xml
-		  parse_sparql_query_result_xml response
+			parse_sparql_query_result_json response.body
+		when :xml, :sparql_xml
+			parse_sparql_query_result_xml response.body
 		end
 		
 		if block_given?
@@ -73,7 +65,22 @@ class SparqlAdapter
 			results
 		end
 	end
+	
+	private
 
+	# constructs correct HTTP header for selected query-result format
+	def header(query)
+		case @result_format
+		when :json
+			header = { 'accept' => 'application/sparql-results+json' }
+		when :xml
+			header = { 'accept' => 'application/rdf+xml' }
+		when :sparql_xml
+		  header = { 'accept' => 'application/sparql-results+xml' }
+		end
+	end
+
+  # parse json query results into array
 	def parse_sparql_query_result_json(query_result)
     require 'json'
     
@@ -101,6 +108,7 @@ class SparqlAdapter
     return results
   end
   
+  # parse xml query results into array
   def parse_sparql_query_result_xml(query_result)
     require 'rexml/document'
     results = []
@@ -134,10 +142,11 @@ class SparqlAdapter
     return results
   end
   
+  # create ruby objects for each RDF node
   def create_node(type, value)
     case type
     when 'uri'
-      RDFS::Resource.lookup(value)
+      RDFS::Resource.new(value)
     when 'bnode'
       raise(ActiveRdfError, "blank node not implemented.")
     when 'literal','typed-literal'

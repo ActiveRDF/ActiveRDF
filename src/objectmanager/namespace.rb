@@ -14,7 +14,7 @@ class Namespace
 	
 	# returns a resource whose URI is formed by concatenation of prefix and localname
   def self.lookup(prefix, localname)
-    RDFS::Resource.lookup(expand(prefix, localname))
+    RDFS::Resource.new(expand(prefix, localname))
 	end
 	
 	# returns URI (string) formed by concatenation of prefix and localname

@@ -34,6 +34,12 @@ class FederationManager
 			union = []
 			results.each { |res| union |= res }
 			
+			# remove duplicate results from multiple 
+			# adapters if asked for distinct query
+			# (adapters return only distinct results, 
+			# but they cannot check duplicates against each other)
+			results.uniq! if q.distinct?
+						
 			# flatten results array if only one select clause
 			# to prevent unnecessarily nested array [[eyal],[renaud],...]
 			union.flatten! if q.select_clauses.size == 1

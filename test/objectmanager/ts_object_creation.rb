@@ -10,18 +10,18 @@ class TestObjectCreation < Test::Unit::TestCase
 	end
 	
 	def test_unique_same_object_creation
-		assert_raise(NoMethodError) { RDFS::Resource.new('abc') }
-		assert_nothing_raised { RDFS::Resource.lookup('abc') }
+		assert_nothing_raised { RDFS::Resource.new('abc') }
 		
-		r1 = RDFS::Resource.lookup('abc')
-		r2 = RDFS::Resource.lookup('cde')
-		r3 = RDFS::Resource.lookup('cde')
+		r1 = RDFS::Resource.new('abc')
+		r2 = RDFS::Resource.new('cde')
+		r3 = RDFS::Resource.new('cde')
 		
 		assert_equal 'abc', r1.uri
 		assert_equal 'cde', r2.uri
-		assert_equal r3.object_id, r2.object_id
+		assert_equal r3, r2
 		
 		assert_instance_of RDFS::Resource, r1
 		assert_instance_of RDFS::Resource, r2
+		assert_instance_of RDFS::Resource, r3
 	end
 end

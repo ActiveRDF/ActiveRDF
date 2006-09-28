@@ -1,9 +1,9 @@
 # The object manager is responsible for creating a single Ruby object (or class) for 
 # each RDF resource (which might be an rdfs class)
-require 'singleton'
+#require 'singleton'
 require 'active_rdf'
-class ObjectManager < Hash
-	include Singleton
+class ObjectManager #< Hash
+#	include Singleton
 
 	# constructs empty Ruby classes for all RDF types found in the data
 	#
@@ -25,33 +25,29 @@ class ObjectManager < Hash
 		# e.g. :foaf and Person
 		localname = Namespace.localname(resource)
 		prefix = Namespace.prefix(resource)
-
+		
 		# find (ruby-acceptable) names for the module and class 
 		# e.g. FOAF and Person
 		modulename = prefix_to_module(prefix)
 		klassname = localname_to_class(localname)
 		
-		#p "looking for #{klassname} in #{modulename} "
-		
 		# look whether module defined
 		# else: create it
 		_module = if Object.const_defined?(modulename.to_sym)
-		 #     p "found module"
 								Object.const_get(modulename.to_sym)
 							else
-			#			p "creating module"
 								Object.const_set(modulename, Module.new)
 							end
 
 		# look whether class defined in that module
-		# if not: define the class insinde that module
-		# and return the found/created class
 		if _module.const_defined?(klassname.to_sym)
+		  # if so, return the existing class
 			_module.const_get(klassname.to_sym)
 		else
-		  p "looking for #{klassname} in #{modulename} "
-			klass = _module.module_eval("#{klassname} = Class.new(RDFS::Resource)")
-			klass.class_uri = resource.uri
+		  # otherwise: create it, inside that module, as subclass of RDFS::Resource
+		  # (using toplevel Class.new to prevent RDFS::Class.new from being called)
+		  klass = _module.module_eval("#{klassname} = Object::Class.new(RDFS::Resource)")
+			klass.class_uri = RDFS::Resource.new(resource.uri)
 			klass
 		end
 	end
