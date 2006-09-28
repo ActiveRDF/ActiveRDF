@@ -132,13 +132,14 @@ module RDFS
   			end
   
   			# checking possibility (3)
-  #			self.class.each do |klass| 
-  #				if klass.instance_methods.include?(method.to_s) 
-  #				  p "should invoke #{method} on #{klass} now"
-  #				  return
-  #				  #extend(klass)
-  #				end
-  #			end
+  			# TODO: implement search strategy to select in which class to invoke
+  			# e.g. if to_s defined in Resource and in Person we should use Person
+  			self.class.each do |klass| 
+  				if klass.instance_methods.include?(method.to_s) 
+  				  _dup = klass.new(uri)
+  				  return _dup.send(method,*args)
+  				end
+  			end
   		
   		# if none of the three possibilities work out,
   		# we don't know this method invocation, so we throw NoMethodError (in 
