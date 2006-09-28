@@ -26,14 +26,14 @@ class FederationManager
 		else
 			# build Array of results from all sources
 			results = @@pool.read_adapters.collect { |source| source.query(q) }
-
+			
 			# filter the empty results
 			results.reject {|ary| ary.empty? }
 			
 			# give the union of results
 			union = []
-			results.each { |res| union |= res }
-			
+			results.each { |res| union += res }
+
 			# remove duplicate results from multiple 
 			# adapters if asked for distinct query
 			# (adapters return only distinct results, 
