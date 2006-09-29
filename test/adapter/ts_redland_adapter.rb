@@ -7,14 +7,14 @@ require 'queryengine/query'
 
 class TestObjectCreation < Test::Unit::TestCase
 	def setup
-		ConnectionPool.instance.clear
+		ConnectionPool.clear
 	end
 	
 	def teardown
 	end
 	
 	def test_registration
-		adapter = ConnectionPool.instance.add_data_source(:type => :redland)
+		adapter = ConnectionPool.add_data_source(:type => :redland)
 		assert_instance_of RedlandAdapter, adapter
 	end
 	
@@ -24,7 +24,7 @@ class TestObjectCreation < Test::Unit::TestCase
 	end
 	
 	def test_simple_query
-		adapter = ConnectionPool.instance.add_data_source(:type => :redland)
+		adapter = ConnectionPool.add_data_source(:type => :redland)
 
 		eyal = RDFS::Resource.new 'eyaloren.org'
 		age = RDFS::Resource.new 'foaf:age'
@@ -38,8 +38,8 @@ class TestObjectCreation < Test::Unit::TestCase
 	end
 	
 	def test_federated_query
-		adapter1 = ConnectionPool.instance.add_data_source(:type => :redland)
-		adapter2 = ConnectionPool.instance.add_data_source(:type => :redland, :fake_symbol_to_get_unique_adapter => true)
+		adapter1 = ConnectionPool.add_data_source(:type => :redland)
+		adapter2 = ConnectionPool.add_data_source(:type => :redland, :fake_symbol_to_get_unique_adapter => true)
 		
 		eyal = RDFS::Resource.new 'eyaloren.org'
 		age = RDFS::Resource.new 'foaf:age'
@@ -60,7 +60,7 @@ class TestObjectCreation < Test::Unit::TestCase
 	end
 	
 	def test_query_with_block
-		adapter = ConnectionPool.instance.add_data_source(:type => :redland)
+		adapter = ConnectionPool.add_data_source(:type => :redland)
 		
 		eyal = RDFS::Resource.new 'eyaloren.org'
 		age = RDFS::Resource.new 'foaf:age'
@@ -73,15 +73,31 @@ class TestObjectCreation < Test::Unit::TestCase
 		end
 	end
 	
+	def test_update_value
+	  # TODO: move to generic test suite: this test is not redland specific,
+	  # but currently redland is the only datasource to which we can write
+	  # but we should move this to a generic test suite, check whether we have a write_adapter,
+	  # and if so run this test
+	  ConnectionPool.add_data_source :type => :redland, :location => 'test/test-person'
+    Namespace.register(:test, 'http://activerdf.org/test/')            
+    eyal = Namespace.lookup(:test, :eyal)
+    
+    assert_equal '27', eyal.age
+    eyal.age = 30
+    assert_equal
+	end
+	
   def test_person_data
-    ConnectionPool.instance.add_data_source :type => :redland, :location => 'test/test-person'
-    Namespace.register(:test, 'http://activerdf.org/test/')
+    ConnectionPool.add_data_source :type => :redland, :location => 'test/test-person'
+    Namespace.register(:test, 'http://activerdf.org/test/')    
         
     eyal = Namespace.lookup(:test, :eyal)
     eye = Namespace.lookup(:test, :eye)
 		person = Namespace.lookup(:test, :Person)
     type = Namespace.lookup(:rdf, :type)
     resource = Namespace.lookup(:rdfs,:resource)
+    
+    p eyal.predicates
     
     color = Query.new.select(:o).where(eyal, eye,:o).execute
     assert 'blue', color

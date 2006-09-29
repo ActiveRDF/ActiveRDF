@@ -5,7 +5,7 @@ require 'queryengine/query2sparql'
 require 'rdf/redland'
 
 class RedlandAdapter
-	ConnectionPool.instance.register_adapter(:redland,self)
+	ConnectionPool.register_adapter(:redland,self)
 	
 	# instantiate connection to Redland database
 	def initialize(params = {})
@@ -37,16 +37,6 @@ class RedlandAdapter
 		# convert the result to array
 		results = query_result_to_array(query_results) 
 		
-		# we want to write here: 
-		# results.each do |c1, c2, c3, ...| 
-		# 	yield c1, c2, c3, ...
-		# end
-		# for as many clauses as have been defined in the query
-		# 
-		# so something like:
-		# results.each do |clauses.times|
-		# 	yield i, j, k, ...
-		# end
 		if block_given?
 			results.each do |clauses|
 				yield(*clauses)

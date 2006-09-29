@@ -2,22 +2,21 @@
 # distributes queries to right datasources and merges their results
 require 'federation/connection_pool'
 class FederationManager
-	include Singleton
-	
-	def initialize
-		@@pool = ConnectionPool.instance
+
+  # add triple s,p,o to the currently selected write-adapter
+	def FederationManager.add(s,p,o)
+	  # TODO: allow addition of full graphs	
+	  ConnectionPool.write_adapter.add(s,p,o)
 	end
-		
+	
 	# executes read-only queries
 	# by distributing query over complete read-pool
 	# and aggregating the results
-	def query(q, options={:flatten => true})
-		# TODO: manage update queries
-		
+	def FederationManager.query(q, options={:flatten => true})
 		# ask each adapter for query results
 		# and yield them consequtively
 		if block_given? 
-			@@pool.read_adapters.each do |source| 
+			ConnectionPool.read_adapters.each do |source| 
 				source.query(q) do |*clauses|
 					yield(*clauses)
 				end
@@ -28,7 +27,7 @@ class FederationManager
 			# (without distinct, should get duplicates, they 
 			# were filtered out when doing results.union)
 			results = []
-			@@pool.read_adapters.each { |source| results << source.query(q) }
+			ConnectionPool.read_adapters.each { |source| results << source.query(q) }
 			
 			# filter the empty results
 			results.reject {|ary| ary.empty? }

@@ -111,52 +111,79 @@ module RDFS
   		# evidence: eyal type ?c, age domain ?c
   		# action: return nil
   		# 
-  		# 3. eyal.age is a custom-written method in class Person
+  		# 3. eyal.age = 30 (setting a value for a property)
+  		# explain: eyal has (or could have) a value for age, and we update that value
+  		# complication: we need to find the full URI for age (by looking at possible predicates to use
+  		# evidence: eyal age ?o  (eyal has a value for age now, we're updating it)
+  		# evidence: eyal type ?c, age domain ?c (eyal could have a value for age, we're setting it)
+      # action: add triple (eyal, age, 30), return 30
+  		# 
+  		# 4. eyal.age is a custom-written method in class Person
   		# evidence: eyal type ?c, ?c.methods includes age
   		# action: inject age into eyal and invoke
   		
-  		# maybe change order in which to check these, checking (3) is probably 
+  		# maybe change order in which to check these, checking (4) is probably 
   		# cheaper than (1)-(2) but (1) and (2) are probably more probable (getting 
   		# attribute values over executing custom methods)
   		
+  		# are we doing an update or not?
+  		# checking if method ends with '='
+  		if method.to_s[-1..-1] == '='
+  		  methodname = method.to_s[0..-2]
+  		  update = true
+  		else
+  		  methodname = method.to_s
+  		  update = false
+  		end
   		
-  		# checking possibility (1) and (2)
+  		# checking possibility (1) and (2) and (3)
   		predicates.each do |pred|
-  			if Namespace.localname(pred) == method.to_s
+  			if Namespace.localname(pred) == methodname
   				# found a property invocation of eyal: option 1) or 2)
   				# query execution will return either the value for the predicate (1)
   				# or nil (2)
+  				if update
+  				  # TODO: delete old value if overwriting
+  				  # FederiationManager.delete(self, pred, nil)
+
+  				  # handling eyal.friends = [armin, andreas] --> expand array values
+  				  args.each do |value|
+  				    FederationManager.add(self, pred, value)
+  				  end
+  				  return args
+  				else
   					return Query.new.distinct(:o).where(self,pred,:o).execute
   				end
   			end
-  
-  			# checking possibility (3)
-  			# TODO: implement search strategy to select in which class to invoke
-  			# e.g. if to_s defined in Resource and in Person we should use Person
-  			self.class.each do |klass| 
-  				if klass.instance_methods.include?(method.to_s) 
-  				  _dup = klass.new(uri)
-  				  return _dup.send(method,*args)
-  				end
-  			end
-  		
-  		# if none of the three possibilities work out,
-  		# we don't know this method invocation, so we throw NoMethodError (in 
-  		# superclass)
-  			super
   		end
   
-  		# returns classes to which this resource belongs (according to rdf:type)
-  		def class
-  			types.collect do |type| 
-  				ObjectManager.get_class(type)
-  			end
-  		end
-  
-  		# overrides built-in instance_of? to use rdf:type definitions
-  		def instance_of?(klass)
-  			self.class.include?(klass)
-  		end
+			# checking possibility (4)
+			# TODO: implement search strategy to select in which class to invoke
+			# e.g. if to_s defined in Resource and in Person we should use Person
+			self.class.each do |klass| 
+				if klass.instance_methods.include?(method.to_s) 
+				  _dup = klass.new(uri)
+				  return _dup.send(method,*args)
+				end
+			end
+		
+		# if none of the three possibilities work out,
+		# we don't know this method invocation, so we throw NoMethodError (in 
+		# superclass)
+			super
+		end
+
+		# returns classes to which this resource belongs (according to rdf:type)
+		def class
+			types.collect do |type| 
+				ObjectManager.get_class(type)
+			end
+		end
+
+		# overrides built-in instance_of? to use rdf:type definitions
+		def instance_of?(klass)
+			self.class.include?(klass)
+		end
   
   		# returns all predicates that fall into the domain of the rdf:type of this 
   	# resource

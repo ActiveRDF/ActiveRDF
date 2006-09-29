@@ -7,7 +7,7 @@ require 'cgi'
 require 'active_rdf'
 
 class SparqlAdapter
-	ConnectionPool.instance.register_adapter(:sparql, self)
+	ConnectionPool.register_adapter(:sparql, self)
 
 	def reads?
 		true

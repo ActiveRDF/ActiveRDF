@@ -49,11 +49,11 @@ class Query
 	# usage: query.execute do |s,p,o| ... end
 	def execute(options={:flatten => true}, &block)
 		if block_given?
-			FederationManager.instance.query(self) do |*clauses|
+			FederationManager.query(self) do |*clauses|
 				block.call(*clauses)
 			end
 		else
-			FederationManager.instance.query(self, options)
+			FederationManager.query(self, options)
 		end
 	end
 	
