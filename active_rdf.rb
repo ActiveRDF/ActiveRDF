@@ -3,12 +3,12 @@
 # (c) 2005-2006 by Eyal Oren and Renaud Delbru - All Rights Reserved
 
 # adding active_rdf subdirectory to the ruby loadpath
-file = 
-	if File.symlink?(__FILE__)
-		File.readlink(__FILE__)	
-	else
-		__FILE__
-	end
+file =
+if File.symlink?(__FILE__)
+  File.readlink(__FILE__)
+else
+  __FILE__
+end
 
 $: << File.dirname(File.expand_path(file)) + '/src'
 $: << File.dirname(File.expand_path(file))
@@ -23,10 +23,9 @@ class Module
     syms.each { |sym| alias_method "#{sym}?", sym }
     remove_method *syms
   end
-end 
+end
 # load standard classes that need to be loaded at startup
 require 'objectmanager/resource'
 require 'objectmanager/namespace'
 require 'federation/connection_pool'
 require 'queryengine/query'
-
