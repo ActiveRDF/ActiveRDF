@@ -96,6 +96,8 @@ module RDFS
       super
     end
 
+		# returns array of all instances of this class (e.g. Person.find_all)
+		# (always returns collection)
     def Resource.find_all
 			query = Query.new.distinct(:s).where(:s, Namespace.lookup(:rdf,:type), class_uri)
 			if block_given?
@@ -103,7 +105,7 @@ module RDFS
 					yield resource
 				end
 			else
-				query.execute
+				query.execute(:flatten => false)
 			end
     end
 
