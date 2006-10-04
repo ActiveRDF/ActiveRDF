@@ -46,6 +46,11 @@ module RDFS
       uri.hash
     end
 
+		# overriding sort based on uri
+		def <=>(other)
+			uri <=> other.uri
+		end
+
     #####                   	#####
     ##### class level methods	#####
     #####                    	#####
@@ -92,7 +97,14 @@ module RDFS
     end
 
     def Resource.find_all
-      Query.new.distinct(:s).where(:s, Namespace.lookup(:rdf,:type), class_uri).execute
+			query = Query.new.distinct(:s).where(:s, Namespace.lookup(:rdf,:type), class_uri)
+			if block_given?
+				query.execute do |resource|
+					yield resource
+				end
+			else
+				query.execute
+			end
     end
 
     #####                         #####
@@ -136,8 +148,14 @@ module RDFS
         update = false
       end
 
+			candidates = if update
+										 class_level_predicates
+									 else
+										 direct_predicates
+									 end
+
       # checking possibility (1) and (2) and (3)
-      predicates.each do |pred|
+      candidates.each do |pred|
         if Namespace.localname(pred) == methodname
           # found a property invocation of eyal: option 1) or 2)
           # query execution will return either the value for the predicate (1)
@@ -187,11 +205,16 @@ module RDFS
 
     # returns all predicates that fall into the domain of the rdf:type of this
     # resource
-    def predicates
+    def class_level_predicates
       type = Namespace.lookup(:rdf, 'type')
       domain = Namespace.lookup(:rdfs, 'domain')
       Query.new.distinct(:p).where(self,type,:t).where(:p, domain, :t).execute || []
     end
+
+		# returns all predicates that are directly defined for this resource
+		def direct_predicates
+			Query.new.distinct(:p).where(self,:p, :o).execute || []
+		end
 
     # returns all rdf:types of this resource
     def types
@@ -213,8 +236,8 @@ module RDFS
       '<' + uri + '>'
     end
 
-    def label
-      Namespace.localname(self)
-    end
+    #def label
+    #  Namespace.localname(self)
+    #end
   end
 end
