@@ -1,4 +1,4 @@
-#!/usr/bin/ruby -w
+#!/usr/bin/ruby1.8 -w
 
 # Ruby beautifier, version 2.1, 09/11/2006
 # Copyright (c) 2006, P. Lutus
