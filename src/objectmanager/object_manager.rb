@@ -25,61 +25,69 @@ class ObjectManager #< Hash
     # e.g. :foaf and Person
     localname = Namespace.localname(resource)
     prefix = Namespace.prefix(resource)
-    if prefix.nil?
-      prefix = create_module_name(resource)
-    end
+
     # find (ruby-acceptable) names for the module and class
     # e.g. FOAF and Person
-    modulename = prefix_to_module(prefix)
+    if prefix.nil?
+			# if the prefix is unknown, we create our own from the full URI
+      modulename = create_module_name(resource)
+		else
+			# otherwise we convert the registered prefix into a module name
+			modulename = prefix_to_module(prefix)
+    end
     klassname = localname_to_class(localname)
 
     # look whether module defined
     # else: create it
     _module = if Object.const_defined?(modulename.to_sym)
-    Object.const_get(modulename.to_sym)
-  else
-    Object.const_set(modulename, Module.new)
-  end
+				Object.const_get(modulename.to_sym)
+			else
+				Object.const_set(modulename, Module.new)
+			end
 
-  # look whether class defined in that module
-  if _module.const_defined?(klassname.to_sym)
-    # if so, return the existing class
-    _module.const_get(klassname.to_sym)
-  else
-    # otherwise: create it, inside that module, as subclass of RDFS::Resource
-    # (using toplevel Class.new to prevent RDFS::Class.new from being called)
-    klass = _module.module_eval("#{klassname} = Object::Class.new(RDFS::Resource)")
-    klass.class_uri = RDFS::Resource.new(resource.uri)
-    klass
-  end
-end
+		# look whether class defined in that module
+		if _module.const_defined?(klassname.to_sym)
+			# if so, return the existing class
+			_module.const_get(klassname.to_sym)
+		else
+			# otherwise: create it, inside that module, as subclass of RDFS::Resource
+			# (using toplevel Class.new to prevent RDFS::Class.new from being called)
+			klass = _module.module_eval("#{klassname} = Object::Class.new(RDFS::Resource)")
+			klass.class_uri = RDFS::Resource.new(resource.uri)
+			klass
+		end
+	end
 
-private
-def self.prefix_to_module(prefix)
-  # TODO: replace illegal characters
-  raise ActiveRdfError, 'bug 62491' if prefix.to_s.empty?
-  prefix.to_s.upcase
-end
+	private
+	def self.prefix_to_module(prefix)
+		# TODO: remove illegal characters
+		prefix.to_s.upcase
+	end
 
-def self.localname_to_class(localname)
-  # TODO: replace illegal characters (numbers,#<(*, etc)
-  # replace spaces by _
+	def self.localname_to_class(localname)
+		# replace illegal characters inside the uri
+		# and capitalize the classname
+		replace_illegal_chars(localname).capitalize
+	end
 
-  #    p localname[0].chr
-  localname[0] = localname[0].chr.upcase
-  #    p localname[0].chr
+	def self.create_module_name(resource)
+		# TODO: write unit test to verify replacement of all illegal characters
+		
+		# extract non-local part (including delimiter)
+		uri = resource.uri
+		delimiter = uri.rindex(/#|\//)
+		nonlocal = uri[0..delimiter]
 
-  localname.to_s
-end
+		# remove illegal characters appearing at the end of the uri (e.g. trailing 
+		# slash)
+		cleaned_non_local = nonlocal.gsub(/[^a-zA-Z0-9]+$/, '')
 
-def self.create_module_name(resource)
-  # TODO clean up, check, if all illegal characters (e.g. numbers?) are replaced.
-  uri = resource.uri
-  delimiter = uri.rindex(/#|\//) # duplicated code from namespace.prefix
-  # extract non-local part (including delimiter)
-  nonlocal = uri[0..delimiter]
-  nonlocal.gsub!(/[0-9 \?#:\/\\\.\+]+$/, '')
-  prefix = nonlocal.gsub(/[ \?#:\/\\\.\+]+/, '_')
-  #      puts "new prefix: #{prefix}"
-end
+		# replace illegal chars within the uri
+		replace_illegal_chars(cleaned_non_local).upcase
+	end
+
+	def self.replace_illegal_chars(name)
+		name.gsub(/[^a-zA-Z0-9]+/, '_')
+	end
+
 end
