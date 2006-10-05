@@ -36,7 +36,11 @@ module RDFS
 
     # a resource is same as another if they both represent the same uri
     def ==(other)
-      other.uri == self.uri
+			if other.instance_of? RDFS::Resource
+				other.uri == self.uri
+			else
+				false
+			end
     end
     alias_method 'eql?','=='
 

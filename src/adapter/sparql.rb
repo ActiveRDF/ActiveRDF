@@ -39,10 +39,15 @@ class SparqlAdapter
   # query datastore with query string (SPARQL), returns array with query results
   def query(query)
     qs = Query2SPARQL.translate(query)
-    clauses = query.select_clauses.size
+		execute_sparql_query(qs, header(query)) #, query.select_clauses.size)
+	end
+
+	def execute_sparql_query(qs, header) #,nr_of_clauses)
+		# TODO: can we really remove this (see line 66)
+    #clauses = query.select_clauses.size
 
     # sending query to sparql endpoint
-    response = @sparql.get("/#{@path}#{@context}?query=#{CGI.escape(qs)}", header(query))
+    response = @sparql.get("/#{@path}#{@context}?query=#{CGI.escape(qs)}", header)
 
     # if no content returned or if something went wrong
     # we return an empty array
@@ -58,7 +63,7 @@ class SparqlAdapter
     end
 
     if block_given?
-      results.each do |clauses|
+      results.each do |*clauses|
         yield(*clauses)
       end
     else

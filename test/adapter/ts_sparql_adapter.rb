@@ -25,10 +25,7 @@ class TestObjectCreation < Test::Unit::TestCase
 
   def test_simple_query
     adapter = ConnectionPool.add_data_source(:type => :sparql)
-
-    title = RDFS::Resource.new('http://purl.org/dc/elements/1.1/title')
-    result = Query.new.select(:b).where(:b, title, :t).execute.first
-
+    result = Query.new.select(:s).where(:s, Namespace.lookup(:rdf,:type), :t).execute.first
     assert_instance_of RDFS::Resource, result
   end
 

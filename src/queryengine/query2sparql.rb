@@ -1,5 +1,4 @@
 # translates abstract query into SPARQL that can be executed on SPARQL-compliant data source
-require 'singleton'
 
 class Query2SPARQL
   def self.translate(query)
