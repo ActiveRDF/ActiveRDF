@@ -60,8 +60,8 @@ class SparqlAdapter
     when :json
       parse_sparql_query_result_json response.body
     when :xml, :sparql_xml
-      #parse_sparql_query_result_xml_stream response.body
-     	 parse_sparql_query_result_xml response.body
+      parse_sparql_query_result_xml_stream response.body
+     	# parse_sparql_query_result_xml response.body
      	# can be removed if everything is working fine. (line 129ff can be removed then as well)
     end
 
