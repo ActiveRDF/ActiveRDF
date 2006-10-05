@@ -12,15 +12,32 @@ class ObjectManager #< Hash
   # before so no class was created for it)
   def self.construct_classes
     # find all rdf:types and construct class for each of them
-    q = Query.new.distinct(:t).where(:s,Namespace.lookup(:rdf,:type),:t)
-    q.execute do |t|
-      get_class(t)
-    end
+    #q = Query.new.select(:t).where(:s,Namespace.lookup(:rdf,:type),:t)
+		
+		# find everything defined as rdfs:class or owl:class
+		type = Namespace.lookup(:rdf,:type)
+		rdfsklass = Namespace.lookup(:rdfs,:Class)
+
+		# TODO: we should not do this, we should not support OWL
+		# instead, owl:Class is defined as subclass-of rdfs:Class, so if the 
+		# reasoner has access to owl definition it should work out fine.
+		owlklass = Namespace.lookup(:owl,:Class)
+
+		klasses = []
+    klasses << Query.new.distinct(:s).where(:s,type,rdfsklass).execute
+    klasses << Query.new.distinct(:s).where(:s,type,owlklass).execute
+
+		# flattening to get rid of nested arrays
+		# compacting array to get rid of nil (if one of these queries returned nil)
+		klasses = klasses.flatten.compact
+		# then we construct a Ruby class for each found rdfs:class
+		# and return the set of all constructed classes
+		klasses.collect { |t| construct_class(t) }
   end
 
   # constructs Ruby class for the given resource (and puts it into the module as
   # defined by the registered namespace abbreviations)
-  def self.get_class(resource)
+  def self.construct_class(resource)
     # get prefix abbreviation and localname from type
     # e.g. :foaf and Person
     localname = Namespace.localname(resource)

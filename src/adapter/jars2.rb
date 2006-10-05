@@ -35,6 +35,9 @@ class Jars2Adapter
 		# parse the result
 		results = parse_result(response.body, query)
 
+		#p "asked: #{query.to_s}; size: #{results.size}; uniq: #{results.uniq.size}"
+		#p results.collect{|r| r.to_s}
+
 		# remove duplicates if asked for distinct results
 		if query.distinct?
 			results.uniq

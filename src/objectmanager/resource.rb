@@ -36,7 +36,7 @@ module RDFS
 
     # a resource is same as another if they both represent the same uri
     def ==(other)
-			if other.instance_of? RDFS::Resource
+			if other.respond_to?(:uri)
 				other.uri == self.uri
 			else
 				false
