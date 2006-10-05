@@ -21,7 +21,10 @@ class Jars2Adapter
 	def query(query)
 		qs = Query2Jars2.translate(query)
 		header = { 'Accept' => 'application/rdf+n3' }
-		response = @yars.get("/?q=#{CGI.escape(qs)}", header)
+
+		# querying Jars2, adding 'eyal' parameter to get all variable bindings in 
+		# the result
+		response = @yars.get("/?q=#{CGI.escape(qs)}&eyal", header)
 
 		# return empty array if no content
 		return [] if response.is_a?(Net::HTTPNoContent)
@@ -29,10 +32,67 @@ class Jars2Adapter
 		# return false unless HTTP OK returned
 		return false unless response.is_a?(Net::HTTPOK)
 
-		response.body.split("\n")
+		# parse the result
+		results = parse_result(response.body, query)
 
-		#results = parse_result(respons.body)
-		#results = extract_selected_clauses(results)
-		#return results.uniq if query.distinct?
+		# remove duplicates if asked for distinct results
+		if query.distinct?
+			results.uniq
+		else
+			results
+		end
 	end
+
+	private
+	Resource = /<[^>]*>/
+	Literal = /"[^"]*"/
+	Node = Regexp.union(Resource,Literal)
+
+	# parses Jars2 results into array of ActiveRDF objects
+	def parse_result(response, query)
+		# Jars2 responses contain one result per line
+		results = response.split("\n")
+
+		# the first line of the response contains the variable bindings of the 
+		# results: we look at that line to figure out which column contains the 
+		# data we are looking for (which is the variables mentioned in the select 
+		# clauses of the query
+		bindings = results[0].split(' ')
+
+		# array of found answers, will be filled by iterating over the results and 
+		# only including the requested (i.e. selected) clauses
+		answers = []
+
+		# we iterate over the real results, and extract the clauses that we're 
+		# looking for (i.e. the select clauses from the query)
+		results[1..-1].each do |result|
+
+			# scan row for occurence of nodes (either resources or literals)
+			row = result.scan(Node)
+
+			# for each select clause, we find its index, and add the value at that 
+			# location in the result row to our answer
+			row = query.select_clauses.collect do |clause|
+				clause_index = bindings.index(clause)
+				convert_into_activerdf(row[clause_index])
+			end
+			answers << row
+		end
+
+		answers
+	end
+
+	# converts ntriples serialisation of resource or literal into ActiveRDF object
+	def convert_into_activerdf(string)
+		case string
+		when /<(.*)>/
+			# <http://foaf/Person> is a resource
+			RDFS::Resource.new($1)
+		when /"(.*)"/
+			# "30" is a literal
+			# TODO: handle datatypes
+			String.new($1)
+		end
+	end
+
 end

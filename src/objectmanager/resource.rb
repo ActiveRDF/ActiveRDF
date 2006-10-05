@@ -128,6 +128,11 @@ module RDFS
       # explain: eyal is a person and some other person (not eyal) has an age
       # evidence: eyal type ?c, age domain ?c
       # action: return nil
+			# TODO: this case is now not handled correctly anymore since we use 
+			# direct_predicates instead of class_level_predicates. To fix this, we 
+			# first try direct_predicates on a read-action, but if we don't find it, 
+			# we try the class_level_predicates. Only if we don't find either, we 
+			# throw "method_missing"
       #
       # 3. eyal.age = 30 (setting a value for a property)
       # explain: eyal has (or could have) a value for age, and we update that value
