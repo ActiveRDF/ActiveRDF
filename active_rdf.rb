@@ -24,8 +24,17 @@ class Module
     remove_method *syms
   end
 end
+
 # load standard classes that need to be loaded at startup
 require 'objectmanager/resource'
 require 'objectmanager/namespace'
 require 'federation/connection_pool'
 require 'queryengine/query'
+
+# load all adapters, discard errors because of failed dependencies
+Dir["./src/adapter/*.rb"].each do |adapter|
+	begin
+		require adapter
+	rescue LoadError
+	end
+end
