@@ -33,8 +33,9 @@ require 'queryengine/query'
 
 # load all adapters, discard errors because of failed dependencies
 Dir["./src/adapter/*.rb"].each do |adapter|
-	begin
-		require adapter
-	rescue LoadError
-	end
+  begin
+    require adapter
+  rescue LoadError
+    p "problem loading adapter #{adapter}"
+  end
 end

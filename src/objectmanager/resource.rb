@@ -205,7 +205,7 @@ module RDFS
     # returns classes to which this resource belongs (according to rdf:type)
     def class
       types.collect do |type|
-        ObjectManager.get_class(type)
+        ObjectManager.construct_class(type)
       end
     end
 
