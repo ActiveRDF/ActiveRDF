@@ -24,7 +24,10 @@ class Jars2Adapter
 
 		# querying Jars2, adding 'eyal' parameter to get all variable bindings in 
 		# the result
+		time = Time.now
 		response = @yars.get("/?q=#{CGI.escape(qs)}&eyal", header)
+		puts qs
+		puts "response from Jars took #{Time.now - time}s"
 
 		# return empty array if no content
 		return [] if response.is_a?(Net::HTTPNoContent)
@@ -33,10 +36,9 @@ class Jars2Adapter
 		return false unless response.is_a?(Net::HTTPOK)
 
 		# parse the result
+		time = Time.now
 		results = parse_result(response.body, query)
-
-		#p "asked: #{query.to_s}; size: #{results.size}; uniq: #{results.uniq.size}"
-		#p results.collect{|r| r.to_s}
+		puts "parsing response took #{Time.now - time}s"
 
 		# remove duplicates if asked for distinct results
 		if query.distinct?

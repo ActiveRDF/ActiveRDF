@@ -1,0 +1,28 @@
+== Welcome to ActiveRDF
+
+ActiveRDF is a library for accessing RDF data from Ruby programs. It can be used 
+as data layer in Ruby-on-Rails, similar to ActiveRecord (which provides an O/R 
+mapping to relational databases). ActiveRDF in RoR allows you to create semantic 
+web applications very rapidly. ActiveRDF gives you a Domain Specific Language 
+(DSL) for your RDF model: you can address RDF resources, classes, properties, 
+etc. programmatically, without queries.
+
+See http://activerdf.org for more information.
+
+== Getting Started
+ require 'active_rdf'
+ ConnectionPool.add_data_source :type => :sparql, :host => '...'
+ Namespace.register :foaf, 'http://xmlns.com/foaf/0.1/'
+ ObjectManager.construct_classes
+ people = FOAF::Person.find_all
+
+See http://activerdf.org for more examples.
+
+== License
+ActiveRDF is distributed under the LGPL[link:../lgpl.txt] license.
+
+== Authors
+* Eyal Oren
+* Renaud Delbru
+* Sebastian Gerke
+* Benjamin Heitmann
