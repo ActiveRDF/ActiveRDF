@@ -1,3 +1,7 @@
+# Author:: Eyal Oren
+# Copyright:: (c) 2005-2006
+# License:: LGPL
+
 #require 'rubygems' # bug in interplay between redland/yars/rubygems: we thus load rubygems here, before redland is loaded
 require 'active_rdf'
 #require 'active_rdf/test/common'

@@ -1,13 +1,19 @@
-# represents an RDF resource and manages manipulations of that resource,
+# Represents an RDF resource and manages manipulations of that resource,
 # including data lookup (e.g. eyal.age), data updates (e.g. eyal.age=20),
 # class-level lookup (Person.find_by_name 'eyal'), and class-membership
 # (eyal.class ...Person)
+#
+# Author:: Eyal Oren
+# Copyright:: (c) 2005-2006
+# License:: LGPL
 
-# TODO: add unit test to validate class construction and queries on them
 
+require 'active_rdf'
 require 'objectmanager/object_manager'
 require 'objectmanager/namespace'
 require 'queryengine/query'
+
+# TODO: add unit test to validate class construction and queries on them
 module RDFS
   class RDFS::Resource
     # adding accessor to the class uri:

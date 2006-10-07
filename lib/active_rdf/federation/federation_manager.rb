@@ -1,5 +1,9 @@
-# manages the federation of datasources
+# Manages the federation of datasources
 # distributes queries to right datasources and merges their results
+#
+# Author:: Eyal Oren
+# Copyright:: (c) 2005-2006
+# License:: LGPL
 require 'federation/connection_pool'
 class FederationManager
 

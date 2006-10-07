@@ -1,5 +1,10 @@
-# (read-only) adapter to Redland databse
+# Adapter to Redland database
 # uses SPARQL for querying
+#
+# Author:: Eyal Oren
+# Copyright:: (c) 2005-2006 Eyal Oren
+# License:: LGPL
+require 'active_rdf'
 require 'federation/connection_pool'
 require 'queryengine/query2sparql'
 require 'rdf/redland'

@@ -1,4 +1,8 @@
-# manages namespace abbreviations and expansions
+# Manages namespace abbreviations and expansions
+#
+# Author:: Eyal Oren
+# Copyright:: (c) 2005-2006
+# License:: LGPL
 
 class Namespace
 

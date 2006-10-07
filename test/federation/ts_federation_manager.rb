@@ -1,3 +1,7 @@
+# Author:: Eyal Oren
+# Copyright:: (c) 2005-2006
+# License:: LGPL
+
 require 'test/unit'
 require 'active_rdf'
 require 'adapter/redland'

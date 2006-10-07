@@ -1,5 +1,10 @@
-# translates abstract query into jars2 query
+# Translates abstract query into jars2 query
 # ignores ASK queries
+#
+# Author:: Eyal Oren
+# Copyright:: (c) 2005-2006
+# License:: LGPL
+require 'active_rdf'
 class Query2Jars2
 	def self.translate(query)
 		str = ""

@@ -1,5 +1,9 @@
-# represent a query on a datasource, abstract representation of SPARQL features
+# Represents a query on a datasource, abstract representation of SPARQL features
 # is passed to federation/adapter for execution on data
+#
+# Author:: Eyal Oren
+# Copyright:: (c) 2005-2006
+# License:: LGPL
 require 'active_rdf'
 require 'federation/federation_manager'
 

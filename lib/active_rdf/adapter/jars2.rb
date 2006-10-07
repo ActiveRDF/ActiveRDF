@@ -1,11 +1,16 @@
-# read-only adapter to jars2
+# Read-only adapter to jars2
 # (experimental YARS branch for SWSE engine)
-# TODO: add unit test
+#
+# Author:: Eyal Oren
+# Copyright:: (c) 2005-2006
+# License:: LGPL
+
 require 'active_rdf'
 require 'queryengine/query2jars2'
 require 'net/http'
 require 'cgi'
 
+# TODO: add unit test
 class Jars2Adapter
 	ConnectionPool.register_adapter(:jars2, self)
 

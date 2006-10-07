@@ -1,6 +1,10 @@
-# maintains pool of adapter instances that are connected to datasources
+# Maintains pool of adapter instances that are connected to datasources
 # returns right adapter for a given datasource, by either reusing
 # existing adapter-instance or creating new adapter-instance
+#
+# Author:: Eyal Oren
+# Copyright:: (c) 2005-2006
+# License:: LGPL
 class ConnectionPool
 
   # pool of all adapters

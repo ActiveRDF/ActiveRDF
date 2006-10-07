@@ -1,12 +1,12 @@
-# The object manager is responsible for creating a single Ruby object (or class) for
-# each RDF resource (which might be an rdfs class)
-#require 'singleton'
+# Constructs Ruby classes for RDFS classes (in the right namespace)
+#
+# Author:: Eyal Oren
+# Copyright:: (c) 2005-2006
+# License:: LGPL
 require 'active_rdf'
-class ObjectManager #< Hash
-  #	include Singleton
-
+class ObjectManager
   # constructs empty Ruby classes for all RDF types found in the data
-  #
+	#
   # allows users to invoke methods on classes (e.g. FOAF::Person) without
   # getting symbol undefined errors (because e.g. foaf:person wasnt encountered
   # before so no class was created for it)
