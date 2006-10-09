@@ -41,9 +41,7 @@ class Jars2Adapter
 		return false unless response.is_a?(Net::HTTPOK)
 
 		# parse the result
-		time = Time.now
 		results = parse_result(response.body, query)
-		puts "parsing response took #{Time.now - time}s"
 
 		# remove duplicates if asked for distinct results
 		if query.distinct?

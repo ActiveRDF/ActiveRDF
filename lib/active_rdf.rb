@@ -12,7 +12,7 @@ else
   __FILE__
 end
 
-$: << File.dirname(File.expand_path(file)) + '/src'
+$: << File.dirname(File.expand_path(file)) + '/active_rdf/'
 $: << File.dirname(File.expand_path(file))
 
 class ActiveRdfError < StandardError
@@ -34,7 +34,8 @@ require 'federation/connection_pool'
 require 'queryengine/query'
 
 # load all adapters, discard errors because of failed dependencies
-Dir["./src/adapter/*.rb"].each do |adapter|
+dir = File.dirname(File.expand_path(file))
+Dir[dir + "/active_rdf/adapter/*.rb"].each do |adapter|
   begin
     require adapter
   rescue LoadError

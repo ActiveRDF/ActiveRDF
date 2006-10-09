@@ -9,7 +9,7 @@ require 'federation/federation_manager'
 
 class Query
   attr_reader :select_clauses, :where_clauses
-  bool_accessor :distinct, :ask, :select
+  bool_accessor :distinct, :ask, :select, :count
 
   def initialize
     distinct = false
@@ -34,6 +34,11 @@ class Query
     @distinct = true
     select(*s)
   end
+
+	def count *s
+		@count = true
+		select(*s)
+	end
 
   alias_method :select_distinct, :distinct
 
