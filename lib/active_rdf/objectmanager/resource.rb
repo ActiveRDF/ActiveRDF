@@ -230,7 +230,11 @@ module RDFS
 
 		# returns all predicates that are directly defined for this resource
 		def direct_predicates
-			Query.new.distinct(:p).where(self,:p, :o).execute || []
+			Query.new.distinct(:p).where(self,:p, :o).execute(:flatten => false) || []
+		end
+
+		def property_accessors
+			direct_predicates.collect {|pred| Namespace.localname(pred) }
 		end
 
     # returns all rdf:types of this resource
