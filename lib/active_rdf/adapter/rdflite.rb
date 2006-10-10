@@ -79,12 +79,13 @@ class RDFLite
 		# construct query clauses
 		sql = construct_select(query) + construct_join(query) + construct_where(query)
 
-		# log constructed query
-		log "executing query: #{sql} with #{@right_hand_sides.join(',')}"
-
 		# executing query, passing all where-clause values as parameters (so that 
 		# sqlite will encode quotes correctly)
-		results = @db.execute(sql, *@right_hand_sides)
+		constraints = @right_hand_sides.collect { |value| String.new(value) }
+		log "going to execute #{sql} with constraints #{constraints}"
+
+		# executing query
+		results = @db.execute(sql, *constraints)
 
 		# convert results to ActiveRDF nodes and return them
 		wrap(query, results)
