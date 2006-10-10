@@ -187,7 +187,10 @@ module RDFS
             end
             return args
           else
-            return Query.new.distinct(:o).where(self,pred,:o).execute
+						# look into args, if it contains a hash with {:array => true} then 
+						# we should not flatten the query results
+						return_ary = args[0][:array] if args[0].is_a?(Hash)
+            return Query.new.distinct(:o).where(self,pred,:o).execute(:flatten => !return_ary)
           end
         end
       end
@@ -256,6 +259,10 @@ module RDFS
       return [Namespace.lookup(:rdfs,"Resource")] if types.empty?
       return types
     end
+
+		# alias include? to ==, so that you can do paper.creator.include?(eyal) 
+		# without worrying whether paper.creator is single- or multi-valued
+		alias include? ==
 
     # returns uri of resource, can be overridden in subclasses
     def to_s
