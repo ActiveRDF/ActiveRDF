@@ -4,14 +4,13 @@ require 'rake/gempackagetask'
 
 spec = Gem::Specification.new do |s|
 	s.name = 'activerdf'
-	s.version = '0.3.0'
+	s.version = '0.9.0'
 	s.author = 'Eyal Oren'
 	s.email = 'eyal.oren@deri.org'
 	s.homepage = 'http://activerdf.org'
 	s.platform = Gem::Platform::RUBY
-	s.summary = 'Object-oriented access to RDF'
+	s.summary = 'Offers object-oriented access to RDF (with adapters to several datastores).'
 	s.files = Dir['lib/**/*.rb']
-	# candidates = FileList["{lib,test}/**/*"].exclude("rdoc").to_a
 	s.require_path = 'lib'
 	s.autorequire = 'active_rdf'
 	s.test_file = 'test/ts_active_rdf.rb'
@@ -20,6 +19,9 @@ spec = Gem::Specification.new do |s|
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|
-	pkg.need_tar = true
-	pkg.need_zip = true
 end
+
+task :upload => :package do
+	sh "scp pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
+end
+
