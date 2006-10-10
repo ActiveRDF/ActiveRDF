@@ -39,6 +39,8 @@ Dir[dir + "/active_rdf/adapter/*.rb"].each do |adapter|
   begin
     require adapter
   rescue LoadError
-    p "problem loading adapter #{adapter}"
+		# skipping not installed adapters
+	rescue StandardError
+		# skipping buggy adapters (see e.g. bug #64952)
   end
 end
