@@ -248,6 +248,6 @@ class RDFLite
 	SPO = ['s','p','o']
 
 	def log(s)
-		puts "#{Time.now}: #{s}"
+#		puts "#{Time.now}: #{s}"
 	end
 end
