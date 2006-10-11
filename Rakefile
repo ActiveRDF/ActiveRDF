@@ -4,7 +4,7 @@ require 'rake/gempackagetask'
 
 spec = Gem::Specification.new do |s|
 	s.name = 'activerdf'
-	s.version = '0.9.0'
+	s.version = '0.9.1'
 	s.author = 'Eyal Oren'
 	s.email = 'eyal.oren@deri.org'
 	s.homepage = 'http://activerdf.org'
