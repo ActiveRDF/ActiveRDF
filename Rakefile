@@ -4,7 +4,7 @@ require 'rake/gempackagetask'
 
 spec = Gem::Specification.new do |s|
 	s.name = 'activerdf'
-	s.version = '0.9.1'
+	s.version = '0.9.2'
 	s.author = 'Eyal Oren'
 	s.email = 'eyal.oren@deri.org'
 	s.homepage = 'http://activerdf.org'
@@ -16,6 +16,7 @@ spec = Gem::Specification.new do |s|
 	s.test_file = 'test/ts_active_rdf.rb'
 	s.has_rdoc = true
 	s.extra_rdoc_files = ["README"]
+	s.add_dependency('gem_plugin', '>= 0.2.1')
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|

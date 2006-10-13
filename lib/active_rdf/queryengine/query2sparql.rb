@@ -7,6 +7,7 @@ require 'active_rdf'
 
 class Query2SPARQL
   def self.translate(query)
+    $log.debug "received query ..."
     str = ""
     if query.select?
       distinct = query.distinct? ? "DISTINCT " : ""
@@ -15,6 +16,8 @@ class Query2SPARQL
     elsif query.ask?
       str << "ASK { #{where_clauses(query)} }"
     end
+    $log.debug "translated into spqrql: ..."
+    return str
   end
 
   private

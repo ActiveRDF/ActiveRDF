@@ -8,6 +8,8 @@
 # License:: LGPL
 
 
+$log.debug 'resource.rb: file is being loaded'
+
 require 'active_rdf'
 require 'objectmanager/object_manager'
 require 'objectmanager/namespace'
@@ -28,6 +30,8 @@ module RDFS
     # creates new resource representing an RDF resource
     def initialize uri
       raise ActiveRdfError, "creating resource <#{uri}>" unless uri.is_a?(String)
+      
+      $log.debug "RDFS::Resource new: initializing new Resource with #{uri}"
       @uri = uri
     end
 

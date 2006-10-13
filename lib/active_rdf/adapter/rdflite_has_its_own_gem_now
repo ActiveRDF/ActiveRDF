@@ -13,9 +13,12 @@ require 'federation/connection_pool'
 class RDFLite
 	ConnectionPool.register_adapter(:rdflite,self)
 	attr_reader :db
+  $log.info 'RDFLite Adapter has been registered with ConnectionPool'
 
 	# instantiate RDFLite database
 	def initialize(params = {})
+	  $log.debug 'RDFLite Adapter initialization: starting'
+	
 		# if no file-location given, we use in-memory store
 		file = params[:location] || ':memory:'
 		@db = SQLite3::Database.new(file) 
@@ -28,6 +31,7 @@ class RDFLite
 		# ignored
 		@db.execute('create table if not exists triple(s,p,o, unique(s,p,o) on conflict ignore)')
 
+    # TODO: the "if exists" syntax is not supported by older versions of sqlite, make this downwards compatible!
 		# creating lookup indices
 		@db.execute('create index if not exists sidx on triple(s)')
 		@db.execute('create index if not exists pidx on triple(p)')
@@ -35,8 +39,8 @@ class RDFLite
 		@db.execute('create index if not exists spidx on triple(s,p)')
 		@db.execute('create index if not exists poidx on triple(p,o)')
 
-		log("opened connection to #{file}")
-		log("database contains #{size} triples")
+		$log.debug "RDFLite Adapter initialization: opened connection to #{file}"
+		$log.debug "RDFLite Adapter initialization: database contains #{size} triples"
 	end
 
 	# returns all triples in the datastore
@@ -68,13 +72,13 @@ class RDFLite
 			@db.execute('insert into triple values (?,?,?)',nodes[0], nodes[1], nodes[2])
 		end
 		
-		log("read #{ntriples.size} triples from file in #{Time.now - time}s")
+		$log.debug "RDFLite Adapter: read #{ntriples.size} triples from file in #{Time.now - time}s"
 		ntriples.size
 	end
 
 	def query(query)
 		# log received query
-		log "received query: #{query}"
+		$log.debug "RDFLite Adapter: received query: #{query}"
 
 		# construct query clauses
 		sql = construct_select(query) + construct_join(query) + construct_where(query)
@@ -82,7 +86,7 @@ class RDFLite
 		# executing query, passing all where-clause values as parameters (so that 
 		# sqlite will encode quotes correctly)
 		constraints = @right_hand_sides.collect { |value| String.new(value) }
-		log "going to execute #{sql} with constraints #{constraints}"
+		$log.debug "RDFLite Adapter: going to execute #{sql} with constraints #{constraints}"
 
 		# executing query
 		results = @db.execute(sql, *constraints)
@@ -247,7 +251,4 @@ class RDFLite
 	Node = Regexp.union(/<[^>]*>/,/"[^"]*"/)
 	SPO = ['s','p','o']
 
-	def log(s)
-#		puts "#{Time.now}: #{s}"
-	end
 end
