@@ -6,44 +6,62 @@
 # Copyright:: (c) 2005-2006 Eyal Oren
 # License:: LGPL
 
-require 'gem_plugin'
-
 require 'sqlite3'
 require 'active_rdf'
 require 'federation/connection_pool'
 
-class RDFLite < GemPlugin::Plugin "/adapter"
+# if ferret is available, we can do keyword search
+@@ferret_available = require('ferret')
+
+class RDFLite
 	ConnectionPool.register_adapter(:rdflite,self)
 	attr_reader :db
-  $log.info 'RDFLite Adapter has been registered with ConnectionPool'
 
 	# instantiate RDFLite database
 	def initialize(params = {})
-	  $log.debug 'RDFLite Adapter initialization: starting'
-	
 		# if no file-location given, we use in-memory store
 		file = params[:location] || ':memory:'
 		@db = SQLite3::Database.new(file) 
+
+		if @@ferret_available
+			# ferret needs type translation, otherwise we don't know if we have 
+			# strings or oid that need lookup
+			##@db.type_translation = true
+
+			ferret_file = params[:location] + '.ferret' || ''
+			@ferret = Ferret::I.new(:path => ferret_file)
+			log "initialised keyword index with #{@ferret.size} documents"
+		end
 
 		# turn off filesystem synchronisation for speed
 		# TODO: can we safely do that?
 		@db.execute('pragma synchronous = off')
 
-    # TODO: the "if exists" syntax is not supported by older versions of sqlite, make this downwards compatible!
-
 		# create triples table. since triples are unique, inserted duplicates are 
 		# ignored
-		@db.execute('create table if not exists triple(s,p,o, unique(s,p,o) on conflict ignore)')
+#		if @@ferret_available
+#			@db.execute('create table if not exists triple(s,p,o integer constraint pk primary key  on conflict ignore autoincrement, unique(s,p,o) on conflict ignore)')
+#		else
+			@db.execute('create table if not exists triple(s,p,o, unique(s,p,o) on conflict ignore)')
+#		end
+
+		sidx = params[:sidx] || false
+		pidx = params[:pidx] || false
+		oidx = params[:oidx] || false
+		spidx = params[:spidx] || true
+		soidx = params[:soidx] || false
+		poidx = params[:poidx] || true
 
 		# creating lookup indices
-		@db.execute('create index if not exists sidx on triple(s)')
-		@db.execute('create index if not exists pidx on triple(p)')
-		@db.execute('create index if not exists oidx on triple(o)')
-		@db.execute('create index if not exists spidx on triple(s,p)')
-		@db.execute('create index if not exists poidx on triple(p,o)')
+		@db.execute('create index if not exists sidx on triple(s)') if sidx
+		@db.execute('create index if not exists pidx on triple(p)') if pidx
+		@db.execute('create index if not exists oidx on triple(o)') if oidx
+		@db.execute('create index if not exists spidx on triple(s,p)') if spidx
+		@db.execute('create index if not exists soidx on triple(s,p)') if soidx
+		@db.execute('create index if not exists poidx on triple(p,o)') if poidx
 
-		$log.debug "RDFLite Adapter initialization: opened connection to #{file}"
-		$log.debug "RDFLite Adapter initialization: database contains #{size} triples"
+		log("opened connection to #{file}")
+		log("database contains #{size} triples")
 	end
 
 	# returns all triples in the datastore
@@ -72,16 +90,23 @@ class RDFLite < GemPlugin::Plugin "/adapter"
 		ntriples = File.readlines(file)
 		ntriples.each do |triple|
 			nodes = triple.scan(Node)
-			@db.execute('insert into triple values (?,?,?)',nodes[0], nodes[1], nodes[2])
+
+			if @@ferret_available
+				hash = nodes[2].hash
+				@db.execute('insert into triple values (?,?,?)', nodes[0], nodes[1], hash)
+				@ferret << {:id => hash, :content => nodes[2]}
+			else
+				@db.execute('insert into triple values (?,?,?)',nodes[0], nodes[1], nodes[2])
+			end
 		end
 		
-		$log.debug "RDFLite Adapter: read #{ntriples.size} triples from file in #{Time.now - time}s"
+		log("read #{ntriples.size} triples from file in #{Time.now - time}s")
 		ntriples.size
 	end
 
 	def query(query)
 		# log received query
-		$log.debug "RDFLite Adapter: received query: #{query}"
+		log "received query: #{query}"
 
 		# construct query clauses
 		sql = construct_select(query) + construct_join(query) + construct_where(query)
@@ -89,20 +114,16 @@ class RDFLite < GemPlugin::Plugin "/adapter"
 		# executing query, passing all where-clause values as parameters (so that 
 		# sqlite will encode quotes correctly)
 		constraints = @right_hand_sides.collect { |value| String.new(value) }
-		$log.debug "RDFLite Adapter: going to execute #{sql} with constraints #{constraints}"
+		log "going to execute #{sql} with constraints #{constraints}"
 
 		# executing query
 		results = @db.execute(sql, *constraints)
 
 		# convert results to ActiveRDF nodes and return them
-		result_nodes = wrap(query, results)
-		
-		# TODO: print contents of the array better ? 
-		$log.debug "RDFLite Adapter: returning these ActiveRDF nodes: " + result_nodes.inspect
+		wrap(query, results)
 	end
 
 	private
-
 	# construct select clause
 	def construct_select(query)
 		select = []
@@ -228,6 +249,18 @@ class RDFLite < GemPlugin::Plugin "/adapter"
 				end
 			end
 		end
+
+		# if keyword clause given, convert it using keyword index
+		if query.keyword?
+			oids = []
+			query.keywords.each do |var, key|
+				@ferret.search_each("content:\"#{key}\"") do |idx,score|
+					oids << @ferret[idx][:id]
+				end
+				where << "#{join_variable(query,var)} in (#{oids.join(',')})"
+			end
+		end
+
 		if where.empty?
 			''
 		else
@@ -235,10 +268,27 @@ class RDFLite < GemPlugin::Plugin "/adapter"
 		end
 	end
 
+	def join_variable(query,term)
+		index = query.where_clauses.flatten.index(term)
+		termtable = "t#{index / 3}"
+		termspo = SPO[index % 3]
+		return "#{termtable}.#{termspo}"
+	end
+
 	# wrap resources into ActiveRDF resources, literals into Strings
 	def wrap(query, results)
 		results.collect do |row|
 			row.collect do |result|
+				# if result is a number (test using .to_i==0) then it is a literal that 
+				# we need to lookup in ferret
+				if result.to_i!=0
+					if @@ferret_available
+						@ferret.search_each("id:\"#{result}\"") do |idx,score|
+							result = @ferret[idx][:content]
+						end
+					end
+				end
+
 				case result
 				when Resource
 					RDFS::Resource.new($1)
@@ -246,7 +296,7 @@ class RDFLite < GemPlugin::Plugin "/adapter"
 					String.new($1)
 				else
 					# when we do a count(*) query we get a number, not a resource/literal
-					result
+					results
 				end
 			end
 		end
@@ -257,4 +307,7 @@ class RDFLite < GemPlugin::Plugin "/adapter"
 	Node = Regexp.union(/<[^>]*>/,/"[^"]*"/)
 	SPO = ['s','p','o']
 
+	def log(s)
+		#puts "#{Time.now}: #{s}"
+	end
 end

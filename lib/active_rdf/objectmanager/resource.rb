@@ -138,16 +138,12 @@ module RDFS
       # explain: eyal is a person and some other person (not eyal) has an age
       # evidence: eyal type ?c, age domain ?c
       # action: return nil
-			# TODO: this case is now not handled correctly anymore since we use 
-			# direct_predicates instead of class_level_predicates. To fix this, we 
-			# first try direct_predicates on a read-action, but if we don't find it, 
-			# we try the class_level_predicates. Only if we don't find either, we 
-			# throw "method_missing"
-      #
+			#
       # 3. eyal.age = 30 (setting a value for a property)
       # explain: eyal has (or could have) a value for age, and we update that value
-      # complication: we need to find the full URI for age (by looking at possible predicates to use
-      # evidence: eyal age ?o  (eyal has a value for age now, we're updating it)
+			# complication: we need to find the full URI for age (by looking at 
+			# possible predicates to use
+			# evidence: eyal age ?o  (eyal has a value for age now, we're updating it)
       # evidence: eyal type ?c, age domain ?c (eyal could have a value for age, we're setting it)
       # action: add triple (eyal, age, 30), return 30
       #
@@ -161,6 +157,7 @@ module RDFS
 
       # are we doing an update or not?
       # checking if method ends with '='
+			
       if method.to_s[-1..-1] == '='
         methodname = method.to_s[0..-2]
         update = true
@@ -175,29 +172,28 @@ module RDFS
 										 direct_predicates
 									 end
 
-      # checking possibility (1) and (2) and (3)
-      candidates.each do |pred|
-        if Namespace.localname(pred) == methodname
-          # found a property invocation of eyal: option 1) or 2)
-          # query execution will return either the value for the predicate (1)
-          # or nil (2)
-          if update
-            # TODO: delete old value if overwriting
-            # FederiationManager.delete(self, pred, nil)
+      # checking possibility (1) and (3)
+			success = get_set_attribute_value(methodname, candidates, update, args)
+			return success unless success.nil?
 
-            # handling eyal.friends = [armin, andreas] --> expand array values
-            args.each do |value|
-              FederationManager.add(self, pred, value)
-            end
-            return args
-          else
-						# look into args, if it contains a hash with {:array => true} then 
-						# we should not flatten the query results
-						return_ary = args[0][:array] if args[0].is_a?(Hash)
-            return Query.new.distinct(:o).where(self,pred,:o).execute(:flatten => !return_ary)
-          end
-        end
-      end
+			# checking possibility (2), it is not handled correctly above since we use 
+			# direct_predicates instead of class_level_predicates. If we didn't find 
+			# anything with direct_predicates, we need to try the 
+			# class_level_predicates. Only if we don't find either, we 
+			# throw "method_missing"
+			candidates = class_level_predicates
+
+			# if any of the class_level candidates fits the sought method, then we 
+			# found situation (2), so we return nil or [] depending on the {:array => 
+			# true} value
+			if candidates.any?{|c| Namespace.localname(c) == methodname}
+				return_ary = args[0][:array] if args[0].is_a? Hash	
+				if return_ary
+					return []
+				else
+					return nil
+				end
+			end
 
       # checking possibility (4)
       # TODO: implement search strategy to select in which class to invoke
@@ -221,6 +217,7 @@ module RDFS
         ObjectManager.construct_class(type)
       end
     end
+		alias_method 'type','class'
 
     # overrides built-in instance_of? to use rdf:type definitions
     def instance_of?(klass)
@@ -276,5 +273,31 @@ module RDFS
     #def label
     #  Namespace.localname(self)
     #end
+		private
+		def get_set_attribute_value(methodname, candidates, update=false, args=[])
+			candidates.each do |pred|
+        if Namespace.localname(pred) == methodname
+          # found a property invocation of eyal: option 1) or 2)
+          # query execution will return either the value for the predicate (1)
+          # or nil (2)
+          if update
+            # TODO: delete old value if overwriting
+            # FederiationManager.delete(self, pred, nil)
+
+            # handling eyal.friends = [armin, andreas] --> expand array values
+            args.each do |value|
+              FederationManager.add(self, pred, value)
+            end
+            return args
+          else
+						# look into args, if it contains a hash with {:array => true} then 
+						# we should not flatten the query results
+						return_ary = args[0][:array] if args[0].is_a? Hash	
+            return Query.new.distinct(:o).where(self,pred,:o).execute(:flatten => !return_ary)
+          end
+        end
+      end
+			return nil
+		end
   end
 end

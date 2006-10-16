@@ -8,13 +8,14 @@ require 'active_rdf'
 require 'federation/federation_manager'
 
 class Query
-  attr_reader :select_clauses, :where_clauses
-  bool_accessor :distinct, :ask, :select, :count
+  attr_reader :select_clauses, :where_clauses, :keywords
+  bool_accessor :distinct, :ask, :select, :count, :keyword
 
   def initialize
     distinct = false
     @select_clauses = []
     @where_clauses = []
+		@keywords = []
   end
 
 	def clear_select
@@ -29,7 +30,6 @@ class Query
     end
 		# removing duplicate select clauses
 		@select_clauses.uniq!
-
     self
   end
 
@@ -51,15 +51,29 @@ class Query
   alias_method :select_distinct, :distinct
 
   def where s,p,o
-		# remove duplicate variable bindings, e.g.
-		# where(:s,type,:o).where(:s,type,:oo) we should remove the second clause, 
-		# since it doesn't add anything to the query and confuses the query 
-		# generator. 
-		# if you construct this query manually, you shouldn't! if your select 
-		# variable happens to be in one of the removed clauses: tough luck.
-    @where_clauses << [s,p,o].collect{|arg| parametrise(arg)}
+		case p
+		when :keyword
+			# treat keywords in where-clauses specially
+			keyword_where(s,o)
+		else
+			# remove duplicate variable bindings, e.g.
+			# where(:s,type,:o).where(:s,type,:oo) we should remove the second clause, 
+			# since it doesn't add anything to the query and confuses the query 
+			# generator. 
+			# if you construct this query manually, you shouldn't! if your select 
+			# variable happens to be in one of the removed clauses: tough luck.
+			@where_clauses << [s,p,o].collect{|arg| parametrise(arg)}
+		end
     self
   end
+
+	# adds keyword constraint to the query. You can use all Ferret query syntax in 
+	# the constraint (e.g. keyword_where(:s,'eyal|benjamin')
+	def keyword_where s,o
+		@keyword = true
+		@keywords << [parametrise(s),o]
+		self
+	end
 
 # this is not normal behaviour, the method is implemented inside FacetNavigation
 #	def replace_where_clause old,new
