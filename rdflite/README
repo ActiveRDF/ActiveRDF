@@ -1,0 +1,16 @@
+== Welcome to rdflite
+
+rdflite is a small RDF datastore, based on sqlite3. It can be used as a 
+datastore for ActiveRDF: it acts as a gemplugin for ActiveRDF. rdflite does not 
+scale well for large datasets, but is very fast for small ones. It supports the 
+full ActiveRDF query grammar (basically, select/distinct/count with arbitrary 
+joins in the where clauses) and offers full-text search over the literals if 
+ferret is installed. 
+
+See http://www.activerdf.org/ for more information.
+
+== License
+rdflite is distributed under the LGPL[link:../LICENSE] license.
+
+== Authors
+* Eyal Oren

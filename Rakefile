@@ -1,6 +1,8 @@
 require 'rubygems'
-Gem::manage_gems
 require 'rake/gempackagetask'
+require 'rake/rdoctask'
+
+Gem::manage_gems
 
 spec = Gem::Specification.new do |s|
 	s.name = 'activerdf'
@@ -22,7 +24,15 @@ end
 Rake::GemPackageTask.new(spec) do |pkg|
 end
 
-task :upload => :package do
-	sh "scp pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
+Rake::RDocTask.new do |rd|
+	rd.main = "README"
+	rd.rdoc_dir = "doc"
+	rd.title = "ActiveRDF RDoc documentation"
+	rd.rdoc_files.include("README", "lib/**/*.rb")
 end
 
+task :default => [:upload]
+
+task :upload => :package do |task|
+	sh "scp pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
+end

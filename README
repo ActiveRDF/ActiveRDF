@@ -7,7 +7,7 @@ web applications very rapidly. ActiveRDF gives you a Domain Specific Language
 (DSL) for your RDF model: you can address RDF resources, classes, properties, 
 etc. programmatically, without queries.
 
-See http://activerdf.org for more information.
+See http://www.activerdf.org for more information.
 
 == Getting Started
  require 'active_rdf'
@@ -19,7 +19,7 @@ See http://activerdf.org for more information.
 See http://activerdf.org for more examples.
 
 == License
-ActiveRDF is distributed under the LGPL[link:../lgpl.txt] license.
+ActiveRDF is distributed under the LGPL[link:../LICENSE] license.
 
 == Authors
 * Eyal Oren
