@@ -6,7 +6,7 @@ Gem::manage_gems
 
 spec = Gem::Specification.new do |s|
 	s.name = 'activerdf'
-	s.version = '0.9.2'
+	s.version = '0.9.3'
 	s.author = 'Eyal Oren'
 	s.email = 'eyal.oren@deri.org'
 	s.homepage = 'http://activerdf.org'
