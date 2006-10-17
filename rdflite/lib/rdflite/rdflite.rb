@@ -10,29 +10,40 @@ require 'sqlite3'
 require 'active_rdf'
 require 'federation/connection_pool'
 
+begin 
+	require 'ferret'
+	@@have_ferret = true
+rescue LoadError
+	log "error loading ferret"
+	@@have_ferret = false
+end
+
 class RDFLite
 	ConnectionPool.register_adapter(:rdflite,self)
 	attr_reader :db
 
 	# instantiate RDFLite database
 	def initialize(params = {})
+		log "initialised with params #{params.to_s}"
 		# if no file-location given, we use in-memory store
 		file = params[:location] || ':memory:'
 		@db = SQLite3::Database.new(file) 
 
 		# we enable keyword unless the user specifies otherwise
-		@keyword_search = params[:keyword] || true
+		@keyword_search = if params[:keyword].nil?
+												true
+											else
+											  params[:keyword]
+											end
 
 		# we can only do keyword search if ferret is found
-		begin 
-			ferret_loaded = require 'aferret' if @keyword_search
-		rescue LoadError
-		end
-		@keyword_search &= ferret_loaded
+		@keyword_search &= @@have_ferret
+		log "we #{@keyword_search ? "do" : "don't"} have keyword search"
 
 		if @keyword_search
 			# we initialise the ferret index, either as a file or in memory
 			@ferret = if params[:location]
+									log "opened ferret index on #{params[:location] + '.ferret'}"
 									Ferret::I.new(:path => params[:location] + '.ferret')
 								else
 									Ferret::I.new()
@@ -96,15 +107,13 @@ class RDFLite
 				if @keyword_search
 					hash = nodes[2].hash
 					@db.execute('insert into triple values (?,?,?)', nodes[0], nodes[1], hash)
-					@ferret << {:id => hash, :content => nodes[2]} unless @ferret
+					@ferret << {:id => hash, :content => nodes[2]}
 				else
 					@db.execute('insert into triple values (?,?,?)',nodes[0], nodes[1], nodes[2])
 				end
 			end
+			log("read #{ntriples.size} triples from file in #{Time.now - time}s")
 		end
-		
-		log("read #{ntriples.size} triples from file in #{Time.now - time}s")
-		ntriples.size
 	end
 
 	def query(query)
@@ -284,9 +293,12 @@ class RDFLite
 			row.collect do |result|
 				# if result is a number (test using .to_i==0) then it is a literal that 
 				# we need to lookup in ferret
+				log "found result #{result}; to_i gives #{result.to_i}; keyword is #{@keyword_search}"
+
 				if result.to_i!=0
 					if @keyword_search
 						@ferret.search_each("id:\"#{result}\"") do |idx,score|
+							log "ferret says #{@ferret[idx][:content]}"
 							result = @ferret[idx][:content]
 						end
 					end
