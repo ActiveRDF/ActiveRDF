@@ -10,9 +10,6 @@ require 'sqlite3'
 require 'active_rdf'
 require 'federation/connection_pool'
 
-# if ferret is available, we can do keyword search
-@@ferret_available = require('ferret')
-
 class RDFLite
 	ConnectionPool.register_adapter(:rdflite,self)
 	attr_reader :db
@@ -23,27 +20,31 @@ class RDFLite
 		file = params[:location] || ':memory:'
 		@db = SQLite3::Database.new(file) 
 
-		if @@ferret_available
-			# ferret needs type translation, otherwise we don't know if we have 
-			# strings or oid that need lookup
-			##@db.type_translation = true
+		# we enable keyword unless the user specifies otherwise
+		@keyword_search = params[:keyword] || true
 
-			ferret_file = params[:location] + '.ferret' || ''
-			@ferret = Ferret::I.new(:path => ferret_file)
-			log "initialised keyword index with #{@ferret.size} documents"
+		# we can only do keyword search if ferret is found
+		begin 
+			ferret_loaded = require 'aferret' if @keyword_search
+		rescue LoadError
+		end
+		@keyword_search &= ferret_loaded
+
+		if @keyword_search
+			# we initialise the ferret index, either as a file or in memory
+			@ferret = if params[:location]
+									Ferret::I.new(:path => params[:location] + '.ferret')
+								else
+									Ferret::I.new()
+								end
 		end
 
 		# turn off filesystem synchronisation for speed
-		# TODO: can we safely do that?
-		@db.execute('pragma synchronous = off')
+		@db.synchronous = 'off'
+		#execute('pragma synchronous = off')
 
 		# create triples table. since triples are unique, inserted duplicates are 
-		# ignored
-#		if @@ferret_available
-#			@db.execute('create table if not exists triple(s,p,o integer constraint pk primary key  on conflict ignore autoincrement, unique(s,p,o) on conflict ignore)')
-#		else
-			@db.execute('create table if not exists triple(s,p,o, unique(s,p,o) on conflict ignore)')
-#		end
+		@db.execute('create table if not exists triple(s,p,o, unique(s,p,o) on conflict ignore)')
 
 		sidx = params[:sidx] || false
 		pidx = params[:pidx] || false
@@ -87,16 +88,18 @@ class RDFLite
 	def load(file)
 		time = Time.now
 
-		ntriples = File.readlines(file)
-		ntriples.each do |triple|
-			nodes = triple.scan(Node)
+		@db.transaction do 
+			ntriples = File.readlines(file)
+			ntriples.each do |triple|
+				nodes = triple.scan(Node)
 
-			if @@ferret_available
-				hash = nodes[2].hash
-				@db.execute('insert into triple values (?,?,?)', nodes[0], nodes[1], hash)
-				@ferret << {:id => hash, :content => nodes[2]}
-			else
-				@db.execute('insert into triple values (?,?,?)',nodes[0], nodes[1], nodes[2])
+				if @keyword_search
+					hash = nodes[2].hash
+					@db.execute('insert into triple values (?,?,?)', nodes[0], nodes[1], hash)
+					@ferret << {:id => hash, :content => nodes[2]} unless @ferret
+				else
+					@db.execute('insert into triple values (?,?,?)',nodes[0], nodes[1], nodes[2])
+				end
 			end
 		end
 		
@@ -282,7 +285,7 @@ class RDFLite
 				# if result is a number (test using .to_i==0) then it is a literal that 
 				# we need to lookup in ferret
 				if result.to_i!=0
-					if @@ferret_available
+					if @keyword_search
 						@ferret.search_each("id:\"#{result}\"") do |idx,score|
 							result = @ferret[idx][:content]
 						end
@@ -311,3 +314,4 @@ class RDFLite
 		#puts "#{Time.now}: #{s}"
 	end
 end
+ConnectionPool.add_data_source(:type=>:rdflite)
