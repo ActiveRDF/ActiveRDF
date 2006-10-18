@@ -205,10 +205,12 @@ module RDFS
         end
       end
 
-      # if none of the three possibilities work out,
-      # we don't know this method invocation, so we throw NoMethodError (in
-      # superclass)
-      super
+			# if none of the three possibilities work out, we don't know this method 
+			# invocation, but we don't want to throw NoMethodError, instead we return 
+			# nil, so that eyal.age does not raise error, but returns nil. (in RDFS, 
+			# we are never sure that eyal cannot have an age, we just dont know the 
+			# age right now)
+			nil
     end
 
     # returns classes to which this resource belongs (according to rdf:type)
@@ -267,14 +269,22 @@ module RDFS
 
     # returns uri of resource, can be overridden in subclasses
     def to_s
-      '<' + uri + '>'
+			raise ActiveRdfError, "found bug: resource.to_s should not be used"
+		#	"<#{uri}>"
     end
 
-    #def label
-    #  Namespace.localname(self)
-    #end
+    def label(*args)
+			get_property_value(Namespace.lookup(:rdfs,:label)) || Namespace.localname(self)
+    end
+
 		private
-		def get_set_attribute_value(methodname, candidates, update=false, args=[])
+		def get_property_value(predicate, args=[])
+			return_ary = args[0][:array] if args[0].is_a?(Hash)
+			flatten_results = !return_ary
+			Query.new.distinct(:o).where(self, predicate, :o).execute(:flatten => flatten_results)
+		end
+
+		def get_set_attribute_value(methodname, candidates, update=false, *args)
 			candidates.each do |pred|
         if Namespace.localname(pred) == methodname
           # found a property invocation of eyal: option 1) or 2)
@@ -292,9 +302,8 @@ module RDFS
           else
 						# look into args, if it contains a hash with {:array => true} then 
 						# we should not flatten the query results
-						return_ary = args[0][:array] if args[0].is_a? Hash	
-            return Query.new.distinct(:o).where(self,pred,:o).execute(:flatten => !return_ary)
-          end
+            return get_property_value(pred, args)
+					end
         end
       end
 			return nil

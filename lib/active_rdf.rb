@@ -82,9 +82,16 @@ end
 #
 #TODO: disable "require rdflite" before packaging
 #TODO: enable gem-plugin loading before packaging
-##require 'gem_plugin'
-##GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
+#require 'gem_plugin'
+#GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
 require 'rdflite'
 
 # TODO: figure out how to differenciate between gem_plugins only depending on activerdf and those which are also in the catgeory adapter
 
+# TODO: nobody should use string.start_with? anymore...to check if for 
+# query-terms being variables use is_a?(Symbol)
+#class String
+#	def start_with?(other)
+#		slice(0..0) == other
+#	end
+#end

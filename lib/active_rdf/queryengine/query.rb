@@ -109,7 +109,8 @@ class Query
   def parametrise s
     case s
     when Symbol
-      '?' + s.to_s
+			s
+      #'?' + s.to_s
     when RDFS::Resource
       s
     else

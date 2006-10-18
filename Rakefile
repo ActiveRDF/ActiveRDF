@@ -6,7 +6,7 @@ Gem::manage_gems
 
 spec = Gem::Specification.new do |s|
 	s.name = 'activerdf'
-	s.version = '0.9.3'
+	s.version = '0.9.4'
 	s.author = 'Eyal Oren'
 	s.email = 'eyal.oren@deri.org'
 	s.homepage = 'http://activerdf.org'
@@ -35,4 +35,5 @@ task :default => [:upload]
 
 task :upload => :package do |task|
 	sh "scp pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
+	sh "scp rdflite/pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
 end

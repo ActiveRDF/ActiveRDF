@@ -142,20 +142,9 @@ class RDFLite
 	private
 	# construct select clause
 	def construct_select(query)
-		select = []
-		where_clauses = query.where_clauses.flatten
-
-		query.select_clauses.each do |term|
-			# get string representation of resource/literal
-			term = term.to_s
-
-			# find the right select clause for this term: look up the first occurence 
-			# of this term in the where clauses, and compute the level and s/p/o 
-			# position of it
-			index = where_clauses.index(term)
-			termtable = "t#{index / 3}"
-			termspo = SPO[index % 3]
-			select << "#{termtable}.#{termspo}"
+		# find the right select clause for this term
+		select = query.select_clauses.collect do |term|
+			variable_name(query, term)
 		end
 
 		select_clause = ''
@@ -178,7 +167,7 @@ class RDFLite
 		return ' from triple as t0 ' if query.where_clauses.size == 1
 
 		where_clauses = query.where_clauses.flatten
-		considering = where_clauses.uniq
+		considering = where_clauses.uniq.select{|w| w.is_a?(Symbol)}
 
 		# constructing hash with indices for all terms
 		# e.g. {?s => [1,3,5], ?p => [2], ... }
@@ -255,13 +244,15 @@ class RDFLite
 		# add where clause for each subclause, except if it's a variable
 		query.where_clauses.each_with_index do |clause,level|
 			clause.each_with_index do |subclause, i|
-				# get string representation of resource/literal
-				subclause = subclause.to_s
-
 				# dont add where clause for variables
-				unless subclause[0..0] == '?'
+				unless subclause.is_a?(Symbol)
 					where << "t#{level}.#{SPO[i]} = ?"
-					@right_hand_sides << subclause
+					@right_hand_sides << case subclause
+					when RDFS::Resource
+						"<#{subclause.uri}>"
+					else
+						subclause.to_s
+					end
 				end
 			end
 		end
@@ -273,7 +264,7 @@ class RDFLite
 				@ferret.search_each("content:\"#{key}\"") do |idx,score|
 					oids << @ferret[idx][:id]
 				end
-				where << "#{join_variable(query,var)} in (#{oids.join(',')})"
+				where << "#{variable_name(query,var)} in (#{oids.join(',')})"
 			end
 		end
 
@@ -284,8 +275,12 @@ class RDFLite
 		end
 	end
 
-	def join_variable(query,term)
+	# returns sql variable name for a queryterm
+	def variable_name(query,term)
+		# look up the first occurence of this term in the where clauses, and compute 
+		# the level and s/p/o position of it
 		index = query.where_clauses.flatten.index(term)
+		raise ActiveRdfError,'unbound variable in select clause' if index.nil?
 		termtable = "t#{index / 3}"
 		termspo = SPO[index % 3]
 		return "#{termtable}.#{termspo}"
