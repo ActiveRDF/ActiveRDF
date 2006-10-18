@@ -116,12 +116,16 @@ class RDFLite
 		end
 	end
 
+	def translate(query)
+		construct_select(query) + construct_join(query) + construct_where(query)
+	end
+
 	def query(query)
 		# log received query
 		log "received query: #{query}"
 
 		# construct query clauses
-		sql = construct_select(query) + construct_join(query) + construct_where(query)
+		sql = translate(query)
 
 		# executing query, passing all where-clause values as parameters (so that 
 		# sqlite will encode quotes correctly)
@@ -326,4 +330,3 @@ class RDFLite
 		#puts "#{Time.now}: #{s}"
 	end
 end
-ConnectionPool.add_data_source(:type=>:rdflite)

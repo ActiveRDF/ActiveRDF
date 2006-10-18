@@ -79,7 +79,12 @@ Dir[dir + "/active_rdf/adapter/*.rb"].each do |adapter|
 end
 
 # now load all the adapters known to gem_plugin`s automatic loading mechanism
-require 'gem_plugin'
-GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
+#
+#TODO: disable "require rdflite" before packaging
+#TODO: enable gem-plugin loading before packaging
+##require 'gem_plugin'
+##GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
+require 'rdflite'
+
 # TODO: figure out how to differenciate between gem_plugins only depending on activerdf and those which are also in the catgeory adapter
 
