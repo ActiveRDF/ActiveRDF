@@ -10,11 +10,13 @@ require 'sqlite3'
 require 'active_rdf'
 require 'federation/connection_pool'
 
+# TODO FIXME use logging framework
+
 begin 
 	require 'ferret'
 	@@have_ferret = true
 rescue LoadError
-	log "error loading ferret"
+	#log "error loading ferret"
 	@@have_ferret = false
 end
 
@@ -63,6 +65,7 @@ class RDFLite
 		spidx = params[:spidx] || true
 		soidx = params[:soidx] || false
 		poidx = params[:poidx] || true
+		opidx = params[:opidx] || false
 
 		# creating lookup indices
 		@db.execute('create index if not exists sidx on triple(s)') if sidx
@@ -71,6 +74,7 @@ class RDFLite
 		@db.execute('create index if not exists spidx on triple(s,p)') if spidx
 		@db.execute('create index if not exists soidx on triple(s,p)') if soidx
 		@db.execute('create index if not exists poidx on triple(p,o)') if poidx
+		@db.execute('create index if not exists opidx on triple(o,p)') if opidx
 
 		log("opened connection to #{file}")
 		log("database contains #{size} triples")
@@ -117,7 +121,8 @@ class RDFLite
 	end
 
 	def translate(query)
-		construct_select(query) + construct_join(query) + construct_where(query)
+		construct_select(query) + construct_join(query) + construct_where(query) + 
+			construct_limit(query)
 	end
 
 	def query(query)
@@ -153,6 +158,20 @@ class RDFLite
 		select_clause = "count(#{select_clause})" if query.count?
 
 		"select " + select_clause
+	end
+
+	# construct (optional) limit and offset clauses
+	def construct_limit(query)
+		clause = ""
+
+		# if no limit given, use limit -1 (no limit)
+		limit = query.limits.nil? ? -1 : query.limits
+
+		# if no offset given, use offset 0
+		offset = query.offsets.nil? ? 0 : query.offsets
+
+		clause << " limit #{limit} offset #{offset}"
+		clause
 	end
 
 	# construct join clause

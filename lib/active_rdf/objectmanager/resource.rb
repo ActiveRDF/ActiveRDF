@@ -269,8 +269,7 @@ module RDFS
 
     # returns uri of resource, can be overridden in subclasses
     def to_s
-			raise ActiveRdfError, "found bug: resource.to_s should not be used"
-		#	"<#{uri}>"
+			"resource: #{uri}"
     end
 
     def label(*args)

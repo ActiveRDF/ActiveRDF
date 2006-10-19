@@ -8,11 +8,13 @@ require 'active_rdf'
 require 'federation/federation_manager'
 
 class Query
-  attr_reader :select_clauses, :where_clauses, :keywords
+  attr_reader :select_clauses, :where_clauses, :keywords, :limits, :offsets
   bool_accessor :distinct, :ask, :select, :count, :keyword
 
   def initialize
     distinct = false
+		limit = nil
+		offset = nil
     @select_clauses = []
     @where_clauses = []
 		@keywords = []
@@ -42,13 +44,22 @@ class Query
     @distinct = true
     select(*s)
   end
+  alias_method :select_distinct, :distinct
 
 	def count *s
 		@count = true
 		select(*s)
 	end
 
-  alias_method :select_distinct, :distinct
+	def limit(i)
+		@limits = i 
+		self
+	end
+
+	def offset(i)
+		@offsets = i
+		self
+	end
 
   def where s,p,o
 		case p
@@ -101,8 +112,12 @@ class Query
   end
 
   def to_s
-    require 'queryengine/query2sparql'
-    Query2SPARQL.translate(self)
+		ConnectionPool.read_adapters.first.translate(self)
+  end
+
+  def to_sp
+		require 'queryengine/query2sparql'
+		Query2SPARQL.translate(self)
   end
 
   private
