@@ -219,7 +219,10 @@ module RDFS
         ObjectManager.construct_class(type)
       end
     end
-		alias_method 'type','class'
+
+		def type
+			get_property_value(Namespace.lookup(:rdf,:type))
+		end
 
     # overrides built-in instance_of? to use rdf:type definitions
     def instance_of?(klass)

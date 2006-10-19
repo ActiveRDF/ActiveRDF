@@ -33,7 +33,7 @@ class RDFLite
 
 		# we enable keyword unless the user specifies otherwise
 		@keyword_search = if params[:keyword].nil?
-												true
+												false
 											else
 											  params[:keyword]
 											end
@@ -99,6 +99,29 @@ class RDFLite
 	#def clear
 	#	@db.execute('delete from triple')
 	#end
+	
+	def add(s,p,o)
+		s = "<#{s.uri}>"
+		p = "<#{p.uri}>"
+		o = case o
+				when RDFS::Resource
+					"<#{o.uri}>"
+				else
+					"\"#{o.to_s}\""
+				end
+
+		add_internal(s,p,o)
+	end
+	
+	def add_internal(s,p,o)
+		if @keyword_search
+			hash = o.hash
+			@db.execute('insert into triple values (?,?,?)', s, p, hash)
+			@ferret << {:id => hash, :content => o}
+		else
+			@db.execute('insert into triple values (?,?,?)', s,p,o)
+		end
+	end
 
 	def load(file)
 		time = Time.now
@@ -107,14 +130,7 @@ class RDFLite
 			ntriples = File.readlines(file)
 			ntriples.each do |triple|
 				nodes = triple.scan(Node)
-
-				if @keyword_search
-					hash = nodes[2].hash
-					@db.execute('insert into triple values (?,?,?)', nodes[0], nodes[1], hash)
-					@ferret << {:id => hash, :content => nodes[2]}
-				else
-					@db.execute('insert into triple values (?,?,?)',nodes[0], nodes[1], nodes[2])
-				end
+				add_internal(nodes[0], nodes[1], nodes[2])
 			end
 			log("read #{ntriples.size} triples from file in #{Time.now - time}s")
 		end
