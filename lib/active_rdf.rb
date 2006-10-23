@@ -35,8 +35,6 @@ $log =
       Logger.new(Dir.tmpdir.to_s + "/activerdf.log", 1, 100*1024); 
     end
   end
-
-$log = Logger.new($stdout)
     
 # if user has specified loglevel we use that, otherwise we use default level
 # in the environment variable ACTIVE_RDF_LOG_LEVEL we expect numbers, which we have to convert
