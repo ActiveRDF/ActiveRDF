@@ -33,7 +33,7 @@ class RDFLite
 
 		# we enable keyword unless the user specifies otherwise
 		@keyword_search = if params[:keyword].nil?
-												false
+												true
 											else
 											  params[:keyword]
 											end
@@ -44,11 +44,16 @@ class RDFLite
 
 		if @keyword_search
 			# we initialise the ferret index, either as a file or in memory
+
+			# we setup the fields not to store object's contents
+			infos = Ferret::Index::FieldInfos.new
+			infos.add_field(:subject, :store => :yes, :index => :no, :term_vector => :no)
+			infos.add_field(:object, :store => :no, :index => :omit_norms)
+			
 			@ferret = if params[:location]
-									log "opened ferret index on #{params[:location] + '.ferret'}"
-									Ferret::I.new(:path => params[:location] + '.ferret')
+									Ferret::I.new(:path => params[:location] + '.ferret', :field_infos => infos)
 								else
-									Ferret::I.new()
+									Ferret::I.new(:field_infos => infos)
 								end
 		end
 
@@ -114,13 +119,11 @@ class RDFLite
 	end
 	
 	def add_internal(s,p,o)
-		if @keyword_search
-			hash = o.hash
-			@db.execute('insert into triple values (?,?,?)', s, p, hash)
-			@ferret << {:id => hash, :content => o}
-		else
-			@db.execute('insert into triple values (?,?,?)', s,p,o)
-		end
+		# insert the triple into the datastore
+		@db.execute('insert into triple values (?,?,?)', s,p,o)
+
+		# if keyword-search available, insert the object into keyword search
+		@ferret << {:subject => s, :object => o} if @keyword_search
 	end
 
 	def load(file)
@@ -136,28 +139,29 @@ class RDFLite
 		end
 	end
 
-	def translate(query)
-		construct_select(query) + construct_join(query) + construct_where(query) + 
-			construct_limit(query)
-	end
-
 	def query(query)
 		# log received query
-		log "received query: #{query}"
+		log "received query: #{query.to_sp}"
 
 		# construct query clauses
 		sql = translate(query)
 
 		# executing query, passing all where-clause values as parameters (so that 
 		# sqlite will encode quotes correctly)
-		constraints = @right_hand_sides.collect { |value| String.new(value) }
-		log "going to execute #{sql} with constraints #{constraints}"
+		constraints = @right_hand_sides.collect { |value| value.to_s }
+
+		log format("executing: #{sql.gsub('?','"%s"')}", *constraints)
 
 		# executing query
 		results = @db.execute(sql, *constraints)
 
 		# convert results to ActiveRDF nodes and return them
 		wrap(query, results)
+	end
+
+	def translate(query)
+		construct_select(query) + construct_join(query) + construct_where(query) + 
+			construct_limit(query)
 	end
 
 	private
@@ -283,7 +287,7 @@ class RDFLite
 				unless subclause.is_a?(Symbol)
 					where << "t#{level}.#{SPO[i]} = ?"
 					@right_hand_sides << case subclause
-					when RDFS::Resource
+				 	when RDFS::Resource
 						"<#{subclause.uri}>"
 					else
 						subclause.to_s
@@ -294,12 +298,14 @@ class RDFLite
 
 		# if keyword clause given, convert it using keyword index
 		if query.keyword?
-			oids = []
-			query.keywords.each do |var, key|
-				@ferret.search_each("content:\"#{key}\"") do |idx,score|
-					oids << @ferret[idx][:id]
+			subjects = []
+			query.keywords.each do |subject, key|
+				@ferret.search_each("object:\"#{key}\"") do |idx,score|
+					subjects << @ferret[idx][:subject]
 				end
-				where << "#{variable_name(query,var)} in (#{oids.join(',')})"
+				subjects.uniq! if query.distinct?
+				where << "#{variable_name(query,subject)} in (#{subjects.collect {'?'}.join(',')})"
+				@right_hand_sides += subjects
 			end
 		end
 
@@ -325,19 +331,6 @@ class RDFLite
 	def wrap(query, results)
 		results.collect do |row|
 			row.collect do |result|
-				# if result is a number (test using .to_i==0) then it is a literal that 
-				# we need to lookup in ferret
-				log "found result #{result}; to_i gives #{result.to_i}; keyword is #{@keyword_search}"
-
-				if result.to_i!=0
-					if @keyword_search
-						@ferret.search_each("id:\"#{result}\"") do |idx,score|
-							log "ferret says #{@ferret[idx][:content]}"
-							result = @ferret[idx][:content]
-						end
-					end
-				end
-
 				case result
 				when Resource
 					RDFS::Resource.new($1)
@@ -357,6 +350,6 @@ class RDFLite
 	SPO = ['s','p','o']
 
 	def log(s)
-		#puts "#{Time.now}: #{s}"
+#		puts "#{Time.now}: #{s}"
 	end
 end
