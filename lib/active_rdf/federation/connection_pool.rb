@@ -5,6 +5,7 @@
 # Author:: Eyal Oren
 # Copyright:: (c) 2005-2006
 # License:: LGPL
+
 class ConnectionPool
 
   # pool of all adapters
@@ -23,6 +24,7 @@ class ConnectionPool
 
   # clears the pool: removes all registered data sources
   def ConnectionPool.clear
+    $log.info "ConnectionPool: clear called"
     @@adapter_pool = []
     @@adapter_parameters = []
     @@write_adapter = nil
@@ -41,11 +43,13 @@ class ConnectionPool
   # sets the given adapter as currently selected writeable adapter
   # (sets currently selected writer to nil if given adapter does not support writing)
   def ConnectionPool.write_adapter= adapter
+    $log.info "ConnectionPool: setting write adapter to #{adapter.type}"
     @@write_adapter = adapter.writes? ? adapter : nil
   end
 
   # returns adapter-instance for given parameters (either existing or new)
   def ConnectionPool.add_data_source(connection_params)
+    $log.info "ConnectionPool: add_data_source with params: #{connection_params.join(', ')}"
     # either get the adapter-instance from the pool
     # or create new one (and add it to the pool)
     index = @@adapter_parameters.index(connection_params)
@@ -71,6 +75,7 @@ class ConnectionPool
   # adapter-types can register themselves with connection pool by
   # indicating which adapter-type they are
   def ConnectionPool.register_adapter(type, klass)
+    $log.info "ConnectionPool: registering adapter of type #{type} for class #{klass}"
     @@registered_adapter_types[type] = klass
   end
 

@@ -7,11 +7,14 @@
 require 'active_rdf'
 require 'federation/federation_manager'
 
+# TODO add log for every method which constitues to the query
+
 class Query
   attr_reader :select_clauses, :where_clauses, :keywords, :limits, :offsets
   bool_accessor :distinct, :ask, :select, :count, :keyword
 
   def initialize
+    $log.debug "Query: initializing"
     distinct = false
 		limit = nil
 		offset = nil
@@ -21,6 +24,7 @@ class Query
   end
 
 	def clear_select
+    $log.debug "Query: clearing select query"
 		@select_clauses = []
 		distinct = false
 	end
@@ -32,11 +36,13 @@ class Query
     end
 		# removing duplicate select clauses
 		@select_clauses.uniq!
+    $log.debug "Query: the current select clauses are: #{@select_clauses.join(', ')}"
     self
   end
 
   def ask
     @ask = true
+    $log.debug "Query: the current select clauses are: #{@select_clauses.join(', ')}"
     self
   end
 
@@ -102,6 +108,8 @@ class Query
   # usage: results = query.execute
   # usage: query.execute do |s,p,o| ... end
   def execute(options={:flatten => true}, &block)
+    $log.debug "Query: executing query: #{self.to_s}"
+    
     if block_given?
       FederationManager.query(self) do |*clauses|
         block.call(*clauses)

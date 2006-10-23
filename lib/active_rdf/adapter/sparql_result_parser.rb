@@ -3,6 +3,8 @@
 # Author:: Sebastian Gerke
 # Copyright:: (c) 2005-2006
 # License:: LGPL
+
+
 class SparqlResultParser
   
   attr_reader :result

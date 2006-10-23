@@ -24,6 +24,8 @@ class RedlandAdapter
 			type = 'memory'; path = '';	file = '.'
 		end
 		
+		$log.info "RedlandAdapter: initializing with type: #{type} file: #{file} path: #{path}"
+		
 		@store = Redland::HashStore.new(type, file, path, false)
 		@model = Redland::Model.new @store
 	end	
@@ -31,17 +33,28 @@ class RedlandAdapter
 	# yields query results (as many as requested in select clauses) executed on data source
 	def query(query)
 		qs = Query2SPARQL.translate(query)
+    $log.debug "RedlandAdapter: after translating to SPARQL, query is: #{qs}"
+		
+		time = Time.now
 		clauses = query.select_clauses.size
 		redland_query = Redland::Query.new(qs, 'sparql')
 		query_results = @model.query_execute(redland_query)
+		$log.info "RedlandAdapter: query response from Redland took: #{Time.now - time}s"
 
 		# verify if the query has failed
-		return false if query_results.nil?
-		return false unless query_results.is_bindings?
+		if query_results.nil?
+		  $log.info "RedlandAdapter: query has failed with nil result"
+		  return false
+		end
+		if query_results.is_bindings?
+		  $log.info "RedlandAdapter: query has failed without bindings"
+		  return false
+		end
 
 		# convert the result to array
 		#TODO: if block is given we should not parse all results into array first
 		results = query_result_to_array(query_results) 
+    $log.debug "RedlandAdapter: result of query is #{results.join(', ')}"
 		
 		if block_given?
 			results.each do |clauses|
@@ -55,12 +68,31 @@ class RedlandAdapter
 	# add triple to datamodel
 	def add(s, p, o)
 		# verify input
-		return false if s.nil? or p.nil? or o.nil?
-		return false if !s.kind_of?(RDFS::Resource) or !p.kind_of?(RDFS::Resource)
+		if s.nil? 
+      $log.info "RedlandAdapter: add: subject is nil, exiting"
+		  return false
+		elsif p.nil? 
+      $log.info "RedlandAdapter: add: predicate is nil, exiting"
+		  return false
+		elsif o.nil?
+      $log.info "RedlandAdapter: add: object is nil, exiting"		
+		  return false		
+		end 
+		
+		if !s.kind_of?(RDFS::Resource) or !p.kind_of?(RDFS::Resource)
+      $log.info "RedlandAdapter: add: subject is no RDFS::Resource, exiting"		
+		  return false
+	  elsif !p.kind_of?(RDFS::Resource)
+      $log.info "RedlandAdapter: add: predicate is no RDFS::Resource, exiting"			  
+	    return false
+		end
+	
+    $log.debug "RedlandAdapter: adding triple #{s} #{p} #{o}"
 	
 		begin
 		  @model.add(wrap(s), wrap(p), wrap(o))		  
 		rescue Redland::RedlandError => e
+		  $log.warn "RedlandAdapter: adding triple failed in Redland library: #{e}"
 		  return false
 		end		
 	end

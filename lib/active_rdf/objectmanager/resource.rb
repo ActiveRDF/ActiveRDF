@@ -7,9 +7,6 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
-
-$log.debug 'resource.rb: file is being loaded'
-
 require 'active_rdf'
 require 'objectmanager/object_manager'
 require 'objectmanager/namespace'
@@ -30,7 +27,7 @@ module RDFS
     # creates new resource representing an RDF resource
     def initialize uri
       raise ActiveRdfError, "creating resource <#{uri}>" unless uri.is_a?(String)
-      
+
       $log.debug "RDFS::Resource new: initializing new Resource with #{uri}"
       @uri = uri
     end
@@ -46,11 +43,11 @@ module RDFS
 
     # a resource is same as another if they both represent the same uri
     def ==(other)
-			if other.respond_to?(:uri)
-				other.uri == self.uri
-			else
-				false
-			end
+      if other.respond_to?(:uri)
+        other.uri == self.uri
+      else
+        false
+      end
     end
     alias_method 'eql?','=='
 
@@ -60,10 +57,10 @@ module RDFS
       uri.hash
     end
 
-		# overriding sort based on uri
-		def <=>(other)
-			uri <=> other.uri
-		end
+    # overriding sort based on uri
+    def <=>(other)
+      uri <=> other.uri
+    end
 
     #####                   	#####
     ##### class level methods	#####
@@ -79,6 +76,8 @@ module RDFS
     # manages invocations such as Person.find_by_name
     def Resource.method_missing(method, *args)
       method_name = method.to_s
+
+      $log.debug "RDFS::Resource: method_missing on class: called with method name #{method}"
 
       # extract predicates on which to match
       # e.g. find_by_name, find_by_name_and_age
@@ -103,24 +102,26 @@ module RDFS
         end
 
         # execute query
+        $log.debug "RDFS::Resource: method_missing on class: executing query: #{query}"
         return query.execute
       end
 
       # otherwise, if no match found, raise NoMethodError (in superclass)
+      $log.warn 'RDFS::Resource: method_missing on class: method not matching find_by_*'
       super
     end
 
-		# returns array of all instances of this class (e.g. Person.find_all)
-		# (always returns collection)
+    # returns array of all instances of this class (e.g. Person.find_all)
+    # (always returns collection)
     def Resource.find_all
-			query = Query.new.distinct(:s).where(:s, Namespace.lookup(:rdf,:type), class_uri)
-			if block_given?
-				query.execute do |resource|
-					yield resource
-				end
-			else
-				query.execute(:flatten => false)
-			end
+      query = Query.new.distinct(:s).where(:s, Namespace.lookup(:rdf,:type), class_uri)
+      if block_given?
+        query.execute do |resource|
+          yield resource
+        end
+      else
+        query.execute(:flatten => false)
+      end
     end
 
     #####                         #####
@@ -138,12 +139,12 @@ module RDFS
       # explain: eyal is a person and some other person (not eyal) has an age
       # evidence: eyal type ?c, age domain ?c
       # action: return nil
-			#
+      #
       # 3. eyal.age = 30 (setting a value for a property)
       # explain: eyal has (or could have) a value for age, and we update that value
-			# complication: we need to find the full URI for age (by looking at 
-			# possible predicates to use
-			# evidence: eyal age ?o  (eyal has a value for age now, we're updating it)
+      # complication: we need to find the full URI for age (by looking at
+      # possible predicates to use
+      # evidence: eyal age ?o  (eyal has a value for age now, we're updating it)
       # evidence: eyal type ?c, age domain ?c (eyal could have a value for age, we're setting it)
       # action: add triple (eyal, age, 30), return 30
       #
@@ -155,9 +156,11 @@ module RDFS
       # cheaper than (1)-(2) but (1) and (2) are probably more probable (getting
       # attribute values over executing custom methods)
 
+      $log.debug "RDFS::Resource: method_missing on instance: called with method name #{method}"
+
       # are we doing an update or not?
       # checking if method ends with '='
-			
+
       if method.to_s[-1..-1] == '='
         methodname = method.to_s[0..-2]
         update = true
@@ -166,149 +169,151 @@ module RDFS
         update = false
       end
 
-			candidates = if update
-										 class_level_predicates
-									 else
-										 direct_predicates
-									 end
-
-      # checking possibility (1) and (3)
-			success = get_set_attribute_value(methodname, candidates, update, args)
-			return success unless success.nil?
-
-			# checking possibility (2), it is not handled correctly above since we use 
-			# direct_predicates instead of class_level_predicates. If we didn't find 
-			# anything with direct_predicates, we need to try the 
-			# class_level_predicates. Only if we don't find either, we 
-			# throw "method_missing"
-			candidates = class_level_predicates
-
-			# if any of the class_level candidates fits the sought method, then we 
-			# found situation (2), so we return nil or [] depending on the {:array => 
-			# true} value
-			if candidates.any?{|c| Namespace.localname(c) == methodname}
-				return_ary = args[0][:array] if args[0].is_a? Hash	
-				if return_ary
-					return []
-				else
-					return nil
-				end
-			end
-
-      # checking possibility (4)
-      # TODO: implement search strategy to select in which class to invoke
-      # e.g. if to_s defined in Resource and in Person we should use Person
-      self.class.each do |klass|
-        if klass.instance_methods.include?(method.to_s)
-          _dup = klass.new(uri)
-          return _dup.send(method,*args)
-        end
-      end
-
-			# if none of the three possibilities work out, we don't know this method 
-			# invocation, but we don't want to throw NoMethodError, instead we return 
-			# nil, so that eyal.age does not raise error, but returns nil. (in RDFS, 
-			# we are never sure that eyal cannot have an age, we just dont know the 
-			# age right now)
-			nil
+      candidates = if update
+      class_level_predicates
+    else
+      direct_predicates
     end
 
-    # returns classes to which this resource belongs (according to rdf:type)
-    def class
-      types.collect do |type|
-        ObjectManager.construct_class(type)
+    # checking possibility (1) and (3)
+    success = get_set_attribute_value(methodname, candidates, update, args)
+    return success unless success.nil?
+
+    # checking possibility (2), it is not handled correctly above since we use
+    # direct_predicates instead of class_level_predicates. If we didn't find
+    # anything with direct_predicates, we need to try the
+    # class_level_predicates. Only if we don't find either, we
+    # throw "method_missing"
+    candidates = class_level_predicates
+
+    # if any of the class_level candidates fits the sought method, then we
+    # found situation (2), so we return nil or [] depending on the {:array =>
+    # true} value
+    if candidates.any?{|c| Namespace.localname(c) == methodname}
+      return_ary = args[0][:array] if args[0].is_a? Hash
+      if return_ary
+        return []
+      else
+        return nil
+
       end
     end
 
-		def type
-			get_property_value(Namespace.lookup(:rdf,:type))
-		end
-
-    # overrides built-in instance_of? to use rdf:type definitions
-    def instance_of?(klass)
-      self.class.include?(klass)
-    end
-
-    # returns all predicates that fall into the domain of the rdf:type of this
-    # resource
-    def class_level_predicates
-      type = Namespace.lookup(:rdf, 'type')
-      domain = Namespace.lookup(:rdfs, 'domain')
-      Query.new.distinct(:p).where(self,type,:t).where(:p, domain, :t).execute || []
-    end
-
-		# returns all predicates that are directly defined for this resource
-		def direct_predicates(distinct = true)
-		  if distinct
-			  q = Query.new.distinct(:p)
-			else
-			  q = Query.new.select(:p)
-			end
-			q.where(self,:p, :o).execute(:flatten => false) || []
-    end
-
-		def property_accessors
-			direct_predicates.collect {|pred| Namespace.localname(pred) }
-		end
-
-    # returns all rdf:types of this resource
-    def types
-      type = Namespace.lookup(:rdf, :type)
-
-      # we lookup the type in the database
-      types = Query.new.distinct(:t).where(self,type,:t).execute(:flatten => false)
-
-      # if we dont know it, we return Resource (as toplevel)
-      # this should in theory actually never happen (since any node is a rdfs:Resource)
-      # but could happen if the subject is unknown to the database
-      # or if the database does not support RDFS inferencing
-      return [Namespace.lookup(:rdfs,"Resource")] if types.empty?
-      return types
-    end
-
-		# alias include? to ==, so that you can do paper.creator.include?(eyal) 
-		# without worrying whether paper.creator is single- or multi-valued
-		alias include? ==
-
-    # returns uri of resource, can be overridden in subclasses
-    def to_s
-			"resource: #{uri}"
-    end
-
-    def label(*args)
-			get_property_value(Namespace.lookup(:rdfs,:label)) || Namespace.localname(self)
-    end
-
-		private
-		def get_property_value(predicate, args=[])
-			return_ary = args[0][:array] if args[0].is_a?(Hash)
-			flatten_results = !return_ary
-			Query.new.distinct(:o).where(self, predicate, :o).execute(:flatten => flatten_results)
-		end
-
-		def get_set_attribute_value(methodname, candidates, update=false, *args)
-			candidates.each do |pred|
-        if Namespace.localname(pred) == methodname
-          # found a property invocation of eyal: option 1) or 2)
-          # query execution will return either the value for the predicate (1)
-          # or nil (2)
-          if update
-            # TODO: delete old value if overwriting
-            # FederiationManager.delete(self, pred, nil)
-
-            # handling eyal.friends = [armin, andreas] --> expand array values
-            args.each do |value|
-              FederationManager.add(self, pred, value)
-            end
-            return args
-          else
-						# look into args, if it contains a hash with {:array => true} then 
-						# we should not flatten the query results
-            return get_property_value(pred, args)
-					end
-        end
+    # checking possibility (4)
+    # TODO: implement search strategy to select in which class to invoke
+    # e.g. if to_s defined in Resource and in Person we should use Person
+    $log.debug "RDFS::Resource: method_missing on instance: branch selected: execution of custom class method"
+    self.class.each do |klass|
+      if klass.instance_methods.include?(method.to_s)
+        _dup = klass.new(uri)
+        return _dup.send(method,*args)
       end
-			return nil
-		end
+    end
+
+    # if none of the three possibilities work out, we don't know this method
+    # invocation, but we don't want to throw NoMethodError, instead we return
+    # nil, so that eyal.age does not raise error, but returns nil. (in RDFS,
+    # we are never sure that eyal cannot have an age, we just dont know the
+    # age right now)
+    nil
   end
+
+  # returns classes to which this resource belongs (according to rdf:type)
+  def class
+    types.collect do |type|
+      ObjectManager.construct_class(type)
+    end
+  end
+
+  def type
+    get_property_value(Namespace.lookup(:rdf,:type))
+  end
+
+  # overrides built-in instance_of? to use rdf:type definitions
+  def instance_of?(klass)
+    self.class.include?(klass)
+  end
+
+  # returns all predicates that fall into the domain of the rdf:type of this
+  # resource
+  def class_level_predicates
+    type = Namespace.lookup(:rdf, 'type')
+    domain = Namespace.lookup(:rdfs, 'domain')
+    Query.new.distinct(:p).where(self,type,:t).where(:p, domain, :t).execute || []
+  end
+
+  # returns all predicates that are directly defined for this resource
+  def direct_predicates(distinct = true)
+    if distinct
+      q = Query.new.distinct(:p)
+    else
+      q = Query.new.select(:p)
+    end
+    q.where(self,:p, :o).execute(:flatten => false) || []
+  end
+
+  def property_accessors
+    direct_predicates.collect {|pred| Namespace.localname(pred) }
+  end
+
+  # returns all rdf:types of this resource
+  def types
+    type = Namespace.lookup(:rdf, :type)
+
+    # we lookup the type in the database
+    types = Query.new.distinct(:t).where(self,type,:t).execute(:flatten => false)
+
+    # if we dont know it, we return Resource (as toplevel)
+    # this should in theory actually never happen (since any node is a rdfs:Resource)
+    # but could happen if the subject is unknown to the database
+    # or if the database does not support RDFS inferencing
+    return [Namespace.lookup(:rdfs,"Resource")] if types.empty?
+    return types
+  end
+
+  # alias include? to ==, so that you can do paper.creator.include?(eyal)
+  # without worrying whether paper.creator is single- or multi-valued
+  alias include? ==
+
+  # returns uri of resource, can be overridden in subclasses
+  def to_s
+    "resource: #{uri}"
+  end
+
+  def label(*args)
+    get_property_value(Namespace.lookup(:rdfs,:label)) || Namespace.localname(self)
+  end
+
+  private
+  def get_property_value(predicate, args=[])
+    return_ary = args[0][:array] if args[0].is_a?(Hash)
+    flatten_results = !return_ary
+    Query.new.distinct(:o).where(self, predicate, :o).execute(:flatten => flatten_results)
+  end
+
+  def get_set_attribute_value(methodname, candidates, update=false, *args)
+    candidates.each do |pred|
+      if Namespace.localname(pred) == methodname
+        # found a property invocation of eyal: option 1) or 2)
+        # query execution will return either the value for the predicate (1)
+        # or nil (2)
+        if update
+          # TODO: delete old value if overwriting
+          # FederiationManager.delete(self, pred, nil)
+
+          # handling eyal.friends = [armin, andreas] --> expand array values
+          args.each do |value|
+            FederationManager.add(self, pred, value)
+          end
+          return args
+        else
+          # look into args, if it contains a hash with {:array => true} then
+          # we should not flatten the query results
+          return get_property_value(pred, args)
+        end
+      end
+    end
+    return nil
+  end
+end
 end

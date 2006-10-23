@@ -17,6 +17,7 @@ class Jars2Adapter
 	def initialize(params = {})
 		@host = params[:host] || 'm3pe.org'
 		@port = params[:port] || 2020
+		$log.info "Jars2Adapter: initializing new instance with host: #{@host} port: #{@port}"
 		@yars = Net::HTTP.new(@host, @port)
 	end
 
@@ -31,8 +32,9 @@ class Jars2Adapter
 		# the result
 		time = Time.now
 		response = @yars.get("/?q=#{CGI.escape(qs)}&eyal", header)
-		puts qs
-		puts "response from Jars took #{Time.now - time}s"
+		
+		$log.debug "Jars2Adapter: query executed: #{qs}"
+		$log.info "Jars2Adapter: query response from Jars took: #{Time.now - time}s"
 
 		# return empty array if no content
 		return [] if response.is_a?(Net::HTTPNoContent)
@@ -45,10 +47,13 @@ class Jars2Adapter
 
 		# remove duplicates if asked for distinct results
 		if query.distinct?
-			results.uniq
+			final_results = results.uniq
 		else
-			results
+			final_results = results
 		end
+		
+		$log.debug "Jars2Adapter: query returned results #{final_results.join(', ')}"
+		return final_results
 	end
 
 	private

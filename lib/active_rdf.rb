@@ -38,16 +38,7 @@ $log =
   
 # if user has specified loglevel we use that, otherwise we use default level
 # in the environment variable ACTIVE_RDF_LOG_LEVEL we expect numbers, which we have to convert
-$log.level = 
-  case ENV['ACTIVE_RDF_LOG_LEVEL']
-    when "0": Logger::DEBUG
-    when "1": Logger::INFO
-    when "2": Logger::WARN
-    when "3": Logger::ERROR
-    when "4": Logger::FATAL
-    when "5": Logger::UNKOWN 
-    else      Logger::WARN
-  end
+$log.level = ENV['ACTIVE_RDF_LOG_LEVEL'].to_i || Logger::WARN
 
 $log.info "ActiveRDF 0.9.1 started"
 
@@ -78,20 +69,14 @@ Dir[dir + "/active_rdf/adapter/*.rb"].each do |adapter|
   end
 end
 
-# now load all the adapters known to gem_plugin`s automatic loading mechanism
-#
-#TODO: disable "require rdflite" before packaging
-#TODO: enable gem-plugin loading before packaging
-#require 'gem_plugin'
-#GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
-require 'rdflite'
-
-# TODO: figure out how to differenciate between gem_plugins only depending on activerdf and those which are also in the catgeory adapter
-
-# TODO: nobody should use string.start_with? anymore...to check if for 
-# query-terms being variables use is_a?(Symbol)
-#class String
-#	def start_with?(other)
-#		slice(0..0) == other
-#	end
-#end
+#determine if we are installed as a gem right now:
+if Gem::cache().search("activerdf").empty?
+  #we are not running as a gem
+  $log.info 'ActiveRDF is NOT installed as a Gem'
+  require 'rdflite'
+else
+  #we are indeed running as a gem
+  require 'gem_plugin'
+  $log.info 'ActiveRDF is installed as a Gem'
+  GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
+end 

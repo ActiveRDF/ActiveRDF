@@ -5,6 +5,8 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 require 'active_rdf'
+
+
 class Query2Jars2
 	def self.translate(query)
 		str = ""
@@ -18,6 +20,8 @@ class Query2Jars2
 			# interesting information. Maybe we should not touch it and let the user 
 			# figure it out.
 		end
-		str
+		
+		$log.debug "Query2Jars2: translated #{query} to #{str}"
+		return str
 	end
 end

@@ -4,6 +4,7 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
+
 class Namespace
 
   @@namespaces = Hash.new
@@ -13,12 +14,15 @@ class Namespace
   # e.g. :rdf and 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
   def self.register(prefix, fullURI)
 		raise ActiveRdfError, 'prefix nor uri can be empty' if (prefix.to_s.empty? or fullURI.to_s.empty?)
+		$log.info "Namespace: registering #{fullURI} to #{prefix}"
     @@namespaces[prefix.to_sym] = fullURI.to_s
     @@inverted_namespaces[fullURI.to_s] = prefix.to_sym
   end
 
   # returns a resource whose URI is formed by concatenation of prefix and localname
   def self.lookup(prefix, localname)
+    full_resource = expand(prefix, localname)
+    $log.info "Namespace: lookup for Resource #{full_resource} initiated"
     RDFS::Resource.new(expand(prefix, localname))
   end
 

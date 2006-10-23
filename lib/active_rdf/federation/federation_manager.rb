@@ -5,11 +5,14 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 require 'federation/connection_pool'
+
+
 class FederationManager
 
   # add triple s,p,o to the currently selected write-adapter
   def FederationManager.add(s,p,o)
     # TODO: allow addition of full graphs
+    $log.debug "FederationManager: add: triple is #{s} #{p} #{o}, write adapter is #{write_adapter.type}"
     ConnectionPool.write_adapter.add(s,p,o)
   end
 
@@ -17,6 +20,7 @@ class FederationManager
   # by distributing query over complete read-pool
   # and aggregating the results
   def FederationManager.query(q, options={:flatten => true})
+    $log.debug "FederationManager: query called with: #{q}"
     # ask each adapter for query results
     # and yield them consequtively
     if block_given?
@@ -50,16 +54,17 @@ class FederationManager
       if options[:flatten]
         case results.size
         when 0
-          nil
+          final_results = nil
         when 1
-          results.first
+          final_results = results.first
         else
-          results
+          final_results = results
         end
       else
-        results
+        final_results = results
       end
-
     end
+    $log.debug "FederationManager: query results are #{final_results.join(', ')}"
+    return final_results
   end
 end

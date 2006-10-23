@@ -4,12 +4,11 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 require 'active_rdf'
-require 'active_rdf'
 require 'queryengine/query2sparql'
 
 require 'net/http'
 require 'cgi'
-require 'active_rdf'
+
 
 class SparqlAdapter
 	ConnectionPool.register_adapter(:sparql, self)
@@ -33,6 +32,8 @@ class SparqlAdapter
 		known_formats = [:xml, :json, :sparql_xml]
 		raise ActiveRdfError, "Result format unsupported" unless known_formats.include?(@result_format)
 		
+		$log.info "SparqlAdaper: initializing with host: #{@host} path: #{@path} port: #{@port} context #{@context} result format: #{@result_format}"
+		
 		# We don't open the connection yet but let each HTTP method open and close 
 		# it individually. It would be more efficient to pipeline methods, and keep 
 		# the connection open continuously, but then we would need to close it 
@@ -43,8 +44,11 @@ class SparqlAdapter
 
 	# query datastore with query string (SPARQL), returns array with query results
 	def query(query)
+		time = Time.now
     qs = Query2SPARQL.translate(query)
-		execute_sparql_query(qs, header(query)) #, query.select_clauses.size)
+		final_result = execute_sparql_query(qs, header(query)) #, query.select_clauses.size)
+		$log.info "SparqlAdapter: query response from the SPARQL Endpoint took: #{Time.now - time}s"
+		return final_result
 	end
 	
 	
@@ -57,8 +61,15 @@ class SparqlAdapter
 
     # if no content returned or if something went wrong
     # we return an empty array
-    return [] if response.is_a?(Net::HTTPNoContent)
-    return [] unless response.is_a?(Net::HTTPOK)
+    if response.is_a?(Net::HTTPNoContent)
+      $log.info "SparqlAdapter: executing the SPARQL query returned empty response"
+      return [] 
+    end
+    
+    unless response.is_a?(Net::HTTPOK)
+      $log.info "SparqlAdapter: executing the SPARQL query failed: #{response.body}"
+      return [] 
+    end
 
     # we parse content depending on the result format
     results = case @result_format
@@ -118,6 +129,7 @@ class SparqlAdapter
         end
       end
     end
+    $log.debug "SparqlAdapter: parsed SPARQL query results as JSON, input: #{query_result.join(', ')} output: #{results.join(', ')}"
     return results
   end
   
@@ -127,7 +139,9 @@ class SparqlAdapter
     require 'adapter/sparql_result_parser'
     parser = SparqlResultParser.new
     REXML::Document.parse_stream(qr, parser)
-    parser.result
+    final_results = parser.result
+    $log.debug "SparqlAdapter: parsed SPARQL query results as XML Stream"
+    return final_results
   end
   
   # parse xml query results into array
@@ -161,6 +175,7 @@ class SparqlAdapter
         end
       end
     end
+    $log.debug "SparqlAdapter: parsed SPARQL query results as XML, input: #{query_result.join(', ')} output: #{results.join(', ')}"
     return results
   end
   
