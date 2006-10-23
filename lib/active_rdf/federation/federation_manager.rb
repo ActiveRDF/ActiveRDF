@@ -44,7 +44,7 @@ class FederationManager
 
       # flatten results array if only one select clause
       # to prevent unnecessarily nested array [[eyal],[renaud],...]
-      results.flatten! if q.select_clauses.size == 1
+      results.flatten! if q.select_clauses.size == 1 or q.ask?
 
       # and remove array (return single value) unless asked not to
       if options[:flatten]

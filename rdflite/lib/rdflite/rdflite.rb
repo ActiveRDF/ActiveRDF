@@ -155,6 +155,8 @@ class RDFLite
 		# executing query
 		results = @db.execute(sql, *constraints)
 
+		return [results[0][0].to_i > 0] if query.ask?
+
 		# convert results to ActiveRDF nodes and return them
 		wrap(query, results)
 	end
@@ -167,6 +169,9 @@ class RDFLite
 	private
 	# construct select clause
 	def construct_select(query)
+		# ask queries just count the results, and return true if results > 0
+		return "select count(*)" if query.ask?
+
 		# find the right select clause for this term
 		select = query.select_clauses.collect do |term|
 			variable_name(query, term)
