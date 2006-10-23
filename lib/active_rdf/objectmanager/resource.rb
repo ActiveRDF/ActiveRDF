@@ -28,7 +28,7 @@ module RDFS
     def initialize uri
       raise ActiveRdfError, "creating resource <#{uri}>" unless uri.is_a?(String)
 
-      $log.debug "RDFS::Resource new: initializing new Resource with #{uri}"
+#      $log.debug "RDFS::Resource new: initializing new Resource with #{uri}"
       @uri = uri
     end
 
