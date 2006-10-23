@@ -32,13 +32,17 @@ $log =
     else
       require 'tmpdir'
       # else just write to the temp dir
-      Logger.new(Dir.tmpdir.to_s + "/active_rdf.log", 1, 100*1024); 
+      Logger.new(Dir.tmpdir.to_s + "/activerdf.log", 1, 100*1024); 
     end
   end
   
 # if user has specified loglevel we use that, otherwise we use default level
 # in the environment variable ACTIVE_RDF_LOG_LEVEL we expect numbers, which we have to convert
-$log.level = ENV['ACTIVE_RDF_LOG_LEVEL'].to_i || Logger::WARN
+if ENV['ACTIVE_RDF_LOG_LEVEL'].nil?
+  $log.level = Logger::WARN
+else
+  $log.level = ENV['ACTIVE_RDF_LOG_LEVEL'].to_i
+end
 
 $log.info "ActiveRDF 0.9.1 started"
 

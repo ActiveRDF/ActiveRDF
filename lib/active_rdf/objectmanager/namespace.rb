@@ -22,7 +22,7 @@ class Namespace
   # returns a resource whose URI is formed by concatenation of prefix and localname
   def self.lookup(prefix, localname)
     full_resource = expand(prefix, localname)
-    $log.info "Namespace: lookup for Resource #{full_resource} initiated"
+    $log.debug "Namespace: lookup for Resource #{full_resource} initiated"
     RDFS::Resource.new(expand(prefix, localname))
   end
 
