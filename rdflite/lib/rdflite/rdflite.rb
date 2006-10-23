@@ -10,13 +10,11 @@ require 'sqlite3'
 require 'active_rdf'
 require 'federation/connection_pool'
 
-# TODO FIXME use logging framework
-
 begin 
 	require 'ferret'
 	@@have_ferret = true
 rescue LoadError
-	#log "error loading ferret"
+	$log.warn "We could not load ferret, therefore keyword search is not available. If you want keyword search, please install ferret: gem install ferret"
 	@@have_ferret = false
 end
 
@@ -26,7 +24,8 @@ class RDFLite
 
 	# instantiate RDFLite database
 	def initialize(params = {})
-		log "initialised with params #{params.to_s}"
+		$log.info "initialised rdflite with params #{params.to_s}"
+	
 		# if no file-location given, we use in-memory store
 		file = params[:location] || ':memory:'
 		@db = SQLite3::Database.new(file) 
@@ -40,7 +39,7 @@ class RDFLite
 
 		# we can only do keyword search if ferret is found
 		@keyword_search &= @@have_ferret
-		log "we #{@keyword_search ? "do" : "don't"} have keyword search"
+		$log.debug "we #{@keyword_search ? "do" : "don't"} have keyword search"
 
 		if @keyword_search
 			# we initialise the ferret index, either as a file or in memory
@@ -81,8 +80,8 @@ class RDFLite
 		@db.execute('create index if not exists poidx on triple(p,o)') if poidx
 		@db.execute('create index if not exists opidx on triple(o,p)') if opidx
 
-		log("opened connection to #{file}")
-		log("database contains #{size} triples")
+		$log.debug("opened connection to #{file}")
+		$log.debug("database contains #{size} triples")
 	end
 
 	# returns all triples in the datastore
@@ -135,13 +134,13 @@ class RDFLite
 				nodes = triple.scan(Node)
 				add_internal(nodes[0], nodes[1], nodes[2])
 			end
-			log("read #{ntriples.size} triples from file in #{Time.now - time}s")
+			$log.debug("read #{ntriples.size} triples from file in #{Time.now - time}s")
 		end
 	end
 
 	def query(query)
 		# log received query
-		log "received query: #{query.to_sp}"
+		$log.debug "received query: #{query.to_sp}"
 
 		# construct query clauses
 		sql = translate(query)
@@ -150,7 +149,7 @@ class RDFLite
 		# sqlite will encode quotes correctly)
 		constraints = @right_hand_sides.collect { |value| value.to_s }
 
-		log format("executing: #{sql.gsub('?','"%s"')}", *constraints)
+		$log.debug format("executing: #{sql.gsub('?','"%s"')}", *constraints)
 
 		# executing query
 		results = @db.execute(sql, *constraints)
@@ -354,7 +353,4 @@ class RDFLite
 	Node = Regexp.union(/<[^>]*>/,/"[^"]*"/)
 	SPO = ['s','p','o']
 
-	def log(s)
-#		puts "#{Time.now}: #{s}"
-	end
 end

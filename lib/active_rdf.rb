@@ -21,7 +21,7 @@ end
 require 'logger'
 
 # initialize our logger
-$log = 
+$log =
   begin
     # us the rails logger if running under rails
     RAILS_DEFAULT_LOGGER 
@@ -35,7 +35,9 @@ $log =
       Logger.new(Dir.tmpdir.to_s + "/activerdf.log", 1, 100*1024); 
     end
   end
-  
+
+$log = Logger.new($stdout)
+    
 # if user has specified loglevel we use that, otherwise we use default level
 # in the environment variable ACTIVE_RDF_LOG_LEVEL we expect numbers, which we have to convert
 if ENV['ACTIVE_RDF_LOG_LEVEL'].nil?
@@ -45,12 +47,13 @@ else
 end
 
 $log.info "ActiveRDF 0.9.1 started"
+$log.info "Logging on level #{$log.level}"
 
 class Module
   def bool_accessor *syms
-    attr_accessor *syms
+    attr_accessor(*syms)
     syms.each { |sym| alias_method "#{sym}?", sym }
-    remove_method *syms
+    remove_method(*syms)
   end
 end
 

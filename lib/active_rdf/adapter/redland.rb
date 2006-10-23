@@ -39,15 +39,15 @@ class RedlandAdapter
 		clauses = query.select_clauses.size
 		redland_query = Redland::Query.new(qs, 'sparql')
 		query_results = @model.query_execute(redland_query)
-		$log.info "RedlandAdapter: query response from Redland took: #{Time.now - time}s"
+		$log.debug "RedlandAdapter: query response from Redland took: #{Time.now - time}s"
 
 		# verify if the query has failed
 		if query_results.nil?
-		  $log.info "RedlandAdapter: query has failed with nil result"
+		  $log.debug "RedlandAdapter: query has failed with nil result"
 		  return false
 		end
 		if query_results.is_bindings?
-		  $log.info "RedlandAdapter: query has failed without bindings"
+		  $log.debug "RedlandAdapter: query has failed without bindings"
 		  return false
 		end
 
@@ -69,21 +69,21 @@ class RedlandAdapter
 	def add(s, p, o)
 		# verify input
 		if s.nil? 
-      $log.info "RedlandAdapter: add: subject is nil, exiting"
+      $log.debug "RedlandAdapter: add: subject is nil, exiting"
 		  return false
 		elsif p.nil? 
-      $log.info "RedlandAdapter: add: predicate is nil, exiting"
+      $log.debug "RedlandAdapter: add: predicate is nil, exiting"
 		  return false
 		elsif o.nil?
-      $log.info "RedlandAdapter: add: object is nil, exiting"		
+      $log.debug "RedlandAdapter: add: object is nil, exiting"		
 		  return false		
 		end 
 		
 		if !s.kind_of?(RDFS::Resource) or !p.kind_of?(RDFS::Resource)
-      $log.info "RedlandAdapter: add: subject is no RDFS::Resource, exiting"		
+      $log.debug "RedlandAdapter: add: subject is no RDFS::Resource, exiting"		
 		  return false
 	  elsif !p.kind_of?(RDFS::Resource)
-      $log.info "RedlandAdapter: add: predicate is no RDFS::Resource, exiting"			  
+      $log.debug "RedlandAdapter: add: predicate is no RDFS::Resource, exiting"			  
 	    return false
 		end
 	

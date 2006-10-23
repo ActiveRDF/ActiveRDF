@@ -34,7 +34,7 @@ class Jars2Adapter
 		response = @yars.get("/?q=#{CGI.escape(qs)}&eyal", header)
 		
 		$log.debug "Jars2Adapter: query executed: #{qs}"
-		$log.info "Jars2Adapter: query response from Jars took: #{Time.now - time}s"
+		$log.debug "Jars2Adapter: query response from Jars took: #{Time.now - time}s"
 
 		# return empty array if no content
 		return [] if response.is_a?(Net::HTTPNoContent)

@@ -5,10 +5,8 @@
 # License:: LGPL
 require 'active_rdf'
 require 'queryengine/query2sparql'
-
 require 'net/http'
 require 'cgi'
-
 
 class SparqlAdapter
 	ConnectionPool.register_adapter(:sparql, self)
@@ -47,7 +45,7 @@ class SparqlAdapter
 		time = Time.now
     qs = Query2SPARQL.translate(query)
 		final_result = execute_sparql_query(qs, header(query)) #, query.select_clauses.size)
-		$log.info "SparqlAdapter: query response from the SPARQL Endpoint took: #{Time.now - time}s"
+		$log.debug "SparqlAdapter: query response from the SPARQL Endpoint took: #{Time.now - time}s"
 		return final_result
 	end
 	
@@ -62,12 +60,12 @@ class SparqlAdapter
     # if no content returned or if something went wrong
     # we return an empty array
     if response.is_a?(Net::HTTPNoContent)
-      $log.info "SparqlAdapter: executing the SPARQL query returned empty response"
+      $log.debug "SparqlAdapter: executing the SPARQL query returned empty response"
       return [] 
     end
     
     unless response.is_a?(Net::HTTPOK)
-      $log.info "SparqlAdapter: executing the SPARQL query failed: #{response.body}"
+      $log.warn "SparqlAdapter: executing the SPARQL query failed: #{response.body}"
       return [] 
     end
 

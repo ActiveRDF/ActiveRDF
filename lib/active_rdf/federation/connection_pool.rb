@@ -7,7 +7,6 @@
 # License:: LGPL
 
 class ConnectionPool
-
   # pool of all adapters
   @@adapter_pool = Array.new
 
@@ -49,7 +48,7 @@ class ConnectionPool
 
   # returns adapter-instance for given parameters (either existing or new)
   def ConnectionPool.add_data_source(connection_params)
-    $log.info "ConnectionPool: add_data_source with params: #{connection_params.to_a.join(', ')}"
+    $log.info "ConnectionPool: add_data_source with params: #{connection_params}"
     # either get the adapter-instance from the pool
     # or create new one (and add it to the pool)
     index = @@adapter_parameters.index(connection_params)
@@ -57,12 +56,14 @@ class ConnectionPool
       # adapter not in the pool yet: create it,
       # register its connection parameters in parameters-array
       # and add it to the pool (at same index-position as parameters)
+      $log.debug("Create a new adapter for parameters #{connection_params}")
       adapter = create_adapter(connection_params)
       @@adapter_parameters << connection_params
       @@adapter_pool << adapter
     else
       # if adapter parametrs registered already,
       # then adapter must be in the pool, at the same index-position as its parameters
+      $log.debug("Reusing existing adapter")
       adapter = @@adapter_pool[index]
     end
 
