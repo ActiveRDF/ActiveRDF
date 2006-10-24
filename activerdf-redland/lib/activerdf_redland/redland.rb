@@ -79,27 +79,18 @@ class RedlandAdapter
 	
 	# add triple to datamodel
 	def add(s, p, o)
+    $log.debug "adding triple #{s} #{p} #{o}"
+
 		# verify input
-		if s.nil? 
-      $log.debug "RedlandAdapter: add: subject is nil, exiting"
+		if s.nil? || p.nil? || o.nil?
+      $log.debug "cannot add triple with empty subject, exiting"
 		  return false
-		elsif p.nil? 
-      $log.debug "RedlandAdapter: add: predicate is nil, exiting"
-		  return false
-		elsif o.nil?
-      $log.debug "RedlandAdapter: add: object is nil, exiting"		
-		  return false		
 		end 
 		
-		if !s.kind_of?(RDFS::Resource) or !p.kind_of?(RDFS::Resource)
-      $log.debug "RedlandAdapter: add: subject is no RDFS::Resource, exiting"		
+		unless s.respond_to?(:uri) && p.respond_to?(:uri)
+      $log.debug "cannot add triple where s/p are not resources, exiting"		
 		  return false
-	  elsif !p.kind_of?(RDFS::Resource)
-      $log.debug "RedlandAdapter: add: predicate is no RDFS::Resource, exiting"			  
-	    return false
 		end
-	
-    $log.debug "RedlandAdapter: adding triple #{s} #{p} #{o}"
 	
 		begin
 		  @model.add(wrap(s), wrap(p), wrap(o))		  
@@ -108,6 +99,12 @@ class RedlandAdapter
 		  return false
 		end		
 	end
+
+	# saves updates to the model into the redland file location
+	def save
+		Redland::librdf_model_sync(@model.model).nil?
+	end
+	alias flush save
 	
 	def reads?
 		true
@@ -118,11 +115,20 @@ class RedlandAdapter
 	end
 	
 	def translate(query)
-	 return Query2SPARQL.translate(query)
+		Query2SPARQL.translate(query)
 	end
 	
+	# returns size of datasources as number of triples
+	#
+	# warning: expensive method as it iterates through all statements
 	def size
-    return @model.size
+		# we cannot use @model.size, because redland does not allow counting of 
+		# file-based models (@model.size raises an error if used on a file)
+		
+		# instead, we just dump all triples, and count them
+		stats = []
+    @model.statements{|s,p,o| stats << [s,p,o]}
+		stats.size
 	end
 	
 	################ helper methods ####################
