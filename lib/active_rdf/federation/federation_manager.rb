@@ -12,7 +12,7 @@ class FederationManager
   # add triple s,p,o to the currently selected write-adapter
   def FederationManager.add(s,p,o)
     # TODO: allow addition of full graphs
-    $log.debug "FederationManager: add: triple is #{s} #{p} #{o}, write adapter is #{write_adapter.type}"
+    $log.debug "FederationManager: add: triple is #{s} #{p} #{o}"
     ConnectionPool.write_adapter.add(s,p,o)
   end
 

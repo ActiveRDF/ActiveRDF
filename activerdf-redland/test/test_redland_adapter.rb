@@ -77,6 +77,14 @@ class TestObjectCreation < Test::Unit::TestCase
       assert_equal 'foaf:age', p.uri
     end
   end
+  
+  def test_load_from_file
+    adapter = ConnectionPool.add_data_source :type => :redland
+    # adapter.load("/tmp/test_person_data.nt", "turtle")
+    # adapter.load("/home/metaman/workspaces/deri-workspace/activerdf/test/test_person_data.nt", "turtle")
+    adapter.load("#{File.dirname(__FILE__)}/test_person_data.nt", "turtle")
+    assert_equal 28, adapter.size  
+  end
 
   def test_person_data
     ConnectionPool.add_data_source :type => :redland, :location => 'test/test-person'
@@ -217,18 +225,22 @@ class TestObjectCreation < Test::Unit::TestCase
     # but currently redland is the only datasource to which we can write
     # but we should move this to a generic test suite, check whether we have a write_adapter,
     # and if so run this test
-    ConnectionPool.add_data_source :type => :redland, :location => 'test/test-person'
+    
+    # ConnectionPool.add_data_source :type => :redland, :location => 'test/test-person'
+    adapter = ConnectionPool.add_data_source :type => :redland
+    adapter.load("#{File.dirname(__FILE__)}/test_person_data.nt", "turtle")
     Namespace.register(:test, 'http://activerdf.org/test/')
     eyal = Namespace.lookup(:test, :eyal)
 
     assert_equal '27', eyal.age
     eyal.age = 30
-    assert_equal
   end
 
   # test fails 
   def test_person_data
-    ConnectionPool.add_data_source :type => :redland, :location => 'test/test-person'
+    adapter = ConnectionPool.add_data_source :type => :redland
+    adapter.load("#{File.dirname(__FILE__)}/test_person_data.nt", "turtle")
+
     Namespace.register(:test, 'http://activerdf.org/test/')
 
     eyal = Namespace.lookup(:test, :eyal)
@@ -237,14 +249,37 @@ class TestObjectCreation < Test::Unit::TestCase
     type = Namespace.lookup(:rdf, :type)
     resource = Namespace.lookup(:rdfs,:resource)
 
-    p eyal.predicates
-
     color = Query.new.select(:o).where(eyal, eye,:o).execute
-    assert 'blue', color
+    assert_equal 'blue', color
     assert_instance_of String, color
 
     ObjectManager.construct_classes
     assert eyal.instance_of?(TEST::Person)
     assert eyal.instance_of?(RDFS::Resource)
   end
+  
+  def test_write_to_file_and_reload
+    require 'tmpdir'
+    location = "#{Dir.tmpdir}/redland-temp"
+    adapter = ConnectionPool.add_data_source(:type => :redland, :location => location)
+
+    eyal = RDFS::Resource.new 'eyaloren.org'
+    age = RDFS::Resource.new 'foaf:age'
+    test = RDFS::Resource.new 'test'
+
+    adapter.add(eyal, age, test)
+    adapter.save 
+    
+    
+    
+    # flush the pool and freshly load the file we just wrote into
+    ConnectionPool.clear
+    
+    adapter2 = ConnectionPool.add_data_source(:type => :redland, :location => location)
+    
+    assert adapter2.object_id != adapter.object_id
+    assert_equal 1, adapter2.size
+      
+  end
+  
 end

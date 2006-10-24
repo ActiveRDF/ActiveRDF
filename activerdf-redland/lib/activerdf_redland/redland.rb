@@ -35,8 +35,9 @@ class RedlandAdapter
 	# load a file from the given location with the given syntax into the model.
 	# use Redland syntax strings, e.g. "ntriples" or "rdfxml", defaults to "ntriples"
 	def load(location, syntax="ntriples")
-    parser = Parser.new(syntax, "", nil)
-    parser.parse_into_model(model, "file:#{location}")
+    $log.debug "Redland: loading file with syntax: #{syntax} and location: #{location}"
+    parser = Redland::Parser.new(syntax, "", nil)
+    parser.parse_into_model(@model, "file:#{location}")
 	end
 	
 	# yields query results (as many as requested in select clauses) executed on data source
@@ -120,6 +121,10 @@ class RedlandAdapter
 	 return Query2SPARQL.translate(query)
 	end
 	
+	def size
+    return @model.size
+	end
+	
 	################ helper methods ####################
 	#TODO: if block is given we should not parse all results into array first
 	def query_result_to_array(query_results)
@@ -160,7 +165,7 @@ class RedlandAdapter
 		when RDFS::Resource
 			Redland::Uri.new(node.uri)
 		else
-			Redland::Literal.new(node)
+			Redland::Literal.new(node.to_s)
 		end
 	end
 end
