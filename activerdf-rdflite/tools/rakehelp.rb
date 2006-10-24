@@ -75,7 +75,7 @@ def base_gem_spec(pkg_name, pkg_version)
     s.has_rdoc = true
     s.extra_rdoc_files = [ "README" ]
     
-    s.files = %w(COPYING LICENSE README Rakefile) +
+    s.files = %w(LICENSE README Rakefile) +
       Dir.glob("{bin,doc/rdoc,test,lib}/**/*") + 
       Dir.glob("ext/**/*.{h,c,rb}") +
       Dir.glob("examples/**/*.rb") +

@@ -3,7 +3,7 @@ This is the ActiveRDF adapter to the Redland RDF store.
 See http://www.activerdf.org/ and http://librdf.org for more information.
 
 == License
-This adapter is distributed under the LGPL[link:LICENSE] license.
+This adapter is distributed under the LGPL license.
 
 == Authors
 * Eyal Oren

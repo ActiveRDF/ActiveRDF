@@ -16,7 +16,7 @@ desc "Does a full compile, test run"
 task :default => [:test, :package]
 
 version="0.2.1"
-name="rdflite"
+name="activerdf-rdflite"
 
 setup_gem(name, version) do |spec|
   spec.summary = "an RDF database for usage in ActiveRDF (based on sqlite3)" 
@@ -25,7 +25,7 @@ setup_gem(name, version) do |spec|
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('activerdf', '>= 0.9.2')
   spec.add_dependency('sqlite3-ruby', '>= 1.1.0')
-  spec.files += Dir.glob("resources/**/*")
+#  spec.files += Dir.glob("resources/**/*")
 end
 
 

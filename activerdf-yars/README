@@ -3,7 +3,7 @@ This is the ActiveRDF adapter to the YARS and Jars2 RDF stores.
 See http://www.activerdf.org/ for more information.
 
 == License
-This adapter is distributed under the LGPL[link:LICENSE] license.
+This adapter is distributed under the LGPL license.
 
 == Authors
 * Eyal Oren
