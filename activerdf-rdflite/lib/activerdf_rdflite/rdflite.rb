@@ -18,10 +18,11 @@ rescue LoadError
 	@@have_ferret = false
 end
 
-class RDFLite < GemPlugin::Plugin "/adapter"
+class RDFLite
 	$log.info "loading RDFLite adapter"
 	ConnectionPool.register_adapter(:rdflite,self)
 	attr_reader :db
+	bool_accessor :keyword_search
 
 	# instantiate RDFLite database
 	def initialize(params = {})
@@ -98,7 +99,7 @@ class RDFLite < GemPlugin::Plugin "/adapter"
 
 	# returns the number of triples in the datastore (incl. possible duplicates)
 	def size
-		@db.execute('select count(*) from triple')[0]
+		@db.execute('select count(*) from triple')[0][0].to_i
 	end
 
 	#def clear
