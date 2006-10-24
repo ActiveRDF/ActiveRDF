@@ -44,8 +44,7 @@ else
   $log.level = ENV['ACTIVE_RDF_LOG_LEVEL'].to_i
 end
 
-$log.info "ActiveRDF 0.9.1 started"
-$log.info "Logging on level #{$log.level}"
+$log.info "ActiveRDF started, logging level: #{$log.level}"
 
 class Module
   def bool_accessor *syms
@@ -65,7 +64,6 @@ require 'queryengine/query'
 dir = File.dirname(File.expand_path(file))
 Dir[dir + "/active_rdf/adapter/*.rb"].each do |adapter|
   begin
-    #log: including adapter abc
     require adapter
   rescue LoadError
 		# skipping not installed adapters

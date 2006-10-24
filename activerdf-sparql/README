@@ -1,0 +1,10 @@
+== ActiveRDF SPARQL adapter
+This is the ActiveRDF adapter to a SPARQL endpoint serving RDF.
+See http://www.activerdf.org/ for more information.
+
+== License
+This adapter is distributed under the LGPL[link:LICENSE] license.
+
+== Authors
+* Eyal Oren
+* Sebastian Gerke

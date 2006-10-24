@@ -35,5 +35,5 @@ task :default => [:upload]
 
 task :upload => :package do |task|
 	sh "scp pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
-	sh "scp rdflite/pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
+	sh "scp activerdf-*/pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
 end
