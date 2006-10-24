@@ -19,6 +19,7 @@ class ActiveRdfError < StandardError
 end
 
 require 'logger'
+require 'gem_plugin'
 
 # initialize our logger
 $log =
@@ -76,10 +77,9 @@ end
 if Gem::cache().search("activerdf").empty?
   #we are not running as a gem
   $log.info 'ActiveRDF is NOT installed as a Gem'
-  require 'rdflite'
+  require '../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
 else
   #we are indeed running as a gem
-  require 'gem_plugin'
   $log.info 'ActiveRDF is installed as a Gem'
   GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
 end 
