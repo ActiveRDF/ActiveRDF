@@ -117,6 +117,13 @@ class RDFLite
 		add_internal(s,p,o)
 	end
 
+	# flushes openstanding changes to underlying sqlite3
+	def flush
+		# since we always write changes into sqlite3 immediately, we don't do 
+		# anything here
+		true
+	end
+
 	# loads triples from file in ntriples format
 	def load(file)
 		ntriples = File.readlines(file)

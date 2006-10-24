@@ -16,6 +16,8 @@ class ConnectionPool
   # currently active write-adapter (we can only write to one at a time)
   @@write_adapter = nil
 
+	@@auto_flush = true
+
   # adapters-classes known to the pool, registered by the adapter-class
   # itself using register_adapter method, used to select new
   # adapter-instance for requested connection type
@@ -28,6 +30,22 @@ class ConnectionPool
     @@adapter_parameters = []
     @@write_adapter = nil
   end
+
+	# enable/disable automatic flushing
+	# if enabled (default) all changes to a datasource adapter are flushed to the 
+	# original source immediately (e.g. changes are written to the filesystem)
+	#
+	# if disabled, changes to an adapter are not written back into the original 
+	# source: you need to invoke ConnectionPool.flush manually
+	def ConnectionPool.auto_flush=(flag)
+		@@auto_flush = flag
+	end
+
+	# flushes all openstanding changes into the original datasource (e.g. to the 
+	# filesystem).
+	def ConnectionPool.flush
+		@@write_adapter.flush
+	end
 
   # returns the set of currently registered read-access datasources
   def ConnectionPool.read_adapters
