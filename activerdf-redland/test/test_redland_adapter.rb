@@ -2,10 +2,8 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
-require 'active_rdf'
 require 'test/unit'
 require 'active_rdf'
-require 'adapter/redland'
 require 'federation/federation_manager'
 require 'queryengine/query'
 # require 'active_rdf/test/common'
