@@ -1,39 +1,45 @@
-require 'rubygems'
+require 'rake'
+require 'rake/testtask'
+require 'rake/clean'
 require 'rake/gempackagetask'
 require 'rake/rdoctask'
+require 'tools/rakehelp'
+require 'rubygems'
 
-Gem::manage_gems
+#Gem::manage_gems
+setup_tests
+setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb']
 
-spec = Gem::Specification.new do |s|
-	s.name = 'activerdf'
-	s.version = '0.9.4'
-	s.author = 'Eyal Oren'
-	s.email = 'eyal.oren@deri.org'
-	s.homepage = 'http://activerdf.org'
-	s.platform = Gem::Platform::RUBY
-	s.summary = 'Offers object-oriented access to RDF (with adapters to several datastores).'
-	s.files = Dir['lib/**/*.rb']
-	s.require_path = 'lib'
-	s.autorequire = 'active_rdf'
-	s.test_file = 'test/ts_active_rdf.rb'
-	s.has_rdoc = true
-	s.extra_rdoc_files = ["README"]
-	s.add_dependency('gem_plugin', '>= 0.2.1')
+desc 'test and package gem'
+task :default => :reinstall
+
+version="0.9.5"
+name="activerdf"
+
+setup_gem(name,version) do |spec|
+	spec.summary = 'Offers object-oriented access to RDF (with adapters to several datastores).'
+	spec.description = spec.summary
+	spec.author = 'Eyal Oren'
+	spec.email = 'eyal.oren@deri.org'
+	spec.homepage = 'http://www.activerdf.org'
+	spec.platform = Gem::Platform::RUBY
+	spec.require_path = 'lib'
+	spec.autorequire = 'active_rdf'
+	spec.test_file = 'test/ts_active_rdf.rb'
+	spec.add_dependency('gem_plugin', '>= 0.2.1')
 end
-
-Rake::GemPackageTask.new(spec) do |pkg|
-end
-
-Rake::RDocTask.new do |rd|
-	rd.main = "README"
-	rd.rdoc_dir = "doc"
-	rd.title = "ActiveRDF RDoc documentation"
-	rd.rdoc_files.include("README", "lib/**/*.rb")
-end
-
-task :default => [:upload]
 
 task :upload => :package do |task|
 	sh "scp pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
 	sh "scp activerdf-*/pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
 end
+
+task :install => [:test, :package] do
+  sh %{sudo gem install pkg/#{name}-#{version}.gem}
+end
+
+task :uninstall => [:clean] do
+  sh %{sudo gem uninstall #{name}}
+end
+
+task :reinstall => [:uninstall, :install]

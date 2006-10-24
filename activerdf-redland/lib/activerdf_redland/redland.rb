@@ -10,6 +10,7 @@ require 'queryengine/query2sparql'
 require 'rdf/redland'
 
 class RedlandAdapter
+	$log.info "loading Redland adapter"
 	ConnectionPool.register_adapter(:redland,self)
 	
 	# instantiate connection to Redland database

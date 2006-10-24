@@ -8,15 +8,13 @@ require 'fileutils'
 include FileUtils
 
 setup_tests
-setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
-
 setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
 
-desc "Does a full compile, test run"
+desc "test and package gem"
 task :default => [:test, :package]
 
 version="0.2.1"
-name="activerdf-rdflite"
+name="activerdf_rdflite"
 
 setup_gem(name, version) do |spec|
   spec.summary = "an RDF database for usage in ActiveRDF (based on sqlite3)" 
@@ -37,3 +35,4 @@ task :uninstall => [:clean] do
   sh %{sudo gem uninstall #{name}}
 end
 
+task :reinstall => [:uninstall, :install]

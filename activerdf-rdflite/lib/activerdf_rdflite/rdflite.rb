@@ -18,7 +18,8 @@ rescue LoadError
 	@@have_ferret = false
 end
 
-class RDFLite
+class RDFLite < GemPlugin::Plugin "/adapter"
+	$log.info "loading RDFLite adapter"
 	ConnectionPool.register_adapter(:rdflite,self)
 	attr_reader :db
 
@@ -105,6 +106,9 @@ class RDFLite
 	#end
 	
 	def add(s,p,o)
+		raise(ActiveRdfError, "adding non-resource #{s}") unless s.respond_to?(:uri)
+		raise(ActiveRdfError, "adding non-resource #{p}") unless p.respond_to?(:uri)
+
 		s = "<#{s.uri}>"
 		p = "<#{p.uri}>"
 		o = case o

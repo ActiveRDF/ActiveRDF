@@ -9,6 +9,7 @@ require 'net/http'
 require 'cgi'
 
 class SparqlAdapter
+	$log.info "loading SPARQL adapter"
 	ConnectionPool.register_adapter(:sparql, self)
 
 	def reads?

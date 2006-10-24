@@ -12,6 +12,7 @@ require 'cgi'
 
 # TODO: add unit test
 class Jars2Adapter
+	$log.info "loading Jars2 adapter"
 	ConnectionPool.register_adapter(:jars2, self)
 
 	def initialize(params = {})

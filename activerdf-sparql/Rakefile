@@ -16,7 +16,7 @@ desc "Does a full compile, test run"
 task :default => [:test, :package]
 
 version="0.9"
-name="activerdf-sparql"
+name="activerdf_sparql"
 
 setup_gem(name, version) do |spec|
   spec.summary = "ActiveRDF adapter to SPARQL endpoint" 
@@ -24,7 +24,6 @@ setup_gem(name, version) do |spec|
   spec.author="Eyal Oren <eyal.oren@deri.org"
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('activerdf', '>= 0.9.2')
-  spec.files += Dir.glob("resources/**/*")
 end
 
 
@@ -36,3 +35,4 @@ task :uninstall => [:clean] do
   sh %{sudo gem uninstall #{name}}
 end
 
+task :reinstall => [:uninstall, :install]
