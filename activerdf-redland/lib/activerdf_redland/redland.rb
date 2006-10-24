@@ -16,6 +16,7 @@ class RedlandAdapter
 	# instantiate connection to Redland database
 	def initialize(params = {})
 
+    # TODO: check if the given file exists, or at least look for an exception from redland
 		if params[:location] and params[:location] != :memory
 			# setup file locations for redland database
 			path, file = File.split(params[:location])
@@ -30,6 +31,13 @@ class RedlandAdapter
 		@store = Redland::HashStore.new(type, file, path, false)
 		@model = Redland::Model.new @store
 	end	
+	
+	# load a file from the given location with the given syntax into the model.
+	# use Redland syntax strings, e.g. "ntriples" or "rdfxml", defaults to "ntriples"
+	def load(location, syntax="ntriples")
+    parser = Parser.new(syntax, "", nil)
+    parser.parse_into_model(model, "file:#{location}")
+	end
 	
 	# yields query results (as many as requested in select clauses) executed on data source
 	def query(query)
@@ -49,7 +57,6 @@ class RedlandAdapter
 		  $log.debug "RedlandAdapter: query has failed with nil result"
 		  return false
 		end
-		# TODO not ? 
 		if not query_results.is_bindings?
 		  $log.debug "RedlandAdapter: query has failed without bindings"
 		  return false
