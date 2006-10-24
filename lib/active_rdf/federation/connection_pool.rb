@@ -48,7 +48,8 @@ class ConnectionPool
 
   # returns adapter-instance for given parameters (either existing or new)
   def ConnectionPool.add_data_source(connection_params)
-    $log.info "ConnectionPool: add_data_source with params: #{connection_params.to_hash}"
+    $log.info "ConnectionPool: add_data_source with params: #{connection_params.inspect}"
+
     # either get the adapter-instance from the pool
     # or create new one (and add it to the pool)
     index = @@adapter_parameters.index(connection_params)

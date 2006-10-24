@@ -1,6 +1,6 @@
-# RDFLite is our own lightweight RDF database on top of sqlite3.  It satisfies 
-# the ActiveRDF adapter interface, so it is also an adapter to this datastore 
-# from ActiveRDF.
+# RDFLite is a lightweight RDF database on top of sqlite3. It can act as adapter 
+# in ActiveRDF. It supports on-disk and in-memory usage, and allows keyword 
+# search if ferret is installed.
 #
 # Author:: Eyal Oren
 # Copyright:: (c) 2005-2006 Eyal Oren
@@ -10,21 +10,26 @@ require 'sqlite3'
 require 'active_rdf'
 require 'federation/connection_pool'
 
+$log.info "loading RDFLite adapter"
+
 begin 
 	require 'ferret'
 	@@have_ferret = true
 rescue LoadError
-	$log.warn "We could not load ferret, therefore keyword search is not available. If you want keyword search, please install ferret: gem install ferret"
+	$log.info "Keyword search is disabled since we could not load Ferret. To 
+	enable, please do \"gem install ferret\""
 	@@have_ferret = false
 end
 
 class RDFLite
-	$log.info "loading RDFLite adapter"
 	ConnectionPool.register_adapter(:rdflite,self)
-	attr_reader :db
 	bool_accessor :keyword_search
 
-	# instantiate RDFLite database
+	# instantiates RDFLite database
+	# available parameters:
+	# * :location => filepath (defaults to memory)
+	# * :keyword => true/false (defaults to true)
+	# * :pidx, :oidx, etc. => true/false (enable/disable these indices)
 	def initialize(params = {})
 		$log.info "initialised rdflite with params #{params.to_s}"
 	
@@ -60,37 +65,14 @@ class RDFLite
 
 		# turn off filesystem synchronisation for speed
 		@db.synchronous = 'off'
-		#execute('pragma synchronous = off')
 
 		# create triples table. since triples are unique, inserted duplicates are 
 		@db.execute('create table if not exists triple(s,p,o, unique(s,p,o) on conflict ignore)')
 
-		sidx = params[:sidx] || false
-		pidx = params[:pidx] || false
-		oidx = params[:oidx] || false
-		spidx = params[:spidx] || true
-		soidx = params[:soidx] || false
-		poidx = params[:poidx] || true
-		opidx = params[:opidx] || false
-
-		# creating lookup indices
-		@db.execute('create index if not exists sidx on triple(s)') if sidx
-		@db.execute('create index if not exists pidx on triple(p)') if pidx
-		@db.execute('create index if not exists oidx on triple(o)') if oidx
-		@db.execute('create index if not exists spidx on triple(s,p)') if spidx
-		@db.execute('create index if not exists soidx on triple(s,p)') if soidx
-		@db.execute('create index if not exists poidx on triple(p,o)') if poidx
-		@db.execute('create index if not exists opidx on triple(o,p)') if opidx
+		create_indices
 
 		$log.debug("opened connection to #{file}")
 		$log.debug("database contains #{size} triples")
-	end
-
-	# returns all triples in the datastore
-	def dump
-		@db.execute('select s,p,o from triple') do |s,p,o|
-			[s,p,o].join(' ')
-		end
 	end
 
 	# we can read and write to this adapter
@@ -102,14 +84,26 @@ class RDFLite
 		@db.execute('select count(*) from triple')[0][0].to_i
 	end
 
-	#def clear
-	#	@db.execute('delete from triple')
-	#end
+	# returns all triples in the datastore
+	def dump
+		@db.execute('select s,p,o from triple') do |s,p,o|
+			[s,p,o].join(' ')
+		end
+	end
+
+	# deletes all triples from datastore
+	def clear
+		@db.execute('delete from triple')
+	end
 	
+	# adds triple(s,p,o) to datastore
+	# s,p must be resources, o can be primitive data or resource
 	def add(s,p,o)
+		# check illegal input
 		raise(ActiveRdfError, "adding non-resource #{s}") unless s.respond_to?(:uri)
 		raise(ActiveRdfError, "adding non-resource #{p}") unless p.respond_to?(:uri)
 
+		# transform triple into internal format <uri> and "literal"
 		s = "<#{s.uri}>"
 		p = "<#{p.uri}>"
 		o = case o
@@ -119,30 +113,25 @@ class RDFLite
 					"\"#{o.to_s}\""
 				end
 
+		# add triple to database
 		add_internal(s,p,o)
 	end
-	
-	def add_internal(s,p,o)
-		# insert the triple into the datastore
-		@db.execute('insert into triple values (?,?,?)', s,p,o)
 
-		# if keyword-search available, insert the object into keyword search
-		@ferret << {:subject => s, :object => o} if @keyword_search
-	end
-
+	# loads triples from file in ntriples format
 	def load(file)
-		time = Time.now
+		ntriples = File.readlines(file)
 
 		@db.transaction do 
-			ntriples = File.readlines(file)
 			ntriples.each do |triple|
 				nodes = triple.scan(Node)
 				add_internal(nodes[0], nodes[1], nodes[2])
 			end
-			$log.debug("read #{ntriples.size} triples from file in #{Time.now - time}s")
 		end
+
+		$log.debug "read #{ntriples.size} triples from file #{file}"
 	end
 
+	# executes ActiveRDF query on datastore
 	def query(query)
 		# log received query
 		$log.debug "received query: #{query.to_sp}"
@@ -159,28 +148,44 @@ class RDFLite
 		# executing query
 		results = @db.execute(sql, *constraints)
 
-		return [results[0][0].to_i > 0] if query.ask?
-
-		# convert results to ActiveRDF nodes and return them
-		wrap(query, results)
+		# if ASK query, we check whether we received a positive result count
+		if query.ask?
+			return [results[0][0].to_i > 0]
+		else
+			# otherwise we convert results to ActiveRDF nodes and return them
+			return wrap(query, results)
+		end
 	end
 
+	# translates ActiveRDF query into internal sqlite query string
 	def translate(query)
 		construct_select(query) + construct_join(query) + construct_where(query) + 
 			construct_limit(query)
 	end
 
 	private
+	# adds s,p,o into sqlite and ferret
+	# s,p,o should be in internal format: <uri> and "literal"
+	def add_internal(s,p,o)
+		# insert the triple into the datastore
+		@db.execute('insert into triple values (?,?,?)', s,p,o)
+
+		# if keyword-search available, insert the object into keyword search
+		@ferret << {:subject => s, :object => o} if @keyword_search
+	end
+
 	# construct select clause
 	def construct_select(query)
-		# ask queries just count the results, and return true if results > 0
+		# ASK queries counts the results, and return true if results > 0
 		return "select count(*)" if query.ask?
 
-		# find the right select clause for this term
+		# add select terms for each selectclause in the query
+		# the term names depend on the join conditions, e.g. t0.s or t1.p
 		select = query.select_clauses.collect do |term|
 			variable_name(query, term)
 		end
 
+		# add possible distinct and count functions to select clause
 		select_clause = ''
 		select_clause << 'distinct ' if query.distinct?
 		select_clause << select.join(', ')
@@ -350,6 +355,27 @@ class RDFLite
 					results
 				end
 			end
+		end
+	end
+
+	def create_indices(params)
+		sidx = params[:sidx] || false
+		pidx = params[:pidx] || false
+		oidx = params[:oidx] || false
+		spidx = params[:spidx] || true
+		soidx = params[:soidx] || false
+		poidx = params[:poidx] || true
+		opidx = params[:opidx] || false
+
+		# creating lookup indices
+		@db.transaction do 
+			@db.execute('create index if not exists sidx on triple(s)') if sidx
+			@db.execute('create index if not exists pidx on triple(p)') if pidx
+			@db.execute('create index if not exists oidx on triple(o)') if oidx
+			@db.execute('create index if not exists spidx on triple(s,p)') if spidx
+			@db.execute('create index if not exists soidx on triple(s,p)') if soidx
+			@db.execute('create index if not exists poidx on triple(p,o)') if poidx
+			@db.execute('create index if not exists opidx on triple(o,p)') if opidx
 		end
 	end
 
