@@ -41,13 +41,16 @@ class RedlandAdapter
 		redland_query = Redland::Query.new(qs, 'sparql')
 		query_results = @model.query_execute(redland_query)
 		$log.debug "RedlandAdapter: query response from Redland took: #{Time.now - time}s"
+		
+		$log.debug "RedlandAdapter: query response has size: #{query_results.size}"
 
 		# verify if the query has failed
 		if query_results.nil?
 		  $log.debug "RedlandAdapter: query has failed with nil result"
 		  return false
 		end
-		if query_results.is_bindings?
+		# TODO not ? 
+		if not query_results.is_bindings?
 		  $log.debug "RedlandAdapter: query has failed without bindings"
 		  return false
 		end
@@ -104,6 +107,10 @@ class RedlandAdapter
 	
 	def writes?
 		true
+	end
+	
+	def translate(query)
+	 return Query2SPARQL.translate(query)
 	end
 	
 	################ helper methods ####################
