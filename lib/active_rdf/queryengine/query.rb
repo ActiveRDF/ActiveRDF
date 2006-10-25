@@ -82,11 +82,13 @@ class Query
 			
       unless s.respond_to?(:uri)
     		unless s.class == Symbol
+    		  $log.debug "Query: where: got a Subject which is no Symbol, and no RDFS::Resource, but is instead: #{s}"
           raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
     		end
       end
-      unless s.respond_to?(:uri)
+      unless p.respond_to?(:uri)
     		unless p.class == Symbol
+    		  $log.debug "Query: where: got a Predicate which is no Symbol, and no RDFS::Resource, but is instead: #{p}"
           raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
     		end
       end
