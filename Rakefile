@@ -52,3 +52,9 @@ Rcov::RcovTask.new do |t|
   # t.rcov_opts << "--test-unit-only "
 end
 
+# modify the standard test task to run test from all adapters and from the active_rdf top level 
+Rake::TestTask.new do |t|
+    # t.libs << "test"
+    t.test_files = FileList["test/**/*.rb", "activerdf-*/test/**/*.rb"]
+    t.verbose = true
+end
