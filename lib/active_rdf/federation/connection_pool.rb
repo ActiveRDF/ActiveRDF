@@ -75,7 +75,7 @@ class ConnectionPool
       # adapter not in the pool yet: create it,
       # register its connection parameters in parameters-array
       # and add it to the pool (at same index-position as parameters)
-      $log.debug("Create a new adapter for parameters #{connection_params}")
+      $log.debug("Create a new adapter for parameters #{connection_params.inspect}")
       adapter = create_adapter(connection_params)
       @@adapter_parameters << connection_params
       @@adapter_pool << adapter

@@ -50,7 +50,10 @@ class SparqlAdapter
 		return final_result
 	end
 	
-	
+	def translate(query)
+	 	Query2SPARQL.translate(query)
+	end
+		
 	def execute_sparql_query(qs, header) #,nr_of_clauses)
 		# TODO: can we really remove this (see line 66)
     #clauses = query.select_clauses.size
