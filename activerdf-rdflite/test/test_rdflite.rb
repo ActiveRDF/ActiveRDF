@@ -25,6 +25,10 @@ class TestObjectCreation < Test::Unit::TestCase
 		assert !adapter.keyword_search? 
 	end
 
+	def test_initialise_with_user_params
+		#TODO: FIXME
+	end
+
 	def test_duplicate_registration
     adapter1 = ConnectionPool.add_data_source(:type => :rdflite)
     adapter2 = ConnectionPool.add_data_source(:type => :rdflite)

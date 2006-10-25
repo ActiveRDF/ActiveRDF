@@ -41,6 +41,10 @@ class ConnectionPool
 		@@auto_flush = flag
 	end
 
+	def ConnectionPool.auto_flush
+		@@auto_flush
+	end
+
 	# flushes all openstanding changes into the original datasource (e.g. to the 
 	# filesystem).
 	def ConnectionPool.flush
