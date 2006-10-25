@@ -94,6 +94,7 @@ class RedlandAdapter
 	
 		begin
 		  @model.add(wrap(s), wrap(p), wrap(o))		  
+			save if ConnectionPool.auto_flush
 		rescue Redland::RedlandError => e
 		  $log.warn "RedlandAdapter: adding triple failed in Redland library: #{e}"
 		  return false
