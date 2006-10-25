@@ -27,7 +27,7 @@ setup_gem(name, version) do |spec|
 end
 
 
-task :install => [:test, :package] do
+task :install => [:package] do
   sh %{sudo gem install pkg/#{name}-#{version}.gem}
 end
 
