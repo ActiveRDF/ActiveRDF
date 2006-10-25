@@ -79,11 +79,18 @@ class Query
 			# generator. 
 			# if you construct this query manually, you shouldn't! if your select 
 			# variable happens to be in one of the removed clauses: tough luck.
-
-  		unless s.respond_to?(:uri) && p.respond_to?(:uri)
-        raise(ActiveRdfError, "cannot add a where clause, in which s/p are not resources")
-  		end
-
+			
+      unless s.respond_to?(:uri)
+    		unless s.class == Symbol
+          raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
+    		end
+      end
+      unless s.respond_to?(:uri)
+    		unless p.class == Symbol
+          raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
+    		end
+      end
+      
 			@where_clauses << [s,p,o].collect{|arg| parametrise(arg)}
 		end
     self
