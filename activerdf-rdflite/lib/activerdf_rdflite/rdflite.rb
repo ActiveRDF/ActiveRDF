@@ -69,7 +69,7 @@ class RDFLite
 		# create triples table. since triples are unique, inserted duplicates are 
 		@db.execute('create table if not exists triple(s,p,o, unique(s,p,o) on conflict ignore)')
 
-		create_indices({})
+		create_indices(params)
 
 		$log.debug("opened connection to #{file}")
 		$log.debug("database contains #{size} triples")
