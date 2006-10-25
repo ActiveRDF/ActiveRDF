@@ -1,0 +1,42 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ar: <http://activerdf.org/test/> .
+
+ar:Person a rdfs:Class .
+# each class is subclass of resource
+ar:Person rdfs:subClassOf rdfs:Resource .
+
+ar:eyal a ar:Person .
+ar:eyal ar:age "27".
+ar:eyal ar:eye "blue".
+# inferred statements about eyal
+
+# all properties of Person are also properties of Resource
+ar:age rdfs:domain rdfs:Resource .
+ar:eye rdfs:domain rdfs:Resource .
+ar:car rdfs:domain rdfs:Resource .
+
+ar:age a rdf:Property .
+ar:eye a rdf:Property .
+ar:car a rdf:Property .
+ar:age rdfs:domain ar:Person .
+ar:age rdfs:range rdf:Literal .
+ar:eye rdfs:domain ar:Person .
+ar:eye rdfs:range rdf:Literal .
+ar:car rdfs:domain ar:Person .
+ar:car rdfs:range rdf:Literal .
+
+# everything is a resource
+ar:Person a rdfs:Resource .
+ar:eye a rdfs:Resource .
+ar:eyal a rdfs:Resource .
+ar:age a rdfs:Resource .
+ar:car a rdfs:Resource .
+
+# standard stuff
+rdfs:Class a rdfs:Class .
+rdfs:Class a rdfs:Resource .
+rdf:Property a rdfs:Class .
+rdf:Property a rdfs:Resource .
+rdf:type rdfs:domain rdfs:Resource .
+rdf:type rdfs:range rdfs:Class .
