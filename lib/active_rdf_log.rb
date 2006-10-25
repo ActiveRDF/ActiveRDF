@@ -23,3 +23,21 @@ if ENV['ACTIVE_RDF_LOG_LEVEL'].nil?
 else
   $log.level = ENV['ACTIVE_RDF_LOG_LEVEL'].to_i
 end
+
+class Logger
+  def debug_pp(message, variable)  
+    if variable.respond_to?(:join)
+      if variable.empty?
+        debug(sprintf(message, "empty"))
+      else 
+        debug(sprintf(message, variable.join(', ')))        
+      end
+    else
+      if variable.nil?
+        debug(sprintf(message, 'empty'))
+      else
+        debug(sprintf(message, variable))
+      end
+    end
+  end
+end
