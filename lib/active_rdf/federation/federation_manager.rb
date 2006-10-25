@@ -64,7 +64,7 @@ class FederationManager
         final_results = results
       end
     end
-    $log.debug "FederationManager: query results are #{final_results}"
+    $log.debug "FederationManager: query results are #{final_results.join(', ')}"
     return final_results
   end
 end
