@@ -138,7 +138,7 @@ class SparqlAdapter
   
   def parse_sparql_query_result_xml_stream(qr)
     require 'rexml/document'
-    require "#{File.dirname(__FILE__)}/sparql_result_parser'
+    require "#{File.dirname(__FILE__)}/sparql_result_parser"
     parser = SparqlResultParser.new
     REXML::Document.parse_stream(qr, parser)
     final_results = parser.result
