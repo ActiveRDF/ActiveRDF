@@ -4,32 +4,35 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'adapter/redland'
 require 'federation/federation_manager'
-# require 'active_rdf/test/common'
+require "#{File.dirname(__FILE__)}/../common"
 
 class TestObjectCreation < Test::Unit::TestCase
   def setup
+		ConnectionPool.clear
   end
 
   def teardown
   end
 
-  def test_pool
-    adapter1 = ConnectionPool.add_data_source(:type => :redland)
-    adapter2 = ConnectionPool.add_data_source(:type => :redland)
-    adapter3 = ConnectionPool.add_data_source(:type => :redland, :fake_symbol_to_get_different_adapter => true)
-    adapter4 = ConnectionPool.add_data_source(:type => :redland, :fake_symbol_to_get_different_adapter => true)
-    adapter5 = ConnectionPool.add_data_source(:type => :redland, :yet_another_symbol => true)
+	def test_ensure_adapter_behaviour
+		adapter = get_adapter
+		read_behaviour = [:query, :translate, :writes?, :reads?, :size]
+		write_behaviour = [:add, :flush, :load]
 
-    one = adapter1.object_id
-    three = adapter3.object_id
-    five = adapter5.object_id
+		read_behaviour.each do |method|
+			assert adapter.respond_to?(method), "adapter #{adapter.class} should respond to #{method}"
+		end if adapter.reads?
 
-    assert_equal one, adapter2.object_id
-    assert_equal three, adapter4.object_id
-    assert one != three
-    assert one != five
-    assert three != five
-  end
+		write_behaviour.each do |method|
+			assert adapter.respond_to?(method), "adapter #{adapter.class} should respond to #{method}"
+		end if adapter.writes?
+	end
+
+	def test_single_pool
+		a1 = get_adapter
+		a2 = get_adapter
+		assert_equal a1, a2
+		assert_equal a1.object_id, a2.object_id
+	end
 end

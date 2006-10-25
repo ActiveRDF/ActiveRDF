@@ -6,6 +6,7 @@ require 'test/unit'
 require 'active_rdf'
 require 'queryengine/query'
 require 'queryengine/query2sparql'
+require "#{File.dirname(__FILE__)}/../common"
 
 class TestObjectCreation < Test::Unit::TestCase
   def setup

@@ -4,7 +4,6 @@
 
 require 'test/unit'
 require 'active_rdf'
-# require 'active_rdf/test/common'
 
 class TestObjectCreation < Test::Unit::TestCase
   def setup

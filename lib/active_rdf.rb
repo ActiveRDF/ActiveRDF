@@ -34,8 +34,8 @@ end
 if Gem::cache().search("activerdf").empty?
   #we are not running as a gem
   $log.info 'ActiveRDF is NOT installed as a Gem'
-  load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
-  load_adapter this_dir + '/../activerdf-redland/lib/activerdf_redland/redland'
+	load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
+	load_adapter this_dir + '/../activerdf-redland/lib/activerdf_redland/redland'
   load_adapter this_dir + '/../activerdf-sparql/lib/activerdf_sparql/sparql'
   load_adapter this_dir + '/../activerdf-yars/lib/activerdf_yars/jars2'
 else

@@ -10,11 +10,14 @@ require 'queryengine/query2jars2'
 require 'net/http'
 require 'cgi'
 
-# TODO: add unit test
 class Jars2Adapter
 	$log.info "loading Jars2 adapter"
 	ConnectionPool.register_adapter(:jars2, self)
 
+	# initialises connection to jars2 datastore
+	# available parameters are:
+	# * :host (default 'm3pe.org')
+	# * :port (default 2020)
 	def initialize(params = {})
 		@host = params[:host] || 'm3pe.org'
 		@port = params[:port] || 2020
@@ -25,17 +28,20 @@ class Jars2Adapter
 	def reads?; true; end
 	def writes?; false; end
 
+	def translate query
+		Query2Jars2.translate(query)
+	end
+
+	# executes query on jars2 datastore
 	def query(query)
 		qs = Query2Jars2.translate(query)
 		header = { 'Accept' => 'application/rdf+n3' }
 
 		# querying Jars2, adding 'eyal' parameter to get all variable bindings in 
 		# the result
-		time = Time.now
 		response = @yars.get("/?q=#{CGI.escape(qs)}&eyal", header)
 		
 		$log.debug "Jars2Adapter: query executed: #{qs}"
-		$log.debug "Jars2Adapter: query response from Jars took: #{Time.now - time}s"
 
 		# return empty array if no content
 		return [] if response.is_a?(Net::HTTPNoContent)
@@ -53,9 +59,15 @@ class Jars2Adapter
 			final_results = results
 		end
 		
-		$log.debug "Jars2Adapter: query returned results #{final_results.join(', ')}"
-		return final_results
+		$log.debug_pp "Jars2Adapter: query returned %s", final_results
+		final_results
 	end
+
+	# returns size of dataset as numbers of triples
+	def size
+		Query.new.select(:s).where(:s,:p,:o).execute.size
+	end
+
 
 	private
 	Resource = /<[^>]*>/
@@ -108,5 +120,4 @@ class Jars2Adapter
 			String.new($1)
 		end
 	end
-
 end

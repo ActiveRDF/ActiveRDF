@@ -5,9 +5,7 @@
 require 'test/unit'
 require 'active_rdf'
 require 'federation/connection_pool'
-#require 'adapter/redland'
-require 'adapter/sparql'
-# require 'active_rdf/test/common'
+require "#{File.dirname(__FILE__)}/../common"
 
 class TestResourceInstanceMethods < Test::Unit::TestCase
   def setup

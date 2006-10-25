@@ -6,9 +6,7 @@
 # License:: LGPL
 require 'federation/connection_pool'
 
-
 class FederationManager
-
   # add triple s,p,o to the currently selected write-adapter
   def FederationManager.add(s,p,o)
     # TODO: allow addition of full graphs
