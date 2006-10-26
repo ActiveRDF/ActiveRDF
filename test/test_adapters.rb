@@ -16,6 +16,25 @@ class TestAdapter < Test::Unit::TestCase
 	def teardown
 	end
 
+	def test_ensure_adapter_behaviour
+		read_adapters = get_all_read_adapters
+		write_adapters = get_all_write_adapters
+		read_behaviour = [:query, :translate, :writes?, :reads?]
+		write_behaviour = [:add, :delete, :flush, :load]
+
+		read_behaviour.each do |method|
+			read_adapters.each do |a|
+				assert a.respond_to?(method), "adapter #{a.class} should respond to #{method}"
+			end
+		end
+
+		write_behaviour.each do |method|
+			write_adapters.each do |a|
+				assert a.respond_to?(method), "adapter #{a.class} should respond to #{method}"
+			end
+		end
+	end
+
   def test_update_value
 		adapter = get_write_adapter
 		adapter.load "#{File.dirname(__FILE__)}/test_person_data.nt"

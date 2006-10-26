@@ -15,19 +15,6 @@ class TestObjectCreation < Test::Unit::TestCase
   def teardown
   end
 
-	def test_ensure_adapter_behaviour
-		adapter = get_adapter
-		read_behaviour = [:query, :translate, :writes?, :reads?, :size]
-		write_behaviour = [:add, :flush, :load]
-
-		read_behaviour.each do |method|
-			assert adapter.respond_to?(method), "adapter #{adapter.class} should respond to #{method}"
-		end if adapter.reads?
-
-		write_behaviour.each do |method|
-			assert adapter.respond_to?(method), "adapter #{adapter.class} should respond to #{method}"
-		end if adapter.writes?
-	end
 
 	def test_single_pool
 		a1 = get_adapter

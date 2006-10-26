@@ -63,12 +63,6 @@ class Jars2Adapter
 		final_results
 	end
 
-	# returns size of dataset as numbers of triples
-	def size
-		Query.new.select(:s).where(:s,:p,:o).execute.size
-	end
-
-
 	private
 	Resource = /<[^>]*>/
 	Literal = /"[^"]*"/

@@ -15,6 +15,18 @@ def get_adapter
 	end
 end
 
+def get_all_read_adapters
+	types = ConnectionPool.adapter_types
+	adapters = types.collect {|type| ConnectionPool.add :type => type }
+	adapters.select {|adapter| adapter.reads?}
+end
+
+def get_all_write_adapters
+	types = ConnectionPool.adapter_types
+	adapters = types.collect {|type| ConnectionPool.add :type => type }
+	adapters.select {|adapter| adapter.writes?}
+end
+
 def get_write_adapter
 	types = ConnectionPool.adapter_types
 	if types.include?(:rdflite)

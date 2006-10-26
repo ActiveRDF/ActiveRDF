@@ -49,10 +49,6 @@ class SparqlAdapter
 		$log.debug "SparqlAdapter: query response from the SPARQL Endpoint took: #{Time.now - time}s"
 		return final_result
 	end
-
-	def size
-		Query.new.select(:s).where(:s,:p,:o).execute.size
-	end
 	
 	def translate(query)
 	 	Query2SPARQL.translate(query)
