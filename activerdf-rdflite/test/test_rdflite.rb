@@ -2,6 +2,7 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
+require 'rubygems'
 require 'test/unit'
 require 'active_rdf'
 require 'federation/federation_manager'
@@ -36,6 +37,7 @@ class TestObjectCreation < Test::Unit::TestCase
 		assert_equal adapter1, adapter2
 		assert_equal adapter1.object_id, adapter2.object_id
 	end
+
 
   def test_simple_query
     adapter = ConnectionPool.add_data_source(:type => :rdflite)
