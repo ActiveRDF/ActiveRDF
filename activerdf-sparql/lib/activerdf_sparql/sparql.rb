@@ -31,7 +31,7 @@ class SparqlAdapter
 		known_formats = [:xml, :json, :sparql_xml]
 		raise ActiveRdfError, "Result format unsupported" unless known_formats.include?(@result_format)
 		
-		$log.info "SparqlAdaper: initializing with host: #{@host} path: #{@path} port: #{@port} context #{@context} result format: #{@result_format}"
+		$log.info "SparqlAdaper: initializing with host: #{@host} path: #{@path} port: #{@port} context: #{@context} result-format: #{@result_format}"
 		
 		# We don't open the connection yet but let each HTTP method open and close 
 		# it individually. It would be more efficient to pipeline methods, and keep 
@@ -63,7 +63,10 @@ class SparqlAdapter
     #clauses = query.select_clauses.size
 
     # sending query to sparql endpoint
+    $log.debug "SparqlAdapter: execute_sparql_query will have get request: /#{@path}#{@context}?query=#{CGI.escape(qs)}"
     response = @sparql.get("/#{@path}#{@context}?query=#{CGI.escape(qs)}", header)
+
+    $log.debug "SparqlAdapter: body of response is #{response.body}"
 
     # if no content returned or if something went wrong
     # we return an empty array
@@ -73,7 +76,7 @@ class SparqlAdapter
     end
     
     unless response.is_a?(Net::HTTPOK)
-      $log.warn "SparqlAdapter: executing the SPARQL query failed: #{response.body}"
+      $log.warn "SparqlAdapter: executing the SPARQL query failed"
       return [] 
     end
 
@@ -86,6 +89,8 @@ class SparqlAdapter
      	# parse_sparql_query_result_xml response.body
      	# can be removed if everything is working fine. (line 129ff can be removed then as well)
     end
+
+    # TODO: BH: continue work here
 
     if block_given?
       results.each do |*clauses|
