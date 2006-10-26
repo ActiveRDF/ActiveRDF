@@ -21,6 +21,12 @@ class SparqlAdapter
 	end
 	
 	# Instantiate the connection with the SPARQL Endpoint.
+	# available parameters:
+	# * :host => hostname of the sparql endpoint
+	# * :port => portnumber on host
+	# * :path => path to sparql endpoint 
+	# * :context => name of the context on the sparql endpoint
+	# * :result_format => one of :xml, :json, :sparql_xml
 	def initialize(params = {})	
 		@host = params[:host] || 'm3pe.org'
 		@path = params[:path] || 'repositories/'
@@ -42,19 +48,25 @@ class SparqlAdapter
 	end
 
 	# query datastore with query string (SPARQL), returns array with query results
-	def query(query)
+	# may be called with a block
+	def query(query, &block)
 		time = Time.now
     qs = Query2SPARQL.translate(query)
-		final_result = execute_sparql_query(qs, header(query)) #, query.select_clauses.size)
+    if block_given?
+      $log.debug "SparqlAdapter: query: a block has been given, am now going to execute_sparql_query"
+    end
+		final_result = execute_sparql_query(qs, header(query), &block) #, query.select_clauses.size)
 		$log.debug "SparqlAdapter: query response from the SPARQL Endpoint took: #{Time.now - time}s"
 		return final_result
 	end
 	
+	# translate a query to its string representation
 	def translate(query)
 	 	Query2SPARQL.translate(query)
 	end
 		
-	def execute_sparql_query(qs, header) #,nr_of_clauses)
+	# do the real work of executing the sparql query
+	def execute_sparql_query(qs, header, &block) #,nr_of_clauses)
 		# TODO: can we really remove this (see line 66)
     #clauses = query.select_clauses.size
 
@@ -86,7 +98,9 @@ class SparqlAdapter
      	# can be removed if everything is working fine. (line 129ff can be removed then as well)
     end
 
-    # TODO: BH: continue work here
+    if block_given?
+      $log.debug "SparqlAdapter: execute_sparql_query: a block has been passed through"
+    end
 
     if block_given?
       results.each do |*clauses|
@@ -140,7 +154,7 @@ class SparqlAdapter
     return results
   end
   
-  
+  # parse xml stream result into array
   def parse_sparql_query_result_xml_stream(qr)
     require 'rexml/document'
     require "#{File.dirname(__FILE__)}/sparql_result_parser"

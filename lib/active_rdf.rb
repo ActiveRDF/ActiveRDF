@@ -29,7 +29,7 @@ def load_adapter s
   end
 end
 
-
+require 'rubygems'
 #determine if we are installed as a gem right now:
 if Gem::cache().search("activerdf").empty?
   #we are not running as a gem
