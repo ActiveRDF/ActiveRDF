@@ -4,6 +4,8 @@
 
 require 'test/unit'
 require 'active_rdf'
+require 'objectmanager/namespace'
+require "#{File.dirname(__FILE__)}/../common"
 
 class TestObjectCreation < Test::Unit::TestCase
   Rdf = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
