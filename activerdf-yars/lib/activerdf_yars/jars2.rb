@@ -10,7 +10,7 @@ require 'queryengine/query2jars2'
 require 'net/http'
 require 'cgi'
 
-class Jars2Adapter
+class Jars2Adapter < ActiveRdfAdapter
 	$log.info "loading Jars2 adapter"
 	ConnectionPool.register_adapter(:jars2, self)
 

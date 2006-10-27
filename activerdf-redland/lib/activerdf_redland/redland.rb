@@ -9,7 +9,7 @@ require 'federation/connection_pool'
 require 'queryengine/query2sparql'
 require 'rdf/redland'
 
-class RedlandAdapter
+class RedlandAdapter < ActiveRdfAdapter
 	$log.info "loading Redland adapter"
 	ConnectionPool.register_adapter(:redland,self)
 	
@@ -113,10 +113,6 @@ class RedlandAdapter
 	
 	def writes?
 		true
-	end
-	
-	def translate(query)
-		Query2SPARQL.translate(query)
 	end
 	
 	# returns size of datasources as number of triples

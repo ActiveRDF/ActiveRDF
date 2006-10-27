@@ -8,7 +8,7 @@ require 'queryengine/query2sparql'
 require 'net/http'
 require 'cgi'
 
-class SparqlAdapter
+class SparqlAdapter < ActiveRdfAdapter
 	$log.info "loading SPARQL adapter"
 	ConnectionPool.register_adapter(:sparql, self)
 
@@ -58,11 +58,6 @@ class SparqlAdapter
 		final_result = execute_sparql_query(qs, header(query), &block) #, query.select_clauses.size)
 		$log.debug "SparqlAdapter: query response from the SPARQL Endpoint took: #{Time.now - time}s"
 		return final_result
-	end
-	
-	# translate a query to its string representation
-	def translate(query)
-	 	Query2SPARQL.translate(query)
 	end
 		
 	# do the real work of executing the sparql query

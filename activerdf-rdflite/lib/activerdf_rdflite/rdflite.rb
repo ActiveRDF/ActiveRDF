@@ -21,7 +21,7 @@ rescue LoadError
 	@@have_ferret = false
 end
 
-class RDFLite
+class RDFLite < ActiveRdfAdapter
 	ConnectionPool.register_adapter(:rdflite,self)
 	bool_accessor :keyword_search
 

@@ -20,12 +20,13 @@ require 'objectmanager/resource'
 require 'objectmanager/namespace'
 require 'federation/connection_pool'
 require 'queryengine/query'
-
+require 'federation/active_rdf_adapter'
 
 def load_adapter s
   begin
     require s
-  rescue StandardError
+  rescue StandardError => e
+    $log.info "could not load adapter #{s}: #{e}"
   end
 end
 
