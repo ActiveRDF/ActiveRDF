@@ -10,7 +10,6 @@ require 'active_rdf'
 
 class ConnectionPool
 	class << self
-		attr_reader :adapter_pool, :registered_adapter_types
 		attr_accessor :write_adapter
 
 		# sets automatic flushing of data from adapters to original datasources 
@@ -100,7 +99,6 @@ class ConnectionPool
     @registered_adapter_types[type] = klass
   end
 
-  private
   # create new adapter from connection parameters
   def ConnectionPool.create_adapter connection_params
     # lookup registered adapter klass
@@ -112,4 +110,6 @@ class ConnectionPool
     # create new adapter-instance
     klass.send(:new,connection_params)
   end
+  
+  private_class_method :create_adapter
 end
