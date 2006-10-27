@@ -93,7 +93,7 @@ def setup_gem(pkg_name, pkg_version)
     
   Rake::GemPackageTask.new(spec) do |p|
     p.gem_spec = spec
-    p.need_tar = true
+    p.need_tar = false
   end
 end
 

@@ -33,16 +33,16 @@ end
 require 'rubygems'
 #determine if we are installed as a gem right now:
 if Gem::cache().search("activerdf").empty?
-  #we are not running as a gem
-  $log.info 'ActiveRDF is NOT installed as a Gem'
-	load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
-	load_adapter this_dir + '/../activerdf-redland/lib/activerdf_redland/redland'
-  load_adapter this_dir + '/../activerdf-sparql/lib/activerdf_sparql/sparql'
-  load_adapter this_dir + '/../activerdf-yars/lib/activerdf_yars/jars2'
+   #we are not running as a gem
+   $log.info 'ActiveRDF is NOT installed as a Gem'
+   load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
+   load_adapter this_dir + '/../activerdf-redland/lib/activerdf_redland/redland'
+   load_adapter this_dir + '/../activerdf-sparql/lib/activerdf_sparql/sparql'
+   load_adapter this_dir + '/../activerdf-yars/lib/activerdf_yars/jars2'
 else
-  #we are indeed running as a gem
-	require 'gem_plugin'
-  $log.info 'ActiveRDF is installed as a Gem'
-  GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
-end 
-  
+   #we are indeed running as a gem
+   require 'gem_plugin'
+   $log.info 'ActiveRDF is installed as a Gem'
+   GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
+end
+
