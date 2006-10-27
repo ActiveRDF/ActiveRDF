@@ -43,4 +43,9 @@ class Query2SPARQL
 			term.to_s
 		end
 	end
+	
+  #declare the class level methods as private with these directives
+  private_class_method :where_clauses
+  private_class_method :construct_clause
+	
 end

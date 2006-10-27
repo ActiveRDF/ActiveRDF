@@ -84,7 +84,6 @@ class ObjectManager
 		end
 	end
 
-	private
 	def self.prefix_to_module(prefix)
 		# TODO: remove illegal characters
 		prefix.to_s.upcase
@@ -115,5 +114,11 @@ class ObjectManager
 	def self.replace_illegal_chars(name)
 		name.gsub(/[^a-zA-Z0-9]+/, '_')
 	end
+
+  #declare the class level methods as private with these directives
+  private_class_method :prefix_to_module
+  private_class_method :localname_to_class
+  private_class_method :create_module_name
+  private_class_method :replace_illegal_chars
 
 end

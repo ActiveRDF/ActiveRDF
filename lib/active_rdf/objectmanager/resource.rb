@@ -315,5 +315,6 @@ module RDFS
     end
     return nil
   end
+  
 end
 end
