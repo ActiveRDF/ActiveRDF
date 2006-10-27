@@ -4,6 +4,7 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
+require 'active_rdf'
 
 class Namespace
 
