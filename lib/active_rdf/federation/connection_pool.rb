@@ -6,6 +6,8 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
+require 'active_rdf'
+
 class ConnectionPool
 	class << self
 		attr_reader :adapter_pool, :registered_adapter_types

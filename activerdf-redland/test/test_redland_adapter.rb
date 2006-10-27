@@ -7,7 +7,9 @@ require 'rubygems'
 require 'active_rdf'
 require 'federation/federation_manager'
 require 'queryengine/query'
-# require 'active_rdf/test/common'
+
+
+
 
 class TestObjectCreation < Test::Unit::TestCase
   def setup
@@ -143,7 +145,6 @@ class TestObjectCreation < Test::Unit::TestCase
     end
   end
 
-  # test fails
   def test_update_value
     # TODO: move to generic test suite: this test is not redland specific,
     # but currently redland is the only datasource to which we can write
@@ -160,7 +161,6 @@ class TestObjectCreation < Test::Unit::TestCase
     eyal.age = 30
   end
 
-  # test fails 
   def test_person_data
     adapter = ConnectionPool.add_data_source :type => :redland
     adapter.load("#{File.dirname(__FILE__)}/test_person_data.nt", "turtle")

@@ -68,4 +68,6 @@ class TestResourceInstanceMethods < Test::Unit::TestCase
     assert_equal @eyal, RDFS::Resource.find_by_age_and_eye(27,'blue')
   end
 
+  # TODO: test for writing if no write adapter is defined (like only sparqls) 
+
 end
