@@ -342,7 +342,27 @@ class RDFLite < ActiveRdfAdapter
 		# look up the first occurence of this term in the where clauses, and compute 
 		# the level and s/p/o position of it
 		index = query.where_clauses.flatten.index(term)
-		raise ActiveRdfError,'unbound variable in select clause' if index.nil?
+
+		if index.nil? 
+			# term does not appear in where clause
+			# but maybe it appears in a keyword clause
+				
+			# index would not be nil if we had:
+			# select(:o).where(knud, knows, :o).where(:o, :keyword, 'eyal')
+			#
+			# the only possibility that index is nil is if we have:
+			# select(:o).where(:o, :keyword, :eyal) (selecting subject)
+			# or if we use a select clause that does not appear in any where clause
+
+			# so we check if we find the term in the keyword clauses, otherwise we throw 
+			# an error
+			if query.keywords.flatten.include?(term)
+				return "t0.s"
+			else
+				raise ActiveRdfError,'unbound variable in select clause'
+			end
+		end
+
 		termtable = "t#{index / 3}"
 		termspo = SPO[index % 3]
 		return "#{termtable}.#{termspo}"
