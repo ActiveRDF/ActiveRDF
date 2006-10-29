@@ -136,6 +136,7 @@ class RDFLite < ActiveRdfAdapter
 		end
 
 		$log.debug "read #{ntriples.size} triples from file #{file}"
+		@db
 	end
 
 	# executes ActiveRDF query on datastore
