@@ -281,7 +281,15 @@ module RDFS
   end
 
   def label(*args)
-    get_property_value(Namespace.lookup(:rdfs,:label)) || Namespace.localname(self)
+    label = get_property_value(Namespace.lookup(:rdfs,:label)) || Namespace.localname(self)
+
+		# empty labels are not useful: replace them by localname
+		label = Namespace.localname(self) if label.empty?
+
+		# if we have no localname, use full uri
+		label = uri if label.empty?
+
+		label
   end
 
   private

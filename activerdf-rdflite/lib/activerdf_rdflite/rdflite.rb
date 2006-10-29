@@ -321,7 +321,7 @@ class RDFLite < ActiveRdfAdapter
 		if query.keyword?
 			subjects = []
 			query.keywords.each do |subject, key|
-				@ferret.search_each("object:\"#{key}\"") do |idx,score|
+				@ferret.search_each(key) do |idx,score|
 					subjects << @ferret[idx][:subject]
 				end
 				subjects.uniq! if query.distinct?
@@ -356,7 +356,7 @@ class RDFLite < ActiveRdfAdapter
 
 			# so we check if we find the term in the keyword clauses, otherwise we throw 
 			# an error
-			if query.keywords.flatten.include?(term)
+			if query.keywords.keys.include?(term)
 				return "t0.s"
 			else
 				raise ActiveRdfError,'unbound variable in select clause'

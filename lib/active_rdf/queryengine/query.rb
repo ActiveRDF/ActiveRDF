@@ -20,7 +20,7 @@ class Query
 		offset = nil
     @select_clauses = []
     @where_clauses = []
-		@keywords = []
+		@keywords = {}
   end
 
 	def clear_select
@@ -102,7 +102,12 @@ class Query
 	# the constraint (e.g. keyword_where(:s,'eyal|benjamin')
 	def keyword_where s,o
 		@keyword = true
-		@keywords << [parametrise(s),o]
+		s = parametrise(s)
+		if @keywords.include?(s)
+			@keywords[s] = @keywords[s] + ' ' + o
+		else
+			@keywords[s] = o
+		end
 		self
 	end
 
