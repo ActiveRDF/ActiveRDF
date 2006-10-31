@@ -170,15 +170,39 @@ module RDFS
       end
 
       candidates = if update
-      class_level_predicates
-    else
-      direct_predicates
-    end
-
+                      class_level_predicates
+                    else
+                      direct_predicates
+                    end
+    
     # checking possibility (1) and (3)
-    success = get_set_attribute_value(methodname, candidates, update, args)
-    return success unless success.nil?
+    candidates.each do |pred|
+      if Namespace.localname(pred) == methodname
+        # found a property invocation of eyal: option 1) or 2)
+        # query execution will return either the value for the predicate (1)
+        # or nil (2)
+        if update
+          # TODO: delete old value if overwriting
+          # FederiationManager.delete(self, pred, nil)
 
+          # handling eyal.friends = [armin, andreas] --> expand array values
+          args.each do |value|
+            puts "setting #{pred} to #{value}"
+            FederationManager.add(self, pred, value)
+          end
+          return args
+        else
+          # look into args, if it contains a hash with {:array => true} then
+          # we should not flatten the query results
+          return get_property_value(pred, args)
+        end
+      end
+    end
+    
+    raise ActiveRdfError, "could not set #{methodname} to #{args}: no suitable predicate found. Maybe you are missing some shcema information?" if update
+
+    # get/set attribute value did not succeed, so checking option (2) and (4)
+    
     # checking possibility (2), it is not handled correctly above since we use
     # direct_predicates instead of class_level_predicates. If we didn't find
     # anything with direct_predicates, we need to try the
@@ -297,32 +321,6 @@ module RDFS
     return_ary = args[0][:array] if args[0].is_a?(Hash)
     flatten_results = !return_ary
     Query.new.distinct(:o).where(self, predicate, :o).execute(:flatten => flatten_results)
-  end
-
-  def get_set_attribute_value(methodname, candidates, update=false, *args)
-    candidates.each do |pred|
-      if Namespace.localname(pred) == methodname
-        # found a property invocation of eyal: option 1) or 2)
-        # query execution will return either the value for the predicate (1)
-        # or nil (2)
-        if update
-          # TODO: delete old value if overwriting
-          # FederiationManager.delete(self, pred, nil)
-
-          # handling eyal.friends = [armin, andreas] --> expand array values
-          args.each do |value|
-            FederationManager.add(self, pred, value)
-          end
-          return args
-        else
-          # look into args, if it contains a hash with {:array => true} then
-          # we should not flatten the query results
-          return get_property_value(pred, args)
-        end
-      end
-    end
-    return nil
-  end
-  
+  end  
 end
 end

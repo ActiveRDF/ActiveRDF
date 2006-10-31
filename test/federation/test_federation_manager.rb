@@ -113,7 +113,8 @@ class TestFederationManager < Test::Unit::TestCase
     second_result = write2.query(Query.new.select(:o).where(@@eyal, @@eye, :o))
     assert "blue", second_result
   end
-
+  
+  # this test makes no sense without two different data sources
   def test_federated_query
 		unless ConnectionPool.adapter_types.include?(:sparql)
 			raise(ActiveRdfError, "cannot run federation query test because sparql 
