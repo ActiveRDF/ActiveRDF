@@ -32,6 +32,9 @@ class RDFLite < ActiveRdfAdapter
 	# * :pidx, :oidx, etc. => true/false (enable/disable these indices)
 	def initialize(params = {})
 		$log.info "initialised rdflite with params #{params.to_s}"
+
+		@reads = true
+		@writes = true
 	
 		# if no file-location given, we use in-memory store
 		file = params[:location] || ':memory:'
@@ -46,9 +49,9 @@ class RDFLite < ActiveRdfAdapter
 
 		# we can only do keyword search if ferret is found
 		@keyword_search &= @@have_ferret
-		$log.debug "we #{@keyword_search ? "do" : "don't"} have keyword search"
+		$log.debug "we #{keyword_search? ? "do" : "don't"} have keyword search"
 
-		if @keyword_search
+		if keyword_search?
 			# we initialise the ferret index, either as a file or in memory
 
 			# we setup the fields not to store object's contents
@@ -75,10 +78,6 @@ class RDFLite < ActiveRdfAdapter
 		$log.debug("database contains #{size} triples")
 	end
 
-	# we can read and write to this adapter
-	def writes?; true; end
-	def reads?; true; end
-
 	# returns the number of triples in the datastore (incl. possible duplicates)
 	def size
 		@db.execute('select count(*) from triple')[0][0].to_i
@@ -95,6 +94,54 @@ class RDFLite < ActiveRdfAdapter
 	def clear
 		@db.execute('delete from triple')
 	end
+
+	# deletes triple(s,p,o) from datastore
+	# nil parameters match anything: delete(nil,nil,nil) will delete all triples
+	def delete(s,p,o)
+		# convert input to internal format
+		# leave nil input alone (we'll deal with it later)
+		s = "<#{s.uri}>" unless s.nil?
+		p = "<#{p.uri}>" unless p.nil?
+		o = case o
+				when RDFS::Resource
+					"<#{o.uri}>"
+				else
+					"\"#{o.to_s}\""
+				end unless o.nil?
+
+		# construct where clause for deletion (for all non-nil input)
+		where_clauses = []
+		conditions = []
+		unless s.nil?
+			conditions << s
+			where_clauses << 's = ?' 
+		end
+
+		unless p.nil?
+			conditions << p
+			where_clauses << 'p = ?' 
+		end
+
+		unless o.nil?
+			conditions << o
+			where_clauses << 'o = ?' 
+		end
+
+		# construct delete string
+		ds = 'delete from triple'
+		ds << " where #{where_clauses.join(' and ')}" unless where_clauses.empty?
+
+		# execute delete string with possible deletion conditions (for each 
+		# non-empty where clause)
+		@db.execute(ds, *conditions)
+		$log.debug(sprintf("sending delete query: #{ds}", *conditions))
+
+		# delete literal from ferret index
+		@ferret.search_each("subject:\"#{s}\", object:\"#{o}\"") do |idx, score|
+			$log.debug "deleting #{o} => #{s} from ferret index"
+			@ferret.delete(idx)
+		end if keyword_search?
+	end
 	
 	# adds triple(s,p,o) to datastore
 	# s,p must be resources, o can be primitive data or resource
@@ -103,18 +150,11 @@ class RDFLite < ActiveRdfAdapter
 		raise(ActiveRdfError, "adding non-resource #{s}") unless s.respond_to?(:uri)
 		raise(ActiveRdfError, "adding non-resource #{p}") unless p.respond_to?(:uri)
 
-		# transform triple into internal format <uri> and "literal"
-		s = "<#{s.uri}>"
-		p = "<#{p.uri}>"
-		o = case o
-				when RDFS::Resource
-					"<#{o.uri}>"
-				else
-					"\"#{o.to_s}\""
-				end
+		# get internal representation (array)
+		triple = internal_triple_representation(s,p,o)
 
 		# add triple to database
-		add_internal(s,p,o)
+		add_internal(*triple)
 	end
 
 	# flushes openstanding changes to underlying sqlite3
@@ -172,6 +212,12 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	private
+	# constants for extracting resources/literals from sql results
+	Resource = /<([^>]*)>/
+	Literal = /"([^"]*)"/
+	Node = Regexp.union(/<[^>]*>/,/"[^"]*"/)
+	SPO = ['s','p','o']
+
 	# adds s,p,o into sqlite and ferret
 	# s,p,o should be in internal format: <uri> and "literal"
 	def add_internal(s,p,o)
@@ -179,7 +225,7 @@ class RDFLite < ActiveRdfAdapter
 		@db.execute('insert into triple values (?,?,?)', s,p,o)
 
 		# if keyword-search available, insert the object into keyword search
-		@ferret << {:subject => s, :object => o} if @keyword_search
+		@ferret << {:subject => s, :object => o} if keyword_search?
 	end
 
 	# construct select clause
@@ -407,9 +453,17 @@ class RDFLite < ActiveRdfAdapter
 		end
 	end
 
-	Resource = /<([^>]*)>/
-	Literal = /"([^"]*)"/
-	Node = Regexp.union(/<[^>]*>/,/"[^"]*"/)
-	SPO = ['s','p','o']
-
+	# transform triple into internal format <uri> and "literal"
+	# returns array [s,p,o] 
+	def internal_triple_representation(s,p,o)
+		s = "<#{s.uri}>"
+		p = "<#{p.uri}>"
+		o = case o
+				when RDFS::Resource
+					"<#{o.uri}>"
+				else
+					"\"#{o.to_s}\""
+				end
+		[s,p,o]
+	end
 end

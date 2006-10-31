@@ -7,19 +7,13 @@ require 'active_rdf'
 require 'federation/connection_pool'
 require "#{File.dirname(__FILE__)}/../common"
 
-# need access to connectionpool.adapter_pool in tests
-class ConnectionPool
-  def self.adapter_pool
-    @adapter_pool
-  end
-end
-
 class TestObjectCreation < Test::Unit::TestCase
   def setup
 		ConnectionPool.clear
   end
 
   def teardown
+		ConnectionPool.clear
   end
 
   def test_class_add_data_source    
@@ -35,6 +29,7 @@ class TestObjectCreation < Test::Unit::TestCase
   end
 
   def test_class_adapter_pool
+		#ConnectionPool.clear
     assert_equal 0, ConnectionPool.adapter_pool.size
     adapter = get_adapter
     assert_equal 1, ConnectionPool.adapter_pool.size
@@ -71,3 +66,11 @@ class TestObjectCreation < Test::Unit::TestCase
     assert_equal adapter, ConnectionPool.write_adapter
   end
 end
+
+# need access to connectionpool.adapter_pool in tests
+class ConnectionPool
+  def self.adapter_pool
+    @@adapter_pool
+  end
+end
+

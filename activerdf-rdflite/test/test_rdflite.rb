@@ -115,4 +115,17 @@ class TestObjectCreation < Test::Unit::TestCase
     assert eyal.instance_of?(TEST::Person)
     assert eyal.instance_of?(RDFS::Resource)
 	end
+
+	def test_delete_data
+    adapter = ConnectionPool.add_data_source :type => :rdflite
+		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')
+		assert_equal 28, adapter.size
+
+    eyal = RDFS::Resource.new('http://activerdf.org/test/eyal')
+		adapter.delete(eyal, nil, nil)
+		assert_equal 24, adapter.size
+
+		adapter.delete(nil,nil,nil)
+		assert_equal 0, adapter.size
+	end
 end

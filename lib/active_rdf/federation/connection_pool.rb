@@ -18,44 +18,43 @@ class ConnectionPool
 		# ConnectionPool.flush manually
 		bool_accessor :auto_flush
 	end
-
   # pool of all adapters
-  @adapter_pool = Array.new
+  @@adapter_pool = Array.new
 
   # pool of connection parameters to all adapter
-  @adapter_parameters = Array.new
+  @@adapter_parameters = Array.new
 
   # currently active write-adapter (we can only write to one at a time)
-  @write_adapter = nil
+  self.write_adapter = nil
 
 	# default setting for auto_flush
-	@auto_flush = true
+	self.auto_flush = true
 
   # adapters-classes known to the pool, registered by the adapter-class
   # itself using register_adapter method, used to select new
   # adapter-instance for requested connection type
-  @registered_adapter_types = Hash.new
+  @@registered_adapter_types = Hash.new
 
   # clears the pool: removes all registered data sources
   def ConnectionPool.clear
     $log.info "ConnectionPool: clear called"
-    @adapter_pool = []
-    @adapter_parameters = []
-    @write_adapter = nil
+    @@adapter_pool = []
+    @@adapter_parameters = []
+    self.write_adapter = nil
   end
 
 	# flushes all openstanding changes into the original datasource.
 	def ConnectionPool.flush
-		@write_adapter.flush
+		write_adapter.flush
 	end
 
 	def ConnectionPool.adapter_types
-		@registered_adapter_types.keys
+		@@registered_adapter_types.keys
 	end
 
   # returns the set of currently registered read-access datasources
   def ConnectionPool.read_adapters
-    @adapter_pool.select {|adapter| adapter.reads? }
+    @@adapter_pool.select {|adapter| adapter.reads? }
   end
 
   # returns adapter-instance for given parameters (either existing or new)
@@ -64,24 +63,24 @@ class ConnectionPool
 
     # either get the adapter-instance from the pool
     # or create new one (and add it to the pool)
-    index = @adapter_parameters.index(connection_params)
+    index = @@adapter_parameters.index(connection_params)
     if index.nil?
       # adapter not in the pool yet: create it,
       # register its connection parameters in parameters-array
       # and add it to the pool (at same index-position as parameters)
       $log.debug("Create a new adapter for parameters #{connection_params.inspect}")
       adapter = create_adapter(connection_params)
-      @adapter_parameters << connection_params
-      @adapter_pool << adapter
+      @@adapter_parameters << connection_params
+      @@adapter_pool << adapter
     else
       # if adapter parametrs registered already,
       # then adapter must be in the pool, at the same index-position as its parameters
       $log.debug("Reusing existing adapter")
-      adapter = @adapter_pool[index]
+      adapter = @@adapter_pool[index]
     end
 
     # sets the adapter as current write-source if it can write
-    @write_adapter = adapter if adapter.writes?
+    self.write_adapter = adapter if adapter.writes?
 
     return adapter
   end
@@ -96,13 +95,13 @@ class ConnectionPool
   # indicating which adapter-type they are
   def ConnectionPool.register_adapter(type, klass)
     $log.info "ConnectionPool: registering adapter of type #{type} for class #{klass}"
-    @registered_adapter_types[type] = klass
+    @@registered_adapter_types[type] = klass
   end
 
   # create new adapter from connection parameters
   def ConnectionPool.create_adapter connection_params
     # lookup registered adapter klass
-    klass = @registered_adapter_types[connection_params[:type]]
+    klass = @@registered_adapter_types[connection_params[:type]]
 
     # raise error if adapter type unknown
     raise(ActiveRdfError, "unknown adapter type #{connection_params[:type]}") if klass.nil?

@@ -14,14 +14,6 @@ require "#{File.dirname(__FILE__)}/sparql_result_parser"
 class SparqlAdapter < ActiveRdfAdapter
 	$log.info "loading SPARQL adapter"
 	ConnectionPool.register_adapter(:sparql, self)
-
-	def reads?
-		true
-	end
-	
-	def writes?
-		false
-	end
 	
 	# Instantiate the connection with the SPARQL Endpoint.
 	# available parameters:
@@ -31,6 +23,9 @@ class SparqlAdapter < ActiveRdfAdapter
 	# * :context => name of the context on the sparql endpoint
 	# * :result_format => one of :xml, :json, :sparql_xml
 	def initialize(params = {})	
+		@reads = true
+		@writes = false
+
 		@host = params[:host] || 'm3pe.org'
 		@path = params[:path] || 'repositories/'
 		@port = params[:port] || 8080
@@ -92,8 +87,6 @@ class SparqlAdapter < ActiveRdfAdapter
       parse_sparql_query_result_json response.body
     when :xml, :sparql_xml
       parse_sparql_query_result_xml_stream response.body
-     	# parse_sparql_query_result_xml response.body
-     	# can be removed if everything is working fine. (line 129ff can be removed then as well)
     end
 
     if block_given?
@@ -156,43 +149,7 @@ class SparqlAdapter < ActiveRdfAdapter
   def parse_sparql_query_result_xml_stream(qr)
     parser = SparqlResultParser.new
     REXML::Document.parse_stream(qr, parser)
-    final_results = parser.result
-    $log.debug "SparqlAdapter: parsed SPARQL query results as XML Stream"
-    return final_results
-  end
-  
-  # parse xml query results into array
-  def parse_sparql_query_result_xml(query_result)
-    results = []
-    vars = []
-    objects = []
-    doc = REXML::Document.new query_result
-    doc.elements.each("*/head/variable") {|v| vars << v.attributes["name"]}
-    doc.elements.each("*/results/result") {|o| objects << o}
-    if vars.length > 1
-      objects.each do |result|
-        myResult = []
-        vars.each do |v|
-          result.each_element_with_attribute('name', v) do |binding|
-            binding.elements.each do |e|
-              myResult << create_node(e.name, e.text)
-            end            
-          end          
-        end
-        results << myResult
-      end
-      
-    else
-      objects.each do |bs| 
-        bs.elements.each("binding") do |b|
-          b.elements.each do |e|
-						results << create_node(e.name, e.text)
-					end
-        end
-      end
-    end
-    $log.debug "SparqlAdapter: parsed SPARQL query results as XML, input: #{query_result.join(', ')} output: #{results.join(', ')}"
-    return results
+    parser.result
   end
   
   # create ruby objects for each RDF node

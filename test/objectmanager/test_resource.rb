@@ -22,7 +22,7 @@ class TestResourceInstanceMethods < Test::Unit::TestCase
 
   def test_find_all_instances
     assert_equal 36, RDFS::Resource.find_all.size
-    assert_equal @eyal, AR::Person.find_all
+    assert_equal [@eyal], AR::Person.find_all
   end
 
   def test_class_predicates
@@ -30,13 +30,20 @@ class TestResourceInstanceMethods < Test::Unit::TestCase
   end
 
   def test_eyal_predicates
-    predicates = @eyal.predicates
+    predicates = @eyal.direct_predicates
 
-    # assert that the three found predicates are (in short form) eye, age, and type
-    assert_equal 10, predicates.size
+    # assert that the three found predicates are eye, age, and type
+    assert_equal 3, predicates.size
     predicates_labels = predicates.collect {|pred| pred.label }
+		['age', 'eye', 'type'].each do |pr| 
+			assert predicates_labels.include?(pr), "Eyal should have predicate #{pr}"
+		end
 
-    assert ['age', 'eye', 'type', 'car'].all? { |pr| predicates_labels.include?(pr) }
+    # assert that the found predicates on Person are eye, age, and type
+    predicates_labels = predicates.collect {|pred| pred.label }
+		['age', 'eye', 'type'].each do |pr| 
+			assert predicates_labels.include?(pr), "Eyal should have predicate #{pr}"
+		end
   end
 
   def test_eyal_types

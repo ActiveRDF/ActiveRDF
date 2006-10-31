@@ -23,10 +23,10 @@ class Jars2Adapter < ActiveRdfAdapter
 		@port = params[:port] || 2020
 		$log.info "Jars2Adapter: initializing new instance with host: #{@host} port: #{@port}"
 		@yars = Net::HTTP.new(@host, @port)
-	end
 
-	def reads?; true; end
-	def writes?; false; end
+		@reads = true
+		@writes = false
+	end
 
 	def translate query
 		Query2Jars2.translate(query)

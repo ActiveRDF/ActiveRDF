@@ -32,6 +32,9 @@ class RedlandAdapter < ActiveRdfAdapter
 		
 		@store = Redland::HashStore.new(type, file, path, false)
 		@model = Redland::Model.new @store
+
+		@reads = true
+		@writes = true
 	end	
 	
 	# load a file from the given location with the given syntax into the model.
@@ -41,7 +44,7 @@ class RedlandAdapter < ActiveRdfAdapter
     parser = Redland::Parser.new(syntax, "", nil)
     parser.parse_into_model(@model, "file:#{location}")
 	end
-	
+
 	# yields query results (as many as requested in select clauses) executed on data source
 	def query(query)
 		qs = Query2SPARQL.translate(query)
@@ -137,19 +140,20 @@ class RedlandAdapter < ActiveRdfAdapter
 		end		
 	end
 
+	# deletes triple(s,p,o) from datastore
+	# nil parameters match anything: delete(nil,nil,nil) will delete all triples
+	def delete(s,p,o)
+		s = wrap(s) unless s.nil?
+		p = wrap(p) unless p.nil?
+		o = wrap(o) unless o.nil?
+		@model.delete(s,p,o)
+	end
+
 	# saves updates to the model into the redland file location
 	def save
 		Redland::librdf_model_sync(@model.model).nil?
 	end
 	alias flush save
-	
-	def reads?
-		true
-	end
-	
-	def writes?
-		true
-	end
 	
 	# returns size of datasources as number of triples
 	#
