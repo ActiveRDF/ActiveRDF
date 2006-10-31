@@ -127,7 +127,7 @@ class Query
   # usage: results = query.execute
   # usage: query.execute do |s,p,o| ... end
   def execute(options={:flatten => true}, &block)
-    $log.debug "Query: executing query: #{self.to_s}"
+    $log.debug "Query: executing query: #{self.inspect}"
     
     if block_given?
       FederationManager.query(self) do |*clauses|
@@ -139,7 +139,11 @@ class Query
   end
 
   def to_s
-		ConnectionPool.read_adapters.first.translate(self)
+		if ConnectionPool.read_adapters.empty?
+			inspect 
+		else
+			ConnectionPool.read_adapters.first.translate(self)
+		end
   end
 
   def to_sp

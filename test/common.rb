@@ -5,7 +5,7 @@ def get_adapter
 	elsif types.include?(:redland)
 		ConnectionPool.add :type => :redland
 	elsif types.include?(:sparql)
-		ConnectionPool.add :type => :sparql
+		ConnectionPool.add(:type => :sparql, :url => "http://m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
 	elsif types.include?(:yars)
 		ConnectionPool.add :type => :yars
 	elsif types.include?(:jars2)
@@ -18,7 +18,7 @@ end
 def get_read_only_adapter
 	types = ConnectionPool.adapter_types
   if types.include?(:sparql)
-		ConnectionPool.add :type => :sparql
+		ConnectionPool.add(:type => :sparql, :url => "http://m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
 	else
 		raise ActiveRdfError, "no suitable read only adapter found for test"
 	end
@@ -33,7 +33,7 @@ def get_different_adapter(existing_adapter)
 	elsif types.include?(:redland) and existing_adapter.class != RedlandAdapter
 		ConnectionPool.add :type => :redland
 	elsif types.include?(:sparql) and existing_adapter.class != SparqlAdapter
-		ConnectionPool.add :type => :sparql
+		ConnectionPool.add(:type => :sparql, :url => "http://m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
 	elsif types.include?(:yars) and existing_adapter.class != YarsAdapter
 		ConnectionPool.add :type => :yars
 	elsif types.include?(:jars2) and existing_adapter.class != Jars2Adapter
@@ -45,7 +45,13 @@ end
 
 def get_all_read_adapters
 	types = ConnectionPool.adapter_types
-	adapters = types.collect {|type| ConnectionPool.add :type => type }
+	adapters = types.collect {|type| 
+		if type == :sparql
+			ConnectionPool.add(:type => :sparql, :url => "http://m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
+		else
+			ConnectionPool.add :type => type 
+		end
+	}
 	adapters.select {|adapter| adapter.reads?}
 end
 

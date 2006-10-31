@@ -49,25 +49,17 @@ class TestNamespace < Test::Unit::TestCase
     assert_equal :rdfs, Namespace.prefix(Namespace.lookup(:rdfs, :Resource))
     assert_equal :rdfs, Namespace.prefix(Namespace.expand(:rdfs, :Resource))
   end
-  
-   def test_class_expand
-    raise NotImplementedError, 'Need to write test_class_expand'
-  end
 
   def test_class_localname
-    raise NotImplementedError, 'Need to write test_class_localname'
-  end
-
-  def test_class_lookup
-    raise NotImplementedError, 'Need to write test_class_lookup'
-  end
-
-  def test_class_prefix
-    raise NotImplementedError, 'Need to write test_class_prefix'
+		assert_equal 'type', Namespace.localname(Namespace.lookup(:rdf, :type))
+		assert_equal 'Class', Namespace.localname(Namespace.lookup(:rdfs, :Class))
   end
 
   def test_class_register
-    raise NotImplementedError, 'Need to write test_class_register'
+		test = 'http://test.org/'
+		abc = "#{test}abc"
+		Namespace.register :test, test
+
+		assert_equal abc, Namespace.expand(:test, :abc)
   end
-  
 end

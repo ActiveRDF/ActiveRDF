@@ -9,7 +9,7 @@ require "#{File.dirname(__FILE__)}/../common"
 
 class TestResourceInstanceMethods < Test::Unit::TestCase
   def setup
-    ConnectionPool.add_data_source(:type => :sparql, :path => 'repositories/', :context => 'test-people')
+    ConnectionPool.add_data_source(:type => :sparql, :url => "http://m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
     Namespace.register(:ar, 'http://activerdf.org/test/')
     @eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
   end
@@ -35,15 +35,15 @@ class TestResourceInstanceMethods < Test::Unit::TestCase
     # assert that the three found predicates are eye, age, and type
     assert_equal 3, predicates.size
     predicates_labels = predicates.collect {|pred| pred.label }
-		['age', 'eye', 'type'].each do |pr| 
-			assert predicates_labels.include?(pr), "Eyal should have predicate #{pr}"
-		end
+    ['age', 'eye', 'type'].each do |pr|
+      assert predicates_labels.include?(pr), "Eyal should have predicate #{pr}"
+    end
 
     # assert that the found predicates on Person are eye, age, and type
     predicates_labels = predicates.collect {|pred| pred.label }
-		['age', 'eye', 'type'].each do |pr| 
-			assert predicates_labels.include?(pr), "Eyal should have predicate #{pr}"
-		end
+    ['age', 'eye', 'type'].each do |pr|
+      assert predicates_labels.include?(pr), "Eyal should have predicate #{pr}"
+    end
   end
 
   def test_eyal_types
@@ -75,6 +75,6 @@ class TestResourceInstanceMethods < Test::Unit::TestCase
     assert_equal @eyal, RDFS::Resource.find_by_age_and_eye(27,'blue')
   end
 
-  # TODO: test for writing if no write adapter is defined (like only sparqls) 
+  # TODO: test for writing if no write adapter is defined (like only sparqls)
 
 end

@@ -5,7 +5,7 @@
 # License:: LGPL
 require 'active_rdf'
 require 'queryengine/query2sparql'
-require 'net/http'
+require 'open-uri'
 require 'cgi'
 require 'rexml/document'
 require "#{File.dirname(__FILE__)}/sparql_result_parser"
@@ -17,32 +17,20 @@ class SparqlAdapter < ActiveRdfAdapter
 	
 	# Instantiate the connection with the SPARQL Endpoint.
 	# available parameters:
-	# * :host => hostname of the sparql endpoint
-	# * :port => portnumber on host
-	# * :path => path to sparql endpoint 
-	# * :context => name of the context on the sparql endpoint
-	# * :result_format => one of :xml, :json, :sparql_xml
+	# * :url => url: endpoint location e.g. "http://m3pe.org:8080/repositories/test-people"
+	# * :results => one of :xml, :json, :sparql_xml
 	def initialize(params = {})	
 		@reads = true
 		@writes = false
 
-		@host = params[:host] || 'm3pe.org'
-		@path = params[:path] || 'repositories/'
-		@port = params[:port] || 8080
-		@context = params[:context] || 'test-people'
-		@result_format = params[:result_format] || :sparql_xml
+		@url = params[:url] || ''
+		@result_format = params[:results] || :json
 		
 		known_formats = [:xml, :json, :sparql_xml]
-		raise ActiveRdfError, "Result format unsupported" unless known_formats.include?(@result_format)
+		raise ActiveRdfError, "Result format unsupported" unless 
+		known_formats.include?(@result_format)
 		
-		$log.info "SparqlAdaper: initializing with host: #{@host} path: #{@path} port: #{@port} context: #{@context} result-format: #{@result_format}"
-		
-		# We don't open the connection yet but let each HTTP method open and close 
-		# it individually. It would be more efficient to pipeline methods, and keep 
-		# the connection open continuously, but then we would need to close it 
-		# manually at some point in time, which I do not want to do.
-		
-		@sparql = Net::HTTP.new(@host,@port)
+		$log.info "Sparql adapter initialised #{inspect}"
 	end
 
 	# query datastore with query string (SPARQL), returns array with query results
@@ -50,48 +38,36 @@ class SparqlAdapter < ActiveRdfAdapter
 	def query(query, &block)
 		time = Time.now
     qs = Query2SPARQL.translate(query)
-    if block_given?
-      $log.debug "SparqlAdapter: query: a block has been given, am now going to execute_sparql_query"
-    end
-		final_result = execute_sparql_query(qs, header(query), &block) #, query.select_clauses.size)
-		$log.debug "SparqlAdapter: query response from the SPARQL Endpoint took: #{Time.now - time}s"
-		return final_result
+		$log.debug "executing sparql query #{query}"
+
+		execute_sparql_query(qs, header(query), &block)
 	end
 		
 	# do the real work of executing the sparql query
-	def execute_sparql_query(qs, header, &block) #,nr_of_clauses)
-		# TODO: can we really remove this (see line 66)
-    #clauses = query.select_clauses.size
+	def execute_sparql_query(qs, header, &block)
+		$log.debug "executing query #{qs} on url #@url"
 
-    # sending query to sparql endpoint
-    $log.debug "SparqlAdapter: execute_sparql_query will have get request: /#{@path}#{@context}?query=#{CGI.escape(qs)}"
-    response = @sparql.get("/#{@path}#{@context}?query=#{CGI.escape(qs)}", header)
+		# encoding query string in URL
+		url = "#@url?query=#{CGI.escape(qs)}"
 
-    $log.debug "SparqlAdapter: body of response is #{response.body}"
-
-    # if no content returned or if something went wrong
-    # we return an empty array
-    if response.is_a?(Net::HTTPNoContent)
-      $log.debug "SparqlAdapter: executing the SPARQL query returned empty response"
-      return [] 
-    end
-    
-    unless response.is_a?(Net::HTTPOK)
-      $log.warn "SparqlAdapter: executing the SPARQL query failed"
-      return [] 
-    end
+    # querying sparql endpoint
+		begin 
+			response = open(url, header).read
+		rescue OpenURI::HTTPError => e
+			raise ActiveRdfError, "could not query SPARQL endpoint, server said: #{e}"
+			return []
+		rescue Errno::ECONNREFUSED
+			raise ActiveRdfError, "connection refused on SPARQL endpoint #@url"
+			return []
+	 	end
 
     # we parse content depending on the result format
     results = case @result_format
-    when :json
-      parse_sparql_query_result_json response.body
-    when :xml, :sparql_xml
-      parse_sparql_query_result_xml_stream response.body
-    end
-
-    if block_given?
-      $log.debug "SparqlAdapter: execute_sparql_query: a block has been passed through"
-    end
+						 	when :json 
+								parse_json(response)
+						 	when :xml, :sparql_xml
+							 	parse_xml(response)
+						 	end
 
     if block_given?
       results.each do |*clauses|
@@ -103,24 +79,23 @@ class SparqlAdapter < ActiveRdfAdapter
 	end
 	
 	private
-
 	# constructs correct HTTP header for selected query-result format
 	def header(query)
 		case @result_format
 		when :json
-			header = { 'accept' => 'application/sparql-results+json' }
+			{ 'accept' => 'application/sparql-results+json' }
 		when :xml
-			header = { 'accept' => 'application/rdf+xml' }
+			{ 'accept' => 'application/rdf+xml' }
 		when :sparql_xml
-		  header = { 'accept' => 'application/sparql-results+xml' }
+		  { 'accept' => 'application/sparql-results+xml' }
 		end
 	end
 
   # parse json query results into array
-	def parse_sparql_query_result_json(query_result)
+	def parse_json(s)
     require 'json'
     
-    parsed_object = JSON.parse(query_result)
+    parsed_object = JSON.parse(s)
     return [] if parsed_object.nil?
     
     results = []    
@@ -141,14 +116,13 @@ class SparqlAdapter < ActiveRdfAdapter
         end
       end
     end
-    $log.debug "SparqlAdapter: parsed SPARQL query results as JSON, input: #{query_result.join(', ')} output: #{results.join(', ')}"
-    return results
+    results
   end
   
   # parse xml stream result into array
-  def parse_sparql_query_result_xml_stream(qr)
+  def parse_xml(s)
     parser = SparqlResultParser.new
-    REXML::Document.parse_stream(qr, parser)
+    REXML::Document.parse_stream(s, parser)
     parser.result
   end
   
