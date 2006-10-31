@@ -47,12 +47,16 @@ task :reinstall => [:uninstall, :install]
 
 # rake task for rcov code coverage, 
 # execute with "rake rcov"
-require 'rcov/rcovtask'
-Rcov::RcovTask.new do |t|
-  # t.test_files = FileList["test/**/*.rb", "activerdf-*/test/**/*.rb"]
-  t.test_files = FileList["activerdf-*/test/**/*.rb"]
-  t.verbose = true     # uncomment to see the executed command
-  # t.rcov_opts << "--test-unit-only "
+begin 
+	require 'rcov/rcovtask'
+	Rcov::RcovTask.new do |t|
+		# t.test_files = FileList["test/**/*.rb", "activerdf-*/test/**/*.rb"]
+		t.test_files = FileList["activerdf-*/test/**/*.rb"]
+		t.verbose = true     # uncomment to see the executed command
+		# t.rcov_opts << "--test-unit-only "
+	end
+rescue LoadError
+	# rcov not installed
 end
 
 # modify the standard test task to run test from all adapters and from the active_rdf top level 
