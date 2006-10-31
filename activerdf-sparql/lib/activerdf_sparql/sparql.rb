@@ -7,6 +7,9 @@ require 'active_rdf'
 require 'queryengine/query2sparql'
 require 'net/http'
 require 'cgi'
+require 'rexml/document'
+require "#{File.dirname(__FILE__)}/sparql_result_parser"
+  
 
 class SparqlAdapter < ActiveRdfAdapter
 	$log.info "loading SPARQL adapter"
@@ -151,8 +154,6 @@ class SparqlAdapter < ActiveRdfAdapter
   
   # parse xml stream result into array
   def parse_sparql_query_result_xml_stream(qr)
-    require 'rexml/document'
-    require "#{File.dirname(__FILE__)}/sparql_result_parser"
     parser = SparqlResultParser.new
     REXML::Document.parse_stream(qr, parser)
     final_results = parser.result
@@ -162,7 +163,6 @@ class SparqlAdapter < ActiveRdfAdapter
   
   # parse xml query results into array
   def parse_sparql_query_result_xml(query_result)
-    require 'rexml/document'
     results = []
     vars = []
     objects = []
