@@ -187,7 +187,6 @@ module RDFS
 
           # handling eyal.friends = [armin, andreas] --> expand array values
           args.each do |value|
-            puts "setting #{pred} to #{value}"
             FederationManager.add(self, pred, value)
           end
           return args

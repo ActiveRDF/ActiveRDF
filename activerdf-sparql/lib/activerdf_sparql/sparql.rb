@@ -33,6 +33,10 @@ class SparqlAdapter < ActiveRdfAdapter
 		$log.info "Sparql adapter initialised #{inspect}"
 	end
 
+	def size
+		query(Query.new.select(:s,:p,:o).where(:s,:p,:o)).size
+	end
+
 	# query datastore with query string (SPARQL), returns array with query results
 	# may be called with a block
 	def query(query, &block)

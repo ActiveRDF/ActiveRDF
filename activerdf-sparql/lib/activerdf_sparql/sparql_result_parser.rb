@@ -4,9 +4,7 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
-
 class SparqlResultParser
-  
   attr_reader :result
 
   def initialize
@@ -16,13 +14,14 @@ class SparqlResultParser
   end
   
   def tag_start(name, attrs)
-    if name == 'variable'
+		case name
+		when 'variable'
       @vars << attrs['name']
-    elsif name == 'result'
+		when 'result'
       @current_result = []
-    elsif name == 'binding'
+		when 'binding'
       @index = @vars.index(attrs['name'])
-    elsif name == 'bnode' || name == 'literal' || name == 'typed-literal' || name == 'uri'
+		when 'bnode', 'literal', 'typed-literal', 'uri'
       @current_type = name
     end
   end
