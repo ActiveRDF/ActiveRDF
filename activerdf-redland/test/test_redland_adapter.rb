@@ -8,9 +8,6 @@ require 'active_rdf'
 require 'federation/federation_manager'
 require 'queryengine/query'
 
-
-
-
 class TestObjectCreation < Test::Unit::TestCase
   def setup
     ConnectionPool.clear
@@ -28,7 +25,6 @@ class TestObjectCreation < Test::Unit::TestCase
     adapter = RedlandAdapter.new({})
     assert_instance_of RedlandAdapter, adapter
   end
-
 
   def test_simple_query
     adapter = ConnectionPool.add_data_source(:type => :redland)
@@ -98,8 +94,6 @@ class TestObjectCreation < Test::Unit::TestCase
     type = Namespace.lookup(:rdf, :type)
     resource = Namespace.lookup(:rdfs,:resource)
 
-    p eyal.predicates
-
     color = Query.new.select(:o).where(eyal, eye,:o).execute
     assert 'blue', color
     assert_instance_of String, color
@@ -145,22 +139,6 @@ class TestObjectCreation < Test::Unit::TestCase
     end
   end
 
-  def test_update_value
-    # TODO: move to generic test suite: this test is not redland specific,
-    # but currently redland is the only datasource to which we can write
-    # but we should move this to a generic test suite, check whether we have a write_adapter,
-    # and if so run this test
-    
-    # ConnectionPool.add_data_source :type => :redland, :location => 'test/test-person'
-    adapter = ConnectionPool.add_data_source :type => :redland
-    adapter.load("#{File.dirname(__FILE__)}/test_person_data.nt", "turtle")
-    Namespace.register(:test, 'http://activerdf.org/test/')
-    eyal = Namespace.lookup(:test, :eyal)
-
-    assert_equal '27', eyal.age
-    eyal.age = 30
-  end
-
   def test_person_data
     adapter = ConnectionPool.add_data_source :type => :redland
     adapter.load("#{File.dirname(__FILE__)}/test_person_data.nt", "turtle")
@@ -201,4 +179,21 @@ class TestObjectCreation < Test::Unit::TestCase
     assert adapter2.object_id != adapter.object_id
     assert_equal 1, adapter2.size
   end
+
+	def test_sparql_query
+		adapter = ConnectionPool.add_data_source :type => :redland
+
+    eyal = RDFS::Resource.new 'eyaloren.org'
+    age = RDFS::Resource.new 'foaf:age'
+    test = RDFS::Resource.new 'test'
+    adapter.add(eyal, age, test)
+
+    adapter.save 
+		query = Query.new.distinct(:s).where(:s,:p,:o)
+		results = adapter.get_query_results(query)
+
+		# TODO: test if results are correct; but we do this only when redland 
+		# supports this method in release
+		assert results.include?('eyaloren.org')
+	end
 end

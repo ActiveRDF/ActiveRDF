@@ -9,6 +9,8 @@ require 'federation/connection_pool'
 require 'queryengine/query2sparql'
 require 'rdf/redland'
 
+# TODO: add json results for eric hanson
+
 class RedlandAdapter < ActiveRdfAdapter
 	$log.info "loading Redland adapter"
 	ConnectionPool.register_adapter(:redland,self)
@@ -76,6 +78,40 @@ class RedlandAdapter < ActiveRdfAdapter
 			results
 		end
 	end
+
+	# executes query and returns results as SPARQL JSON or XML results
+	# requires svn version of redland-ruby bindings
+	# * query: ActiveRDF Query object
+	# * result_format: :json or :xml
+	def get_query_results(query, result_format=nil)
+		get_sparql_query_results(Query2SPARQL.translate(query), result_format)
+	end
+
+	# executes sparql query and returns results as SPARQL JSON or XML results
+	# * query: sparql query string
+	# * result_format: :json or :xml
+	def get_sparql_query_results(qs, result_format=nil)
+		# author: Eric Hanson
+
+		# set uri for result formatting
+		result_uri = 
+			case result_format
+		 	when :json
+        Redland::Uri.new('http://www.w3.org/2001/sw/DataAccess/json-sparql/')
+      when :xml
+        Redland::Uri.new('http://www.w3.org/TR/2004/WD-rdf-sparql-XMLres-20041221/')
+			end
+
+		# use sparql to query redland
+		qs = Query2SPARQL.translate(query)
+
+		# query redland
+    redland_query = Redland::Query.new(qs, 'sparql')
+    query_results = @model.query_execute(redland_query)
+
+		# get string representation in requested result_format (json or xml)
+    query_results.to_string()
+  end
 	
 	# add triple to datamodel
 	def add(s, p, o)
