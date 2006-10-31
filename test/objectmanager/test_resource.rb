@@ -59,7 +59,7 @@ class TestResourceInstanceMethods < Test::Unit::TestCase
     assert_equal nil, @eyal.car
 
     # non-existent method should throw error
-    assert_raise(NoMethodError) { @eyal.non_existing_method }
+    assert_equal nil, @eyal.non_existing_method
   end
 
   def test_eyal_type
