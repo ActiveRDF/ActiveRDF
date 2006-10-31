@@ -5,9 +5,12 @@ require 'rake/gempackagetask'
 require 'rake/rdoctask'
 require 'tools/rakehelp'
 require 'rubygems'
+require 'fileutils'
+include FileUtils
 
 #Gem::manage_gems
 setup_tests
+setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
 setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb']
 
 desc 'test and package gem'
@@ -53,8 +56,8 @@ Rcov::RcovTask.new do |t|
 end
 
 # modify the standard test task to run test from all adapters and from the active_rdf top level 
-Rake::TestTask.new do |t|
-    # t.libs << "test"
-    t.test_files = FileList["test/**/*.rb", "activerdf-*/test/**/*.rb"]
-    t.verbose = true
-end
+#Rake::TestTask.new do |t|
+#    # t.libs << "test"
+#    t.test_files = FileList["test/**/*.rb", "activerdf-*/test/**/*.rb"]
+#    t.verbose = true
+#end
