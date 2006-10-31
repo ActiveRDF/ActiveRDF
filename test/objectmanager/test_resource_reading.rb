@@ -7,7 +7,7 @@ require 'active_rdf'
 require 'federation/connection_pool'
 require "#{File.dirname(__FILE__)}/../common"
 
-class TestResourceInstanceMethods < Test::Unit::TestCase
+class TestResourceReading < Test::Unit::TestCase
   def setup
     @adapter = get_read_only_adapter
     Namespace.register(:ar, 'http://activerdf.org/test/')

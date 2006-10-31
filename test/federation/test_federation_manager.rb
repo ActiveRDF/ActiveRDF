@@ -113,36 +113,36 @@ class TestFederationManager < Test::Unit::TestCase
     second_result = write2.query(Query.new.select(:o).where(@@eyal, @@eye, :o))
     assert "blue", second_result
   end
-  
+
   # this test makes no sense without two different data sources
   def test_federated_query
-		unless ConnectionPool.adapter_types.include?(:sparql)
-			raise(ActiveRdfError, "cannot run federation query test because sparql 
-						adapter is not installed")
-		end
-		ConnectionPool.add_data_source(:type => :sparql, :url => 
-"http://www.m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
+    first_adapter = get_write_adapter
+    first_adapter.load("#{File.dirname(__FILE__)}/../test_person_data.nt")
+    first = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
 
-		# we first ask one sparl endpoint
-    first_size = Query.new.select(:o).where(:s, :p, :o).execute(:flatten => false).size
-    ConnectionPool.clear
-
-    # then we ask the second endpoint
-    ConnectionPool.add_data_source(:type => :sparql, :url =>
-    "http://www.m3pe.org:8080/repositories/mindpeople", :results => :sparql_xml)
-
-    second_size = Query.new.select(:o).where(:s, :p, :o).execute(:flatten =>
-    false).size
+    # results should not be empty, because then the test succeeds trivially
+    assert_not_nil first
+    assert first != []
 
     ConnectionPool.clear
+    second_adapter = get_different_write_adapter(first_adapter)
+    second_adapter.load("#{File.dirname(__FILE__)}/../test_person_data.nt")
+    second = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
 
-    # now we ask both
-    ConnectionPool.add_data_source(:type => :sparql, :url =>
-    "http://m3pe.org:8080/repositories/test-people/", :results => :sparql_xml)
-    ConnectionPool.add_data_source(:type => :sparql, :url =>
-    "http://www.m3pe.org:8080/repositories/mindpeople", :results => :sparql_xml)
+    # now we query both adapters in parallel
+    ConnectionPool.clear
+    first_adapter = get_write_adapter
+    first_adapter.load("#{File.dirname(__FILE__)}/../test_person_data.nt")
+    second_adapter = get_different_write_adapter(first_adapter)
+    second_adapter.load("#{File.dirname(__FILE__)}/../test_person_data.nt")
+    both = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
+    # assert both together contain twice the sum of the separate sources
+    assert_equal first + second, both
 
-    union_size = Query.new.select(:o).where(:s, :p, :o).execute(:flatten => false).size
-    assert_equal first_size + second_size, union_size
+    # since both sources contain the same data, we check that querying (both!)
+    # in parallel for distinct data, actually gives same results as querying
+    # only the one set
+    uniq = Query.new.distinct(:s,:p,:o).where(:s,:p,:o).execute
+    assert_equal first, uniq
   end
 end

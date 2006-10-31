@@ -85,8 +85,6 @@ def get_different_write_adapter(existing_adapter)
 		ConnectionPool.add :type => :redland
 	elsif types.include?(:yars) and existing_adapter.class != YarsAdapter
 		ConnectionPool.add :type => :yars
-	elsif types.include?(:jars2) and existing_adapter.class != Jars2Adapter
-		ConnectionPool.add :type => :jars2
 	else
 		raise ActiveRdfError, "only one write adapter on this system, or no suitable write adapter found for test"
 	end

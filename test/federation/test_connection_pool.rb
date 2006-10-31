@@ -59,11 +59,11 @@ class TestConnectionPool < Test::Unit::TestCase
   end
 
   def test_class_write_adapter_equals
-    adapter = ConnectionPool.add_data_source(:type => :redland)
-    adapter2 = ConnectionPool.add_data_source(:type => :redland, :location => "/tmp/redland-tmpy")
+		adapter1 = get_write_adapter
+		adapter2 = get_different_write_adapter(adapter1)
     assert_equal adapter2, ConnectionPool.write_adapter
-    ConnectionPool.write_adapter = adapter
-    assert_equal adapter, ConnectionPool.write_adapter
+    ConnectionPool.write_adapter = adapter1
+    assert_equal adapter1, ConnectionPool.write_adapter
   end
 end
 

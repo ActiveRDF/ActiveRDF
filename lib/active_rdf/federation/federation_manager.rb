@@ -37,7 +37,12 @@ class FederationManager
       # (without distinct, should get duplicates, they
       # were filtered out when doing results.union)
       results = []
-      ConnectionPool.read_adapters.each { |source| results << source.query(q) }
+      ConnectionPool.read_adapters.each do |source|
+				source_results = source.query(q)
+				source_results.each do |clauses|
+					results << clauses
+				end
+			end
 
       # filter the empty results
       results.reject {|ary| ary.empty? }
