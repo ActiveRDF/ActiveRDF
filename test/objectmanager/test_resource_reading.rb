@@ -9,15 +9,12 @@ require "#{File.dirname(__FILE__)}/../common"
 
 class TestResourceInstanceMethods < Test::Unit::TestCase
   def setup
-    ConnectionPool.add_data_source(:type => :sparql, :url => "http://m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
+    adapter = get_read_only_adapter
     Namespace.register(:ar, 'http://activerdf.org/test/')
     @eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
   end
 
   def teardown
-  end
-
-  def test_update_value
   end
 
   def test_find_all_instances
@@ -75,6 +72,11 @@ class TestResourceInstanceMethods < Test::Unit::TestCase
     assert_equal @eyal, RDFS::Resource.find_by_age_and_eye(27,'blue')
   end
 
-  # TODO: test for writing if no write adapter is defined (like only sparqls)
+  # test for writing if no write adapter is defined (like only sparqls)
+  def test_write_without_write_adapter
+    assert_raises NoMethodError do
+      @eyal.age = 18
+    end
+  end
 
 end
