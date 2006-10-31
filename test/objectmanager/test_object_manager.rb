@@ -5,7 +5,7 @@
 require 'test/unit'
 require 'active_rdf'
 
-class TestObjectCreation < Test::Unit::TestCase
+class TestObjectManager < Test::Unit::TestCase
   def setup
   end
 
@@ -27,4 +27,29 @@ class TestObjectCreation < Test::Unit::TestCase
     assert_instance_of RDFS::Resource, r2
     assert_instance_of RDFS::Resource, r3
   end
+  
+   def test_class_construct_class
+    raise NotImplementedError, 'Need to write test_class_construct_class'
+  end
+
+  def test_class_construct_classes
+    raise NotImplementedError, 'Need to write test_class_construct_classes'
+  end
+
+  def test_class_create_module_name
+    raise NotImplementedError, 'Need to write test_class_create_module_name'
+  end
+
+  def test_class_localname_to_class
+    raise NotImplementedError, 'Need to write test_class_localname_to_class'
+  end
+
+  def test_class_prefix_to_module
+    raise NotImplementedError, 'Need to write test_class_prefix_to_module'
+  end
+
+  def test_class_replace_illegal_chars
+    raise NotImplementedError, 'Need to write test_class_replace_illegal_chars'
+  end
+  
 end

@@ -7,7 +7,7 @@ require 'active_rdf'
 require 'objectmanager/namespace'
 require "#{File.dirname(__FILE__)}/../common"
 
-class TestObjectCreation < Test::Unit::TestCase
+class TestNamespace < Test::Unit::TestCase
   Rdf = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
   RdfType = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
   RdfsResource = 'http://www.w3.org/2000/01/rdf-schema#Resource'
@@ -49,4 +49,25 @@ class TestObjectCreation < Test::Unit::TestCase
     assert_equal :rdfs, Namespace.prefix(Namespace.lookup(:rdfs, :Resource))
     assert_equal :rdfs, Namespace.prefix(Namespace.expand(:rdfs, :Resource))
   end
+  
+   def test_class_expand
+    raise NotImplementedError, 'Need to write test_class_expand'
+  end
+
+  def test_class_localname
+    raise NotImplementedError, 'Need to write test_class_localname'
+  end
+
+  def test_class_lookup
+    raise NotImplementedError, 'Need to write test_class_lookup'
+  end
+
+  def test_class_prefix
+    raise NotImplementedError, 'Need to write test_class_prefix'
+  end
+
+  def test_class_register
+    raise NotImplementedError, 'Need to write test_class_register'
+  end
+  
 end

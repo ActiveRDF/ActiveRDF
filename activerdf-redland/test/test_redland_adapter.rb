@@ -8,7 +8,7 @@ require 'active_rdf'
 require 'federation/federation_manager'
 require 'queryengine/query'
 
-class TestObjectCreation < Test::Unit::TestCase
+class TestRedlandAdapter < Test::Unit::TestCase
   def setup
     ConnectionPool.clear
   end

@@ -8,7 +8,7 @@ require 'queryengine/query'
 require 'queryengine/query2sparql'
 require "#{File.dirname(__FILE__)}/../common"
 
-class TestObjectCreation < Test::Unit::TestCase
+class TestQueryEngine < Test::Unit::TestCase
   def setup
   end
 

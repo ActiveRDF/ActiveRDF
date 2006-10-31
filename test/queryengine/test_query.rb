@@ -7,7 +7,7 @@ require 'active_rdf'
 require 'queryengine/query'
 require "#{File.dirname(__FILE__)}/../common"
 
-class TestObjectCreation < Test::Unit::TestCase
+class TestQuery < Test::Unit::TestCase
   def setup
   end
 

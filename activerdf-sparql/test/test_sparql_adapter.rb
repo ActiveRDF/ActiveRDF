@@ -8,7 +8,7 @@ require 'federation/federation_manager'
 require 'queryengine/query'
 
 
-class TestObjectCreation < Test::Unit::TestCase
+class TestSparqlAdapter < Test::Unit::TestCase
   def setup
     ConnectionPool.clear
   end
@@ -80,36 +80,7 @@ class TestObjectCreation < Test::Unit::TestCase
   		adapter1.add(eyal, age, test)
 		end
   
-  end
-
-
-	def test_federated_query
-    # we need two disjunct queries and first ask one sparl endpoint
-		adapter1 = ConnectionPool.add_data_source(:type => :sparql)
-		results_first_source = Query.new.select(:o).where(:s, :p, :o).execute(:flatten => false).size
-	
-    ConnectionPool.clear
-    
-    # then we ask the second endpoint
-    # sparql endpoint at: http://www.m3pe.org:8080/repositories//mindpeople
-		adapter2 = ConnectionPool.add_data_source(:type => :sparql, :host => "m3pe.org", 
-		                                          :path => "repositories/", :port => "8080", :context => "mindpeople")
-  		results_second_source = Query.new.select(:o).where(:s, :p, :o).execute(:flatten => false).size
-
-
-      ConnectionPool.clear    
-      
-      # now we ask them both and the size of the returned statements should be the sum of the sizes of the
-    # seperate results
-  
-		adapter3 = ConnectionPool.add_data_source(:type => :sparql)
-		adapter4 = ConnectionPool.add_data_source(:type => :sparql, :host => "m3pe.org", 
-		                                          :path => "repositories/", :port => "8080", :context => "mindpeople")
-		results_union = Query.new.select(:o).where(:s, :p, :o).execute(:flatten => false).size
-    assert_equal results_first_source + results_second_source, results_union
-  
-	end
-  	
+  end  	
 
 
   def test_person_data

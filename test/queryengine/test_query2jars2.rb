@@ -7,7 +7,7 @@ require 'active_rdf'
 require 'queryengine/query2jars2'
 require "#{File.dirname(__FILE__)}/../common"
 
-class TestObjectCreation < Test::Unit::TestCase
+class TestQuery2Jars2 < Test::Unit::TestCase
   def setup
   end
 
