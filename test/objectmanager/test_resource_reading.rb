@@ -9,6 +9,7 @@ require "#{File.dirname(__FILE__)}/../common"
 
 class TestResourceReading < Test::Unit::TestCase
   def setup
+		ConnectionPool.clear
     @adapter = get_read_only_adapter
     Namespace.register(:ar, 'http://activerdf.org/test/')
     @eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'

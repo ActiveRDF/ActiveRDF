@@ -105,9 +105,6 @@ class RedlandAdapter < ActiveRdfAdapter
         Redland::Uri.new('http://www.w3.org/TR/2004/WD-rdf-sparql-XMLres-20041221/')
 			end
 
-		# use sparql to query redland
-		qs = Query2SPARQL.translate(query)
-
 		# query redland
     redland_query = Redland::Query.new(qs, 'sparql')
     query_results = @model.query_execute(redland_query)

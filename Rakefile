@@ -8,18 +8,23 @@ require 'rubygems'
 require 'fileutils'
 include FileUtils
 
-#Gem::manage_gems
+# setup tests and rdoc files
 setup_tests
 setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
 setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb']
 
+# default task: install
 desc 'test and package gem'
-task :default => :reinstall
+task :default => :install
 
-version="0.9.5"
-name="activerdf"
+# get ActiveRdfVersion from commandline
+ActiveRdfVersion = ENV['REL'] || '0.9.7'
+NAME="activerdf"
+GEMNAME="#{NAME}-#{ActiveRdfVersion}.gem"
 
-setup_gem(name,version) do |spec|
+# define package task
+setup_gem(NAME,ActiveRdfVersion) do |spec|
+	fail "usage: rake [package|install|upload] REL=x.y.z" if ActiveRdfVersion == '0'
 	spec.summary = 'Offers object-oriented access to RDF (with adapters to several datastores).'
 	spec.description = spec.summary
 	spec.author = 'Eyal Oren'
@@ -30,38 +35,37 @@ setup_gem(name,version) do |spec|
 	spec.add_dependency('gem_plugin', '>= 0.2.1')
 end
 
+
+# define upload task
 task :upload => :package do |task|
-	sh "scp pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
+	sh "scp pkg/#{GEMNAME} eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
 	sh "scp activerdf-*/pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
 end
 
 task :install => [:package] do
-  sh %{sudo gem install pkg/#{name}-#{version}.gem}
+  sh "sudo gem install pkg/#{GEMNAME}"
 end
 
 task :uninstall => [:clean] do
-  sh %{sudo gem uninstall #{name}}
+  sh "sudo gem uninstall #{NAME}"
 end
 
 task :reinstall => [:uninstall, :install]
 
-# rake task for rcov code coverage, 
-# execute with "rake rcov"
+# define task rcov
 begin 
 	require 'rcov/rcovtask'
 	Rcov::RcovTask.new do |t|
-		# t.test_files = FileList["test/**/*.rb", "activerdf-*/test/**/*.rb"]
 		t.test_files = FileList["activerdf-*/test/**/*.rb"]
-		t.verbose = true     # uncomment to see the executed command
+		t.verbose = true
 		# t.rcov_opts << "--test-unit-only "
 	end
 rescue LoadError
 	# rcov not installed
 end
 
-# modify the standard test task to run test from all adapters and from the active_rdf top level 
-#Rake::TestTask.new do |t|
-#    # t.libs << "test"
-#    t.test_files = FileList["test/**/*.rb", "activerdf-*/test/**/*.rb"]
-#    t.verbose = true
-#end
+# define test_all task
+Rake::TestTask.new do |t|
+	t.name = :test_all
+	t.test_files = FileList["test/**/*.rb", "activerdf-*/test/**/*.rb"]
+end
