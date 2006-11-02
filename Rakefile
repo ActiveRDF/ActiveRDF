@@ -18,7 +18,7 @@ desc 'test and package gem'
 task :default => :install
 
 # get ActiveRdfVersion from commandline
-ActiveRdfVersion = ENV['REL'] || '0.9.7'
+ActiveRdfVersion = ENV['REL'] || '1.0'
 NAME="activerdf"
 GEMNAME="#{NAME}-#{ActiveRdfVersion}.gem"
 

@@ -15,7 +15,7 @@ setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
 desc "Does a full compile, test run"
 task :default => [:test, :package]
 
-version="0.9"
+version="1.0"
 name="activerdf_sparql"
 
 setup_gem(name, version) do |spec|
