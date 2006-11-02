@@ -92,8 +92,8 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 	def test_loading_data
     adapter = ConnectionPool.add_data_source :type => :rdflite
 		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')
-		assert_equal 28, adapter.size
-		assert_equal 28, Query.new.count(:s).where(:s,:p,:o).execute.to_i
+		assert_equal 29, adapter.size
+		assert_equal 29, Query.new.count(:s).where(:s,:p,:o).execute.to_i
 	end
 
 	def test_person_data 
@@ -119,7 +119,7 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 	def test_delete_data
     adapter = ConnectionPool.add_data_source :type => :rdflite
 		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')
-		assert_equal 28, adapter.size
+		assert_equal 29, adapter.size
 
     eyal = RDFS::Resource.new('http://activerdf.org/test/eyal')
 		adapter.delete(eyal, nil, nil)
@@ -127,5 +127,16 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 
 		adapter.delete(nil,nil,nil)
 		assert_equal 0, adapter.size
+	end
+
+	def test_keyword_search
+    adapter = ConnectionPool.add_data_source :type => :rdflite
+		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')
+
+    eyal = RDFS::Resource.new('http://activerdf.org/test/eyal')
+		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"blue").execute
+		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"27").execute
+
+		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"eyal oren").execute
 	end
 end

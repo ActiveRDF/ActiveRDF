@@ -57,7 +57,7 @@ class RDFLite < ActiveRdfAdapter
 			# we setup the fields not to store object's contents
 			infos = Ferret::Index::FieldInfos.new
 			infos.add_field(:subject, :store => :yes, :index => :no, :term_vector => :no)
-			infos.add_field(:object, :store => :no, :index => :omit_norms)
+			infos.add_field(:object, :store => :no) #, :index => :omit_norms)
 			
 			@ferret = if params[:location]
 									Ferret::I.new(:path => params[:location] + '.ferret', :field_infos => infos)
@@ -367,14 +367,16 @@ class RDFLite < ActiveRdfAdapter
 		# if keyword clause given, convert it using keyword index
 		if query.keyword?
 			subjects = []
-			query.keywords.each do |subject, key|
-				@ferret.search_each(key) do |idx,score|
-					subjects << @ferret[idx][:subject]
-				end
-				subjects.uniq! if query.distinct?
-				where << "#{variable_name(query,subject)} in (#{subjects.collect {'?'}.join(',')})"
-				@right_hand_sides += subjects
+			select_subject = query.keywords.collect {|subj,key| subj}.uniq
+			raise ActiveRdfError, "cannot do keyword search over multiple subjects" if select_subject.size > 1
+
+			keywords = query.keywords.collect {|subj,key| key}
+			@ferret.search_each("object:\"#{keywords}\"") do |idx,score|
+				subjects << @ferret[idx][:subject]
 			end
+			subjects.uniq! if query.distinct?
+			where << "#{variable_name(query,select_subject.first)} in (#{subjects.collect {'?'}.join(',')})"
+			@right_hand_sides += subjects
 		end
 
 		if where.empty?

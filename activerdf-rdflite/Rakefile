@@ -13,10 +13,13 @@ setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
 desc "test and package gem"
 task :default => [:test, :package]
 
-version="0.2.1"
-name="activerdf_rdflite"
+# get ActiveRdfVersion from commandline
+ActiveRdfVersion = ENV['REL'] || '0.9.7'
+NAME="activerdf_rdflite"
+GEMNAME="#{NAME}-#{ActiveRdfVersion}.gem"
 
-setup_gem(name, version) do |spec|
+# define package task
+setup_gem(NAME,ActiveRdfVersion) do |spec|
   spec.summary = "an RDF database for usage in ActiveRDF (based on sqlite3)" 
   spec.description = spec.summary
   spec.author="Eyal Oren <eyal.oren@deri.org"
@@ -24,7 +27,6 @@ setup_gem(name, version) do |spec|
   spec.add_dependency('activerdf', '>= 0.9.2')
   spec.add_dependency('sqlite3-ruby', '>= 1.1.0')
 end
-
 
 task :install => [:package] do
   sh %{sudo gem install pkg/#{name}-#{version}.gem}
@@ -35,3 +37,8 @@ task :uninstall => [:clean] do
 end
 
 task :reinstall => [:uninstall, :install]
+
+task :upload => :package do |task|
+  sh "scp pkg/#{GEMNAME} eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
+end
+
