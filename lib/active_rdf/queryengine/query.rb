@@ -7,14 +7,11 @@
 require 'active_rdf'
 require 'federation/federation_manager'
 
-# TODO add log for every method which constitues to the query
-
 class Query
   attr_reader :select_clauses, :where_clauses, :keywords, :limits, :offsets
   bool_accessor :distinct, :ask, :select, :count, :keyword
 
   def initialize
-    $log.debug "Query: initializing"
     distinct = false
 		limit = nil
 		offset = nil
@@ -24,7 +21,7 @@ class Query
   end
 
 	def clear_select
-    $log.debug "Query: clearing select query"
+    $log.debug "cleared select clause"
 		@select_clauses = []
 		distinct = false
 	end
@@ -36,13 +33,11 @@ class Query
     end
 		# removing duplicate select clauses
 		@select_clauses.uniq!
-    $log.debug "Query: the current select clauses are: #{@select_clauses.join(', ')}"
     self
   end
 
   def ask
     @ask = true
-    $log.debug "Query: the current select clauses are: #{@select_clauses.join(', ')}"
     self
   end
 
@@ -82,13 +77,11 @@ class Query
 			
       unless s.respond_to?(:uri)
     		unless s.class == Symbol
-    		  $log.debug "Query: where: got a Subject which is no Symbol, and no RDFS::Resource, but is instead: #{s}"
           raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
     		end
       end
       unless p.respond_to?(:uri)
     		unless p.class == Symbol
-    		  $log.debug "Query: where: got a Predicate which is no Symbol, and no RDFS::Resource, but is instead: #{p}"
           raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
     		end
       end
@@ -127,8 +120,6 @@ class Query
   # usage: results = query.execute
   # usage: query.execute do |s,p,o| ... end
   def execute(options={:flatten => true}, &block)
-    $log.debug "Query: executing query: #{self.inspect}"
-    
     if block_given?
       FederationManager.query(self) do |*clauses|
         block.call(*clauses)

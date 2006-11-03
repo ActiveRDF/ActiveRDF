@@ -49,7 +49,6 @@ class RDFLite < ActiveRdfAdapter
 
 		# we can only do keyword search if ferret is found
 		@keyword_search &= @@have_ferret
-		$log.debug "we #{keyword_search? ? "do" : "don't"} have keyword search"
 
 		if keyword_search?
 			# we initialise the ferret index, either as a file or in memory
@@ -138,7 +137,6 @@ class RDFLite < ActiveRdfAdapter
 
 		# delete literal from ferret index
 		@ferret.search_each("subject:\"#{s}\", object:\"#{o}\"") do |idx, score|
-			$log.debug "deleting #{o} => #{s} from ferret index"
 			@ferret.delete(idx)
 		end if keyword_search?
 	end
@@ -181,9 +179,6 @@ class RDFLite < ActiveRdfAdapter
 
 	# executes ActiveRDF query on datastore
 	def query(query)
-		# log received query
-		$log.debug "received query: #{query.to_sp}"
-
 		# construct query clauses
 		sql = translate(query)
 

@@ -10,7 +10,6 @@ class FederationManager
   # add triple s,p,o to the currently selected write-adapter
   def FederationManager.add(s,p,o)
     # TODO: allow addition of full graphs
-    $log.debug "FederationManager: add: triple is #{s} #{p} #{o}"
     ConnectionPool.write_adapter.add(s,p,o)
   end
 
@@ -22,7 +21,6 @@ class FederationManager
 			raise ActiveRdfError, "cannot execute query without data sources" 
 		end
 
-    $log.debug "FederationManager: query called with: #{q}"
     # ask each adapter for query results
     # and yield them consequtively
     if block_given?
@@ -72,9 +70,6 @@ class FederationManager
       end
     end
     
-    $log.debug_pp("FederationManager: query results are %s", final_results)
-    
-    
-    return final_results
+    final_results
   end
 end
