@@ -8,7 +8,7 @@ require 'active_rdf'
 require 'federation/federation_manager'
 
 class Query
-  attr_reader :select_clauses, :where_clauses, :keywords, :limits, :offsets
+  attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets
   bool_accessor :distinct, :ask, :select, :count, :keyword
 
   def initialize
@@ -17,6 +17,7 @@ class Query
 		offset = nil
     @select_clauses = []
     @where_clauses = []
+		@sort_clauses = []
 		@keywords = {}
   end
 
@@ -50,6 +51,15 @@ class Query
 	def count *s
 		@count = true
 		select(*s)
+	end
+
+	def sort *s
+    s.each do |e|
+      @sort_clauses << parametrise(e) 
+    end
+		# removing duplicate select clauses
+		@sort_clauses.uniq!
+    self
 	end
 
 	def limit(i)

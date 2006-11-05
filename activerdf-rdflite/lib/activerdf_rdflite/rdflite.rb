@@ -203,7 +203,7 @@ class RDFLite < ActiveRdfAdapter
 	# translates ActiveRDF query into internal sqlite query string
 	def translate(query)
 		construct_select(query) + construct_join(query) + construct_where(query) + 
-			construct_limit(query)
+			construct_sort(query) + construct_limit(query)
 	end
 
 	private
@@ -255,6 +255,16 @@ class RDFLite < ActiveRdfAdapter
 
 		clause << " limit #{limit} offset #{offset}"
 		clause
+	end
+
+	# sort query results on variable clause (optionally)
+	def construct_sort(query)
+		return "" if query.sort_clauses.empty?
+
+		sort = query.sort_clauses.collect do |term|
+			variable_name(query, term)
+		end
+		" order by (#{sort.join(',')})"
 	end
 
 	# construct join clause
@@ -345,6 +355,7 @@ class RDFLite < ActiveRdfAdapter
 		# convert each where clause to SQL:
 		# add where clause for each subclause, except if it's a variable
 		query.where_clauses.each_with_index do |clause,level|
+			raise ActiveRdfError, "where clause #{clause} is not a triple" unless clause.is_a?(Array)
 			clause.each_with_index do |subclause, i|
 				# dont add where clause for variables
 				unless subclause.is_a?(Symbol)
@@ -366,7 +377,7 @@ class RDFLite < ActiveRdfAdapter
 			raise ActiveRdfError, "cannot do keyword search over multiple subjects" if select_subject.size > 1
 
 			keywords = query.keywords.collect {|subj,key| key}
-			@ferret.search_each("object:\"#{keywords}\"") do |idx,score|
+			@ferret.search_each("object:#{keywords}") do |idx,score|
 				subjects << @ferret[idx][:subject]
 			end
 			subjects.uniq! if query.distinct?

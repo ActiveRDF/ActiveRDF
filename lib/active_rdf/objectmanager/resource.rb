@@ -319,7 +319,8 @@ module RDFS
   def get_property_value(predicate, args=[])
     return_ary = args[0][:array] if args[0].is_a?(Hash)
     flatten_results = !return_ary
-    Query.new.distinct(:o).where(self, predicate, :o).execute(:flatten => flatten_results)
+    query = Query.new.distinct(:o).where(self, predicate, :o)
+		query.execute(:flatten => flatten_results)
   end  
 end
 end
