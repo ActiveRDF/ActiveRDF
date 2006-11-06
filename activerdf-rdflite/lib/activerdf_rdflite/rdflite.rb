@@ -75,6 +75,7 @@ class RDFLite < ActiveRdfAdapter
 
 		$log.debug("opened connection to #{file}")
 		$log.debug("database contains #{size} triples")
+		@db
 	end
 
 	# returns the number of triples in the datastore (incl. possible duplicates)
