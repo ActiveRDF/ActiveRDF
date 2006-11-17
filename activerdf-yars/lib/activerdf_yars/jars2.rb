@@ -41,7 +41,7 @@ class Jars2Adapter < ActiveRdfAdapter
 		# the result
 		response = @yars.get("/?q=#{CGI.escape(qs)}&eyal", header)
 		
-		$log.debug "Jars2Adapter: query executed: #{qs}"
+		$log.debug "Jars2Adapter: query executed: #{qs}" if $log.level == Logger::DEBUG
 
 		# return empty array if no content
 		return [] if response.is_a?(Net::HTTPNoContent)
@@ -59,7 +59,7 @@ class Jars2Adapter < ActiveRdfAdapter
 			final_results = results
 		end
 		
-		$log.debug_pp "Jars2Adapter: query returned %s", final_results
+		$log.debug_pp "Jars2Adapter: query returned %s", final_results if $log.level == Logger::DEBUG
 		final_results
 	end
 

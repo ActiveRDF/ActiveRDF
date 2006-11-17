@@ -39,6 +39,7 @@ class RDFLite < ActiveRdfAdapter
 		# if no file-location given, we use in-memory store
 		file = params[:location] || ':memory:'
 		@db = SQLite3::Database.new(file) 
+		puts "db is a fixnum" if @db.is_a?(Fixnum)
 
 		# we enable keyword unless the user specifies otherwise
 		@keyword_search = if params[:keyword].nil?

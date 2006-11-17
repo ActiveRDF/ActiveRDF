@@ -55,8 +55,11 @@ class SparqlAdapter < ActiveRdfAdapter
 		url = "#@url?query=#{CGI.escape(qs)}"
 
     # querying sparql endpoint
+		response = ''
 		begin 
-			response = open(url, header).read
+		  open(url, header) do |f|
+				response = f.read
+			end
 		rescue OpenURI::HTTPError => e
 			raise ActiveRdfError, "could not query SPARQL endpoint, server said: #{e}"
 			return []
@@ -105,21 +108,15 @@ class SparqlAdapter < ActiveRdfAdapter
     results = []    
     vars = parsed_object['head']['vars']
     objects = parsed_object['results']['bindings']
-    if vars.length > 1
-      objects.each do |obj|
-        result = []
-        vars.each do |v|
-          result << create_node( obj[v]['type'], obj[v]['value'])
-        end
-        results << result
-      end
-    else
-      objects.each do |obj| 
-        obj.each_value do |e|
-          results << create_node(e['type'], e['value'])
-        end
-      end
-    end
+
+		objects.each do |obj|
+			result = []
+			vars.each do |v|
+				result << create_node( obj[v]['type'], obj[v]['value'])
+			end
+			results << result
+		end
+
     results
   end
   

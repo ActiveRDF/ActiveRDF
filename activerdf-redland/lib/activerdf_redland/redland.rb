@@ -40,7 +40,7 @@ class RedlandAdapter < ActiveRdfAdapter
 	# load a file from the given location with the given syntax into the model.
 	# use Redland syntax strings, e.g. "ntriples" or "rdfxml", defaults to "ntriples"
 	def load(location, syntax="ntriples")
-    $log.debug "Redland: loading file with syntax: #{syntax} and location: #{location}"
+    $log.debug "Redland: loading file with syntax: #{syntax} and location: #{location}" if $log.level == Logger::DEBUG
     parser = Redland::Parser.new(syntax, "", nil)
     parser.parse_into_model(@model, "file:#{location}")
 	end
@@ -48,30 +48,27 @@ class RedlandAdapter < ActiveRdfAdapter
 	# yields query results (as many as requested in select clauses) executed on data source
 	def query(query)
 		qs = Query2SPARQL.translate(query)
-    $log.debug "RedlandAdapter: after translating to SPARQL, query is: #{qs}"
+    $log.debug "RedlandAdapter: executing SPARQL query #{qs}" if $log.level == Logger::DEBUG
 		
-		time = Time.now
 		clauses = query.select_clauses.size
 		redland_query = Redland::Query.new(qs, 'sparql')
 		query_results = @model.query_execute(redland_query)
-		$log.debug "RedlandAdapter: query response from Redland took: #{Time.now - time}s"
 		
-		$log.debug "RedlandAdapter: query response has size: #{query_results.size}"
+		$log.debug "RedlandAdapter: found #{query_results.size} query results" if $log.level == Logger::DEBUG
 
 		# verify if the query has failed
 		if query_results.nil?
-		  $log.debug "RedlandAdapter: query has failed with nil result"
+		  $log.debug "RedlandAdapter: query has failed with nil result" if $log.level == Logger::DEBUG
 		  return false
 		end
 		if not query_results.is_bindings?
-		  $log.debug "RedlandAdapter: query has failed without bindings"
+		  $log.debug "RedlandAdapter: query has failed without bindings" if $log.level == Logger::DEBUG
 		  return false
 		end
 
 		# convert the result to array
 		#TODO: if block is given we should not parse all results into array first
 		results = query_result_to_array(query_results) 
-    $log.debug "RedlandAdapter: result of query is #{results.join(', ')}"
 		
 		if block_given?
 			results.each do |clauses|
@@ -115,16 +112,16 @@ class RedlandAdapter < ActiveRdfAdapter
 	
 	# add triple to datamodel
 	def add(s, p, o)
-    $log.debug "adding triple #{s} #{p} #{o}"
+    $log.debug "adding triple #{s} #{p} #{o}" if $log.level == Logger::DEBUG
 
 		# verify input
 		if s.nil? || p.nil? || o.nil?
-      $log.debug "cannot add triple with empty subject, exiting"
+      $log.debug "cannot add triple with empty subject, exiting" if $log.level == Logger::DEBUG
 		  return false
 		end 
 		
 		unless s.respond_to?(:uri) && p.respond_to?(:uri)
-      $log.debug "cannot add triple where s/p are not resources, exiting"		
+      $log.debug "cannot add triple where s/p are not resources, exiting"		 if $log.level == Logger::DEBUG
 		  return false
 		end
 	
