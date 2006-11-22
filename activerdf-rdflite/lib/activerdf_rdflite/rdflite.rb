@@ -169,7 +169,6 @@ class RDFLite < ActiveRdfAdapter
 		ntriples = File.readlines(file)
 
 		@db.transaction do |transaction|
-			puts "loading #{file} #{@db.transaction_active? ? 'inside transaction' : ''}; database is a #{transaction.class}"
 			ntriples.each do |triple|
 				nodes = triple.scan(Node)
 				add_internal(transaction, nodes[0], nodes[1], nodes[2])
@@ -218,9 +217,24 @@ class RDFLite < ActiveRdfAdapter
 
 	# adds s,p,o into sqlite and ferret
 	# s,p,o should be in internal format: <uri> and "literal"
-	def add_internal(db,s,p,o)
+	def add_internal(db, s,p,o)
+		retried = false
 		# insert the triple into the datastore
-		db.execute('insert into triple values (?,?,?)', s,p,o)
+		begin
+			db.execute('insert into triple values (?,?,?)', s,p,o)
+		rescue NoMethodError
+			# temporary fix for sqlite bug! sqlite seems to bug sometimes on fast 
+			# multiple inserts...raising a NoMethodError because internally the db has 
+			# suddenly turned into a Fixnum. When we encounter such things, we simply 
+			# retry the insertion (once). This is of course a horrible hack, and we should 
+			# remove it ASAP when sqlite is fixed.
+			if retried
+				raise ActiveRdfError, "problem inserting triple #{s} #{p} #{o} into database"
+			else
+				retried = true
+				retry
+			end
+		end
 
 		# if keyword-search available, insert the object into keyword search
 		@ferret << {:subject => s, :object => o} if keyword_search?
