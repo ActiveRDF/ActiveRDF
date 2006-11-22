@@ -39,7 +39,6 @@ class RDFLite < ActiveRdfAdapter
 		# if no file-location given, we use in-memory store
 		file = params[:location] || ':memory:'
 		@db = SQLite3::Database.new(file) 
-		puts "db is a fixnum" if @db.is_a?(Fixnum)
 
 		# we enable keyword unless the user specifies otherwise
 		@keyword_search = if params[:keyword].nil?
@@ -134,13 +133,14 @@ class RDFLite < ActiveRdfAdapter
 
 		# execute delete string with possible deletion conditions (for each 
 		# non-empty where clause)
-		@db.execute(ds, *conditions)
 		$log.debug(sprintf("sending delete query: #{ds}", *conditions))
+		@db.execute(ds, *conditions)
 
 		# delete literal from ferret index
 		@ferret.search_each("subject:\"#{s}\", object:\"#{o}\"") do |idx, score|
 			@ferret.delete(idx)
 		end if keyword_search?
+		@db
 	end
 	
 	# adds triple(s,p,o) to datastore
@@ -154,7 +154,7 @@ class RDFLite < ActiveRdfAdapter
 		triple = internal_triple_representation(s,p,o)
 
 		# add triple to database
-		add_internal(*triple)
+		add_internal(@db,*triple)
 	end
 
 	# flushes openstanding changes to underlying sqlite3
@@ -168,10 +168,10 @@ class RDFLite < ActiveRdfAdapter
 	def load(file)
 		ntriples = File.readlines(file)
 
-		@db.transaction do 
+		@db.transaction do |transaction|
 			ntriples.each do |triple|
 				nodes = triple.scan(Node)
-				add_internal(nodes[0], nodes[1], nodes[2])
+				add_internal(transaction, nodes[0], nodes[1], nodes[2])
 			end
 		end
 
@@ -217,9 +217,9 @@ class RDFLite < ActiveRdfAdapter
 
 	# adds s,p,o into sqlite and ferret
 	# s,p,o should be in internal format: <uri> and "literal"
-	def add_internal(s,p,o)
+	def add_internal(db,s,p,o)
 		# insert the triple into the datastore
-		@db.execute('insert into triple values (?,?,?)', s,p,o)
+		db.execute('insert into triple values (?,?,?)', s,p,o)
 
 		# if keyword-search available, insert the object into keyword search
 		@ferret << {:subject => s, :object => o} if keyword_search?
