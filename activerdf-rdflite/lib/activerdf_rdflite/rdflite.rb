@@ -169,6 +169,7 @@ class RDFLite < ActiveRdfAdapter
 		ntriples = File.readlines(file)
 
 		@db.transaction do |transaction|
+			puts "loading #{file} #{@db.transaction_active? ? 'inside transaction' : ''}; database is a #{transaction.class}"
 			ntriples.each do |triple|
 				nodes = triple.scan(Node)
 				add_internal(transaction, nodes[0], nodes[1], nodes[2])
