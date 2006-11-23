@@ -11,7 +11,19 @@ include FileUtils
 # setup tests and rdoc files
 setup_tests
 setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
-setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb']
+
+# setup rdoc task
+#setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb']
+Rake::RDocTask.new do |rdoc|
+	files = ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc', 'test/*.rb']
+	files << 'activerdf-*/lib/**/*.rb'
+	rdoc.rdoc_files.add(files)
+	rdoc.main = "README" # page to start on
+	rdoc.title = "ActiveRDF documentation"
+	rdoc.template = "tools/allison/allison.rb"
+	rdoc.rdoc_dir = 'doc' # rdoc output folder
+	rdoc.options << '--line-numbers' << '--inline-source'
+end
 
 # default task: install
 desc 'test and package gem'
