@@ -1,19 +1,14 @@
-# Represents an RDF resource and manages manipulations of that resource,
-# including data lookup (e.g. eyal.age), data updates (e.g. eyal.age=20),
-# class-level lookup (Person.find_by_name 'eyal'), and class-membership
-# (eyal.class ...Person)
-#
-# Author:: Eyal Oren
-# Copyright:: (c) 2005-2006
-# License:: LGPL
-
 require 'active_rdf'
 require 'objectmanager/object_manager'
 require 'objectmanager/namespace'
 require 'queryengine/query'
 
-# TODO: add unit test to validate class construction and queries on them
 module RDFS
+	# Represents an RDF resource and manages manipulations of that resource,
+	# including data lookup (e.g. eyal.age), data updates (e.g. eyal.age=20),
+	# class-level lookup (Person.find_by_name 'eyal'), and class-membership
+	# (eyal.class ...Person).
+
   class RDFS::Resource
     # adding accessor to the class uri:
     # the uri of the rdf resource being represented by this class
@@ -27,8 +22,6 @@ module RDFS
     # creates new resource representing an RDF resource
     def initialize uri
       raise ActiveRdfError, "creating resource <#{uri}>" unless uri.is_a?(String)
-
-#      $log.debug "RDFS::Resource new: initializing new Resource with #{uri}"
       @uri = uri
     end
 
@@ -225,7 +218,7 @@ module RDFS
     # checking possibility (4)
     # TODO: implement search strategy to select in which class to invoke
     # e.g. if to_s defined in Resource and in Person we should use Person
-    $log.debug "RDFS::Resource: method_missing on instance: branch selected: execution of custom class method"
+    $log.debug "RDFS::Resource: method_missing option 4: custom class method"
     self.class.each do |klass|
       if klass.instance_methods.include?(method.to_s)
         _dup = klass.new(uri)

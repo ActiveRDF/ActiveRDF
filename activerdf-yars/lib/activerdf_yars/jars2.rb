@@ -1,6 +1,3 @@
-# Read-only adapter to jars2
-# (experimental YARS branch for SWSE engine)
-#
 # Author:: Eyal Oren
 # Copyright:: (c) 2005-2006
 # License:: LGPL
@@ -10,6 +7,8 @@ require 'queryengine/query2jars2'
 require 'net/http'
 require 'cgi'
 
+# Read-only adapter to jars2
+# (experimental YARS branch for SWSE engine)
 class Jars2Adapter < ActiveRdfAdapter
 	$log.info "loading Jars2 adapter"
 	ConnectionPool.register_adapter(:jars2, self)

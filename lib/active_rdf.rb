@@ -1,8 +1,4 @@
-# Loader of ActiveRDF library
-#
-# Author:: Eyal Oren and Renaud Delbru
-# Copyright:: (c) 2005-2006 Eyal Oren and Renaud Delbru
-# License:: LGPL
+# ActiveRDF loader
 
 # adding active_rdf subdirectory to the ruby loadpath
 file = File.symlink?(__FILE__) ? File.readlink(__FILE__) : __FILE__

@@ -1,13 +1,12 @@
+require 'active_rdf'
+
 # Manages namespace abbreviations and expansions
 #
 # Author:: Eyal Oren
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
-require 'active_rdf'
-
 class Namespace
-
   @@namespaces = Hash.new
   @@inverted_namespaces = Hash.new
 

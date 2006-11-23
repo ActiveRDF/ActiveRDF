@@ -1,6 +1,3 @@
-# Adapter to Redland database
-# uses SPARQL for querying
-#
 # Author:: Eyal Oren
 # Copyright:: (c) 2005-2006 Eyal Oren
 # License:: LGPL
@@ -9,8 +6,8 @@ require 'federation/connection_pool'
 require 'queryengine/query2sparql'
 require 'rdf/redland'
 
-# TODO: add json results for eric hanson
-
+# Adapter to Redland database
+# uses SPARQL for querying
 class RedlandAdapter < ActiveRdfAdapter
 	$log.info "loading Redland adapter"
 	ConnectionPool.register_adapter(:redland,self)

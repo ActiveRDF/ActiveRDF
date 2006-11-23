@@ -1,10 +1,7 @@
-# Manages the federation of datasources
-# distributes queries to right datasources and merges their results
-#
-# Author:: Eyal Oren
-# Copyright:: (c) 2005-2006
-# License:: LGPL
 require 'federation/connection_pool'
+
+# Manages the federation of datasources: distributes queries to right 
+# datasources and merges their results
 
 class FederationManager
   # add triple s,p,o to the currently selected write-adapter

@@ -1,12 +1,8 @@
-# Maintains pool of adapter instances that are connected to datasources
-# returns right adapter for a given datasource, by either reusing
-# existing adapter-instance or creating new adapter-instance
-#
-# Author:: Eyal Oren
-# Copyright:: (c) 2005-2006
-# License:: LGPL
-
 require 'active_rdf'
+
+# Maintains pool of adapter instances that are connected to datasources. Returns 
+# right adapter for a given datasource, by either reusing an
+# existing adapter-instance or creating new a adapter-instance.
 
 class ConnectionPool
 	class << self

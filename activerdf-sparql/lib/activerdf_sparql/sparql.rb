@@ -1,8 +1,3 @@
-# SPARQL adapter
-#
-# Author:: Eyal Oren and Sebastian Gerke
-# Copyright:: (c) 2005-2006
-# License:: LGPL
 require 'active_rdf'
 require 'queryengine/query2sparql'
 require 'open-uri'
@@ -10,7 +5,7 @@ require 'cgi'
 require 'rexml/document'
 require "#{File.dirname(__FILE__)}/sparql_result_parser"
   
-
+# SPARQL adapter
 class SparqlAdapter < ActiveRdfAdapter
 	$log.info "loading SPARQL adapter"
 	ConnectionPool.register_adapter(:sparql, self)

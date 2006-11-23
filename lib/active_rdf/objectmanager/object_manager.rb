@@ -1,15 +1,11 @@
-# Constructs Ruby classes for RDFS classes (in the right namespace)
-#
-# Author:: Eyal Oren
-# Copyright:: (c) 2005-2006
-# License:: LGPL
 require 'active_rdf'
 
+# Constructs Ruby classes for RDFS classes (in the right namespace)
+
 class ObjectManager
-  # constructs empty Ruby classes for all RDF types found in the data
-	#
-  # allows users to invoke methods on classes (e.g. FOAF::Person) without
-  # getting symbol undefined errors (because e.g. foaf:person wasnt encountered
+	# Constructs empty Ruby classes for all RDF types found in the data. Allows 
+	# users to invoke methods on classes (e.g. FOAF::Person) without
+	# getting symbol undefined errors (because e.g. foaf:person wasnt encountered
   # before so no class was created for it)
   def self.construct_classes
     # find all rdf:types and construct class for each of them

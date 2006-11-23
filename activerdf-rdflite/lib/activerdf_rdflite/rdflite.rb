@@ -1,7 +1,3 @@
-# RDFLite is a lightweight RDF database on top of sqlite3. It can act as adapter 
-# in ActiveRDF. It supports on-disk and in-memory usage, and allows keyword 
-# search if ferret is installed.
-#
 # Author:: Eyal Oren
 # Copyright:: (c) 2005-2006 Eyal Oren
 # License:: LGPL
@@ -21,6 +17,9 @@ rescue LoadError
 	@@have_ferret = false
 end
 
+# RDFLite is a lightweight RDF database on top of sqlite3. It can act as adapter 
+# in ActiveRDF. It supports on-disk and in-memory usage, and allows keyword 
+# search if ferret is installed.
 class RDFLite < ActiveRdfAdapter
 	ConnectionPool.register_adapter(:rdflite,self)
 	bool_accessor :keyword_search

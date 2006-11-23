@@ -1,5 +1,3 @@
-== Welcome to ActiveRDF
-
 ActiveRDF is a library for accessing RDF data from Ruby programs. It can be used 
 as data layer in Ruby-on-Rails, similar to ActiveRecord (which provides an O/R 
 mapping to relational databases). ActiveRDF in RoR allows you to create semantic 
@@ -10,13 +8,20 @@ etc. programmatically, without queries.
 See http://www.activerdf.org for more information.
 
 == Getting Started
+
+See http://wiki.activerdf.org/gettingstarted for information on how to install 
+ActiveRDF, get it running with some data sources, and start using it.
+
+== Simple Example
+
+The following example uses a SPARQL endpoint with FOAF data and displays all 
+people found in the data source:
+
  require 'active_rdf'
  ConnectionPool.add_data_source :type => :sparql, :host => '...'
  Namespace.register :foaf, 'http://xmlns.com/foaf/0.1/'
  ObjectManager.construct_classes
  people = FOAF::Person.find_all
-
-See http://activerdf.org for more examples.
 
 == License
 ActiveRDF is distributed under the LGPL[link:../LICENSE] license.
