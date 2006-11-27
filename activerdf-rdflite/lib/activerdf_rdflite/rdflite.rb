@@ -221,7 +221,6 @@ class RDFLite < ActiveRdfAdapter
 	# adds s,p,o into sqlite and ferret
 	# s,p,o should be in internal format: <uri> and "literal"
 	def add_internal(db, s, p, o, c)
-		retried = false
 		# insert the triple into the datastore
 		db.execute('insert into triple values (?,?,?,?)', s,p,o,c)
 
