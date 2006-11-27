@@ -1,7 +1,7 @@
 require 'active_rdf'
 
-# Translates abstract query into SPARQL that can be executed on SPARQL-compliant 
-# data source
+# Translates abstract query into SPARQL that can be executed on SPARQL-compliant
+# data source.
 class Query2SPARQL
   def self.translate(query)
     str = ""

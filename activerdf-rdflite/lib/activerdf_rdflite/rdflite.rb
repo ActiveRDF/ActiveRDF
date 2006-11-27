@@ -67,8 +67,9 @@ class RDFLite < ActiveRdfAdapter
 		# turn off filesystem synchronisation for speed
 		@db.synchronous = 'off'
 
-		# create triples table. since triples are unique, inserted duplicates are 
-		@db.execute('create table if not exists triple(s,p,o, unique(s,p,o) on conflict ignore)')
+		# create triples table. ignores duplicated triples
+		#@db.execute('create table if not exists triple(s,p,o, unique(s,p,o) on conflict ignore)')
+		@db.execute('create table if not exists triple(s,p,o,c, unique(s,p,o,c) on conflict ignore)')
 
 		create_indices(params)
 
@@ -84,8 +85,8 @@ class RDFLite < ActiveRdfAdapter
 
 	# returns all triples in the datastore
 	def dump
-		@db.execute('select s,p,o from triple') do |s,p,o|
-			[s,p,o].join(' ')
+		@db.execute('select s,p,o,c from triple').collect do |s,p,o,c|
+			[s,p,o,c].join(' ')
 		end
 	end
 
@@ -144,16 +145,16 @@ class RDFLite < ActiveRdfAdapter
 	
 	# adds triple(s,p,o) to datastore
 	# s,p must be resources, o can be primitive data or resource
-	def add(s,p,o)
+	def add(s,p,o,c=nil)
 		# check illegal input
 		raise(ActiveRdfError, "adding non-resource #{s}") unless s.respond_to?(:uri)
 		raise(ActiveRdfError, "adding non-resource #{p}") unless p.respond_to?(:uri)
 
 		# get internal representation (array)
-		triple = internal_triple_representation(s,p,o)
+		quad = [s,p,o,c].collect {|r| internalise(r) }
 
 		# add triple to database
-		add_internal(@db,*triple)
+		add_internal(@db,*quad)
 	end
 
 	# flushes openstanding changes to underlying sqlite3
@@ -166,11 +167,12 @@ class RDFLite < ActiveRdfAdapter
 	# loads triples from file in ntriples format
 	def load(file)
 		ntriples = File.readlines(file)
+		context = "<file:#{file}>"
 
 		@db.transaction do |transaction|
 			ntriples.each do |triple|
 				nodes = triple.scan(Node)
-				add_internal(transaction, nodes[0], nodes[1], nodes[2])
+				add_internal(transaction, nodes[0], nodes[1], nodes[2], context)
 			end
 		end
 
@@ -212,28 +214,14 @@ class RDFLite < ActiveRdfAdapter
 	Resource = /<([^>]*)>/
 	Literal = /"([^"]*)"/
 	Node = Regexp.union(/<[^>]*>/,/"[^"]*"/)
-	SPO = ['s','p','o']
+	SPOC = ['s','p','o','c']
 
 	# adds s,p,o into sqlite and ferret
 	# s,p,o should be in internal format: <uri> and "literal"
-	def add_internal(db, s,p,o)
+	def add_internal(db, s, p, o, c)
 		retried = false
 		# insert the triple into the datastore
-		begin
-			db.execute('insert into triple values (?,?,?)', s,p,o)
-		rescue NoMethodError
-			# temporary fix for sqlite bug! sqlite seems to bug sometimes on fast 
-			# multiple inserts...raising a NoMethodError because internally the db has 
-			# suddenly turned into a Fixnum. When we encounter such things, we simply 
-			# retry the insertion (once). This is of course a horrible hack, and we should 
-			# remove it ASAP when sqlite is fixed.
-			if retried
-				raise ActiveRdfError, "problem inserting triple #{s} #{p} #{o} into database"
-			else
-				retried = true
-				retry
-			end
-		end
+		db.execute('insert into triple values (?,?,?,?)', s,p,o,c)
 
 		# if keyword-search available, insert the object into keyword search
 		@ferret << {:subject => s, :object => o} if keyword_search?
@@ -319,8 +307,8 @@ class RDFLite < ActiveRdfAdapter
 
 			# construct t0,t1,... as aliases for term
 			# and construct join condition, e.g. t0.s
-			termalias = "t#{index / 3}"
-			termjoin = "#{termalias}.#{SPO[index % 3]}"
+			termalias = "t#{index / 4}"
+			termjoin = "#{termalias}.#{SPOC[index % 4]}"
 
 			join = if join_stmt.include?(termalias)
 							 ""
@@ -334,8 +322,8 @@ class RDFLite < ActiveRdfAdapter
 
 				# construct t0,t1, etc. as aliases for buddy,
 				# and construct join condition, e.g. t0.s = t1.p
-				buddyalias = "t#{i/3}"
-				buddyjoin = "#{buddyalias}.#{SPO[i%3]}"
+				buddyalias = "t#{i/4}"
+				buddyjoin = "#{buddyalias}.#{SPOC[i%4]}"
 
 				# TODO: fix reuse of same table names as aliases, e.g.
 				# "from triple as t1 join triple as t2 on ... join t1 on ..."
@@ -375,7 +363,7 @@ class RDFLite < ActiveRdfAdapter
 			clause.each_with_index do |subclause, i|
 				# dont add where clause for variables
 				unless subclause.is_a?(Symbol)
-					where << "t#{level}.#{SPO[i]} = ?"
+					where << "t#{level}.#{SPOC[i]} = ?"
 					@right_hand_sides << case subclause
 				 	when RDFS::Resource
 						"<#{subclause.uri}>"
@@ -434,8 +422,8 @@ class RDFLite < ActiveRdfAdapter
 			end
 		end
 
-		termtable = "t#{index / 3}"
-		termspo = SPO[index % 3]
+		termtable = "t#{index / 4}"
+		termspo = SPOC[index % 4]
 		return "#{termtable}.#{termspo}"
 	end
 
@@ -479,15 +467,12 @@ class RDFLite < ActiveRdfAdapter
 
 	# transform triple into internal format <uri> and "literal"
 	# returns array [s,p,o] 
-	def internal_triple_representation(s,p,o)
-		s = "<#{s.uri}>"
-		p = "<#{p.uri}>"
-		o = case o
-				when RDFS::Resource
-					"<#{o.uri}>"
-				else
-					"\"#{o.to_s}\""
-				end
-		[s,p,o]
+	def internalise(s)
+		case s
+		when RDFS::Resource
+			"<#{s.uri}>"
+		else
+			"\"#{s.to_s}\""
+		end
 	end
 end

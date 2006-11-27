@@ -96,6 +96,37 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 		assert_equal 29, Query.new.count(:s).where(:s,:p,:o).execute.to_i
 	end
 
+	def test_single_context
+    adapter = ConnectionPool.add_data_source :type => :rdflite
+		file = File.dirname(File.expand_path(__FILE__)) + '/test_data.nt'
+		adapter.load(file)
+
+		context = Query.new.distinct(:c).where(:s,:p,:o,:c).execute
+		assert_instance_of RDFS::Resource, context
+		assert_equal RDFS::Resource.new("file:#{file}"), context
+	end
+
+	def test_multiple_context
+    adapter = ConnectionPool.add_data_source :type => :rdflite
+		file = File.dirname(File.expand_path(__FILE__)) + '/test_data.nt'
+		adapter.load(file)
+		file_context = RDFS::Resource.new("file:#{file}") 
+		
+    eyal = RDFS::Resource.new 'eyaloren.org'
+    age = RDFS::Resource.new 'foaf:age'
+    test = RDFS::Resource.new 'test'
+    adapter.add(eyal, age, test)
+
+		context = Query.new.distinct(:c).where(:s,:p,:o,:c).execute
+		assert_equal file_context, context[0]
+		assert_equal '', context[1]
+
+		n1 = Query.new.distinct(:s).where(:s,:p,:o,'').execute(:flatten => false)
+		n2 = Query.new.distinct(:s).where(:s,:p,:o,file_context).execute(:flatten => false)
+		assert_equal 1, n1.size
+		assert_equal 8, n2.size
+	end
+
 	def test_person_data 
     adapter = ConnectionPool.add_data_source :type => :rdflite
 		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')

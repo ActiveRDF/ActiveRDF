@@ -6,49 +6,49 @@ require 'federation/federation_manager'
 # data source.  In all clauses symbols represent variables: 
 # Query.new.select(:s).where(:s,:p,:o).
 class Query
-  attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets
-  bool_accessor :distinct, :ask, :select, :count, :keyword
+	attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets
+	bool_accessor :distinct, :ask, :select, :count, :keyword
 
-  def initialize
-    distinct = false
+	def initialize
+		distinct = false
 		limit = nil
 		offset = nil
-    @select_clauses = []
-    @where_clauses = []
+		@select_clauses = []
+		@where_clauses = []
 		@sort_clauses = []
 		@keywords = {}
-  end
+	end
 
 	# Clears the select clauses
 	def clear_select
-    $log.debug "cleared select clause"
+		$log.debug "cleared select clause"
 		@select_clauses = []
 		distinct = false
 	end
 
 	# Adds variables to select clause
-  def select *s
-    @select = true
-    s.each do |e|
-      @select_clauses << parametrise(e) 
-    end
+	def select *s
+		@select = true
+		s.each do |e|
+			@select_clauses << parametrise(e) 
+		end
 		# removing duplicate select clauses
 		@select_clauses.uniq!
-    self
-  end
+		self
+	end
 
 	# Adds variables to ask clause (see SPARQL specification)
-  def ask
-    @ask = true
-    self
-  end
+	def ask
+		@ask = true
+		self
+	end
 
 	# Adds variables to select distinct clause
-  def distinct *s
-    @distinct = true
-    select(*s)
-  end
-  alias_method :select_distinct, :distinct
+	def distinct *s
+		@distinct = true
+		select(*s)
+	end
+	alias_method :select_distinct, :distinct
 
 	# Adds variables to count clause
 	def count *s
@@ -58,12 +58,12 @@ class Query
 
 	# Adds sort predicates (must appear in select clause)
 	def sort *s
-    s.each do |e|
-      @sort_clauses << parametrise(e) 
-    end
+		s.each do |e|
+			@sort_clauses << parametrise(e) 
+		end
 		# removing duplicate select clauses
 		@sort_clauses.uniq!
-    self
+		self
 	end
 
 	# Adds limit clause (maximum number of results to return)
@@ -81,7 +81,7 @@ class Query
 	# Adds where clauses (s,p,o) where each constituent is either variable (:s) or 
 	# an RDFS::Resource. Keyword queries are specified with the special :keyword 
 	# symbol: Query.new.select(:s).where(:s, :keyword, 'eyal')
-  def where s,p,o
+	def where s,p,o,c=nil
 		case p
 		when :keyword
 			# treat keywords in where-clauses specially
@@ -93,19 +93,19 @@ class Query
 			# generator. 
 			# if you construct this query manually, you shouldn't! if your select 
 			# variable happens to be in one of the removed clauses: tough luck.
-			
-      unless s.respond_to?(:uri)
-    		unless s.class == Symbol
-          raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
-    		end
-      end
-      unless p.respond_to?(:uri)
-    		unless p.class == Symbol
-          raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
-    		end
-      end
-      
-			@where_clauses << [s,p,o].collect{|arg| parametrise(arg)}
+
+			unless s.respond_to?(:uri)
+				unless s.class == Symbol
+					raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
+				end
+			end
+			unless p.respond_to?(:uri)
+				unless p.class == Symbol
+					raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
+				end
+			end
+
+			@where_clauses << [s,p,o,c].collect{|arg| parametrise(arg)}.compact
 		end
     self
   end
@@ -163,6 +163,8 @@ class Query
       #'?' + s.to_s
     when RDFS::Resource
       s
+		when nil
+			nil
     else
       '"' + s.to_s + '"'
     end
