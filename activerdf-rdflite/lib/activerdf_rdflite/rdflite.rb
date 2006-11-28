@@ -178,13 +178,35 @@ class RDFLite < ActiveRdfAdapter
 		# convert context to internal format if RDFS::Resource
 		context = "<#{context.uri}>" if context.respond_to?(:uri)
 
+		# need unique identifier for this batch of triples (to detect occurence of 
+		# same bnodes _:#1
+		uuid = `uuidgen`
+
 		# add each triple to db
 		@db.transaction do |tr|
 			ntriples.each do |triple|
 				nodes = triple.scan(Node)
-				subject = nodes[0]
+
+				# handle bnodes if necessary (bnodes need to have uri generated)
+				subject = case nodes[0]
+									when BNode
+										"<http://www.activerdf.org/bnode/#$1/#{uuid}>"
+									else
+										nodes[0]
+									end
+
 				predicate = nodes[1]
-				object = fix_unicode(nodes[2])
+
+				# handle bnodes and literals if necessary (literals need unicode fixing)
+				object = case nodes[2]
+								 when BNode
+									 "<http://www.activerdf.org/bnode/#$1/#{uuid}>"
+								 when Literal
+									 fix_unicode(nodes[2])
+								 else
+									 nodes[2]
+								 end
+
 				add_internal(tr, subject, predicate, object, context)
 			end
 		end
@@ -225,9 +247,10 @@ class RDFLite < ActiveRdfAdapter
 
 	private
 	# constants for extracting resources/literals from sql results
+	BNode = /_:(\S*)/
 	Resource = /<([^>]*)>/
 	Literal = /"([^"]*)"/
-	Node = Regexp.union(/<[^>]*>/,/"[^"]*"/)
+	Node = Regexp.union(/_:\S*/,/<[^>]*>/,/"[^"]*"/)
 	SPOC = ['s','p','o','c']
 
 	# adds s,p,o into sqlite and ferret
@@ -451,7 +474,7 @@ class RDFLite < ActiveRdfAdapter
 					String.new($1)
 				else
 					# when we do a count(*) query we get a number, not a resource/literal
-					results
+					result
 				end
 			end
 		end

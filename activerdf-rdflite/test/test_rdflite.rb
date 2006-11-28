@@ -92,8 +92,14 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 	def test_loading_data
     adapter = ConnectionPool.add_data_source :type => :rdflite
 		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')
-		assert_equal 29, adapter.size
-		assert_equal 29, Query.new.count(:s).where(:s,:p,:o).execute.to_i
+		assert_equal 32, adapter.size
+	end
+
+	def test_count_query
+    adapter = ConnectionPool.add_data_source :type => :rdflite
+		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')
+		assert_kind_of Fixnum, Query.new.count(:s).where(:s,:p,:o).execute
+		assert_equal 32, Query.new.count(:s).where(:s,:p,:o).execute
 	end
 
 	def test_single_context
@@ -124,7 +130,7 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 		n1 = Query.new.distinct(:s).where(:s,:p,:o,'').execute(:flatten => false)
 		n2 = Query.new.distinct(:s).where(:s,:p,:o,file_context).execute(:flatten => false)
 		assert_equal 1, n1.size
-		assert_equal 8, n2.size
+		assert_equal 9, n2.size
 	end
 
 	def test_person_data 
@@ -150,11 +156,11 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 	def test_delete_data
     adapter = ConnectionPool.add_data_source :type => :rdflite
 		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')
-		assert_equal 29, adapter.size
+		assert_equal 32, adapter.size
 
     eyal = RDFS::Resource.new('http://activerdf.org/test/eyal')
 		adapter.delete(eyal, nil, nil)
-		assert_equal 24, adapter.size
+		assert_equal 27, adapter.size
 
 		adapter.delete(nil,nil,nil)
 		assert_equal 0, adapter.size
@@ -167,7 +173,17 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
     eyal = RDFS::Resource.new('http://activerdf.org/test/eyal')
 		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"blue").execute
 		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"27").execute
-
 		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"eyal oren").execute
+	end
+
+	def test_bnodes
+    adapter = ConnectionPool.add_data_source :type => :rdflite
+		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')
+
+    Namespace.register(:test, 'http://activerdf.org/test/')
+    ObjectManager.construct_classes
+    assert_equal 2, TEST::Person.find_all.size
+		assert_equal 29, TEST::Person.find_all[1].age.to_i
+		assert_equal "Another Person", TEST::Person.find_all[1].name
 	end
 end
