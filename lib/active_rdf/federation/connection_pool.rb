@@ -81,6 +81,19 @@ class ConnectionPool
     return adapter
   end
 
+	# sets adapter-instance for connection parameters (if you want to re-enable an existing adapter)
+	def ConnectionPool.set_data_source(adapter, connection_params = {})
+		index = @@adapter_parameters.index(connection_params)
+		if index.nil?
+      @@adapter_parameters << connection_params
+      @@adapter_pool << adapter
+		else
+			@@adapter_pool[index] = adapter
+		end
+		self.write_adapter = adapter if adapter.writes?
+		adapter
+	end
+
 	# aliasing add_data_source as add
 	# (code bit more complicad since they are class methods)
 	class << self
