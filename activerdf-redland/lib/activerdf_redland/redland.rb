@@ -9,7 +9,7 @@ require 'rdf/redland'
 # Adapter to Redland database
 # uses SPARQL for querying
 class RedlandAdapter < ActiveRdfAdapter
-	$log.info "loading Redland adapter"
+	$activerdflog.info "loading Redland adapter"
 	ConnectionPool.register_adapter(:redland,self)
 	
 	# instantiate connection to Redland database
@@ -25,7 +25,7 @@ class RedlandAdapter < ActiveRdfAdapter
 			type = 'memory'; path = '';	file = '.'
 		end
 		
-		$log.info "RedlandAdapter: initializing with type: #{type} file: #{file} path: #{path}"
+		$activerdflog.info "RedlandAdapter: initializing with type: #{type} file: #{file} path: #{path}"
 		
 		@store = Redland::HashStore.new(type, file, path, false)
 		@model = Redland::Model.new @store
@@ -37,7 +37,7 @@ class RedlandAdapter < ActiveRdfAdapter
 	# load a file from the given location with the given syntax into the model.
 	# use Redland syntax strings, e.g. "ntriples" or "rdfxml", defaults to "ntriples"
 	def load(location, syntax="ntriples")
-    $log.debug "Redland: loading file with syntax: #{syntax} and location: #{location}" if $log.level == Logger::DEBUG
+    $activerdflog.debug "Redland: loading file with syntax: #{syntax} and location: #{location}" if $activerdflog.level == Logger::DEBUG
     parser = Redland::Parser.new(syntax, "", nil)
     parser.parse_into_model(@model, "file:#{location}")
 	end
@@ -45,21 +45,21 @@ class RedlandAdapter < ActiveRdfAdapter
 	# yields query results (as many as requested in select clauses) executed on data source
 	def query(query)
 		qs = Query2SPARQL.translate(query)
-    $log.debug "RedlandAdapter: executing SPARQL query #{qs}" if $log.level == Logger::DEBUG
+    $activerdflog.debug "RedlandAdapter: executing SPARQL query #{qs}" if $activerdflog.level == Logger::DEBUG
 		
 		clauses = query.select_clauses.size
 		redland_query = Redland::Query.new(qs, 'sparql')
 		query_results = @model.query_execute(redland_query)
 		
-		$log.debug "RedlandAdapter: found #{query_results.size} query results" if $log.level == Logger::DEBUG
+		$activerdflog.debug "RedlandAdapter: found #{query_results.size} query results" if $activerdflog.level == Logger::DEBUG
 
 		# verify if the query has failed
 		if query_results.nil?
-		  $log.debug "RedlandAdapter: query has failed with nil result" if $log.level == Logger::DEBUG
+		  $activerdflog.debug "RedlandAdapter: query has failed with nil result" if $activerdflog.level == Logger::DEBUG
 		  return false
 		end
 		if not query_results.is_bindings?
-		  $log.debug "RedlandAdapter: query has failed without bindings" if $log.level == Logger::DEBUG
+		  $activerdflog.debug "RedlandAdapter: query has failed without bindings" if $activerdflog.level == Logger::DEBUG
 		  return false
 		end
 
@@ -109,16 +109,16 @@ class RedlandAdapter < ActiveRdfAdapter
 	
 	# add triple to datamodel
 	def add(s, p, o)
-    $log.debug "adding triple #{s} #{p} #{o}" if $log.level == Logger::DEBUG
+    $activerdflog.debug "adding triple #{s} #{p} #{o}" if $activerdflog.level == Logger::DEBUG
 
 		# verify input
 		if s.nil? || p.nil? || o.nil?
-      $log.debug "cannot add triple with empty subject, exiting" if $log.level == Logger::DEBUG
+      $activerdflog.debug "cannot add triple with empty subject, exiting" if $activerdflog.level == Logger::DEBUG
 		  return false
 		end 
 		
 		unless s.respond_to?(:uri) && p.respond_to?(:uri)
-      $log.debug "cannot add triple where s/p are not resources, exiting"		 if $log.level == Logger::DEBUG
+      $activerdflog.debug "cannot add triple where s/p are not resources, exiting"		 if $activerdflog.level == Logger::DEBUG
 		  return false
 		end
 	
@@ -126,7 +126,7 @@ class RedlandAdapter < ActiveRdfAdapter
 		  @model.add(wrap(s), wrap(p), wrap(o))		  
 			save if ConnectionPool.auto_flush?
 		rescue Redland::RedlandError => e
-		  $log.warn "RedlandAdapter: adding triple failed in Redland library: #{e}"
+		  $activerdflog.warn "RedlandAdapter: adding triple failed in Redland library: #{e}"
 		  return false
 		end		
 	end

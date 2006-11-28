@@ -21,7 +21,7 @@ class Query
 
 	# Clears the select clauses
 	def clear_select
-		$log.debug "cleared select clause"
+		$activerdflog.debug "cleared select clause"
 		@select_clauses = []
 		distinct = false
 	end

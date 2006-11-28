@@ -7,7 +7,7 @@ require "#{File.dirname(__FILE__)}/sparql_result_parser"
   
 # SPARQL adapter
 class SparqlAdapter < ActiveRdfAdapter
-	$log.info "loading SPARQL adapter"
+	$activerdflog.info "loading SPARQL adapter"
 	ConnectionPool.register_adapter(:sparql, self)
 	
 	# Instantiate the connection with the SPARQL Endpoint.
@@ -25,7 +25,7 @@ class SparqlAdapter < ActiveRdfAdapter
 		raise ActiveRdfError, "Result format unsupported" unless 
 		known_formats.include?(@result_format)
 		
-		$log.info "Sparql adapter initialised #{inspect}"
+		$activerdflog.info "Sparql adapter initialised #{inspect}"
 	end
 
 	def size
@@ -37,14 +37,14 @@ class SparqlAdapter < ActiveRdfAdapter
 	def query(query, &block)
 		time = Time.now
     qs = Query2SPARQL.translate(query)
-		$log.debug "executing sparql query #{query}"
+		$activerdflog.debug "executing sparql query #{query}"
 
 		execute_sparql_query(qs, header(query), &block)
 	end
 		
 	# do the real work of executing the sparql query
 	def execute_sparql_query(qs, header, &block)
-		$log.debug "executing query #{qs} on url #@url"
+		$activerdflog.debug "executing query #{qs} on url #@url"
 
 		# encoding query string in URL
 		url = "#@url?query=#{CGI.escape(qs)}"

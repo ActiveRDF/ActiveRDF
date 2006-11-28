@@ -10,7 +10,7 @@ require 'cgi'
 # Read-only adapter to jars2
 # (experimental YARS branch for SWSE engine)
 class Jars2Adapter < ActiveRdfAdapter
-	$log.info "loading Jars2 adapter"
+	$activerdflog.info "loading Jars2 adapter"
 	ConnectionPool.register_adapter(:jars2, self)
 
 	# initialises connection to jars2 datastore
@@ -20,7 +20,7 @@ class Jars2Adapter < ActiveRdfAdapter
 	def initialize(params = {})
 		@host = params[:host] || 'm3pe.org'
 		@port = params[:port] || 2020
-		$log.info "Jars2Adapter: initializing new instance with host: #{@host} port: #{@port}"
+		$activerdflog.info "Jars2Adapter: initializing new instance with host: #{@host} port: #{@port}"
 		@yars = Net::HTTP.new(@host, @port)
 
 		@reads = true
@@ -40,7 +40,7 @@ class Jars2Adapter < ActiveRdfAdapter
 		# the result
 		response = @yars.get("/?q=#{CGI.escape(qs)}&eyal", header)
 		
-		$log.debug "Jars2Adapter: query executed: #{qs}" if $log.level == Logger::DEBUG
+		$activerdflog.debug "Jars2Adapter: query executed: #{qs}" if $activerdflog.level == Logger::DEBUG
 
 		# return empty array if no content
 		return [] if response.is_a?(Net::HTTPNoContent)
@@ -58,7 +58,7 @@ class Jars2Adapter < ActiveRdfAdapter
 			final_results = results
 		end
 		
-		$log.debug_pp "Jars2Adapter: query returned %s", final_results if $log.level == Logger::DEBUG
+		$activerdflog.debug_pp "Jars2Adapter: query returned %s", final_results if $activerdflog.level == Logger::DEBUG
 		final_results
 	end
 

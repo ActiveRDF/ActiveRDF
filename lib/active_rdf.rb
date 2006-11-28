@@ -9,7 +9,7 @@ $: << this_dir + '/active_rdf/'
 require 'active_rdf_helpers'
 require 'active_rdf_log'
 
-$log.info "ActiveRDF started, logging level: #{$log.level}"
+$activerdflog.info "ActiveRDF started, logging level: #{$activerdflog.level}"
 
 # load standard classes that need to be loaded at startup
 require 'objectmanager/resource'
@@ -22,7 +22,7 @@ def load_adapter s
   begin
     require s
   rescue StandardError => e
-    $log.info "could not load adapter #{s}: #{e}"
+    $activerdflog.info "could not load adapter #{s}: #{e}"
   end
 end
 
@@ -30,7 +30,7 @@ require 'rubygems'
 #determine if we are installed as a gem right now:
 if Gem::cache().search("activerdf").empty?
    #we are not running as a gem
-   $log.info 'ActiveRDF is NOT installed as a Gem'
+   $activerdflog.info 'ActiveRDF is NOT installed as a Gem'
    load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
    load_adapter this_dir + '/../activerdf-redland/lib/activerdf_redland/redland'
    load_adapter this_dir + '/../activerdf-sparql/lib/activerdf_sparql/sparql'
@@ -38,7 +38,7 @@ if Gem::cache().search("activerdf").empty?
 else
    #we are indeed running as a gem
    require 'gem_plugin'
-   $log.info 'ActiveRDF is installed as a Gem'
+   $activerdflog.info 'ActiveRDF is installed as a Gem'
    GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
 end
 

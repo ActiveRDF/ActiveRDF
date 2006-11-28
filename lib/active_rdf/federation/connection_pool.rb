@@ -33,7 +33,7 @@ class ConnectionPool
 
   # clears the pool: removes all registered data sources
   def ConnectionPool.clear
-    $log.info "ConnectionPool: clear called"
+    $activerdflog.info "ConnectionPool: clear called"
     @@adapter_pool = []
     @@adapter_parameters = []
     self.write_adapter = nil
@@ -55,7 +55,7 @@ class ConnectionPool
 
   # returns adapter-instance for given parameters (either existing or new)
   def ConnectionPool.add_data_source(connection_params)
-    $log.info "ConnectionPool: add_data_source with params: #{connection_params.inspect}"
+    $activerdflog.info "ConnectionPool: add_data_source with params: #{connection_params.inspect}"
 
     # either get the adapter-instance from the pool
     # or create new one (and add it to the pool)
@@ -64,14 +64,14 @@ class ConnectionPool
       # adapter not in the pool yet: create it,
       # register its connection parameters in parameters-array
       # and add it to the pool (at same index-position as parameters)
-      $log.debug("Create a new adapter for parameters #{connection_params.inspect}")
+      $activerdflog.debug("Create a new adapter for parameters #{connection_params.inspect}")
       adapter = create_adapter(connection_params)
       @@adapter_parameters << connection_params
       @@adapter_pool << adapter
     else
       # if adapter parametrs registered already,
       # then adapter must be in the pool, at the same index-position as its parameters
-      $log.debug("Reusing existing adapter")
+      $activerdflog.debug("Reusing existing adapter")
       adapter = @@adapter_pool[index]
     end
 
@@ -90,7 +90,7 @@ class ConnectionPool
   # adapter-types can register themselves with connection pool by
   # indicating which adapter-type they are
   def ConnectionPool.register_adapter(type, klass)
-    $log.info "ConnectionPool: registering adapter of type #{type} for class #{klass}"
+    $activerdflog.info "ConnectionPool: registering adapter of type #{type} for class #{klass}"
     @@registered_adapter_types[type] = klass
   end
 

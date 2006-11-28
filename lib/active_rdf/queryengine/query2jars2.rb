@@ -16,7 +16,7 @@ class Query2Jars2
 			# figure it out.
 		end
 		
-		$log.debug "Query2Jars2: translated #{query} to #{str}"
+		$activerdflog.debug "Query2Jars2: translated #{query} to #{str}"
 		return str
 	end
 end

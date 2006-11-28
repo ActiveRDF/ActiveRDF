@@ -6,13 +6,13 @@ require 'sqlite3'
 require 'active_rdf'
 require 'federation/connection_pool'
 
-$log.info "loading RDFLite adapter"
+$activerdflog.info "loading RDFLite adapter"
 
 begin 
 	require 'ferret'
 	@@have_ferret = true
 rescue LoadError
-	$log.info "Keyword search is disabled since we could not load Ferret. To 
+	$activerdflog.info "Keyword search is disabled since we could not load Ferret. To 
 	enable, please do \"gem install ferret\""
 	@@have_ferret = false
 end
@@ -30,7 +30,7 @@ class RDFLite < ActiveRdfAdapter
 	# * :keyword => true/false (defaults to true)
 	# * :pidx, :oidx, etc. => true/false (enable/disable these indices)
 	def initialize(params = {})
-		$log.info "initialised rdflite with params #{params.to_s}"
+		$activerdflog.info "initialised rdflite with params #{params.to_s}"
 
 		@reads = true
 		@writes = true
@@ -73,8 +73,8 @@ class RDFLite < ActiveRdfAdapter
 
 		create_indices(params)
 
-		$log.debug("opened connection to #{file}")
-		$log.debug("database contains #{size} triples")
+		$activerdflog.debug("opened connection to #{file}")
+		$activerdflog.debug("database contains #{size} triples")
 		@db
 	end
 
@@ -133,7 +133,7 @@ class RDFLite < ActiveRdfAdapter
 
 		# execute delete string with possible deletion conditions (for each 
 		# non-empty where clause)
-		$log.debug(sprintf("sending delete query: #{ds}", *conditions))
+		$activerdflog.debug(sprintf("sending delete query: #{ds}", *conditions))
 		@db.execute(ds, *conditions)
 
 		# delete literal from ferret index
@@ -167,16 +167,28 @@ class RDFLite < ActiveRdfAdapter
 	# loads triples from file in ntriples format
 	def load(file)
 		ntriples = File.readlines(file)
-		context = "<file:#{file}>"
+		$activerdflog.debug "read #{ntriples.size} triples from file #{file}"
 
-		@db.transaction do |transaction|
+		context = "<file:#{file}>"
+		add_ntriples(ntriples, context)
+	end
+
+	# adds string of ntriples from given context to database
+	def add_ntriples(ntriples, context=nil)
+		# convert context to internal format if RDFS::Resource
+		context = "<#{context.uri}>" if context.respond_to?(:uri)
+
+		# add each triple to db
+		@db.transaction do |tr|
 			ntriples.each do |triple|
 				nodes = triple.scan(Node)
-				add_internal(transaction, nodes[0], nodes[1], nodes[2], context)
+				subject = nodes[0]
+				predicate = nodes[1]
+				object = fix_unicode(nodes[2])
+				add_internal(tr, subject, predicate, object, context)
 			end
 		end
 
-		$log.debug "read #{ntriples.size} triples from file #{file}"
 		@db
 	end
 
@@ -189,7 +201,7 @@ class RDFLite < ActiveRdfAdapter
 		# sqlite will encode quotes correctly)
 		constraints = @right_hand_sides.collect { |value| value.to_s }
 
-		$log.debug format("executing: #{sql.gsub('?','"%s"')}", *constraints)
+		$activerdflog.debug format("executing: #{sql.gsub('?','"%s"')}", *constraints)
 
 		# executing query
 		results = @db.execute(sql, *constraints)
@@ -476,4 +488,11 @@ class RDFLite < ActiveRdfAdapter
 			"\"#{s.to_s}\""
 		end
 	end
+
+	# fixes unicode characters in literals (because we parse them wrongly somehow)
+	def fix_unicode(str)
+		tmp = str.gsub(/\\\u([0-9a-fA-F]{4,4})/u){ "U+#$1" }
+    tmp.gsub(/U\+([0-9a-fA-F]{4,4})/u){["#$1".hex ].pack('U*')}
+	end
+
 end

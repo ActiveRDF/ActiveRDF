@@ -70,7 +70,7 @@ module RDFS
     def Resource.method_missing(method, *args)
       method_name = method.to_s
 
-      $log.debug "RDFS::Resource: method_missing on class: called with method name #{method}"
+      $activerdflog.debug "RDFS::Resource: method_missing on class: called with method name #{method}"
 
       # extract predicates on which to match
       # e.g. find_by_name, find_by_name_and_age
@@ -95,12 +95,12 @@ module RDFS
         end
 
         # execute query
-        $log.debug "RDFS::Resource: method_missing on class: executing query: #{query}"
+        $activerdflog.debug "RDFS::Resource: method_missing on class: executing query: #{query}"
         return query.execute
       end
 
       # otherwise, if no match found, raise NoMethodError (in superclass)
-      $log.warn 'RDFS::Resource: method_missing on class: method not matching find_by_*'
+      $activerdflog.warn 'RDFS::Resource: method_missing on class: method not matching find_by_*'
       super
     end
 
@@ -149,7 +149,7 @@ module RDFS
       # cheaper than (1)-(2) but (1) and (2) are probably more probable (getting
       # attribute values over executing custom methods)
 
-      $log.debug "RDFS::Resource: method_missing on instance: called with method name #{method}"
+      $activerdflog.debug "RDFS::Resource: method_missing on instance: called with method name #{method}"
 
       # are we doing an update or not?
       # checking if method ends with '='
@@ -218,7 +218,7 @@ module RDFS
     # checking possibility (4)
     # TODO: implement search strategy to select in which class to invoke
     # e.g. if to_s defined in Resource and in Person we should use Person
-    $log.debug "RDFS::Resource: method_missing option 4: custom class method"
+    $activerdflog.debug "RDFS::Resource: method_missing option 4: custom class method"
     self.class.each do |klass|
       if klass.instance_methods.include?(method.to_s)
         _dup = klass.new(uri)

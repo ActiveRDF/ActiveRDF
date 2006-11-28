@@ -15,7 +15,7 @@ class Query2SPARQL
       str << "ASK { #{where_clauses(query)} }"
     end
     
-    $log.debug "Query2SPARQL: translated the query to #{str}"
+    $activerdflog.debug "Query2SPARQL: translated the query to #{str}"
     return str
   end
 
