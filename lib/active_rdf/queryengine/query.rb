@@ -130,7 +130,7 @@ class Query
   #
   # usage:: results = query.execute
   # usage:: query.execute do |s,p,o| ... end
-  def execute(options={:flatten => true}, &block)
+  def execute(options={:flatten => false}, &block)
     if block_given?
       FederationManager.query(self) do |*clauses|
         block.call(*clauses)

@@ -97,35 +97,19 @@ class RDFLite < ActiveRdfAdapter
 
 	# deletes triple(s,p,o) from datastore
 	# nil parameters match anything: delete(nil,nil,nil) will delete all triples
-	def delete(s,p,o)
+	def delete(s,p,o,c=nil)
 		# convert input to internal format
-		# leave nil input alone (we'll deal with it later)
-		s = "<#{s.uri}>" unless s.nil?
-		p = "<#{p.uri}>" unless p.nil?
-		o = case o
-				when RDFS::Resource
-					"<#{o.uri}>"
-				else
-					"\"#{o.to_s}\""
-				end unless o.nil?
+		quad = [s,p,o,c].collect {|r| internalise(r) }
 
-		# construct where clause for deletion (for all non-nil input)
+    # construct where clause for deletion (for all non-nil input)
 		where_clauses = []
-		conditions = []
-		unless s.nil?
-			conditions << s
-			where_clauses << 's = ?' 
-		end
-
-		unless p.nil?
-			conditions << p
-			where_clauses << 'p = ?' 
-		end
-
-		unless o.nil?
-			conditions << o
-			where_clauses << 'o = ?' 
-		end
+		conditions = []		
+    quad.each_with_index do |r,i|
+      unless r.nil?
+			 conditions << r
+			 where_clauses << "#{SPOC[i]} = ?"
+		  end
+    end
 
 		# construct delete string
 		ds = 'delete from triple'
@@ -140,6 +124,7 @@ class RDFLite < ActiveRdfAdapter
 		@ferret.search_each("subject:\"#{s}\", object:\"#{o}\"") do |idx, score|
 			@ferret.delete(idx)
 		end if keyword_search?
+
 		@db
 	end
 	
@@ -176,11 +161,11 @@ class RDFLite < ActiveRdfAdapter
 	# adds string of ntriples from given context to database
 	def add_ntriples(ntriples, context=nil)
 		# convert context to internal format if RDFS::Resource
-		context = "<#{context.uri}>" if context.respond_to?(:uri)
+		context = internalise(context)
 
 		# need unique identifier for this batch of triples (to detect occurence of 
 		# same bnodes _:#1
-		uuid = `uuidgen`
+		# uuid = `uuidgen`
 
 		# add each triple to db
 		@db.transaction do |tr|
@@ -504,8 +489,7 @@ class RDFLite < ActiveRdfAdapter
 	# transform triple into internal format <uri> and "literal"
 	# returns array [s,p,o] 
 	def internalise(s)
-		case s
-		when RDFS::Resource
+		if s.respond_to?(:uri)
 			"<#{s.uri}>"
 		else
 			"\"#{s.to_s}\""
