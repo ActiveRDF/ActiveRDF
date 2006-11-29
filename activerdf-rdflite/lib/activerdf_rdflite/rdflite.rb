@@ -95,8 +95,10 @@ class RDFLite < ActiveRdfAdapter
 		@db.execute('delete from triple')
 	end
 
-	# deletes triple(s,p,o) from datastore
-	# nil parameters match anything: delete(nil,nil,nil) will delete all triples
+	# deletes triple(s,p,o,c) from datastore
+	# symbol parameters match anything: delete(:s,:p,:o) will delete all triples
+	# you can specify a context to limit deletion to that context: 
+	# delete(:s,:p,:o, 'http://context') will delete all triples with that context
 	def delete(s,p,o,c=nil)
 		# convert input to internal format
 		quad = [s,p,o,c].collect {|r| internalise(r) }
@@ -165,7 +167,7 @@ class RDFLite < ActiveRdfAdapter
 
 		# need unique identifier for this batch of triples (to detect occurence of 
 		# same bnodes _:#1
-		# uuid = `uuidgen`
+		uuid = `uuidgen`
 
 		# add each triple to db
 		@db.transaction do |tr|
@@ -491,6 +493,8 @@ class RDFLite < ActiveRdfAdapter
 	def internalise(s)
 		if s.respond_to?(:uri)
 			"<#{s.uri}>"
+		elsif s.is_a?(Symbol)
+			nil
 		else
 			"\"#{s.to_s}\""
 		end
