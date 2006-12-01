@@ -119,7 +119,7 @@ class RDFLite < ActiveRdfAdapter
 
 		# execute delete string with possible deletion conditions (for each 
 		# non-empty where clause)
-		$activerdflog.debug(sprintf("sending delete query: #{ds}", *conditions))
+		$activerdflog.debug("deleting #{[s,p,o,c].join(' ')}")
 		@db.execute(ds, *conditions)
 
 		# delete literal from ferret index
@@ -210,14 +210,12 @@ class RDFLite < ActiveRdfAdapter
 		# sqlite will encode quotes correctly)
 		constraints = @right_hand_sides.collect { |value| value.to_s }
 
-		$activerdflog.debug format("executing: #{sql.gsub('?','"%s"')}", *constraints)
-
 		# executing query
 		results = @db.execute(sql, *constraints)
 
 		# if ASK query, we check whether we received a positive result count
 		if query.ask?
-			return [results[0][0].to_i > 0]
+			return [[results[0][0].to_i > 0]]
 		elsif query.count?
 			return [[results[0][0].to_i]]
 		else
