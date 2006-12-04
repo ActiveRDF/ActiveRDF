@@ -7,7 +7,7 @@ require 'federation/federation_manager'
 # Query.new.select(:s).where(:s,:p,:o).
 class Query
 	attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets
-	bool_accessor :distinct, :ask, :select, :count, :keyword
+	bool_accessor :distinct, :ask, :select, :count, :keyword, :reasoning
 
 	def initialize
 		distinct = false
@@ -17,6 +17,7 @@ class Query
 		@where_clauses = []
 		@sort_clauses = []
 		@keywords = {}
+		@reasoning = true
 	end
 
 	# Clears the select clauses
@@ -94,15 +95,11 @@ class Query
 			# if you construct this query manually, you shouldn't! if your select 
 			# variable happens to be in one of the removed clauses: tough luck.
 
-			unless s.respond_to?(:uri)
-				unless s.class == Symbol
-					raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
-				end
+			unless s.respond_to?(:uri) or s.class == Symbol
+				raise(ActiveRdfError, "cannot add a where clause with s #{s}: s must be a resource or a variable")
 			end
-			unless p.respond_to?(:uri)
-				unless p.class == Symbol
-					raise(ActiveRdfError, "cannot add a where clause, in which s is not a resource and not a variable")
-				end
+			unless p.respond_to?(:uri) or p.class == Symbol
+				raise(ActiveRdfError, "cannot add a where clause with p #{p}: p must be a resource or a variable")
 			end
 
 			@where_clauses << [s,p,o,c].collect{|arg| parametrise(arg)}.compact

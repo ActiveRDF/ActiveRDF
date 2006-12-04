@@ -293,7 +293,7 @@ module RDFS
 
   # returns uri of resource, can be overridden in subclasses
   def to_s
-    "resource: #{uri}"
+    "<#{uri}>"
   end
 
   def label(*args)

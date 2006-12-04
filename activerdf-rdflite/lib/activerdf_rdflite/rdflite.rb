@@ -22,7 +22,7 @@ end
 # search if ferret is installed.
 class RDFLite < ActiveRdfAdapter
 	ConnectionPool.register_adapter(:rdflite,self)
-	bool_accessor :keyword_search
+	bool_accessor :keyword_search, :reasoning
 
 	# instantiates RDFLite database
 	# available parameters:
@@ -39,21 +39,17 @@ class RDFLite < ActiveRdfAdapter
 		file = params[:location] || ':memory:'
 		@db = SQLite3::Database.new(file) 
 
-		# we enable keyword unless the user specifies otherwise
-		@keyword_search = if params[:keyword].nil?
-												true
-											else
-											  params[:keyword]
-											end
-
-		# we can only do keyword search if ferret is found
+		# enable keyword search by default, but only if ferret is found
+		@keyword_search = params[:keyword] || true
 		@keyword_search &= @@have_ferret
+
+		@reasoning = params[:reasoning] || false
 
 		if keyword_search?
 			# we initialise the ferret index, either as a file or in memory
+			infos = Ferret::Index::FieldInfos.new
 
 			# we setup the fields not to store object's contents
-			infos = Ferret::Index::FieldInfos.new
 			infos.add_field(:subject, :store => :yes, :index => :no, :term_vector => :no)
 			infos.add_field(:object, :store => :no) #, :index => :omit_norms)
 			
@@ -68,13 +64,9 @@ class RDFLite < ActiveRdfAdapter
 		@db.synchronous = 'off'
 
 		# create triples table. ignores duplicated triples
-		#@db.execute('create table if not exists triple(s,p,o, unique(s,p,o) on conflict ignore)')
 		@db.execute('create table if not exists triple(s,p,o,c, unique(s,p,o,c) on conflict ignore)')
 
 		create_indices(params)
-
-		$activerdflog.debug("opened connection to #{file}")
-		$activerdflog.debug("database contains #{size} triples")
 		@db
 	end
 
@@ -204,14 +196,14 @@ class RDFLite < ActiveRdfAdapter
 	# executes ActiveRDF query on datastore
 	def query(query)
 		# construct query clauses
-		sql = translate(query)
+		sql, conditions = translate(query)
 
 		# executing query, passing all where-clause values as parameters (so that 
 		# sqlite will encode quotes correctly)
-		constraints = @right_hand_sides.collect { |value| value.to_s }
+		#constraints = right_hand_sides.collect { |value| value.to_s }
 
 		# executing query
-		results = @db.execute(sql, *constraints)
+		results = @db.execute(sql, *conditions)
 
 		# if ASK query, we check whether we received a positive result count
 		if query.ask?
@@ -226,8 +218,8 @@ class RDFLite < ActiveRdfAdapter
 
 	# translates ActiveRDF query into internal sqlite query string
 	def translate(query)
-		construct_select(query) + construct_join(query) + construct_where(query) + 
-			construct_sort(query) + construct_limit(query)
+		where, conditions = construct_where(query)
+		[construct_select(query) + construct_join(query) + where + construct_sort(query) + construct_limit(query), conditions]
 	end
 
 	private
@@ -375,7 +367,7 @@ class RDFLite < ActiveRdfAdapter
 		# collecting all the right-hand sides of where clauses (e.g. where name = 
 		# 'abc'), to add to query string later using ?-notation, because then 
 		# sqlite will automatically encode quoted literals correctly
-		@right_hand_sides = []
+		right_hand_sides = []
 
 		# convert each where clause to SQL:
 		# add where clause for each subclause, except if it's a variable
@@ -384,12 +376,13 @@ class RDFLite < ActiveRdfAdapter
 			clause.each_with_index do |subclause, i|
 				# dont add where clause for variables
 				unless subclause.is_a?(Symbol)
-					where << "t#{level}.#{SPOC[i]} = ?"
-					@right_hand_sides << case subclause
-				 	when RDFS::Resource
-						"<#{subclause.uri}>"
+					conditions = compute_where_condition(i, subclause, query.reasoning? && reasoning?)
+					if conditions.size == 1
+						where << "t#{level}.#{SPOC[i]} = ?"
+						right_hand_sides << conditions.first
 					else
-						subclause.to_s
+						conditions = conditions.collect {|c| "'#{c}'"}
+						where << "t#{level}.#{SPOC[i]} in (#{conditions.join(',')})"
 					end
 				end
 			end
@@ -407,13 +400,48 @@ class RDFLite < ActiveRdfAdapter
 			end
 			subjects.uniq! if query.distinct?
 			where << "#{variable_name(query,select_subject.first)} in (#{subjects.collect {'?'}.join(',')})"
-			@right_hand_sides += subjects
+			right_hand_sides += subjects
 		end
 
 		if where.empty?
-			''
+			['',[]]
 		else
-			"where " + where.join(' and ')
+			["where " + where.join(' and '), right_hand_sides]
+		end
+	end
+
+	def compute_where_condition(index, subclause, reasoning)
+		conditions = [subclause]
+
+		# expand conditions with rdfs rules if reasoning enabled
+		if reasoning
+			case index
+			when 0: ;
+				# no rule for subjects
+			when 1:
+				# expand properties to include all subproperties
+				conditions = subproperties(subclause) if subclause.respond_to?(:uri)
+			when 2:
+				# no rule for objects
+			when 3:
+				# no rule for contexts
+			end
+		end
+
+		# convert conditions into internal format
+		conditions.collect { |c| c.respond_to?(:uri) ? "<#{c.uri}>" : c.to_s }
+	end
+
+	def subproperties(resource)
+		subproperty = Namespace.lookup(:rdfs,:subPropertyOf)
+		children_query = Query.new.distinct(:sub).where(:sub, subproperty, resource)
+		children_query.reasoning = false
+		children = children_query.execute
+
+		if children.empty?
+			[resource]
+		else
+			[resource] + children.collect{|c| subproperties(c)}.flatten.compact
 		end
 	end
 
@@ -504,4 +532,5 @@ class RDFLite < ActiveRdfAdapter
     tmp.gsub(/U\+([0-9a-fA-F]{4,4})/u){["#$1".hex ].pack('U*')}
 	end
 
+	public :subproperties
 end
