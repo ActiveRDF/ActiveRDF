@@ -163,7 +163,7 @@ module RDFS
       end
 
       candidates = if update
-                      class_level_predicates
+                      (class_level_predicates + direct_predicates).compact.uniq
                     else
                       direct_predicates
                     end
@@ -191,7 +191,8 @@ module RDFS
       end
     end
     
-    raise ActiveRdfError, "could not set #{methodname} to #{args}: no suitable predicate found. Maybe you are missing some shcema information?" if update
+		raise ActiveRdfError, "could not set #{methodname} to #{args}: no suitable 
+		predicate found. Maybe you are missing some schema information?" if update
 
     # get/set attribute value did not succeed, so checking option (2) and (4)
     
