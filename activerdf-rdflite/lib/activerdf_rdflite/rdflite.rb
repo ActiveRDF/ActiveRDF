@@ -40,7 +40,7 @@ class RDFLite < ActiveRdfAdapter
 		@db = SQLite3::Database.new(file) 
 
 		# enable keyword search by default, but only if ferret is found
-		@keyword_search = params[:keyword] || true
+		@keyword_search = params[:keyword].nil? ? true : params[:keyword]
 		@keyword_search &= @@have_ferret
 
 		@reasoning = params[:reasoning] || false
@@ -479,19 +479,22 @@ class RDFLite < ActiveRdfAdapter
 	# wrap resources into ActiveRDF resources, literals into Strings
 	def wrap(query, results)
 		results.collect do |row|
-			row.collect do |result|
-				case result
-				when Resource
-					RDFS::Resource.new($1)
-				when Literal
-					String.new($1)
-				else
-					# when we do a count(*) query we get a number, not a resource/literal
-					result
-				end
-			end
+			row.collect { |result| parse(result) }
 		end
 	end
+
+	def parse(result)
+		case result
+		when Resource
+			RDFS::Resource.new($1)
+		when Literal
+			String.new($1)
+		else
+			# when we do a count(*) query we get a number, not a resource/literal
+			result
+		end
+	end
+
 
 	def create_indices(params)
 		sidx = params[:sidx] || false
@@ -516,13 +519,13 @@ class RDFLite < ActiveRdfAdapter
 
 	# transform triple into internal format <uri> and "literal"
 	# returns array [s,p,o] 
-	def internalise(s)
-		if s.respond_to?(:uri)
-			"<#{s.uri}>"
-		elsif s.is_a?(Symbol)
+	def internalise(r)
+		if r.respond_to?(:uri)
+			"<#{r.uri}>"
+		elsif r.is_a?(Symbol)
 			nil
 		else
-			"\"#{s.to_s}\""
+			"\"#{r.to_s}\""
 		end
 	end
 
