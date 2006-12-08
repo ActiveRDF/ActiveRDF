@@ -9,15 +9,16 @@ See http://www.activerdf.org for more information.
 
 == Getting Started
 
-See http://wiki.activerdf.org/GettingStartedGuide for information on how to install 
-ActiveRDF, get it running with some data sources, and start using it.
+See http://wiki.activerdf.org/GettingStartedGuide for information on how to
+install ActiveRDF, point to data sources, and use it. In brief: "gem install
+activerdf_sparql".
 
 == Simple Example
 
 The following example uses a SPARQL endpoint with FOAF data and displays all 
 people found in the data source:
 
- require 'active_rdf'
+ require 'activerdf'
  ConnectionPool.add_data_source :type => :sparql, :host => '...'
  Namespace.register :foaf, 'http://xmlns.com/foaf/0.1/'
  ObjectManager.construct_classes
