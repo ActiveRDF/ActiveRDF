@@ -28,25 +28,25 @@ class TestResourceReading < Test::Unit::TestCase
   end
 
   def test_eyal_predicates
-    predicates = @eyal.direct_predicates
-
-    # assert that the three found predicates are eye, age, and type
-    assert_equal 3, predicates.size
-    predicates_labels = predicates.collect {|pred| pred.label }
+    # assert that eyal's three direct predicates are eye, age, and type
+    preds = @eyal.direct_predicates.collect {|p| p.uri }
+    assert_equal 3, preds.size
     ['age', 'eye', 'type'].each do |pr|
-      assert predicates_labels.include?(pr), "Eyal should have predicate #{pr}"
+      assert preds.any? {|uri| uri =~ /.*#{pr}$/ }, "Eyal should have predicate #{pr}"
     end
 
-    # assert that the found predicates on Person are eye, age, and type
-    predicates_labels = predicates.collect {|pred| pred.label }
-    ['age', 'eye', 'type'].each do |pr|
-      assert predicates_labels.include?(pr), "Eyal should have predicate #{pr}"
-    end
+		# test class level predicates
+		class_preds = @eyal.class_level_predicates.collect {|p| p.uri }
+		# eyal.type: person and resource, has predicates age, eye, and 
+		# rdfs:label, rdfs:comment, etc.
+    assert_equal 10, class_preds.size
   end
 
   def test_eyal_types
-    type_labels = @eyal.types.collect {|pred| pred.label}
-    assert_equal ['Person','Resource'], type_labels
+    types = @eyal.type
+		assert_equal 2, types.size
+		assert types.include?(AR::Person)
+		assert types.include?(RDFS::Resource)
   end
 
   def test_eyal_age

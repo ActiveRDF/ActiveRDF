@@ -96,7 +96,7 @@ module RDFS
 
         # execute query
         $activerdflog.debug "RDFS::Resource: method_missing on class: executing query: #{query}"
-        return query.execute
+        return query.execute(:flatten => true)
       end
 
       # otherwise, if no match found, raise NoMethodError (in superclass)
@@ -220,7 +220,7 @@ module RDFS
     # TODO: implement search strategy to select in which class to invoke
     # e.g. if to_s defined in Resource and in Person we should use Person
     $activerdflog.debug "RDFS::Resource: method_missing option 4: custom class method"
-    self.class.each do |klass|
+    self.type.each do |klass|
       if klass.instance_methods.include?(method.to_s)
         _dup = klass.new(uri)
         return _dup.send(method,*args)
@@ -235,20 +235,28 @@ module RDFS
     nil
   end
 
-  # returns classes to which this resource belongs (according to rdf:type)
-  def class
+	# saves instance into datastore
+	def save
+		db = ConnectionPool.write_adapter
+		rdftype = Namespace.lookup(:rdf, :type)
+		types.each do |t|
+			db.add(self, rdftype, t)
+		end
+
+		Query.new.distinct(:p,:o).where(self, :p, :o).execute do |p, o|
+			db.add(self, p, o)
+		end
+	end
+
+  def type
     types.collect do |type|
       ObjectManager.construct_class(type)
     end
   end
 
-  def type
-    get_property_value(Namespace.lookup(:rdf,:type))
-  end
-
   # overrides built-in instance_of? to use rdf:type definitions
   def instance_of?(klass)
-    self.class.include?(klass)
+    self.type.include?(klass)
   end
 
   # returns all predicates that fall into the domain of the rdf:type of this
@@ -266,26 +274,11 @@ module RDFS
     else
       q = Query.new.select(:p)
     end
-    q.where(self,:p, :o).execute(:flatten => false) || []
+    q.where(self,:p, :o).execute
   end
 
   def property_accessors
     direct_predicates.collect {|pred| Namespace.localname(pred) }
-  end
-
-  # returns all rdf:types of this resource
-  def types
-    type = Namespace.lookup(:rdf, :type)
-
-    # we lookup the type in the database
-    types = Query.new.distinct(:t).where(self,type,:t).execute(:flatten => false)
-
-    # if we dont know it, we return Resource (as toplevel)
-    # this should in theory actually never happen (since any node is a rdfs:Resource)
-    # but could happen if the subject is unknown to the database
-    # or if the database does not support RDFS inferencing
-    return [Namespace.lookup(:rdfs,"Resource")] if types.empty?
-    return types
   end
 
   # alias include? to ==, so that you can do paper.creator.include?(eyal)
@@ -297,8 +290,8 @@ module RDFS
     "<#{uri}>"
   end
 
-  def label(*args)
-		# use rdfs:label if available, full uri otherwise
+	# label of resource (rdfs:label if available, uri otherwise)
+  def label
     get_property_value(Namespace.lookup(:rdfs,:label)) || uri
   end
 
@@ -309,5 +302,21 @@ module RDFS
     query = Query.new.distinct(:o).where(self, predicate, :o)
 		query.execute(:flatten => flatten_results)
   end  
+
+  # returns all rdf:types of this resource
+  def types
+    type = Namespace.lookup(:rdf, :type)
+
+    # we lookup the type in the database
+    types = Query.new.distinct(:t).where(self,type,:t).execute
+
+    # we are also always of type rdfs:resource and of our own class (e.g. foaf:Person)
+		defaults = []
+		defaults << Namespace.lookup(:rdfs,:Resource)
+		defaults << self.class.class_uri
+
+    (types + defaults).uniq
+  end
+
 end
 end
