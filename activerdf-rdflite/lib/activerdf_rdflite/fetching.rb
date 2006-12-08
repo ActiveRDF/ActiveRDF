@@ -25,15 +25,15 @@ class FetchingAdapter < RDFLite
 
 		$activerdflog.debug "fetching from #{url}"
 
-		#TODO: waiting for an answer on how to enable --scan over ruby api
 		#model = Redland::Model.new
 		#parser = Redland::Parser.new('rdfxml')
+		#scan = Redland::Uri.new('http://feature.librdf.org/raptor-scanForRDF')
+		#enable = Redland::Literal.new('1')
+		#Redland::librdf_parser_set_feature(parser, scan.uri, enable.node)
 		#parser.parse_into_model(model, url)
-		#triples = Redland.librdf_model_to_string(model.model, nil, 'ntriples', '', nil)
+		#triples = Redland::Serializer.ntriples.model_to_string(nil, model)
 
-		#TODO: using rapper cmdline in the meantime
-		triples = `rapper --quiet --scan "#{url}"`
-
+		triples = `rapper --scan "#{url}"`
 		lines = triples.split($/)
 		$activerdflog.debug "found #{lines.size} triples"
 
