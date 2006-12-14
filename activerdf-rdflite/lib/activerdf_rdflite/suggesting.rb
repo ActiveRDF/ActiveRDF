@@ -41,6 +41,7 @@ class SuggestingAdapter < FetchingAdapter
 
 		# fetch all predicates co-occurring with our predicates
 		candidates = predicates.collect {|p| cooccurring(p) }
+		return nil if candidates.empty?
 
 		# perform set intersection
 		candidates = candidates.inject {|intersect, n| intersect & n }.flatten
