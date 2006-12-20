@@ -50,6 +50,9 @@ class RedlandAdapter < ActiveRdfAdapter
 		clauses = query.select_clauses.size
 		redland_query = Redland::Query.new(qs, 'sparql')
 		query_results = @model.query_execute(redland_query)
+
+		# if ASK query we can immediately return redland's answer
+		return [[query_results.get_boolean?]] if query.ask?
 		
 		$activerdflog.debug "RedlandAdapter: found #{query_results.size} query results" if $activerdflog.level == Logger::DEBUG
 
@@ -62,6 +65,7 @@ class RedlandAdapter < ActiveRdfAdapter
 		  $activerdflog.debug "RedlandAdapter: query has failed without bindings" if $activerdflog.level == Logger::DEBUG
 		  return false
 		end
+
 
 		# convert the result to array
 		#TODO: if block is given we should not parse all results into array first
