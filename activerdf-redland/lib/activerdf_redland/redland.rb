@@ -14,8 +14,6 @@ class RedlandAdapter < ActiveRdfAdapter
 	
 	# instantiate connection to Redland database
 	def initialize(params = {})
-
-    # TODO: check if the given file exists, or at least look for an exception from redland
 		if params[:location] and params[:location] != :memory
 			# setup file locations for redland database
 			path, file = File.split(params[:location])
@@ -27,17 +25,19 @@ class RedlandAdapter < ActiveRdfAdapter
 		
 		$activerdflog.info "RedlandAdapter: initializing with type: #{type} file: #{file} path: #{path}"
 		
-		@store = Redland::HashStore.new(type, file, path, false)
-		@model = Redland::Model.new @store
-
-		@reads = true
-		@writes = true
+		begin
+			@store = Redland::HashStore.new(type, file, path, false)
+			@model = Redland::Model.new @store
+			@reads = true
+			@writes = true
+		rescue Redland::RedlandError => e
+			raise ActiveRdfError, "could not initialise Redland database: #{e.message}"
+		end
 	end	
 	
 	# load a file from the given location with the given syntax into the model.
 	# use Redland syntax strings, e.g. "ntriples" or "rdfxml", defaults to "ntriples"
 	def load(location, syntax="ntriples")
-    $activerdflog.debug "Redland: loading file with syntax: #{syntax} and location: #{location}" if $activerdflog.level == Logger::DEBUG
     parser = Redland::Parser.new(syntax, "", nil)
     parser.parse_into_model(@model, "file:#{location}")
 	end
@@ -45,24 +45,24 @@ class RedlandAdapter < ActiveRdfAdapter
 	# yields query results (as many as requested in select clauses) executed on data source
 	def query(query)
 		qs = Query2SPARQL.translate(query)
-    $activerdflog.debug "RedlandAdapter: executing SPARQL query #{qs}" if $activerdflog.level == Logger::DEBUG
+    $activerdflog.debug "RedlandAdapter: executing SPARQL query #{qs}"
 		
 		clauses = query.select_clauses.size
 		redland_query = Redland::Query.new(qs, 'sparql')
 		query_results = @model.query_execute(redland_query)
 
-		# if ASK query we can immediately return redland's answer
+		# return Redland's answer without parsing if ASK query
 		return [[query_results.get_boolean?]] if query.ask?
 		
-		$activerdflog.debug "RedlandAdapter: found #{query_results.size} query results" if $activerdflog.level == Logger::DEBUG
+		$activerdflog.debug "RedlandAdapter: found #{query_results.size} query results"
 
 		# verify if the query has failed
 		if query_results.nil?
-		  $activerdflog.debug "RedlandAdapter: query has failed with nil result" if $activerdflog.level == Logger::DEBUG
+		  $activerdflog.debug "RedlandAdapter: query has failed with nil result"
 		  return false
 		end
 		if not query_results.is_bindings?
-		  $activerdflog.debug "RedlandAdapter: query has failed without bindings" if $activerdflog.level == Logger::DEBUG
+		  $activerdflog.debug "RedlandAdapter: query has failed without bindings"
 		  return false
 		end
 
@@ -113,16 +113,16 @@ class RedlandAdapter < ActiveRdfAdapter
 	
 	# add triple to datamodel
 	def add(s, p, o)
-    $activerdflog.debug "adding triple #{s} #{p} #{o}" if $activerdflog.level == Logger::DEBUG
+    $activerdflog.debug "adding triple #{s} #{p} #{o}"
 
 		# verify input
 		if s.nil? || p.nil? || o.nil?
-      $activerdflog.debug "cannot add triple with empty subject, exiting" if $activerdflog.level == Logger::DEBUG
+      $activerdflog.debug "cannot add triple with empty subject, exiting"
 		  return false
 		end 
 		
 		unless s.respond_to?(:uri) && p.respond_to?(:uri)
-      $activerdflog.debug "cannot add triple where s/p are not resources, exiting"		 if $activerdflog.level == Logger::DEBUG
+      $activerdflog.debug "cannot add triple where s/p are not resources, exiting"
 		  return false
 		end
 	
@@ -149,20 +149,22 @@ class RedlandAdapter < ActiveRdfAdapter
 		Redland::librdf_model_sync(@model.model).nil?
 	end
 	alias flush save
+
+	# returns all triples in the datastore
+	def dump
+		Redland.librdf_model_to_string(@model.model, nil, 'ntriples')
+	end
 	
 	# returns size of datasources as number of triples
-	#
 	# warning: expensive method as it iterates through all statements
 	def size
 		# we cannot use @model.size, because redland does not allow counting of 
 		# file-based models (@model.size raises an error if used on a file)
-		
 		# instead, we just dump all triples, and count them
-		stats = []
-    @model.statements{|s,p,o| stats << [s,p,o]}
-		stats.size
+    @model.triples.size
 	end
 	
+	private
 	################ helper methods ####################
 	#TODO: if block is given we should not parse all results into array first
 	def query_result_to_array(query_results)

@@ -290,10 +290,10 @@ module RDFS
     "<#{uri}>"
   end
 
-	# label of resource (rdfs:label if available, uri otherwise)
-  def label
-    get_property_value(Namespace.lookup(:rdfs,:label)) || uri
-  end
+#	# label of resource (rdfs:label if available, uri otherwise)
+#  def label
+#    get_property_value(Namespace.lookup(:rdfs,:label)) || uri
+#  end
 
   private
   def get_property_value(predicate, args=[])

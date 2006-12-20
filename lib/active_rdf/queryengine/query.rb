@@ -102,7 +102,7 @@ class Query
 				raise(ActiveRdfError, "cannot add a where clause with p #{p}: p must be a resource or a variable")
 			end
 
-			@where_clauses << [s,p,o,c].collect{|arg| parametrise(arg)}.compact
+			@where_clauses << [s,p,o,c].collect{|arg| parametrise(arg)}
 		end
     self
   end

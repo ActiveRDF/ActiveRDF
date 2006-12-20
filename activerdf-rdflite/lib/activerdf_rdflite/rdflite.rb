@@ -132,8 +132,11 @@ class RDFLite < ActiveRdfAdapter
 		# get internal representation (array)
 		quad = [s,p,o,c].collect {|r| internalise(r) }
 
-		# add triple to database
-		add_internal(@db,*quad)
+		# insert the triple into the datastore
+		@db.execute('insert into triple values (?,?,?,?)', *quad)
+
+		# if keyword-search available, insert the object into keyword search
+		@ferret << {:subject => s, :object => o} if keyword_search?
 	end
 
 	# flushes openstanding changes to underlying sqlite3
@@ -148,48 +151,48 @@ class RDFLite < ActiveRdfAdapter
 		ntriples = File.readlines(file)
 		$activerdflog.debug "read #{ntriples.size} triples from file #{file}"
 
-		context = "<file:#{file}>"
-		add_ntriples(ntriples, context)
-	end
-
-	# adds string of ntriples from given context to database
-	def add_ntriples(ntriples, context=nil)
-		# convert context to internal format if RDFS::Resource
-		context = internalise(context)
+		# use filename as context
+		context = internalise("<file:#{file}>")
 
 		# need unique identifier for this batch of triples (to detect occurence of 
 		# same bnodes _:#1
 		uuid = `uuidgen`
 
 		# add each triple to db
-		@db.transaction do |tr|
-			ntriples.each do |triple|
-				nodes = triple.scan(Node)
+		@db.transaction
+		insert = @db.prepare('insert into triple values (?,?,?,?);')
 
-				# handle bnodes if necessary (bnodes need to have uri generated)
-				subject = case nodes[0]
-									when BNode
-										"<http://www.activerdf.org/bnode/#$1/#{uuid}>"
-									else
-										nodes[0]
-									end
+		ntriples.each do |triple|
+			nodes = triple.scan(Node)
 
-				predicate = nodes[1]
+			# handle bnodes if necessary (bnodes need to have uri generated)
+			subject = case nodes[0]
+								when BNode
+									"<http://www.activerdf.org/bnode/#$1/#{uuid}>"
+								else
+									nodes[0]
+								end
 
-				# handle bnodes and literals if necessary (literals need unicode fixing)
-				object = case nodes[2]
-								 when BNode
-									 "<http://www.activerdf.org/bnode/#$1/#{uuid}>"
-								 when Literal
-									 fix_unicode(nodes[2])
-								 else
-									 nodes[2]
-								 end
+			predicate = nodes[1]
 
-				add_internal(tr, subject, predicate, object, context)
-			end
+			# handle bnodes and literals if necessary (literals need unicode fixing)
+			object = case nodes[2]
+							 when BNode
+								 "<http://www.activerdf.org/bnode/#$1/#{uuid}>"
+							 when Literal
+								 fix_unicode(nodes[2])
+							 else
+								 nodes[2]
+							 end
+
+			# insert triple into database
+			insert.execute(subject, predicate, object, context)
+
+			# if keyword-search available, insert the object into keyword search
+			@ferret << {:subject => subject, :object => object} if keyword_search?
 		end
 
+		@db.commit
 		@db
 	end
 
@@ -229,16 +232,6 @@ class RDFLite < ActiveRdfAdapter
 	Literal = /"([^"]*)"/
 	Node = Regexp.union(/_:\S*/,/<[^>]*>/,/"[^"]*"/)
 	SPOC = ['s','p','o','c']
-
-	# adds s,p,o into sqlite and ferret
-	# s,p,o should be in internal format: <uri> and "literal"
-	def add_internal(db, s, p, o, c)
-		# insert the triple into the datastore
-		db.execute('insert into triple values (?,?,?,?)', s,p,o,c)
-
-		# if keyword-search available, insert the object into keyword search
-		@ferret << {:subject => s, :object => o} if keyword_search?
-	end
 
 	# construct select clause
 	def construct_select(query)
@@ -375,7 +368,7 @@ class RDFLite < ActiveRdfAdapter
 			raise ActiveRdfError, "where clause #{clause} is not a triple" unless clause.is_a?(Array)
 			clause.each_with_index do |subclause, i|
 				# dont add where clause for variables
-				unless subclause.is_a?(Symbol)
+				unless subclause.is_a?(Symbol) || subclause.nil?
 					conditions = compute_where_condition(i, subclause, query.reasoning? && reasoning?)
 					if conditions.size == 1
 						where << "t#{level}.#{SPOC[i]} = ?"
