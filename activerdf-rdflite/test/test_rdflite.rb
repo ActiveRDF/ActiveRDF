@@ -205,4 +205,27 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 		assert_equal 29, TEST::Person.find_all[1].age.to_i
 		assert_equal "Another Person", TEST::Person.find_all[1].name
 	end
+
+	def test_multi_join
+		adapter = ConnectionPool.add_data_source :type => :rdflite
+		type = Namespace.lookup(:rdf, 'type')
+		transProp = Namespace.lookup(:owl, 'TransitiveProperty')
+
+		Namespace.register(:test, 'http://test.com/')
+		ancestor = Namespace.lookup(:test, 'ancestor')
+		sue = Namespace.lookup(:test, 'Sue')
+		mary = Namespace.lookup(:test, 'Mary')
+		anne = Namespace.lookup(:test, 'Anne')
+
+		adapter.add ancestor, type, transProp
+		adapter.add sue, ancestor, mary
+		adapter.add mary, ancestor, anne
+
+		# test that query with multi-join (joining over 1.p==2.p and 1.o==2.s) works
+		query = Query.new.select(:Sue, :p, :Anne)
+		query.where(:p, type, transProp)
+		query.where(:Sue, :p, :Mary)
+		query.where(:Mary, :p, :Anne)
+		assert_equal 1, query.execute.size
+	end
 end
