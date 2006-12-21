@@ -335,7 +335,11 @@ class RDFLite < ActiveRdfAdapter
 				# but on the other hand, restating the aliases gives ambiguity:
 				# "from triple as t1 join triple as t2 on ... join triple as t1 ..."
 				# is ambiguous
-				join << " join triple as #{buddyalias} on #{termjoin} = #{buddyjoin} "
+				if join_stmt.include?(buddyalias)
+					join << "and #{termjoin} = #{buddyjoin}"
+				else
+					join << " join triple as #{buddyalias} on #{termjoin} = #{buddyjoin} "
+				end
 			end
 			join_stmt << join
 			
