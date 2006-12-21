@@ -25,7 +25,7 @@ setup_gem(NAME,VERSION) do |spec|
   spec.author="Eyal Oren <eyal.oren@deri.org"
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('uuidtools')
-  spec.add_dependency('activerdf', '>= 1.1')
+  spec.add_dependency('activerdf', '>= 1.2')
   spec.add_dependency('sqlite3-ruby', '>= 1.1.0.1')
 end
 
