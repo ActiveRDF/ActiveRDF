@@ -53,7 +53,7 @@ class FederationManager
       results.flatten! if q.select_clauses.size == 1 or q.ask?
 
       # and remove array (return single value) unless asked not to
-      if options[:flatten]
+      if options[:flatten] or q.count?
         case results.size
         when 0
           final_results = nil

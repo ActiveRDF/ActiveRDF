@@ -1,0 +1,5 @@
+_:1  <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://activerdf.org/test/Person> .
+_:1  <http://activerdf.org/test/age> "27" .
+_:1  <http://activerdf.org/test/name> "Eyal Oren" .
+_:2  <http://activerdf.org/test/age> "27" .
+_:2  <http://activerdf.org/test/eye> "blue" .

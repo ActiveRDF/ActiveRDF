@@ -5,6 +5,7 @@
 require 'sqlite3'
 require 'active_rdf'
 require 'federation/connection_pool'
+require_gem 'uuidtools'
 
 $activerdflog.info "loading RDFLite adapter"
 
@@ -91,9 +92,9 @@ class RDFLite < ActiveRdfAdapter
 	# symbol parameters match anything: delete(:s,:p,:o) will delete all triples
 	# you can specify a context to limit deletion to that context: 
 	# delete(:s,:p,:o, 'http://context') will delete all triples with that context
-	def delete(s,p,o,c=nil)
-		# convert input to internal format
-		quad = [s,p,o,c].collect {|r| internalise(r) }
+	def delete(s, p, o, c=nil)
+		# convert non-nil input to internal format
+		quad = [s,p,o,c].collect {|r| r.nil? ? nil : internalise(r) }
 
     # construct where clause for deletion (for all non-nil input)
 		where_clauses = []
@@ -152,11 +153,11 @@ class RDFLite < ActiveRdfAdapter
 		$activerdflog.debug "read #{ntriples.size} triples from file #{file}"
 
 		# use filename as context
-		context = internalise("<file:#{file}>")
+		context = internalise(RDFS::Resource.new("file:#{file}"))
 
 		# need unique identifier for this batch of triples (to detect occurence of 
 		# same bnodes _:#1
-		uuid = `uuidgen`
+		uuid = UUID.random_create.to_s
 
 		# add each triple to db
 		@db.transaction
@@ -168,7 +169,7 @@ class RDFLite < ActiveRdfAdapter
 			# handle bnodes if necessary (bnodes need to have uri generated)
 			subject = case nodes[0]
 								when BNode
-									"<http://www.activerdf.org/bnode/#$1/#{uuid}>"
+									"<http://www.activerdf.org/bnode/#{uuid}/#$1>"
 								else
 									nodes[0]
 								end
@@ -203,9 +204,6 @@ class RDFLite < ActiveRdfAdapter
 
 		# executing query, passing all where-clause values as parameters (so that 
 		# sqlite will encode quotes correctly)
-		#constraints = right_hand_sides.collect { |value| value.to_s }
-
-		# executing query
 		results = @db.execute(sql, *conditions)
 
 		# if ASK query, we check whether we received a positive result count
