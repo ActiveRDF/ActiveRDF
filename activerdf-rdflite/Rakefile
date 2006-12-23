@@ -13,13 +13,13 @@ setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
 desc "test and package gem"
 task :default => [:test, :package]
 
-# get VERSION from commandline
-VERSION =  '1.2'
+# get @VERSION from commandline
+@VERSION =  '1.2.1'
 NAME="activerdf_rdflite"
-GEMNAME="#{NAME}-#{VERSION}.gem"
+GEMNAME="#{NAME}-#{@VERSION}.gem"
 
 # define package task
-setup_gem(NAME,VERSION) do |spec|
+setup_gem(NAME,@VERSION) do |spec|
   spec.summary = "an RDF database for usage in ActiveRDF (based on sqlite3)" 
   spec.description = spec.summary
   spec.author="Eyal Oren <eyal.oren@deri.org"

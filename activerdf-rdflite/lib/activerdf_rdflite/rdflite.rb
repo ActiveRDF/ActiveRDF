@@ -179,7 +179,7 @@ class RDFLite < ActiveRdfAdapter
 			# handle bnodes and literals if necessary (literals need unicode fixing)
 			object = case nodes[2]
 							 when BNode
-								 "<http://www.activerdf.org/bnode/#$1/#{uuid}>"
+								 "<http://www.activerdf.org/bnode/#{uuid}/#$1>"
 							 when Literal
 								 fix_unicode(nodes[2])
 							 else
