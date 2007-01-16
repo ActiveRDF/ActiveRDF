@@ -155,6 +155,12 @@ class RDFLite < ActiveRdfAdapter
 		# use filename as context
 		context = internalise(RDFS::Resource.new("file:#{file}"))
 
+		add_ntriples(ntriples, context)
+	end
+
+	# adds ntriples from given context into datastore
+	def add_ntriples(ntriples, context)
+
 		# need unique identifier for this batch of triples (to detect occurence of 
 		# same bnodes _:#1
 		uuid = UUID.random_create.to_s
