@@ -276,7 +276,8 @@ module RDFS
 			else
 				q = Query.new.select(:p)
 			end
-			q.where(self,:p, :o).execute
+			direct = q.where(self,:p, :o).execute
+			return (direct + direct.collect {|d| ancestors(d)}).flatten.uniq
 		end
 
 		def property_accessors
@@ -298,6 +299,12 @@ module RDFS
 	#  end
 
 		private
+
+		def ancestors(predicate)
+			subproperty = Namespace.lookup(:rdfs,:subPropertyOf)
+			Query.new.distinct(:p).where(predicate, subproperty, :p).execute
+		end
+
 		def predicate_invocation(predicate, args, update)
 			if update
 				args.each do |value|
