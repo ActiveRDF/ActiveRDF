@@ -25,7 +25,7 @@ class FetchingAdapter < RDFLite
 		#parser.parse_into_model(model, url)
 		#triples = Redland::Serializer.ntriples.model_to_string(nil, model)
 
-		triples = `rapper --scan "#{url}"`
+		triples = `rapper --scan --quiet "#{url}"`
 		lines = triples.split($/)
 		$activerdflog.debug "found #{lines.size} triples"
 

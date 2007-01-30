@@ -127,8 +127,8 @@ class RDFLite < ActiveRdfAdapter
 	# s,p must be resources, o can be primitive data or resource
 	def add(s,p,o,c=nil)
 		# check illegal input
-		raise(ActiveRdfError, "adding non-resource #{s}") unless s.respond_to?(:uri)
-		raise(ActiveRdfError, "adding non-resource #{p}") unless p.respond_to?(:uri)
+		raise(ActiveRdfError, "adding non-resource #{s} while adding (#{s},#{p},#{o},#{c})") unless s.respond_to?(:uri)
+		raise(ActiveRdfError, "adding non-resource #{p} while adding (#{s},#{p},#{o},#{c})") unless p.respond_to?(:uri)
 
 		# get internal representation (array)
 		quad = [s,p,o,c].collect {|r| internalise(r) }
