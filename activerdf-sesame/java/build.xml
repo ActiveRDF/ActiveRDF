@@ -1,0 +1,311 @@
+<?xml version="1.0"?>
+<project name="generic-build" default="build" basedir=".">
+	
+	<!--
+		This is the generic ant build file 
+		
+		The configuration for the targets is in ./settings.xml. 
+	
+		
+		It currently supports the following targets:
+		- compile: compile all sources
+		- jar: create a jar file from the compiled sources
+		- build: put the jar and all librarys from ./lib into ./dest/jars (needed by the buildmanager)
+		- compile-tests: compile the test sources
+		- run-tests: run the compiled tests
+		- dist-zip: distribution zip file for end users (jar, libs and javadoc)
+		- src-zip: distribution zip only with all sources
+		- all-zip: distribution zip with jar, libs, javadoc and all sources
+		
+	-->
+	
+	<!-- settings.xml contains _ALL_ project specific settings -->
+	<import file="settings.xml"/>
+	
+	<target name="log" description="enables tracking the build process itself">
+		<buildnumber file="build.number"/>
+	</target>
+	
+	<target name="temp" description="crete and clean temp, create and clean dest">
+		<mkdir description="prepare temp dir" dir="temp"/>
+		<mkdir description="prepare temp dir" dir="dest"/>
+		<delete includeemptydirs="true">
+			<fileset dir="temp" includes="**/*"/>
+			<fileset dir="dest" includes="**/*"/> 
+		</delete>
+		<mkdir description="prepare temp dir" dir="temp/dest"/>
+		<mkdir description="prepare temp dir" dir="temp/distribution"/>
+		<mkdir dir="dest/jars"/>
+	</target>
+
+	
+    <target name="compile" depends="log, temp" description="compile the sources for everything except tests">
+       <echo>Compiling ...</echo>
+       <mkdir dir="temp/build" />
+        <!-- debug level can be removed ot get smaller jars -->
+        <javac 
+        		destdir="temp/build"
+        		compiler="javac1.5"  
+        		source="1.5"  
+        		verbose="false" 
+	        	debug="on"
+ 		       	debuglevel="lines,vars,source"
+        	>
+   		<src refid="src-path" />
+   		<classpath refid="src-classpath"/>
+   		</javac>
+	</target>	
+	
+    <target name="jar" depends="compile" description="make the jar library of all sources except tests">
+    	<mkdir dir="temp/manifest" />
+      	<echo>Creating manifest ...</echo>
+        	<manifest file="temp/manifest/MANIFEST.MF"  >
+    	    <attribute name="Built-By" value="${user.name}"/>
+        	<attribute name="Built-Number" value="${build.number}"/>
+    	    <section name="common">
+    	      <attribute name="Specification-Title" value="Example"/>
+    	      <attribute name="Specification-Version" value="${version-number}"/>
+    	      <attribute name="Specification-Vendor" value="${creator}"/>
+    	      <attribute name="Implementation-Title" value="${product-title}"/>
+    	      <attribute name="Implementation-Version" value="${version-number} ${TODAY}"/> 
+    	      <attribute name="Implementation-Vendor" value="${creator}"/>
+    	    </section>
+    	  </manifest>
+    	<echo>Creating JAR ...</echo>
+    	<jar compress="true" manifest="temp/manifest/MANIFEST.MF" manifestencoding="UTF-8"
+    	   destfile="../ext/${product-name}.jar">
+	   		<fileset dir="temp/build/">
+	    			<include name="**"/>
+	    	</fileset>
+    		<fileset refid="jarfile-includes"/>
+		</jar>
+    </target>
+	
+	<!-- build manager targets -->
+	
+	<target name="build" depends="jar" description="copy the jar and all libs of this project to dest/jars (used by the buildmanager)">
+		<echo>Copying all libs and the jar to dest/jars</echo>
+		<mkdir dir="../ext" />
+		<copy description="copy all libs on which this project depends" todir="../ext">
+			<fileset refid="export-libs" /> 
+		</copy>
+		
+<!--		<mkdir dir="dest/jars" />
+		<copy description="copy all libs on which this project depends" todir="dest/jars">
+			<fileset refid="all-libs" /> 
+		</copy> -->
+	</target>
+	
+	
+	<!-- automated testing -->
+
+	<target name="compile-tests" depends="compile" description="compile the tests">
+		<mkdir description="prepare test temp dir" dir="temp/build-test"/>
+		<echo>Compiling test classes ...</echo>	
+		<javac 
+			destdir="temp/build-test" 
+			compiler="javac1.5"  
+			source="1.5" 
+			verbose=""
+        	debug="on"
+		    debuglevel="lines,vars,source"
+		>
+	       	<src refid="test-src-path"/>
+			<classpath refid="test-src-classpath"/>
+		</javac>		
+	</target>
+	
+	<target name="run-tests" depends="compile-tests" description="run the tests">
+		<junit haltonfailure="true" printsummary="yes">
+			<classpath refid="test-src-classpath"/>
+			<formatter type="brief" usefile="false" />
+			<batchtest>
+				<fileset refid="test-cases"/>
+			</batchtest>
+		</junit>
+	</target>
+
+	<!-- prepare for the distribution -->
+	
+	<target name="javadoc" depends="temp" description="generate javadoc into temp/doc/javadoc">
+		<echo>Generating javadocs ...</echo>
+		<mkdir dir="temp/javadoc" />
+		<javadoc
+			access="public" 
+			author="true" 
+			destdir="temp/javadoc" 
+			doctitle="${product-title}"
+			failonerror="true"
+			linksource="true"
+			nodeprecated="false" 
+			nodeprecatedlist="false" 
+			noindex="false" 
+			nonavbar="false" 
+			notree="false" 
+			overview="src/overview.html" 
+			source="1.5"
+			splitindex="true" 
+			use="true"
+			verbose="false"
+			version="true"
+			windowtitle="${product-title}"
+			packagenames="${javadoc-packages}"
+		>
+		    <sourcepath refid="src-path" />
+	    	<classpath>
+	    	    <pathelement path="${classpath}"/>
+	    	    <fileset refid="all-libs" />
+	    	    <pathelement location="build"/>
+	        </classpath>
+		</javadoc>
+	</target>
+
+	
+	<!-- distribution targets -->
+	
+	<property name="dist-zip" value="${product-name}-${version-number}-dist.zip"
+		description="name of the distributed zip file" />
+	<property name="dist-zip-folder" value="${product-name}-${version-number}-dist"
+		description="name of the base folder of the distributed zip file" />
+	<target name="dist-zip" depends="javadoc, build" description="create distribution zip file for end users">
+		<mkdir dir="temp/dist-zip/${dist-zip-folder}" />
+		<copy description="copy all libs on which this project depends" todir="temp/dist-zip/${dist-zip-folder}/lib">
+	   		<fileset dir="dest/jars/">
+	    			<include name="**"/>
+	    	</fileset>
+		</copy>
+		
+		<mkdir dir="temp/dist-zip/${dist-zip-folder}/doc/" />
+		<copy description="copy java doc" todir="temp/dist-zip/${dist-zip-folder}/doc/javadoc">
+	   		<fileset dir="temp/javadoc">
+	    			<include name="**"/>
+	    	</fileset>
+		</copy>
+		
+		<copy description="copy documentation" todir="temp/dist-zip/${dist-zip-folder}/doc/">
+			<fileset refid="documentation" description="other documentation files"/>
+		</copy>
+		
+		<copy todir="temp/dist-zip/${dist-zip-folder}">
+			<fileset refid="data" description="files needed at runtime"/>
+		</copy>
+		
+		<copy todir="temp/dist-zip/${dist-zip-folder}">
+			<fileset dir="." description="include the changelog">
+				<include name="changelog.txt"/>
+			</fileset>
+		</copy>
+				
+		<zip compress="true" whenempty="fail" destfile="dest/${dist-zip}" basedir="temp/dist-zip"/>
+	</target>
+	
+	<property name="src-zip" value="${product-name}-${version-number}-src.zip"/>
+	<property name="src-zip-folder" value="${product-name}-${version-number}-src"/>
+	<target name="src-zip" depends="temp" description="create distribution zip file with the sources">
+		<mkdir dir="temp/src-zip/${src-zip-folder}" />
+		<copy todir="temp/src-zip/${src-zip-folder}">
+			<fileset refid="src" description="source files"/> 
+			<fileset refid="test-src" description="test source files"/> 
+			<fileset dir=".">
+				<include name="settings.xml"/>
+				<include name="build.xml"/>
+				<include name="build.number"/>
+			</fileset>
+		</copy>
+
+	   <zip compress="true" whenempty="fail" 
+	       	destfile="dest/${src-zip}" basedir="temp/src-zip"/>
+	</target>
+
+	<property name="all-zip" value="${product-name}-${version-number}-all.zip"/>
+	<property name="all-zip-folder" value="${product-name}-${version-number}-all"/>
+	<target name="all-zip" depends="javadoc, build" 
+		description="create distribution zip file with all contents of src and dist zip">
+
+		<mkdir dir="temp/all-zip/${all-zip-folder}" />
+		<copy description="copy all libs on which this project depends" todir="temp/all-zip/${all-zip-folder}/lib">
+	   		<fileset dir="dest/jars/">
+	    			<include name="**"/>
+	    	</fileset>
+		</copy>
+		
+		<mkdir dir="temp/all-zip/${all-zip-folder}/doc/" />
+		<copy description="copy java doc" todir="temp/all-zip/${all-zip-folder}/doc/javadoc">
+	   		<fileset dir="temp/javadoc">
+	    			<include name="**"/>
+	    	</fileset>
+		</copy>
+		
+		<copy description="copy documentation" todir="temp/all-zip/${all-zip-folder}/doc/">
+			<fileset refid="documentation" description="other documentation files"/>
+		</copy>
+
+		<copy todir="temp/all-zip/${all-zip-folder}">
+			<fileset refid="data" description="files needed at runtime"/>
+		</copy>
+		
+		<copy todir="temp/all-zip/${all-zip-folder}">
+			<fileset dir="." description="include the changelog">
+				<include name="changelog.txt"/>
+			</fileset>
+		</copy>
+
+		<copy todir="temp/all-zip/${all-zip-folder}">
+			<fileset refid="src" description="source files"/> 
+			<fileset refid="test-src" description="test source files"/> 
+			<fileset dir=".">
+				<include name="settings.xml"/>
+				<include name="build.xml"/>
+				<include name="build.number"/>
+			</fileset>
+		</copy>
+		
+		<zip compress="true" whenempty="fail" destfile="dest/${all-zip}" basedir="temp/all-zip"/>
+				
+	</target>
+	
+	
+	<!-- legacy targets for updating the www module/folder of the project -->
+	
+	<target name="www-zip" depends="temp">
+		<copy todir="temp/www">
+           <fileset dir="${product-www}">
+             <exclude name="*.project"/>
+             <exclude name="javadoc/**"/>
+             <exclude name="bin/**"/>
+           	 <exclude name="*.bak"/>
+           </fileset>
+		</copy>
+		<delete dir="temp/www/bin" />
+		<delete dir="temp/www/javadoc" />
+		<mkdir dir="temp/dest"/>
+	<zip basedir="temp/www" file="temp/dest/${product-name}-${version-number}-www.zip"/>
+	</target>
+
+	<target name="zip-all" depends="src-zip, jar, www-zip, temp, javadoc">
+		<copy file="dest/${src-zip}" tofile="temp/dest/${src-zip}" />
+		<copy file="dest/${javadoc-zip}" tofile="temp/dest/${javadoc-zip}" />
+		<!-- <copy file="dest/${lib-zip}" tofile="temp/dest/${lib-zip}" /> -->
+		<copy todir="temp/dest">
+			<fileset dir=".">
+				<include name="${product-name}-changelog.txt"/>
+			</fileset>
+		</copy>
+
+       <zip description="create zip"
+       	basedir="temp/dest" compress="true" whenempty="fail" 
+       	zipfile="dest/${product-name}-${version-number}-all.zip" />
+	</target>
+		
+	<target name="www" depends="javadoc, jar, zip-all">
+		<copy description="copy javadoc" 
+			todir="${product-www}/javadoc">
+			<fileset dir="doc" includes="**/*" />
+		</copy>
+		<copy description="copy destination files" 
+			todir="${product-www}/bin">
+			<fileset dir="dest" includes="**/*" />
+		</copy>
+	</target>
+	
+</project>

@@ -1,0 +1,65 @@
+<rdf:RDF
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+	xmlns:owl="http://www.w3.org/2002/07/owl#"
+	xmlns:daml="http://www.daml.org/2001/03/daml+oil#"
+	xmlns:foaf="http://xmlns.com/foaf/0.1/"
+	xmlns:syn="http://purl.org/rss/1.0/modules/syndication/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/">
+
+<rdf:Description rdf:about="">
+	<rdfs:label>FOAF file of Eyal Oren</rdfs:label>
+	<syn:updateFrequency>1</syn:updateFrequency>
+	<syn:updatePeriod>weekly</syn:updatePeriod>
+</rdf:Description>
+
+<foaf:Person rdf:about="#me">
+	<foaf:name>Eyal Oren</foaf:name>
+	<foaf:title>ir.</foaf:title>
+	<foaf:gender>male</foaf:gender>
+	<foaf:mbox rdf:resource="mailto:eyal.oren@deri.org" />
+	<foaf:homepage rdf:resource="http://www.eyaloren.org/"/>
+	<foaf:workplaceHomepage rdf:resource="http://www.deri.ie/"/>
+	<foaf:img rdf:resource="http://www.eyaloren.org/eyal.jpg"/>
+
+	<foaf:currentProject>
+		<foaf:Project rdf:about="https://launchpad.net/products/activerdf/+rdf">
+			<foaf:name>ActiveRDF</foaf:name>
+			<foaf:homepage rdf:resource="http://www.activerdf.org/"/>
+		</foaf:Project>
+	</foaf:currentProject>
+
+	<foaf:currentProject>
+		<foaf:Project rdf:about="https://launchpad.net/products/browserdf/+rdf">
+			<foaf:name>BrowseRDF</foaf:name>
+			<foaf:homepage rdf:resource="http://www.browserdf.org/"/>
+		</foaf:Project>
+	</foaf:currentProject>
+
+	<foaf:knows rdf:resource="http://www.w3.org/People/Berners-Lee/card#i"/>
+	<foaf:knows rdf:resource="http://richard.cyganiak.de/foaf.rdf#cygri"/>
+	<foaf:knows rdf:resource="http://www.harth.org/~andreas/foaf.rdf#ah"/>
+	<foaf:knows rdf:resource="http://www.leobard.net/rdf/foaf.xml#me"/>
+	<foaf:knows rdf:resource="http://www.debruijn.net/foaf.rdf#me"/>
+	<foaf:knows rdf:resource="http://platon.escet.urjc.es/~axel/foaf.rdf#me"/>
+	<foaf:knows rdf:resource="http://www.kr.tuwien.ac.at/staff/roman/foaf.rdf#me"/>
+
+	<foaf:knows><foaf:Person rdf:about="http://sw.deri.org/~knud"> 
+		<foaf:name>Knud Möller</foaf:name>
+		<rdfs:seeAlso rdf:resource="http://sw.deri.org/~knud/knudfoaf.rdf"/>
+	</foaf:Person></foaf:knows>
+
+	<foaf:knows><foaf:Person rdf:about="http://www-cdr.stanford.edu/~petrie/foaf.rdf#me">
+		<foaf:name>Charles Petrie</foaf:name>
+	</foaf:Person></foaf:knows>
+
+	<foaf:knows><foaf:Person rdf:about="http://www.isi.edu/~stefan/foaf.rdf">
+		<foaf:name>Stefan Decker</foaf:name>
+	</foaf:Person></foaf:knows>
+
+	<foaf:knows><foaf:Person rdf:about="http://www.aifb.uni-karlsruhe.de/Personen/viewPersonOWL/id2076instance">
+		<foaf:name>Max Völkel</foaf:name>
+	</foaf:Person></foaf:knows>
+
+</foaf:Person>
+</rdf:RDF>

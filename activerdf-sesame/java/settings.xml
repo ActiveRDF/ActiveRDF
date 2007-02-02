@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<project name="rdf2go" basedir=".">
+		
+	<!-- 
+		The buildmanager currently can handle 5 groups of capabilities: 
+	
+		1.) generic and required settings for the project (name, version, classes for which to generate java doc
+		    and a list of all libraries used by the project)
+	    2.) filesets and paths needed to build just the sources of the project
+	    3.) data files (files needed at runtime by the project) 
+	    4.) files which have to be included as documentation 
+	    5.) tests to compile and run  (and how these tests are named)
+	
+	The groups are marked below (although some might be empty).
+	
+	If you want to add new capabilities to this project please refer to buildmanager/settings-example.xml
+	to see how to configure them.
+	-->
+
+	<!-- 
+	==========================================================================================================
+	1.) generic and required settings for the project
+	==========================================================================================================
+	-->	
+	
+	<property name="version-number" value="0.1" />
+	<property name="product-name" value="wrapper-sesame2" description="name for filenames" />
+	<property name="product-title" value="Wrapper-Sesame2" description="display title"/>
+	<property name="product-www" value="./../${product-name}-www"/>
+	<property name="creator" value="DERI Galway, Benjamin Heitmann"/>
+	<property name="javadoc-packages" value="
+		org.activerdf.wrapper.sesame2
+	" />
+	
+	<fileset id="all-libs" dir="lib">
+    	<include name="openrdf-sesame-2.0-alpha4-onejar.jar"/>
+    	<include name="junit-3.8.2.jar"/>
+	</fileset>
+
+	<fileset id="export-libs" dir="lib">
+    	<include name="openrdf-sesame-2.0-alpha4-onejar.jar"/>
+	</fileset>
+	
+	
+	<!-- 
+	==========================================================================================================
+    2.) filesets and paths needed to build just the sources of the project
+	==========================================================================================================
+	-->
+	
+	<fileset id="src" dir=".">
+		<include name="src/**"/>
+		<!-- <include name="test-src/**"/> -->
+	</fileset>
+
+   	<path id="src-path">
+   		<pathelement location="src"/> 
+   		<!-- <pathelement location="test-src"/>  -->
+   	</path>
+
+	<!-- main class path -->
+	
+	<path id="src-classpath" 
+		description="define the classpath needed to build and run the sources">
+        <pathelement path="${classpath}"/>
+        <fileset refid="all-libs" />
+        <pathelement location="temp/build"/>
+	</path>
+
+	<!-- 
+	==========================================================================================================
+    3.) data files (files needed at runtime by the project) 
+	==========================================================================================================
+	-->
+	
+	<fileset id="data" dir=".">
+		<!-- this fileset has to be defined for the generic build --> 
+		<include name="_NONE_"/>
+	</fileset>
+
+	<fileset id="jarfile-includes" dir="." 
+		description="define files which need to be included in the base directory of the jar file">
+		<include name="_NONE_"/>
+	</fileset>	
+	
+	<!-- 
+	==========================================================================================================
+    4.) files which have to be included as documentation 
+	==========================================================================================================
+	-->
+	
+	<fileset id="documentation" dir="." 
+			description="define the location of documentation for the project
+			(javadoc must not be included here, because it is handled automatically)">
+				<include name="_NONE_"/>
+	</fileset>	
+
+	<!-- 
+	==========================================================================================================
+    5.) tests to compile and run  (and how these tests are named)
+	==========================================================================================================
+	-->
+
+	<fileset id="test-src" dir=".">
+		<include name="test-src/**"/>
+	</fileset>
+	
+  	<path id="test-src-path" 
+   		description="define the location of the test sources as a path (fileset and path are different things for ant)">
+   		<pathelement location="test-src"/> 
+   	</path>
+
+	<path id="test-src-classpath" 
+		description="define the classpath needed to build and run the test">
+		<path refid="src-classpath"/>
+		<pathelement location="temp/build-test"/>
+	</path>
+	
+	<fileset id="test-cases"
+		description="define the test cases and suits to be run "
+		dir="temp/build-test"
+		includes="**/*Test.class"
+	/>
+
+</project>
