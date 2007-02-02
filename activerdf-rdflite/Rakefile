@@ -30,11 +30,11 @@ setup_gem(NAME,@VERSION) do |spec|
 end
 
 task :install => [:package] do
-  sh %{sudo gem install pkg/#{name}-#{version}.gem}
+  sh %{sudo gem install pkg/#{NAME}-#{ActiveRdfVersion}.gem}
 end
 
 task :uninstall => [:clean] do
-  sh %{sudo gem uninstall #{name}}
+  sh %{sudo gem uninstall #{NAME}}
 end
 
 task :reinstall => [:uninstall, :install]
