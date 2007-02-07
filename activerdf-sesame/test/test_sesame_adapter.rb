@@ -4,15 +4,9 @@
 
 require 'test/unit'
 require 'rubygems'
-require '../../lib/active_rdf.rb'
 require 'pp' 
-#require 'active_rdf'
-#require 'federation/federation_manager'
-#require 'queryengine/query'
+require 'active_rdf'
 
-class SesameAdapter < ActiveRdfAdapter
-  attr_reader :db
-end
 
 class TestSesameAdapter < Test::Unit::TestCase
   # TODO maybe put more stuff into setup and teardown...
@@ -35,7 +29,6 @@ class TestSesameAdapter < Test::Unit::TestCase
     adapter1 = ConnectionPool.add_data_source(:type => :sesame, :name => :funky)
     adapter2 = ConnectionPool.add_data_source(:type => :sesame, :name => :groovy)
     assert_not_equal adapter1, adapter2
-    assert_not_equal adapter1.db.getSesameConnection.hashCode, adapter2.db.getSesameConnection.hashCode
     adapter1.close
     adapter2.close
   end
@@ -182,7 +175,9 @@ class TestSesameAdapter < Test::Unit::TestCase
   def test_load
     adapter = ConnectionPool.add_data_source(:type => :sesame)
     
-    adapter.load("/home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.nt")
+    this_dir = File.dirname(File.expand_path(__FILE__))
+    
+    adapter.load(this_dir + "/eyal-foaf.nt")
     
     assert_not_equal 0, adapter.size
     
@@ -282,24 +277,31 @@ class TestSesameAdapter < Test::Unit::TestCase
   end
   
   def test_persistence_basic
-    adapter1 = ConnectionPool.add_data_source(:type => :sesame, :location => "/home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/sesame-persistence.s2")
-    assert_instance_of SesameAdapter, adapter1
-    adapter1.close    
-    `rm /home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/sesame-persistence.s2`
-
-    adapter1 = ConnectionPool.add_data_source(:type => :sesame, :inferencing => false, :location => "/home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/sesame-persistence.s2")
-    assert_instance_of SesameAdapter, adapter1
-    adapter1.close    
-    `rm /home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/sesame-persistence.s2`
+    this_dir = File.dirname(File.expand_path(__FILE__))
     
-    adapter2 = ConnectionPool.add_data_source(:type => :sesame, :inferencing => true, :location => "/home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/sesame-persistence.s2")
+    adapter1 = ConnectionPool.add_data_source(:type => :sesame, 
+      :location => this_dir + "/sesame-persistence.s2")
+    assert_instance_of SesameAdapter, adapter1
+    adapter1.close    
+    File.delete(this_dir + "/sesame-persistence.s2")
+
+    adapter1 = ConnectionPool.add_data_source(:type => :sesame, :inferencing => false, 
+      :location => this_dir + "/sesame-persistence.s2")
+    assert_instance_of SesameAdapter, adapter1
+    adapter1.close    
+    File.delete(this_dir + "/sesame-persistence.s2")
+    
+    adapter2 = ConnectionPool.add_data_source(:type => :sesame, :inferencing => true, 
+      :location => this_dir + "/sesame-persistence.s2")
     assert_instance_of SesameAdapter, adapter2
     adapter2.close    
-    `rm /home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/sesame-persistence.s2`
+    File.delete(this_dir + "/sesame-persistence.s2")
   end
   
   def test_persistence_reloading
-    adapter = ConnectionPool.add_data_source(:type => :sesame, :location => "/home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/sesame-persistence.s2")
+    this_dir = File.dirname(File.expand_path(__FILE__))
+    adapter = ConnectionPool.add_data_source(:type => :sesame, 
+      :location => this_dir + "/sesame-persistence.s2")
     
     eyal = RDFS::Resource.new 'http://eyaloren.org'
     age = RDFS::Resource.new 'foaf:age'
@@ -314,7 +316,8 @@ class TestSesameAdapter < Test::Unit::TestCase
     adapter.close
     ConnectionPool.clear
     
-    adapter2 = ConnectionPool.add_data_source(:name => :second_one, :type => :sesame, :location => "/home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/sesame-persistence.s2")
+    adapter2 = ConnectionPool.add_data_source(:name => :second_one, :type => :sesame, 
+      :location => this_dir + "/sesame-persistence.s2")
 
     result = Query.new.distinct(:o).where(eyal, :p, :o).execute
     # sesame does rdfs inferencing and writes into the store that eyal is a resource

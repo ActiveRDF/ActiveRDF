@@ -8,7 +8,7 @@ import org.openrdf.repository.RepositoryImpl;
 import org.openrdf.sail.Sail;
 import org.openrdf.sail.inferencer.MemoryStoreRDFSInferencer;
 import org.openrdf.sail.memory.MemoryStore;
-import org.openrdf.sail.nativerdf.NativeStore;
+
 
 /**
  * construct a wrapper for a sesame2 repository. 
@@ -26,6 +26,16 @@ public class WrapperForSesame2 {
 	protected Repository sesameRepository;
 	
 	/**
+	 * the constructor. it does nothing. 
+	 * all the real work has to be done by the callConstrcutor methods, because JRuby currently
+	 * cant manage custom class loaders _and_ constructors with arguments.. yes, its sad. 
+	 */
+	public WrapperForSesame2() {
+		// do nothing
+	}
+	
+	
+	/**
 	 * construct a wrapper for a sesame2 repository. 
 	 * many sesame2 classes use an initialize method, which clashes with the 
 	 * ruby naming requirement, to name the constructor initialize. 
@@ -38,7 +48,7 @@ public class WrapperForSesame2 {
 	 * 
 	 * @param boolean inferencing - if given, the sesame2 repository will use rdfs inferencing
 	 */
-	public WrapperForSesame2(File file, boolean inferencing) {
+	public Connection callConstructor(File file, boolean inferencing) {
 		Sail sailStack;
 		if (file == null) {
 			sailStack = new MemoryStore();
@@ -50,6 +60,7 @@ public class WrapperForSesame2 {
 			sailStack = new MemoryStoreRDFSInferencer(sailStack);
 		}
 		
+		
 		try {
 			sesameRepository = new RepositoryImpl(sailStack);
 			sesameRepository.initialize();
@@ -58,6 +69,7 @@ public class WrapperForSesame2 {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+		return sesameConnection;
 	}
 
 	/**
@@ -71,8 +83,8 @@ public class WrapperForSesame2 {
 	 *
 	 * Uses in memory repository and rdfs inferencing. 
 	 */
-	public WrapperForSesame2() {
-		this(null, true);
+	public Connection callConstructor() {
+		return callConstructor(null, true);
 	}
 
 	/**
@@ -88,8 +100,8 @@ public class WrapperForSesame2 {
 	 * 
 	 * @param boolean inferencing - if given, the sesame2 repository will use rdfs inferencing
 	 */
-	public WrapperForSesame2(boolean inferencing) {
-		this(null, inferencing);
+	public Connection callConstructor(boolean inferencing) {
+		return callConstructor(null, inferencing);
 	}
 
 	/**
@@ -105,8 +117,8 @@ public class WrapperForSesame2 {
 	 * 
 	 * @param File dataDir - if given a sesame2 NativeStore using this directory will be constructed
 	 */
-	public WrapperForSesame2(File file) {
-		this(file, true);
+	public Connection callConstructor(File file) {
+		return callConstructor(file, true);
 	}
 
 	/**

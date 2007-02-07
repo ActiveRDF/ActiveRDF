@@ -3,36 +3,28 @@
 # License:: LGPL
 
 require 'active_rdf'
-require 'federation/connection_pool'
+#require 'federation/connection_pool'
 
 $activerdflog.info "loading Sesame adapter"
-
-# TODO: load the necessary java classes
-#jars = ['openrdf-sesame-2.0-alpha4-onejar.jar', 'minced-sesame2.jar']
-#`export CLASSPATH=#{jars.collect{|j| File.dirname(__FILE__) + "/../../ext/#{j}"}.join(':')}`
-#puts ENV['CLASSPATH']
 
 
 # ----- java imports and extentsions
 require 'java'
 
-WrapperForSesame2 = org.activerdf.wrapper.sesame2.WrapperForSesame2
-QueryLanguage = org.openrdf.querymodel.QueryLanguage
 StringWriter = java.io.StringWriter
-NTriplesWriter = org.openrdf.rio.ntriples.NTriplesWriter
 FileReader = java.io.FileReader
 JFile = java.io.File
+URLClassLoader = java.net.URLClassLoader 
+JURL = java.net.URL
+JClass = java.lang.Class
+JObject = java.lang.Object
+
+# sesame specific classes: 
+WrapperForSesame2 = org.activerdf.wrapper.sesame2.WrapperForSesame2
+QueryLanguage = org.openrdf.querymodel.QueryLanguage
+NTriplesWriter = org.openrdf.rio.ntriples.NTriplesWriter
 RDFFormat = org.openrdf.rio.RDFFormat
 
-# TODO: ask on irc if a bug report is desired, because this did not work for me
-#JavaUtilities.extend_proxy('java.util.Iterator') {
-#  def each(&block)
-#    while self.hasNext
-#      block.call(self.next)
-#    end
-#    # self.close
-#  end
-#}
 
 
 # TODO: about this adapter
@@ -62,25 +54,42 @@ class SesameAdapter < ActiveRdfAdapter
     
     # if no inferencing is specified, we use the sesame2 rdfs inferencing
     sesameInferencing = params[:inferencing] || nil
-		
-		# the following is butt ugly but I dont have the patience right now, 
-		# to find out how to operating overloading in java is used by jruby...
-		# TODO: file a bug report here ? 
+	
+	# this will not work at the current state of jruby	
+#    # fancy JRuby code so that the user does not have to set the java CLASSPATH
+#    
+#    this_dir = File.dirname(File.expand_path(__FILE__))
+#    
+#    jar1 = JFile.new(this_dir + "/../../ext/wrapper-sesame2.jar")
+#    jar2 = JFile.new(this_dir + "/../../ext/openrdf-sesame-2.0-alpha4-onejar.jar")
+#
+#    # make an array of URL, which contains the URLs corresponding to the files
+#    uris = JURL[].new(2)
+#    uris[0] = jar1.toURL
+#    uris[1] = jar2.toURL
+#
+#    # this is our custom class loader, yay!
+#    @activerdfClassLoader = URLClassLoader.new(uris)
+#    classWrapper = JClass.forName("org.activerdf.wrapper.sesame2.WrapperForSesame2", true, @activerdfClassLoader)    
+#    @myWrapperInstance = classWrapper.new_instance 
+
+    @myWrapperInstance = WrapperForSesame2.new
+
 		if sesameLocation == nil
 		  if sesameInferencing == nil
-        @db = WrapperForSesame2.new		  
+        @db = @myWrapperInstance.callConstructor
 		  else
-		    @db = WrapperForSesame2.new(sesameInferencing)
+        @db = @myWrapperInstance.callConstructor(sesameInferencing)		  
 		  end
 		else
 		  if sesameInferencing == nil
-		    @db = WrapperForSesame2.new(sesameLocation)		  
+		    @db = @myWrapperInstance.callConstructor(sesameLocation)		  
 		  else
-		    @db = WrapperForSesame2.new(sesameLocation,sesameInferencing)		  
+		    @db = @myWrapperInstance.callConstructor(sesameLocation,sesameInferencing)		  
 		  end
 		end
 		
-    @valueFactory = @db.getSesameConnection.getRepository.getSail.getValueFactory
+    @valueFactory = @db.getRepository.getSail.getValueFactory
 
     # define the finalizer, which will call close on the sesame triple store
     # recipie for this, is from: http://wiki.rubygarden.org/Ruby/page/show/GCAndMemoryManagement
@@ -90,19 +99,19 @@ class SesameAdapter < ActiveRdfAdapter
   # TODO: this does not work, but it is also not caused by jruby. 
   def SesameAdapter.create_finalizer(db)
     # we have to call close on the sesame triple store, because otherwise some of the iterators are not closed properly
-    proc { puts "die";  db.getSesameConnection.close }
+    proc { puts "die";  db.close }
   end
 
 
 
 	# returns the number of triples in the datastore (incl. possible duplicates)
 	def size
-		@db.getSesameConnection.size
+		@db.size
 	end
 
 	# deletes all triples from datastore
 	def clear
-		@db.getSesameConnection.clear
+		@db.clear
 	end
 
 	# deletes triple(s,p,o,c) from datastore
@@ -133,9 +142,9 @@ class SesameAdapter < ActiveRdfAdapter
     end	
 	
     # TODO contexts
-    candidateStatements = @db.getSesameConnection.getStatements(sesameSubject, sesamePredicate, sesameObject, false)
+    candidateStatements = @db.getStatements(sesameSubject, sesamePredicate, sesameObject, false)
     
-    @db.getSesameConnection.remove(candidateStatements)
+    @db.remove(candidateStatements)
     
     candidateStatements.close
     return @db
@@ -163,7 +172,7 @@ class SesameAdapter < ActiveRdfAdapter
 
     # TODO: handle context, especially if it is null
 
-    @db.getSesameConnection.add(sesameSubject, sesamePredicate, sesameObject)
+    @db.add(sesameSubject, sesamePredicate, sesameObject)
     # for contexts, just add 4th parameter
 
     # TODO: do we need to handle errors from the java side ? 
@@ -185,7 +194,7 @@ class SesameAdapter < ActiveRdfAdapter
   # close the underlying sesame triple store. 
   # if not called there may be open iterators. 
   def close
-    @db.getSesameConnection.close
+    @db.close
   end
 
   # returns all triples in the datastore
@@ -196,14 +205,14 @@ class SesameAdapter < ActiveRdfAdapter
     # somehow stringy.toString does not work. yes yes, those wacky jruby guys ;) 
     stringy = StringWriter.new
     sesameWriter = NTriplesWriter.new(stringy)
-    @db.getSesameConnection.export(sesameWriter)
+    @db.export(sesameWriter)
     return stringy.to_s
 	end
 
 	# loads triples from file in ntriples format
 	def load(file)
     reader = FileReader.new(file)
-    @db.getSesameConnection.add(reader, "", RDFFormat::NTRIPLES)
+    @db.add(reader, "", RDFFormat::NTRIPLES)
     
     return @db
 	end
@@ -219,7 +228,7 @@ class SesameAdapter < ActiveRdfAdapter
     
     # evaluate the query on the sesame triple store
     # TODO: if we want to get inferred statements back we have to say so, as third boolean parameter
-    tuplequeryresult = @db.getSesameConnection.evaluateTupleQuery(QueryLanguage::SPARQL, qs)
+    tuplequeryresult = @db.evaluateTupleQuery(QueryLanguage::SPARQL, qs)
 
     # what are the variables of the query ?
     variables = tuplequeryresult.getBindingNames

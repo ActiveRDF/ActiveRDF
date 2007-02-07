@@ -14,9 +14,17 @@ desc "test and package gem"
 task :default => [:test, :package]
 
 # get @VERSION from commandline
-@VERSION =  '0.1'
+@VERSION =  '0.2'
 NAME="activerdf_sesame"
 GEMNAME="#{NAME}-#{@VERSION}.gem"
+
+# which files should go into the gem?
+PKG_FILES = FileList[
+  'ext/*.jar',
+  '[A-Z]*',
+  'lib/**/*.rb',
+  'test/**/*',
+]
 
 # define package task
 setup_gem(NAME,@VERSION) do |spec|
@@ -25,7 +33,11 @@ setup_gem(NAME,@VERSION) do |spec|
   spec.author="Benjamin Heitmann <benjamin.heitmann@deri.org>"
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('activerdf', '>= 1.2')
+  spec.files = PKG_FILES.to_a
+  
 end
+
+
 
 task :install => [:package] do
   sh %{sudo gem install pkg/#{NAME}-#{@VERSION}.gem}
