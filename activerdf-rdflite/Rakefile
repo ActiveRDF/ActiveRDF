@@ -14,7 +14,7 @@ desc "test and package gem"
 task :default => [:test, :package]
 
 # get @VERSION from commandline
-@VERSION =  '1.2.1'
+@VERSION =  '1.2.2'
 NAME="activerdf_rdflite"
 GEMNAME="#{NAME}-#{@VERSION}.gem"
 
@@ -26,7 +26,7 @@ setup_gem(NAME,@VERSION) do |spec|
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('uuidtools')
   spec.add_dependency('activerdf', '>= 1.2')
-  spec.add_dependency('sqlite3-ruby', '>= 1.1.0.1')
+  spec.add_dependency('sqlite3-ruby', '>= 1.2.1')
 end
 
 task :install => [:package] do

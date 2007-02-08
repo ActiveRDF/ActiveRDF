@@ -5,7 +5,7 @@
 require 'sqlite3'
 require 'active_rdf'
 require 'federation/connection_pool'
-require_gem 'uuidtools'
+gem 'uuidtools'
 
 $activerdflog.info "loading RDFLite adapter"
 
