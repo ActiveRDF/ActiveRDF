@@ -21,8 +21,8 @@ require 'federation/active_rdf_adapter'
 def load_adapter s
   begin
     require s
-  rescue StandardError => e
-    $activerdflog.info "could not load adapter #{s}: #{e}"
+  rescue Exception => e
+    $activerdflog.warn "could not load adapter #{s}: #{e}"
   end
 end
 
