@@ -324,6 +324,7 @@ class TestSesameAdapter < Test::Unit::TestCase
     assert_equal 2, result.flatten.size
     
     adapter2.close    
+    File.delete(this_dir + "/sesame-persistence.s2")
   end
 
 end

@@ -93,14 +93,14 @@ class SesameAdapter < ActiveRdfAdapter
 
     # define the finalizer, which will call close on the sesame triple store
     # recipie for this, is from: http://wiki.rubygarden.org/Ruby/page/show/GCAndMemoryManagement
-    ObjectSpace.define_finalizer(self, SesameAdapter.create_finalizer(@db))       
+#    ObjectSpace.define_finalizer(self, SesameAdapter.create_finalizer(@db))       
 	end
 
   # TODO: this does not work, but it is also not caused by jruby. 
-  def SesameAdapter.create_finalizer(db)
-    # we have to call close on the sesame triple store, because otherwise some of the iterators are not closed properly
-    proc { puts "die";  db.close }
-  end
+#  def SesameAdapter.create_finalizer(db)
+#    # we have to call close on the sesame triple store, because otherwise some of the iterators are not closed properly
+#    proc { puts "die";  db.close }
+#  end
 
 
 

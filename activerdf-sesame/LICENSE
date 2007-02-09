@@ -1,0 +1,10 @@
+
+Every file distributed as part of the activerdf-sesame adapter is 
+licensed under the LGPL, which is distributed as part of
+activerdf-sesame, with the filename LICENSE-lgpl.
+
+The file ./ext/openrdf-sesame-2.0-alpha4-onejar.jar 
+is licensed by Aduna, as specified in the license
+distributed as part of activerdf-sesame, with the
+filename LICENSE-aduna. 
+

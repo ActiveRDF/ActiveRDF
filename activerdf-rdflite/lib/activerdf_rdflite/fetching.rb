@@ -9,11 +9,8 @@ class FetchingAdapter < RDFLite
 	# fetches RDF/XML data from given url and adds it to the datastore, using the 
 	# source url as context identifier.
   def fetch url
+    # check if url starts with http://
 		return unless url.match(/http:\/\/(.*)/)
-
-		# remove fragment identifier from url
-		hashidx = url.rindex('#')
-		url = url[0..url.rindex('#')-1] unless hashidx.nil?
 
 		$activerdflog.debug "fetching from #{url}"
 

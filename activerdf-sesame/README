@@ -1,0 +1,26 @@
+
+This is the sesame 2 adapter for ActiveRDF. 
+
+currently the major benefits of using ActiveRDF with the Sesame Adapter are:
+ * good speed, because java code is used for all the heavy lifting of a triple store
+ * rdf schema inferencing
+ * support for quads/named graphs (as soon as I get around to implementing them in the adapter)
+
+disadvantages:
+ * installation of jruby and manual setting of the java CLASSPATH are required
+ * no owl inferencing (but all the other adapters also dont have this)
+ * no support for a database backend
+
+It uses Sesame 2 Alpha 4, which is distributed as a jar together with this gem. 
+
+For installation instructions visit: http://wiki.activerdf.org/ActiveRDF_and_RoR_and_Sesame
+
+For more information about ActiveRDF visit: 
+http://www.activerdf.org/
+http://wiki.activerdf.org/ActiveRDF
+
+For more information about Sesame 2, visit: 
+http://www.openrdf.org/
+
+This ruby gem was created by Benjamin Heitmann <benjamin.heitmann@deri.org>
+

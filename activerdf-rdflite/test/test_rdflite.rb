@@ -19,7 +19,8 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
   def test_registration
     adapter = ConnectionPool.add_data_source(:type => :rdflite)
 		assert_instance_of RDFLite, adapter
-		assert adapter.keyword_search?
+		# we cant garantuee that the rdflite adapter can do keyword search
+		# assert adapter.keyword_search?
 	end
 
 	def test_initialise
@@ -190,9 +191,13 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')
 
     eyal = RDFS::Resource.new('http://activerdf.org/test/eyal')
-		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"blue").execute(:flatten => true)
-		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"27").execute(:flatten => true)
-		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"eyal oren").execute(:flatten => true)
+    
+    # we cant garantuee that ferret is installed
+    if adapter.keyword_search?
+  		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"blue").execute(:flatten => true)
+  		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"27").execute(:flatten => true)
+  		assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"eyal oren").execute(:flatten => true)
+		end
 	end
 
 	def test_bnodes

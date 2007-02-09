@@ -14,7 +14,7 @@ desc "test and package gem"
 task :default => [:test, :package]
 
 # get @VERSION from commandline
-@VERSION =  '0.2'
+@VERSION =  '0.2.1'
 NAME="activerdf_sesame"
 GEMNAME="#{NAME}-#{@VERSION}.gem"
 
