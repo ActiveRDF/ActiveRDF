@@ -241,6 +241,13 @@ module RDFS
 			end
 		end
 
+		# returns all rdf:type of this instance, e.g. [RDFS::Resource, 
+		# FOAF::Person]
+		#
+		# Note: this method performs a database lookup for { self rdf:type ?o }. For 
+		# simple type-checking (to know if you are handling an ActiveRDF object, use 
+		# self.class, which does not do a database query, but simply returns 
+		# RDFS::Resource.
 		def type
 			types.collect do |type|
 				ObjectManager.construct_class(type)
@@ -323,7 +330,8 @@ module RDFS
 			query.execute(:flatten => flatten_results)
 		end  
 
-		# returns all rdf:types of this resource
+		# returns all rdf:types of this resource but without a conversion to 
+		# Ruby classes (it returns an array of RDFS::Resources)
 		def types
 			type = Namespace.lookup(:rdf, :type)
 
