@@ -119,68 +119,29 @@ class SesameAdapter < ActiveRdfAdapter
 	# you can specify a context to limit deletion to that context: 
 	# delete(:s,:p,:o, 'http://context') will delete all triples with that context
 	def delete(s, p, o, c=nil)
-    if s.class == RDFS::Resource then
-      sesameSubject = @valueFactory.createURI(s.uri)
-    elsif s == :s
-      sesameSubject = nil
-    else
-      raise ActiveRdfError, "the Sesame Adapter tried to delete a subject which was not of type RDFS::Resource, but of type #{s.class}"
-    end
-    if p.class == RDFS::Resource then
-      sesamePredicate = @valueFactory.createURI(p.uri)
-    elsif p == :p 
-      sesamePredicate = nil
-    else
-      raise ActiveRdfError, "the Sesame Adapter tried to delete a predicate which was not of type RDFS::Resource, but of type #{p.class}"
-    end
-    if o.class == RDFS::Resource then
-      sesameObject = @valueFactory.createURI(o.uri)
-    elsif o == :o
-      sesameObject = nil
-    else
-      sesameObject = @valueFactory.createLiteral(o.to_s)
-    end	
-	
-    # TODO contexts
-    candidateStatements = @db.getStatements(sesameSubject, sesamePredicate, sesameObject, false)
-    
+		params = activerdf_to_sesame(s, p, o, c)
+
+		# TODO: handle context
+    candidateStatements = @db.getStatements(params[0], params[1], params[2], false)
     @db.remove(candidateStatements)
-    
     candidateStatements.close
-    return @db
+
+    @db
 	end
 	
 	# adds triple(s,p,o) to datastore
 	# s,p must be resources, o can be primitive data or resource
 	def add(s,p,o,c=nil)
-
-    if s.class == RDFS::Resource then
-      sesameSubject = @valueFactory.createURI(s.uri)
-    else
-      raise ActiveRdfError, "the Sesame Adapter tried to add a subject which was not of type RDFS::Resource, but of type #{s.class}"
-    end
-    if p.class == RDFS::Resource then
-      sesamePredicate = @valueFactory.createURI(p.uri)
-    else
-      raise ActiveRdfError, "the Sesame Adapter tried to add a predicate which was not of type RDFS::Resource, but of type #{p.class}"
-    end
-    if o.class == RDFS::Resource then
-      sesameObject = @valueFactory.createURI(o.uri)
-    else
-      sesameObject = @valueFactory.createLiteral(o.to_s)
-    end
-
     # TODO: handle context, especially if it is null
-
-    @db.add(sesameSubject, sesamePredicate, sesameObject)
-    # for contexts, just add 4th parameter
-
     # TODO: do we need to handle errors from the java side ? 
+		
+		check_input = [s,p,o]
+		raise ActiveRdfError, "cannot add triple with nil subject, predicate, or object" if check_input.any? {|r| r.nil? || r.is_a?(Symbol) }
 
-    return @db
+		params = activerdf_to_sesame(s, p, o, c)
+    @db.add(params[0], params[1], params[2])
+    @db
 	end
-
-
 
   # flushing is done automatically, because we run sesame2 in autocommit mode
 	def flush
@@ -203,18 +164,17 @@ class SesameAdapter < ActiveRdfAdapter
     # a to a RDFHandler, which we supply, by constructing a NTriplesWriter, which writes to StringWriter, 
     # and we kindly ask that StringWriter to make a string for us. Note, you have to use stringy.to_s, 
     # somehow stringy.toString does not work. yes yes, those wacky jruby guys ;) 
-    stringy = StringWriter.new
-    sesameWriter = NTriplesWriter.new(stringy)
+    _string = StringWriter.new
+    sesameWriter = NTriplesWriter.new(_string)
     @db.export(sesameWriter)
-    return stringy.to_s
+    return _string.to_s
 	end
 
 	# loads triples from file in ntriples format
 	def load(file)
     reader = FileReader.new(file)
     @db.add(reader, "", RDFFormat::NTRIPLES)
-    
-    return @db
+    @db
 	end
 
 	# executes ActiveRDF query on the sesame triple store associated with this adapter
@@ -308,5 +268,28 @@ class SesameAdapter < ActiveRdfAdapter
       raise ActiveRdfError, "the Sesame Adapter tried to return something which is neither a URI nor a Literal, but is instead a #{input.java_class.name}"
     end	
 	end
-	
+
+	# converts spoc input into sesame objects (RDFS::Resource into 
+	# valueFactory.createURI etc.)
+	def activerdf_to_sesame(s, p, o, c)
+		# TODO: manage contexts
+		params = []
+
+		# construct sesame parameters from s,p,o,c
+		[s,p,o].each_with_index do |r,i|
+			params[i] = case r
+							 when RDFS::Resource
+								 @valueFactory.createURI(s.uri)
+							 when Symbol
+								 nil
+							 else
+								 if i < 2 # subject or predicate
+									 raise ActiveRdfError, "trying to add or delete a subject, predicate, or object of type #{r.class}"
+								 else
+									 @valueFactory.createLiteral(o.to_s)
+								 end
+							 end
+		end
+		params << c
+	end
 end
