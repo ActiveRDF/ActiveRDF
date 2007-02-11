@@ -35,7 +35,7 @@ class RDFLite < ActiveRdfAdapter
 
 		@reads = true
 		@writes = true
-	
+
 		# if no file-location given, we use in-memory store
 		file = params[:location] || ':memory:'
 		@db = SQLite3::Database.new(file) 
@@ -53,7 +53,7 @@ class RDFLite < ActiveRdfAdapter
 			# we setup the fields not to store object's contents
 			infos.add_field(:subject, :store => :yes, :index => :no, :term_vector => :no)
 			infos.add_field(:object, :store => :no) #, :index => :omit_norms)
-			
+
 			@ferret = if params[:location]
 									Ferret::I.new(:path => params[:location] + '.ferret', :field_infos => infos)
 								else
@@ -96,15 +96,15 @@ class RDFLite < ActiveRdfAdapter
 		# convert non-nil input to internal format
 		quad = [s,p,o,c].collect {|r| r.nil? ? nil : internalise(r) }
 
-    # construct where clause for deletion (for all non-nil input)
+		# construct where clause for deletion (for all non-nil input)
 		where_clauses = []
 		conditions = []		
-    quad.each_with_index do |r,i|
-      unless r.nil?
-			 conditions << r
-			 where_clauses << "#{SPOC[i]} = ?"
-		  end
-    end
+		quad.each_with_index do |r,i|
+			unless r.nil?
+				conditions << r
+				where_clauses << "#{SPOC[i]} = ?"
+			end
+		end
 
 		# construct delete string
 		ds = 'delete from triple'
@@ -122,7 +122,7 @@ class RDFLite < ActiveRdfAdapter
 
 		@db
 	end
-	
+
 	# adds triple(s,p,o) to datastore
 	# s,p must be resources, o can be primitive data or resource
 	def add(s,p,o,c=nil)

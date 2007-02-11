@@ -4,7 +4,9 @@
 
 # FetchingAdapter is an extension to rdflite for fetching RDF from online sources.
 class FetchingAdapter < RDFLite
-  ConnectionPool.register_adapter(:fetching,self)
+  ConnectionPool.register_adapter(:fetching, self)
+
+	# TODO: check that rapper is installed
 
 	# fetches RDF/XML data from given url and adds it to the datastore, using the 
 	# source url as context identifier.
@@ -30,17 +32,3 @@ class FetchingAdapter < RDFLite
 		add_ntriples(triples, context)
   end
 end
-
-#class String
-#  alias _match match
-#  def match(*args)
-#    m = _match(args.first)
-#    if m && m.length > 1
-#      args[1..-1].each_with_index do |name, index|
-#        m.instance_eval "def #{name}; self[#{index+1}] end"
-#      end
-#    end
-#    m
-#  end
-#end
-
