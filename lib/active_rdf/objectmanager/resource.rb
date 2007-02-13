@@ -149,6 +149,11 @@ module RDFS
 			# 5. eyal.age is registered abbreviation 
 			# evidence: age in @predicates
 			# action: return object from triple (eyal, @predicates[age], ?o)
+			#
+			# 6. eyal.foaf::name, where foaf is a registered abbreviation
+			# evidence: foaf in Namespace.
+			# action: return namespace proxy that handles 'name' invocation, by 
+			# rewriting into predicate lookup (similar to case (5)
 
       # maybe change order in which to check these, checking (4) is probably
       # cheaper than (1)-(2) but (1) and (2) are probably more probable (getting
@@ -170,6 +175,20 @@ module RDFS
 			# check possibility (5)
 			if @predicates.include?(methodname)
 				return predicate_invocation(@predicates[methodname], args, update)
+			end
+
+			# check possibility (6)
+			if Namespace.abbreviations.include?(method)
+				namespace = Object.new	
+				@@uri = method
+				@@subject = self
+				class <<namespace
+					def method_missing(localname, *args)
+						predicate = Namespace.lookup(@@uri, localname)
+						Query.new.distinct(:o).where(@@subject, predicate, :o).execute
+					end
+				end
+				return namespace
 			end
 
       candidates = if update

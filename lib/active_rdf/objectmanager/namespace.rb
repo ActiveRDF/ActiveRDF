@@ -64,6 +64,11 @@ class Namespace
       uri[delimiter+1..-1]
     end
   end
+
+	# returns currently registered namespace abbreviations (e.g. :foaf, :rdf)
+	def self.abbreviations
+		@@namespaces.keys
+	end
 end
 
 Namespace.register(:rdf, 'http://www.w3.org/1999/02/22-rdf-syntax-ns#')
