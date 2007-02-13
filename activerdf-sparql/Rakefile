@@ -3,29 +3,56 @@ require 'rake/testtask'
 require 'rake/clean'
 require 'rake/gempackagetask'
 require 'rake/rdoctask'
-require '../tools/rakehelp'
 require 'fileutils'
 include FileUtils
 
-setup_tests
-setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
+# setup tests
+Rake::TestTask.new do |task|
+	task.test_files = FileList['test/**/*.rb']
+end
 
-setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
+# setup which files to clean
+CLEAN.include ['**/*.log', 'pkg', 'lib/*.bundle', '*.gem', '.config']
+
+# setup rdoc 
+Rake::RDocTask.new do |rdoc|
+	rdoc.rdoc_dir = 'doc/rdoc'
+	rdoc.options << '--line-numbers'
+	rdoc.rdoc_files.add ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
+end
 
 desc "Does a full compile, test run"
 task :default => [:test, :package]
 
-version=ENV['REL']
-name="activerdf_sparql"
+spec = Gem::Specification.new do |spec|
+  spec.name = 'activerdf_sparql'
+  spec.version = '1.2'
+  spec.platform = Gem::Platform::RUBY
+  spec.has_rdoc = true
+  spec.extra_rdoc_files = [ "README" ]
 
-setup_gem(name, version) do |spec|
+  spec.files = %w(LICENSE README Rakefile) +
+  Dir.glob("{bin,doc/rdoc,test,lib}/**/*") +
+  Dir.glob("ext/**/*.{h,c,rb}") +
+  Dir.glob("examples/**/*.rb") +
+  Dir.glob("tools/*.rb")
+
+  spec.require_path = "lib"
+  spec.extensions = FileList["ext/**/extconf.rb"].to_a
+  spec.bindir = "bin"
+
   spec.summary = "ActiveRDF adapter to SPARQL endpoint" 
   spec.description = spec.summary
   spec.author="Eyal Oren <eyal.oren@deri.org"
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('activerdf', '>= 0.9.2')
+  spec.add_dependency('json')
 end
 
+Rake::GemPackageTask.new(spec) do |p|
+  p.gem_spec = spec
+  p.need_tar = false
+end
 
 task :install => [:package] do
   sh %{sudo gem install pkg/#{name}-#{version}.gem}
