@@ -1,0 +1,17 @@
+== activerdf_rdflite (1.2.3) Tue, 13 Feb 2007 20:07:01 +0000
+  * gems published automatically from Rakefile 
+  * changing rapper invocation in fetching adapter
+  * prevent failing unit tests if ferret not installed
+  * bumped dependency of sqlite
+
+== activerdf_rdflite (1.2.2)
+  * use same bnode function in rdflite.load (same bnodes from one file get same uri)
+
+== activerdf_rdflite (1.2.1)
+  * bugfix in multijoins
+
+== activerdf_rdflite (1.2)
+  * speed up rdflite.load using precompiled SQL
+
+== activerdf_rdflite (1.1)
+  * added rdfs:subPropertyOf reasoning

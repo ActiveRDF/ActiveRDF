@@ -1,25 +1,33 @@
+require 'meta_project'
 require 'rake'
 require 'rake/testtask'
 require 'rake/clean'
 require 'rake/gempackagetask'
 require 'rake/rdoctask'
-require '../tools/rakehelp'
+require 'rake/contrib/xforge'
+require 'rubygems'
 require 'fileutils'
-include FileUtils
+require '../tools/rakehelp'
 
+$version  = IO.read('VERSION').strip
+$name     = 'activerdf_rdflite'
+$project  = MetaProject::Project::XForge::RubyForge.new('activerdf')
+
+# setup tests
 setup_tests
-setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
+setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
 
-desc "test and package gem"
+# setup rdoc 
+Rake::RDocTask.new do |rdoc|
+	rdoc.rdoc_dir = 'doc/rdoc'
+	rdoc.options << '--line-numbers'
+	rdoc.rdoc_files.add ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
+end
+
+desc "Does a full compile, test run"
 task :default => [:test, :package]
 
-# get @VERSION from commandline
-@VERSION =  '1.2.2'
-NAME="activerdf_rdflite"
-GEMNAME="#{NAME}-#{@VERSION}.gem"
-
-# define package task
-setup_gem(NAME,@VERSION) do |spec|
+setup_gem($name, $version) do |spec|
   spec.summary = "an RDF database for usage in ActiveRDF (based on sqlite3)" 
   spec.description = spec.summary
   spec.author="Eyal Oren <eyal.oren@deri.org"
@@ -29,17 +37,39 @@ setup_gem(NAME,@VERSION) do |spec|
   spec.add_dependency('sqlite3-ruby', '>= 1.2.1')
 end
 
-task :install => [:package] do
-  sh %{sudo gem install pkg/#{NAME}-#{ActiveRdfVersion}.gem}
+task :verify_rubyforge do
+  raise "RUBYFORGE_USER environment variable not set!" unless ENV['RUBYFORGE_USER']
+  raise "RUBYFORGE_PASSWORD environment variable not set!" unless ENV['RUBYFORGE_PASSWORD']
 end
 
-task :uninstall => [:clean] do
-  sh %{sudo gem uninstall #{NAME}}
+desc "Release files on RubyForge."
+task :release_files => [:clean, :verify_rubyforge, :package ] do
+  release_files = FileList["pkg/#$name-#$version.gem"]
+
+  Rake::XForge::Release.new($project) do |release|
+    release.user_name     = ENV['RUBYFORGE_USER']
+    release.password      = ENV['RUBYFORGE_PASSWORD']
+    release.files         = release_files.to_a
+    release.release_name  = "#$name #$version"
+    release.package_name  = "activerdf-rdflite"
+		release.release_notes = ""
+
+    changes = []
+    File.open("CHANGELOG") do |file|
+      current = true
+
+      file.each do |line|
+        line.chomp!
+				if current and line =~ /^==/
+					current = false; next 
+				end
+        break if line.empty? and not current
+        changes << line
+      end
+    end
+    release.release_changes = changes.join("\n")
+  end
 end
 
-task :reinstall => [:uninstall, :install]
-
-task :upload => :package do |task|
-  sh "scp pkg/#{GEMNAME} eyal@activerdf.org:/home/eyal/webs/activerdf/gems/"
-end
-
+desc "Release the latest version."
+task :release => [ :verify_rubyforge, :release_files, :rdoc ]
