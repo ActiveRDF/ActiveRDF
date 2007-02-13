@@ -1,0 +1,11 @@
+== activerdf (1.2.2) Tue, 13 Feb 2007 19:40:19 +0000
+  * gems published automatically from Rakefile 
+  * added support for namespaced attributes:
+    eyal.foaf::name or eyal.foaf.name (do not require predicate lookup)
+  * minor changes to activerdf loader and documentation
+
+== activerdf (1.2.1) Tue, 30 Jan 2007 19:09:59 +0000
+  * added ancestors when looking at domain/range in Resource#method_missing
+    (makes foaf.name='eyal' work without reasoning because foaf:name defined in 
+    superclass, but does not work when reasoning enabled)
+  * activerdf loader uses 'gem' instead of deprecated 'require_gem'

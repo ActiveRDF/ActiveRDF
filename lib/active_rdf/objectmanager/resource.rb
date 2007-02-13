@@ -185,7 +185,7 @@ module RDFS
 				class <<namespace
 					def method_missing(localname, *args)
 						predicate = Namespace.lookup(@@uri, localname)
-						Query.new.distinct(:o).where(@@subject, predicate, :o).execute
+						Query.new.distinct(:o).where(@@subject, predicate, :o).execute(:flatten => true)
 					end
 				end
 				return namespace

@@ -52,21 +52,17 @@ class FederationManager
       # to prevent unnecessarily nested array [[eyal],[renaud],...]
       results.flatten! if q.select_clauses.size == 1 or q.ask?
 
-      # and remove array (return single value) unless asked not to
+      # remove array (return single value or nil) if asked to
       if options[:flatten] or q.count?
         case results.size
         when 0
-          final_results = nil
+          results = nil
         when 1
-          final_results = results.first
-        else
-          final_results = results
-        end
-      else
-        final_results = results
-      end
+          results = results.first
+				end
+			end
     end
     
-    final_results
+    results
   end
 end

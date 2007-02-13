@@ -25,7 +25,7 @@ people found in the data source:
  people = FOAF::Person.find_all
 
 == License
-ActiveRDF is distributed under the LGPL[link:http://www.gnu.org/licenses/lgpl.html] license.
+ActiveRDF is distributed under the LGPL[http://www.gnu.org/licenses/lgpl.html] license.
 
 == Authors
 * Eyal Oren

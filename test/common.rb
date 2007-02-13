@@ -20,9 +20,8 @@ def get_read_only_adapter
   if types.include?(:sparql)
 		ConnectionPool.add(:type => :sparql, :url => "http://m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
 	else
-		raise ActiveRdfError, "no suitable read only adapter found for test"
+		raise ActiveRdfError, "no suitable read-only adapter found for test"
 	end
-	
 end
 
 # TODO make this work with a list of existing adapters, not only one

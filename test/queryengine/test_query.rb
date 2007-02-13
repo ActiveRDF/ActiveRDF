@@ -46,4 +46,10 @@ class TestQuery < Test::Unit::TestCase
     q2 = Query.new.select(:s).select(:a)
     assert_equal Query2SPARQL.translate(q1),Query2SPARQL.translate(q2)
   end
+
+	def test_query_refuses_string_in_where_clause_subject_or_predicate
+    assert_raises ActiveRdfError do
+      Query.new.select(:s).where("http://test.org/uri",:p, :o).execute
+    end
+  end
 end

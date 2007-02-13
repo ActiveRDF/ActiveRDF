@@ -1,27 +1,32 @@
+require 'meta_project'
 require 'rake'
 require 'rake/testtask'
 require 'rake/clean'
 require 'rake/gempackagetask'
 require 'rake/rdoctask'
+require 'rake/contrib/xforge'
 require 'tools/rakehelp'
 require 'rubygems'
 require 'fileutils'
 include FileUtils
 
+$version  = IO.read('VERSION').strip
+$name     = 'activerdf'
+$project  = MetaProject::Project::XForge::RubyForge.new('activerdf')
+$distdir  = "#$name-#$version"
+
 # setup tests and rdoc files
 setup_tests
 setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
 
-# setup rdoc task
-#setup_rdoc ['README', 'LICENSE', 'lib/**/*.rb']
 Rake::RDocTask.new do |rdoc|
 	files = ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc', 'test/*.rb']
 	files << 'activerdf-*/lib/**/*.rb'
 	rdoc.rdoc_files.add(files)
-	rdoc.main = "README" # page to start on
+	rdoc.main = "README"
 	rdoc.title = "ActiveRDF documentation"
 	rdoc.template = "tools/allison/allison.rb"
-	rdoc.rdoc_dir = 'doc' # rdoc output folder
+	rdoc.rdoc_dir = 'doc'
 	rdoc.options << '--line-numbers' << '--inline-source'
 end
 
@@ -29,13 +34,10 @@ end
 desc 'test and package gem'
 task :default => :install
 
-# get ActiveRdfVersion from commandline
-ActiveRdfVersion = '1.2.1'
-NAME="activerdf"
-GEMNAME="#{NAME}-#{ActiveRdfVersion}.gem"
+# GEMNAME="#{NAME}-#{ActiveRdfVersion}.gem"
 
 # define package task
-setup_gem(NAME,ActiveRdfVersion) do |spec|
+setup_gem("activerdf",$version) do |spec|
   spec.summary = 'Offers object-oriented access to RDF (with adapters to several datastores).'
   spec.description = spec.summary
   spec.author = 'Eyal Oren'
@@ -44,34 +46,16 @@ setup_gem(NAME,ActiveRdfVersion) do |spec|
   spec.platform = Gem::Platform::RUBY
   spec.autorequire = 'active_rdf'
   spec.add_dependency('gem_plugin', '>= 0.2.1')
+  spec.add_dependency('activerdf_sparql')
 end
 
-# define upload task
-task :upload => :package do |task|
-  sh "scp pkg/#{GEMNAME} eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
-  #sh "scp activerdf-*/pkg/*.gem eyal@m3pe.org:/home/eyal/webs/activerdf/gems/"
-end
-
-task :install => [:package] do
-  sh "sudo gem install pkg/#{GEMNAME}"
-end
-
-task :uninstall => [:clean] do
-  sh "sudo gem uninstall #{NAME}"
-end
-
-task :reinstall => [:uninstall, :install]
-
-# define task rcov
 begin
   require 'rcov/rcovtask'
   Rcov::RcovTask.new do |t|
     t.test_files = FileList["activerdf-*/test/**/*.rb"]
     t.verbose = true
-    # t.rcov_opts << "--test-unit-only "
   end
 rescue LoadError
-  # rcov not installed
 end
 
 # define test_all task
@@ -79,3 +63,39 @@ Rake::TestTask.new do |t|
   t.name = :test_all
   t.test_files = FileList["test/**/*.rb", "activerdf-*/test/**/*.rb"]
 end
+
+task :verify_rubyforge do
+  raise "RUBYFORGE_USER environment variable not set!" unless ENV['RUBYFORGE_USER']
+  raise "RUBYFORGE_PASSWORD environment variable not set!" unless ENV['RUBYFORGE_PASSWORD']
+end
+
+desc "Release files on RubyForge."
+task :release_files => [ :clean, :verify_rubyforge, :package ] do
+  release_files = FileList["pkg/#$distdir.gem"]
+  Rake::XForge::Release.new($project) do |release|
+    release.user_name     = ENV['RUBYFORGE_USER']
+    release.password      = ENV['RUBYFORGE_PASSWORD']
+    release.files         = release_files.to_a
+    release.release_name  = "#$name #$version"
+    release.package_name  = "activerdf"
+    release.release_notes = ""
+
+    changes = []
+    File.open("CHANGELOG") do |file|
+      current = true
+
+      file.each do |line|
+        line.chomp!
+				if current and line =~ /^==/
+					current = false; next
+				end
+        break if line.empty? and not current
+        changes << line
+      end
+    end
+    release.release_changes = changes.join("\n")
+  end
+end
+
+desc "Release the latest version."
+task :release => [ :verify_rubyforge, :release_files, :rdoc ]
