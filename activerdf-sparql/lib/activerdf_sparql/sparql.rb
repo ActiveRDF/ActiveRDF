@@ -3,7 +3,7 @@ require 'queryengine/query2sparql'
 require 'open-uri'
 require 'cgi'
 require 'rexml/document'
-require 'sparql_result_parser'
+require "#{File.dirname(__FILE__)}/sparql_result_parser"
   
 # SPARQL adapter
 class SparqlAdapter < ActiveRdfAdapter

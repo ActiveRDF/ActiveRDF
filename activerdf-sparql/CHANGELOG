@@ -1,7 +1,8 @@
-activerdf_sparql (1.2)
+== activerdf_sparql (1.2.1) Tue, 13 Feb 2007 19:18:47 +0000
+  * gems published automatically from Rakefile 
+  * fixed wrong require statement in sparql.rb
 
+== activerdf_sparql (1.2) Tue, 13 Feb 2007 17:00:29 +0000
   * added dependency on json
-	* made tests bit more functional
-	* ensure tests do not fail if SPARQL server is down
-
- -- Eyal Oren <eyal.oren@deri.org> Tue, 13 Feb 2007 17:00:29 +0000
+  * made tests bit more functional
+  * ensure tests do not fail if SPARQL server is down

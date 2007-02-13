@@ -1,18 +1,22 @@
+require 'meta_project'
 require 'rake'
 require 'rake/testtask'
 require 'rake/clean'
 require 'rake/gempackagetask'
 require 'rake/rdoctask'
+require 'rake/contrib/xforge'
+require 'rubygems'
 require 'fileutils'
-include FileUtils
+require '../tools/rakehelp'
+
+$version  = IO.read('VERSION').strip
+$name     = 'activerdf_sparql'
+$project  = MetaProject::Project::XForge::RubyForge.new('activerdf')
+$distdir  = "#$name-#$version"
 
 # setup tests
-Rake::TestTask.new do |task|
-	task.test_files = FileList['test/**/*.rb']
-end
-
-# setup which files to clean
-CLEAN.include ['**/*.log', 'pkg', 'lib/*.bundle', '*.gem', '.config']
+setup_tests
+setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
 
 # setup rdoc 
 Rake::RDocTask.new do |rdoc|
@@ -24,23 +28,7 @@ end
 desc "Does a full compile, test run"
 task :default => [:test, :package]
 
-spec = Gem::Specification.new do |spec|
-  spec.name = 'activerdf_sparql'
-  spec.version = '1.2'
-  spec.platform = Gem::Platform::RUBY
-  spec.has_rdoc = true
-  spec.extra_rdoc_files = [ "README" ]
-
-  spec.files = %w(LICENSE README Rakefile) +
-  Dir.glob("{bin,doc/rdoc,test,lib}/**/*") +
-  Dir.glob("ext/**/*.{h,c,rb}") +
-  Dir.glob("examples/**/*.rb") +
-  Dir.glob("tools/*.rb")
-
-  spec.require_path = "lib"
-  spec.extensions = FileList["ext/**/extconf.rb"].to_a
-  spec.bindir = "bin"
-
+setup_gem($name, $version) do |spec|
   spec.summary = "ActiveRDF adapter to SPARQL endpoint" 
   spec.description = spec.summary
   spec.author="Eyal Oren <eyal.oren@deri.org"
@@ -49,17 +37,39 @@ spec = Gem::Specification.new do |spec|
   spec.add_dependency('json')
 end
 
-Rake::GemPackageTask.new(spec) do |p|
-  p.gem_spec = spec
-  p.need_tar = false
+task :verify_rubyforge do
+  raise "RUBYFORGE_USER environment variable not set!" unless ENV['RUBYFORGE_USER']
+  raise "RUBYFORGE_PASSWORD environment variable not set!" unless ENV['RUBYFORGE_PASSWORD']
 end
 
-task :install => [:package] do
-  sh %{sudo gem install pkg/#{name}-#{version}.gem}
+desc "Release files on RubyForge."
+task :release_files => [:clean, :verify_rubyforge, :package ] do
+  release_files = FileList["pkg/#$distdir.gem"]
+
+  Rake::XForge::Release.new($project) do |release|
+    release.user_name     = ENV['RUBYFORGE_USER']
+    release.password      = ENV['RUBYFORGE_PASSWORD']
+    release.files         = release_files.to_a
+    release.release_name  = "#$name #$version"
+    release.package_name  = "activerdf-sparql"
+		release.release_notes = ""
+
+    changes = []
+    File.open("CHANGELOG") do |file|
+      current = true
+
+      file.each do |line|
+        line.chomp!
+				if current and line =~ /^==/
+					current = false; next 
+				end
+        break if line.empty? and not current
+        changes << line
+      end
+    end
+    release.release_changes = changes.join("\n")
+  end
 end
 
-task :uninstall => [:clean] do
-  sh %{sudo gem uninstall #{name}}
-end
-
-task :reinstall => [:uninstall, :install]
+desc "Release the latest version."
+task :release => [ :verify_rubyforge, :release_files, :rdoc ]
