@@ -13,6 +13,32 @@ class Namespace
 		$activerdflog.info "Namespace: registering #{fullURI} to #{prefix}"
     @@namespaces[prefix.to_sym] = fullURI.to_s
     @@inverted_namespaces[fullURI.to_s] = prefix.to_sym
+
+    # enable namespace lookups through FOAF::name
+    #
+    # create FOAF module
+    ns = Module.new  
+    class << ns
+      # catch FOAF::name or all other lookups 
+      def method_missing(method, *args)
+        Namespace.lookup(self.to_s.downcase.to_sym, method)
+      end
+
+      # make all methods private (except ones that we still need later)
+      # so that they do not clash with NS lookups
+      methods.each do |m|
+        m = m.to_sym
+        unless [:private,:nesting,:new,:superclass,:allocate,:yaml_tag_subclasses?,:method_missing,:to_s].include?(m) 
+          private(m) 
+        end
+      end
+    end
+
+    # create the constant for the namespace proxy (e.g. FOAF or DOAP)
+    Object.const_set(prefix.to_s.upcase, ns)
+
+    # return this new namespace proxy object
+    ns
   end
 
   # returns a resource whose URI is formed by concatenation of prefix and localname

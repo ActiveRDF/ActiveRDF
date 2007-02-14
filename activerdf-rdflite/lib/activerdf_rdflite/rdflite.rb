@@ -159,6 +159,7 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	# adds ntriples from given context into datastore
+  # TODO: use NTriplesParser
 	def add_ntriples(ntriples, context)
 
 		# need unique identifier for this batch of triples (to detect occurence of 
