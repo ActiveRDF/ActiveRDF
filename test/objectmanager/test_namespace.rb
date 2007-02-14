@@ -62,4 +62,16 @@ class TestNamespace < Test::Unit::TestCase
 
 		assert_equal abc, Namespace.expand(:test, :abc)
   end
+
+  def test_attributes
+    assert_nothing_raised { RDFS::domain }
+    assert_nothing_raised { RDF::type }
+    assert_raise(NameError) { FOAF::type }
+
+    foaf = 'http://xmlns.com/foaf/0.1/'
+    Namespace.register :foaf, foaf
+
+    foafname = RDFS::Resource.new(foaf + 'name')
+    assert_equal foafname, FOAF::name
+  end
 end

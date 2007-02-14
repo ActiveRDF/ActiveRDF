@@ -15,11 +15,17 @@ class Namespace
     @@inverted_namespaces[fullURI.to_s] = prefix.to_sym
 
     # enable namespace lookups through FOAF::name
-    #
-    # create FOAF module
-    ns = Module.new  
+    # if FOAF defined, add to it
+    if Object.const_defined?(prefix.to_s.upcase)
+      ns = Object.const_get(prefix.to_s.upcase)
+    else
+      # otherwise create a new module for it
+      ns = Module.new  
+      Object.const_set(prefix.to_s.upcase, ns)
+    end
+
+    # catch FOAF::name or all other lookups 
     class << ns
-      # catch FOAF::name or all other lookups 
       def method_missing(method, *args)
         Namespace.lookup(self.to_s.downcase.to_sym, method)
       end
@@ -28,14 +34,12 @@ class Namespace
       # so that they do not clash with NS lookups
       methods.each do |m|
         m = m.to_sym
-        unless [:private,:nesting,:new,:superclass,:allocate,:yaml_tag_subclasses?,:method_missing,:to_s].include?(m) 
+        unless [:private,:nesting,:new,:superclass,
+          :allocate,:yaml_tag_subclasses?,:method_missing,:to_s,:class_inheritable_hash_writer].include?(m) 
           private(m) 
         end
       end
     end
-
-    # create the constant for the namespace proxy (e.g. FOAF or DOAP)
-    Object.const_set(prefix.to_s.upcase, ns)
 
     # return this new namespace proxy object
     ns
