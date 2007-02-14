@@ -70,7 +70,7 @@ task :verify_rubyforge do
 end
 
 desc "Release files on RubyForge."
-task :release_files => [ :clean, :verify_rubyforge, :package ] do
+task :release => [ :clean, :verify_rubyforge, :package ] do
   release_files = FileList["pkg/#$distdir.gem"]
   Rake::XForge::Release.new($project) do |release|
     release.user_name     = ENV['RUBYFORGE_USER']
@@ -97,5 +97,5 @@ task :release_files => [ :clean, :verify_rubyforge, :package ] do
   end
 end
 
-desc "Release the latest version."
-task :release => [ :verify_rubyforge, :release_files, :rdoc ]
+desc "Release files on RubyForge and build documentation"
+task :release_docs => [ :release, :rdoc ]
