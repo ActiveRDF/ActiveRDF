@@ -24,12 +24,8 @@ EOF
     results = NTriplesParser.parse(str)
     assert_equal 9, results.flatten.size
     assert_equal 3, results[0].size
-    require "pp"
-    pp results
-#    adapter = ConnectionPool.add_data_source(:type => :sparql)
-#    assert_instance_of RDFS::Resource, results[0][0]
-#    assert_instance_of String, results[0][2]
 
+    assert_equal RDFS::Resource, results[0][0].class
+    assert_equal String, results[0][2].class
   end
- 
 end
