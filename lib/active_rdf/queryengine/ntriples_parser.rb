@@ -20,7 +20,7 @@ class NTriplesParser
 			# handle bnodes if necessary (bnodes need to have uri generated)
 			subject = case nodes[0]
 								when BNode
-									RDFS::Resource.new("<http://www.activerdf.org/bnode/#{uuid}/#$1>")
+									RDFS::Resource.new("http://www.activerdf.org/bnode/#{uuid}/#$1")
 								else
 									RDFS::Resource.new(nodes[0])
 								end
@@ -30,7 +30,7 @@ class NTriplesParser
 			# handle bnodes and literals if necessary (literals need unicode fixing)
 			object = case nodes[2]
 							 when BNode
-								 RDFS::Resource.new("<http://www.activerdf.org/bnode/#{uuid}/#$1>")
+								 RDFS::Resource.new("http://www.activerdf.org/bnode/#{uuid}/#$1")
 							 when Literal
 								 fix_unicode(nodes[2])
 							 else
@@ -44,12 +44,13 @@ class NTriplesParser
 
 	private
 	# constants for extracting resources/literals from sql results
+	Node = Regexp.union(/_:\S*/,/<[^>]*>/,/"[^"]*"/)
 	BNode = /_:(\S*)/
 	Resource = /<([^>]*)>/
 	Literal = /"([^"]*)"/
 
 	# fixes unicode characters in literals (because we parse them wrongly somehow)
-	def fix_unicode(str)
+	def self.fix_unicode(str)
 		tmp = str.gsub(/\\\u([0-9a-fA-F]{4,4})/u){ "U+#$1" }
     tmp.gsub(/U\+([0-9a-fA-F]{4,4})/u){["#$1".hex ].pack('U*')}
 	end
