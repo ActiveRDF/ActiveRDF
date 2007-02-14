@@ -48,7 +48,7 @@ class TestQuery < Test::Unit::TestCase
   end
 
 	def test_query_refuses_string_in_where_clause_subject_or_predicate
-    assert_raises ActiveRdfError do
+    assert_raises(ActiveRdfError)do
       Query.new.select(:s).where("http://test.org/uri",:p, :o).execute
     end
   end

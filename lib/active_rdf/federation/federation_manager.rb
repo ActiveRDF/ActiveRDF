@@ -7,6 +7,7 @@ class FederationManager
   # add triple s,p,o to the currently selected write-adapter
   def FederationManager.add(s,p,o)
     # TODO: allow addition of full graphs
+    raise ActiveRdfError, "cannot write without a write-adapter" unless ConnectionPool.write_adapter
     ConnectionPool.write_adapter.add(s,p,o)
   end
 

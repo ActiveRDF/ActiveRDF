@@ -30,18 +30,12 @@ class Namespace
         Namespace.lookup(self.to_s.downcase.to_sym, method)
       end
 
-      # make all methods private (except ones that we still need later)
-      # so that they do not clash with NS lookups
-      methods.each do |m|
-        m = m.to_sym
-        unless [:private,:nesting,:new,:superclass,
-          :allocate,:yaml_tag_subclasses?,:method_missing,:to_s,:class_inheritable_hash_writer].include?(m) 
-          private(m) 
-        end
-      end
+      # make some builtin methods private because lookup doesn't work otherwise 
+      # on e.g. RDF::type and FOAF::name
+      [:type, :name].each {|m| private(m) }
     end
 
-    # return this new namespace proxy object
+    # return the namespace proxy object
     ns
   end
 

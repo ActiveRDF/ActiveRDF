@@ -1,3 +1,6 @@
+== activerdf (1.2.3) Wed, 14 Feb 2007 16:07:41 +0000
+  * namespaced properties are first-class citizens: FOAF::name or RDFS::domain
+
 == activerdf (1.2.2) Tue, 13 Feb 2007 19:40:19 +0000
   * gems published automatically from Rakefile 
   * added support for namespaced attributes:

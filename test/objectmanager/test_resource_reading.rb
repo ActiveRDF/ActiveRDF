@@ -12,6 +12,8 @@ class TestResourceReading < Test::Unit::TestCase
 		ConnectionPool.clear
     @adapter = get_read_only_adapter
     Namespace.register(:ar, 'http://activerdf.org/test/')
+    ObjectManager.construct_classes
+
     @eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
   end
 
@@ -75,9 +77,6 @@ class TestResourceReading < Test::Unit::TestCase
 
   # test for writing if no write adapter is defined (like only sparqls)
   def test_write_without_write_adapter
-    assert_raises NoMethodError do
-      @eyal.age = 18
-    end
+    assert_raises(ActiveRdfError) { @eyal.age = 18 }
   end
-
 end
