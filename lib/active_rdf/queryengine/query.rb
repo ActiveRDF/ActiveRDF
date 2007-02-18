@@ -95,10 +95,10 @@ class Query
 			# if you construct this query manually, you shouldn't! if your select 
 			# variable happens to be in one of the removed clauses: tough luck.
 
-			unless s.respond_to?(:uri) or s.class == Symbol
+			unless [RDFS::Resource, Symbol].include?(s.class)
 				raise(ActiveRdfError, "cannot add a where clause with s #{s}: s must be a resource or a variable")
 			end
-			unless p.respond_to?(:uri) or p.class == Symbol
+			unless [RDFS::Resource, Symbol].include?(s.class)
 				raise(ActiveRdfError, "cannot add a where clause with p #{p}: p must be a resource or a variable")
 			end
 
@@ -157,11 +157,12 @@ class Query
     case s
     when Symbol
 			s
-      #'?' + s.to_s
     when RDFS::Resource
       s
 		when nil
 			nil
+    when Literal
+      s
     else
       '"' + s.to_s + '"'
     end
