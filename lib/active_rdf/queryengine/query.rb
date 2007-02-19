@@ -95,10 +95,10 @@ class Query
 			# if you construct this query manually, you shouldn't! if your select 
 			# variable happens to be in one of the removed clauses: tough luck.
 
-			unless [RDFS::Resource, Symbol].include?(s.class)
+			unless s.is_a?(RDFS::Resource) or s.is_a?(Symbol)
 				raise(ActiveRdfError, "cannot add a where clause with s #{s}: s must be a resource or a variable")
 			end
-			unless [RDFS::Resource, Symbol].include?(s.class)
+			unless p.is_a?(RDFS::Resource) or p.is_a?(Symbol)
 				raise(ActiveRdfError, "cannot add a where clause with p #{p}: p must be a resource or a variable")
 			end
 
