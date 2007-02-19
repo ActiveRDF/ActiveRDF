@@ -46,5 +46,8 @@ class TestLiteral < Test::Unit::TestCase
     cat_en = Literal.new('cat', '@en')
     assert_equal '"cat"@en', cat_en.to_s
     assert_not_equal cat.to_s, cat_en.to_s
+
+    assert_equal '"dog"@en-GB', Literal.new('dog', '@en-GB').to_s
+    assert_equal '"dog"@en@test', Literal.new('dog', '@en@test').to_s
   end
 end
