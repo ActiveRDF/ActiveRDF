@@ -8,6 +8,8 @@ require "#{File.dirname(__FILE__)}/../common"
 
 class TestLiteral < Test::Unit::TestCase
   def setup
+		ConnectionPool.clear
+    @adapter = get_read_only_adapter
   end
 
   def teardown
@@ -31,5 +33,18 @@ class TestLiteral < Test::Unit::TestCase
     # infer boolean
     test = Literal.new(true)
     assert_equal '"true"^^<http://www.w3.org/2001/XMLSchema#boolean>', test.to_s
+  end
+  
+  def test_equality
+    test1 = Literal.new('test')
+    test2 = Literal.new('test', XSD::string)  
+    assert_equal test2.to_s, test1.to_s
+  end
+  
+  def test_language_tag
+    cat = Literal.new('cat')
+    cat_en = Literal.new('cat', '@en')
+    assert_equal '"cat"@en', cat_en.to_s
+    assert_not_equal cat.to_s, cat_en.to_s
   end
 end
