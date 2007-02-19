@@ -46,7 +46,7 @@ setup_gem("activerdf",$version) do |spec|
   spec.platform = Gem::Platform::RUBY
   spec.autorequire = 'active_rdf'
   spec.add_dependency('gem_plugin', '>= 0.2.1')
-  spec.add_dependency('activerdf_sparql')
+#  spec.add_dependency('activerdf_sparql')
 end
 
 begin
