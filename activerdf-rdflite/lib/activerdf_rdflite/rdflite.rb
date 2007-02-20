@@ -490,7 +490,7 @@ class RDFLite < ActiveRdfAdapter
 		when Resource
 			RDFS::Resource.new($1)
 		when Literal
-			String.new($1)
+			"#$1" # using "" to enable string interpolation such as abc\ndef
 		else
 			# when we do a count(*) query we get a number, not a resource/literal
 			result
