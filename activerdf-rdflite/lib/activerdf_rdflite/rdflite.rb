@@ -490,13 +490,12 @@ class RDFLite < ActiveRdfAdapter
 		when Resource
 			RDFS::Resource.new($1)
 		when Literal
-			"#$1".gsub('\n',"\n") # fix interpolations such as abc\ndef
+      eval('"' + $1 + '"') # use eval to have ruby interpolate string such as 'test\nbreak'
 		else
 			# when we do a count(*) query we get a number, not a resource/literal
 			result
 		end
 	end
-
 
 	def create_indices(params)
 		sidx = params[:sidx] || false
