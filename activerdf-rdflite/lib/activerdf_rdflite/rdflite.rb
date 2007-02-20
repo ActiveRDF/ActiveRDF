@@ -490,7 +490,8 @@ class RDFLite < ActiveRdfAdapter
 		when Resource
 			RDFS::Resource.new($1)
 		when Literal
-      eval('"' + $1 + '"') # use eval to have ruby interpolate string such as 'test\nbreak'
+      # replace special characters to allow string interpolation for e.g. 'test\nbreak'
+      $1.gsub('\n',"\n").gsub('\t',"\t")
 		else
 			# when we do a count(*) query we get a number, not a resource/literal
 			result
