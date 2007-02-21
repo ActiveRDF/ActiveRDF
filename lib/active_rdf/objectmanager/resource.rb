@@ -419,7 +419,7 @@ class DynamicFinderProxy
     # retrieve them (we cannot return them here, since we were invoked from 
     # the initialize method so all return values are ignored, instead the proxy 
     # itself is returned)
-    @value = query.execute
+    @value = query.execute(:flatten => true)
     return value
   end
 end
