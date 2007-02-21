@@ -2,6 +2,7 @@
   * fixed literals with escape characters rdflite 
   * fixed parsing of content-encoded (HTML) literals
   * refactored rdflite to use generic NTriplesParser
+  * added test cases for encoded and escaped literals
   
 == activerdf_rdflite (1.2.3) Tue, 13 Feb 2007 20:07:01 +0000
   * gems published automatically from Rakefile 
