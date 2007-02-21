@@ -54,10 +54,10 @@ class NTriplesParser
 
 	private
 	# constants for extracting resources/literals from sql results
-	Node = Regexp.union(/"[^"]*"/,/_:\S*/,/<[^>]*>/)
+	Node = Regexp.union(/"(?:\\"|[^"])*"/,/_:\S*/,/<[^>]*>/)
 	BNode = /_:(\S*)/
 	Resource = /<([^>]*)>/
-	Literal = /"([^"]*)"/
+	Literal = /"((?:\\"|[^"])*)"/
 
 	# fixes unicode characters in literals (because we parse them wrongly somehow)
 	def self.fix_unicode(str)

@@ -14,36 +14,43 @@ class TestNTriplesParser < Test::Unit::TestCase
   def teardown
   end
 
-  def test_the_parser
+  def test_simple_triples
     str = <<EOF
 <http://www.johnbreslin.com/blog/author/cloud/#foaf> <http://xmlns.com/foaf/0.1/surname> "Breslin" .
 <http://www.johnbreslin.com/blog/author/cloud/#foaf> <http://xmlns.com/foaf/0.1/firstName> "John" .
 <http://www.johnbreslin.com/blog/author/cloud/> <http://purl.org/dc/terms/created> "1999-11-30T00:00:00" .  				
 EOF
     
-    results = NTriplesParser.parse(str)
-    assert_equal 9, results.flatten.size
-    assert_equal 3, results[0].size
+    triples = NTriplesParser.parse(str)
+    assert_equal 9, triples.flatten.size
+    assert_equal 3, triples[0].size
 
-    assert_equal RDFS::Resource.new('http://www.johnbreslin.com/blog/author/cloud/#foaf'), results[0][0]
-    assert_equal RDFS::Resource.new('http://xmlns.com/foaf/0.1/surname'), results[0][1]
-    assert_equal 'Breslin', results[0][2]
+    assert_equal RDFS::Resource.new('http://www.johnbreslin.com/blog/author/cloud/#foaf'), triples[0][0]
+    assert_equal RDFS::Resource.new('http://xmlns.com/foaf/0.1/surname'), triples[0][1]
+    assert_equal 'Breslin', triples[0][2]
   end
 
-  # make sure that encoded content (as in RSS feeds) which contains a lot of <something> is not 
-  # interpreted as just a single URL, bit is instead interpreted as a string 
-  def test_parsing_of_encoded_content
+  def test_encoded_content
     str = <<'EOF'
   <http://b4mad.net/datenbrei/archives/2004/07/15/brainstream-his-own-foafing-in-wordpress/#comment-10> <http://purl.org/rss/1.0/modules/content/encoded> "<p>Heh - excellent. Are we leaving Morten in the dust? :) I know he had some bu gs to fix in his version.</p>\n<p>Also, I think we should really add the foaf: in front of the foaf properties to ma ke it easier to read. </p>\n<p>Other hack ideas:</p>\n<p>* Birthdate in month/date/year (seperate fields) to add bio :Event/ bio:Birth and then say who can see the birth year, birth day/mo and full birth date.<br />\n* Add trust leve ls to friends<br />\n* Storing ones PGP key/key fingerprint in Wordpress and referencing it as user_pubkey/user_pubk eyprint respectively<br />\n* Add gender, depiction picture for profile, myers-brigs, astrological sign fields to Pr ofile.<br />\n* Add the option to create Projects/Groups user is involved with re: their Profile.<br />\n* Maybe add phone numbers/address/geo location? Essentially make it a VCard that can be foafified.\n</p>\n" .
 EOF
     literal = '<p>Heh - excellent. Are we leaving Morten in the dust? :) I know he had some bu gs to fix in his version.</p>\n<p>Also, I think we should really add the foaf: in front of the foaf properties to ma ke it easier to read. </p>\n<p>Other hack ideas:</p>\n<p>* Birthdate in month/date/year (seperate fields) to add bio :Event/ bio:Birth and then say who can see the birth year, birth day/mo and full birth date.<br />\n* Add trust leve ls to friends<br />\n* Storing ones PGP key/key fingerprint in Wordpress and referencing it as user_pubkey/user_pubk eyprint respectively<br />\n* Add gender, depiction picture for profile, myers-brigs, astrological sign fields to Pr ofile.<br />\n* Add the option to create Projects/Groups user is involved with re: their Profile.<br />\n* Maybe add phone numbers/address/geo location? Essentially make it a VCard that can be foafified.\n</p>\n'
 
-    results = NTriplesParser.parse(str)
-    assert_equal 1, results.size
+    triples = NTriplesParser.parse(str)
+    assert_equal 1, triples.size
 
-    encoded_content = results.first[2]
+    encoded_content = triples.first[2]
     assert_equal literal, encoded_content
     assert_equal String, encoded_content.class
     assert encoded_content.include?('PGP')
+  end
+
+  def test_escaped_quotes
+    string = '<subject> <predicate> "test string with \n breaks and \" escaped quotes" .'
+    literal = 'test string with \n breaks and \" escaped quotes'
+    triples = NTriplesParser.parse(string)
+
+    assert_equal 1, triples.size
+    assert_equal literal, triples.first[2] 
   end
 end
