@@ -6,6 +6,7 @@ require 'sqlite3'
 require 'active_rdf'
 require 'federation/connection_pool'
 require 'uuidtools'
+require 'queryengine/ntriples_parser'
 
 $activerdflog.info "loading RDFLite adapter"
 
@@ -159,39 +160,16 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	# adds ntriples from given context into datastore
-  # TODO: use NTriplesParser
 	def add_ntriples(ntriples, context)
-
-		# need unique identifier for this batch of triples (to detect occurence of 
-		# same bnodes _:#1
-		uuid = UUID.random_create.to_s
 
 		# add each triple to db
 		@db.transaction
 		insert = @db.prepare('insert into triple values (?,?,?,?);')
 
-		ntriples.each do |triple|
-			nodes = triple.scan(Node)
-
-			# handle bnodes if necessary (bnodes need to have uri generated)
-			subject = case nodes[0]
-								when BNode
-									"<http://www.activerdf.org/bnode/#{uuid}/#$1>"
-								else
-									nodes[0]
-								end
-
-			predicate = nodes[1]
-
-			# handle bnodes and literals if necessary (literals need unicode fixing)
-			object = case nodes[2]
-							 when BNode
-								 "<http://www.activerdf.org/bnode/#{uuid}/#$1>"
-							 when Literal
-								 fix_unicode(nodes[2])
-							 else
-								 nodes[2]
-							 end
+    ntriples = NTriplesParser.parse(ntriples)
+    ntriples.each do |s,p,o|
+      # convert triples into internal db format
+      subject, predicate, object = [s,p,o].collect {|r| internalise(r) }
 
 			# insert triple into database
 			insert.execute(subject, predicate, object, context)
@@ -232,10 +210,6 @@ class RDFLite < ActiveRdfAdapter
 
 	private
 	# constants for extracting resources/literals from sql results
-	BNode = /_:(\S*)/
-	Resource = /<([^>]*)>/
-	Literal = /"([^"]*)"/
-	Node = Regexp.union(/_:\S*/,/<[^>]*>/,/"[^"]*"/)
 	SPOC = ['s','p','o','c']
 
 	# construct select clause
@@ -487,11 +461,11 @@ class RDFLite < ActiveRdfAdapter
 
 	def parse(result)
 		case result
-		when Resource
-			RDFS::Resource.new($1)
 		when Literal
       # replace special characters to allow string interpolation for e.g. 'test\nbreak'
       $1.gsub('\n',"\n").gsub('\t',"\t")
+		when Resource
+			RDFS::Resource.new($1)
 		else
 			# when we do a count(*) query we get a number, not a resource/literal
 			result
@@ -536,6 +510,9 @@ class RDFLite < ActiveRdfAdapter
 		tmp = str.gsub(/\\\u([0-9a-fA-F]{4,4})/u){ "U+#$1" }
     tmp.gsub(/U\+([0-9a-fA-F]{4,4})/u){["#$1".hex ].pack('U*')}
 	end
+
+  Resource = /<([^>]*)>/
+  Literal = /"([^"]*)"/
 
 	public :subproperties
 end
