@@ -512,7 +512,7 @@ class RDFLite < ActiveRdfAdapter
 	end
 
   Resource = /<([^>]*)>/
-  Literal = /"([^"]*)"/
+  Literal = /"((?:\\"|[^"])*)"/
 
 	public :subproperties
 end
