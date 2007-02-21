@@ -11,7 +11,7 @@ class TestResourceReading < Test::Unit::TestCase
   def setup
 		ConnectionPool.clear
     @adapter = get_read_only_adapter
-    Namespace.register(:ar, 'http://activerdf.org/test/')
+    Namespace.register(:test, 'http://activerdf.org/test/')
     ObjectManager.construct_classes
 
     @eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
@@ -22,7 +22,7 @@ class TestResourceReading < Test::Unit::TestCase
 
   def test_find_all_instances
     assert_equal 36, RDFS::Resource.find_all.size
-    assert_equal [@eyal], AR::Person.find_all
+    assert_equal [@eyal], TEST::Person.find_all
   end
 
   def test_class_predicates
@@ -47,7 +47,7 @@ class TestResourceReading < Test::Unit::TestCase
   def test_eyal_types
     types = @eyal.type
 		assert_equal 2, types.size
-		assert types.include?(AR::Person)
+		assert types.include?(TEST::Person)
 		assert types.include?(RDFS::Resource)
   end
 
@@ -64,15 +64,20 @@ class TestResourceReading < Test::Unit::TestCase
 
   def test_eyal_type
     assert_instance_of RDFS::Resource, @eyal
-    assert_instance_of AR::Person, @eyal
+    assert_instance_of TEST::Person, @eyal
   end
 
   def test_find_methods
-    found_eyal = RDFS::Resource.find_by_eye('blue')
-    assert_not_nil found_eyal
-    assert_equal @eyal, found_eyal
-    assert_equal 'blue', RDFS::Resource.find_by_age(27).eye
-    assert_equal @eyal, RDFS::Resource.find_by_age_and_eye(27,'blue')
+    assert_equal [@eyal], RDFS::Resource.find_by_eye('blue')
+    assert_equal [@eyal], RDFS::Resource.find_by_test::eye('blue')
+
+    assert_equal [@eyal], RDFS::Resource.find_by_age(27)
+    assert_equal [@eyal], RDFS::Resource.find_by_test::age(27)
+
+    assert_equal [@eyal], RDFS::Resource.find_by_age_and_eye(27, 'blue')
+    assert_equal [@eyal], RDFS::Resource.find_by_test::age_and_test::eye(27, 'blue')
+    assert_equal [@eyal], RDFS::Resource.find_by_test::age_and_eye(27, 'blue')
+    assert_equal [@eyal], RDFS::Resource.find_by_age_and_test::eye(27, 'blue')
   end
 
   # test for writing if no write adapter is defined (like only sparqls)

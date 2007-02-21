@@ -10,6 +10,7 @@ class Namespace
   # e.g. :rdf and 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
   def self.register(prefix, fullURI)
 		raise ActiveRdfError, 'prefix nor uri can be empty' if (prefix.to_s.empty? or fullURI.to_s.empty?)
+    raise ActiveRdfError, "namespace uri should end with # or /" unless /\/|#/ =~ fullURI.to_s[-1..-1]
 		$activerdflog.info "Namespace: registering #{fullURI} to #{prefix}"
     @@namespaces[prefix.to_sym] = fullURI.to_s
     @@inverted_namespaces[fullURI.to_s] = prefix.to_sym

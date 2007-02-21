@@ -67,42 +67,21 @@ module RDFS
       Query.new.distinct(:p).where(:p, domain, class_uri).execute || []
     end
 
-    # manages invocations such as Person.find_by_name
+    # manages invocations such as Person.find_by_name, 
+    # Person.find_by_foaf::name, Person.find_by_foaf::name_and_foaf::knows, etc.
     def Resource.method_missing(method, *args)
-      method_name = method.to_s
+      if /find_by_(.+)/.match(method.to_s)
+        $activerdflog.debug "constructing dynamic finder for #{method}"
 
-      $activerdflog.debug "RDFS::Resource: method_missing on class: called with method name #{method}"
+        # construct proxy to handle delayed lookups 
+        # (find_by_foaf::name_and_foaf::age)
+        proxy = DynamicFinderProxy.new($1, nil, *args)
 
-      # extract predicates on which to match
-      # e.g. find_by_name, find_by_name_and_age
-      if match = /find_by_(.+)/.match(method_name)
-        # find searched attributes, e.g. name, age
-        attributes = match[1].split('_and_')
-
-        # get list of possible predicates for this class
-        possible_predicates = predicates
-
-        # build query looking for all resources with the given parameters
-        query = Query.new.distinct(:s)
-
-        # add where clause for each attribute-value pair,
-        # looking into possible_predicates to figure out
-        # which full-URI to use for each given parameter (heuristic)
-
-        attributes.each_with_index do |atr,i|
-          possible_predicates.each do |pred|
-            query.where(:s, pred, args[i]) if Namespace.localname(pred) == atr
-          end
-        end
-
-        # execute query
-        $activerdflog.debug "RDFS::Resource: method_missing on class: executing query: #{query}"
-        return query.execute(:flatten => true)
+        # if proxy already found a value (find_by_name) we will not get a more 
+        # complex query, so return the value. Otherwise, return the proxy so that 
+        # subsequent lookups are handled
+        return proxy.value || proxy
       end
-
-      # otherwise, if no match found, raise NoMethodError (in superclass)
-      $activerdflog.warn 'RDFS::Resource: method_missing on class: method not matching find_by_*'
-      super
     end
 
     # returns array of all instances of this class (e.g. Person.find_all)
@@ -187,6 +166,7 @@ module RDFS
 						predicate = Namespace.lookup(@@uri, localname)
 						Query.new.distinct(:o).where(@@subject, predicate, :o).execute(:flatten => true)
 					end
+          private(:type)
 				end
 				return namespace
 			end
@@ -302,8 +282,8 @@ module RDFS
 			else
 				q = Query.new.select(:p)
 			end
-			direct = q.where(self,:p, :o).execute
-			return (direct + direct.collect {|d| ancestors(d)}).flatten.uniq
+			q.where(self,:p, :o).execute
+			#return (direct + direct.collect {|d| ancestors(d)}).flatten.uniq
 		end
 
 		def property_accessors
@@ -326,10 +306,10 @@ module RDFS
 
 		private
 
-		def ancestors(predicate)
-			subproperty = Namespace.lookup(:rdfs,:subPropertyOf)
-			Query.new.distinct(:p).where(predicate, subproperty, :p).execute
-		end
+#		def ancestors(predicate)
+#			subproperty = Namespace.lookup(:rdfs,:subPropertyOf)
+#			Query.new.distinct(:p).where(predicate, subproperty, :p).execute
+#		end
 
 		def predicate_invocation(predicate, args, update)
 			if update
@@ -365,4 +345,81 @@ module RDFS
 			(types + defaults).uniq
 		end
 	end
+end
+
+# proxy to manage find_by_ invocations
+class DynamicFinderProxy
+  @ns = nil
+  @where = nil
+  @value = nil
+  attr_reader :value
+
+  # construct proxy from find_by text
+  # foaf::name
+  def initialize(find_string, where, *args)
+    @where = where || []
+    parse_attributes(find_string, *args)
+  end
+
+  def method_missing(method, *args)
+    # we store the ns:name for later (we need to wait until we have the 
+    # arguments before actually constructing the where clause): now we just 
+    # store that a where clause should appear about foaf:name
+
+    # if this method is called name_and_foaf::age we add ourself to the query
+    # otherwise, the query is built: we execute it and return the results
+    if method.to_s.include?('_and_')
+      parse_attributes(method.to_s, *args)
+    else
+      @where << Namespace.lookup(@ns, method.to_s)
+      query(*args)
+    end
+  end
+
+  private 
+  # split find_string by occurrences of _and_
+  def parse_attributes string, *args
+    attributes = string.split('_and_')
+    attributes.each do |atr|
+      # attribute can be:
+      # - a namespace prefix (foaf): store prefix in @ns to prepare for method_missing
+      # - name (attribute name): store in where to prepare for method_missing
+      if Namespace.abbreviations.include?(atr.to_sym)
+        @ns = atr.to_s.downcase.to_sym
+      else
+        # found simple attribute label, e.g. 'name'
+        # find out candidate (full) predicate for this localname: investigate 
+        # all possible predicates and select first one with matching localname
+        candidates = Query.new.distinct(:p).where(:s,:p,:o).execute
+        @where << candidates.select {|cand| Namespace.localname(cand) == atr}.first
+      end
+    end
+
+    # if the last attribute was a prefix, return this dynamic finder (we'll 
+    # catch the following method_missing and construct the real query then)
+    # if the last attribute was a localname, construct the query now and return 
+    # the results
+    if Namespace.abbreviations.include?(attributes.last.to_sym)
+      return self
+    else
+      return query(*args)
+    end
+  end
+
+  # construct and execute finder query
+  def query(*args)
+    query = Query.new.distinct(:s)
+    @where.each_with_index do |predicate, i|
+      query.where(:s, predicate, args[i])
+    end
+
+    $activerdflog.debug "executing dynamic finder: #{query.to_sp}"
+
+    # store the query results so that caller (Resource.method_missing) can 
+    # retrieve them (we cannot return them here, since we were invoked from 
+    # the initialize method so all return values are ignored, instead the proxy 
+    # itself is returned)
+    @value = query.execute
+    return value
+  end
 end
