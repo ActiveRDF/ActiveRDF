@@ -29,7 +29,7 @@ class RDFLite < ActiveRdfAdapter
 	# instantiates RDFLite database
 	# available parameters:
 	# * :location => filepath (defaults to memory)
-	# * :keyword => true/false (defaults to true)
+	# * :keyword => true/false (defaults to false)
 	# * :pidx, :oidx, etc. => true/false (enable/disable these indices)
 	def initialize(params = {})
 		$activerdflog.info "initialised rdflite with params #{params.to_s}"
@@ -41,8 +41,8 @@ class RDFLite < ActiveRdfAdapter
 		file = params[:location] || ':memory:'
 		@db = SQLite3::Database.new(file) 
 
-		# enable keyword search by default, but only if ferret is found
-		@keyword_search = params[:keyword].nil? ? true : params[:keyword]
+		# disable keyword search by default, enable only if ferret is found
+		@keyword_search = params[:keyword].nil? ? false : params[:keyword]
 		@keyword_search &= @@have_ferret
 
 		@reasoning = params[:reasoning] || false
@@ -131,14 +131,17 @@ class RDFLite < ActiveRdfAdapter
 		raise(ActiveRdfError, "adding non-resource #{s} while adding (#{s},#{p},#{o},#{c})") unless s.respond_to?(:uri)
 		raise(ActiveRdfError, "adding non-resource #{p} while adding (#{s},#{p},#{o},#{c})") unless p.respond_to?(:uri)
 
-		# get internal representation (array)
-		quad = [s,p,o,c].collect {|r| internalise(r) }
+    triple = [s, p, o].collect{|r| serialise(r) }
+    add_ntriples(triple.join(' ') + " .\n", serialise(c) )
 
-		# insert the triple into the datastore
-		@db.execute('insert into triple values (?,?,?,?)', *quad)
+		## get internal representation (array)
+		#quad = [s,p,o,c].collect {|r| internalise(r) }
 
-		# if keyword-search available, insert the object into keyword search
-		@ferret << {:subject => s, :object => o} if keyword_search?
+		## insert the triple into the datastore
+		#@db.execute('insert into triple values (?,?,?,?)', *quad)
+
+		## if keyword-search available, insert the object into keyword search
+		#@ferret << {:subject => s, :object => o} if keyword_search?
 	end
 
 	# flushes openstanding changes to underlying sqlite3
@@ -463,7 +466,7 @@ class RDFLite < ActiveRdfAdapter
 		case result
 		when Literal
       # replace special characters to allow string interpolation for e.g. 'test\nbreak'
-      $1.gsub('\n',"\n").gsub('\t',"\t")
+      $1.double_quote
 		when Resource
 			RDFS::Resource.new($1)
 		else
@@ -494,7 +497,6 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	# transform triple into internal format <uri> and "literal"
-	# returns array [s,p,o] 
 	def internalise(r)
 		if r.respond_to?(:uri)
 			"<#{r.uri}>"
@@ -505,14 +507,31 @@ class RDFLite < ActiveRdfAdapter
 		end
 	end
 
-	# fixes unicode characters in literals (because we parse them wrongly somehow)
-	def fix_unicode(str)
-		tmp = str.gsub(/\\\u([0-9a-fA-F]{4,4})/u){ "U+#$1" }
-    tmp.gsub(/U\+([0-9a-fA-F]{4,4})/u){["#$1".hex ].pack('U*')}
-	end
+  # transform resource/literal into ntriples format
+  def serialise(r)
+    case r
+    when RDFS::Resource
+      "<#{r.uri}>"
+    else
+      "\"#{r.to_s}\""
+    end
+  end
 
   Resource = /<([^>]*)>/
   Literal = /"((?:\\"|[^"])*)"/
 
 	public :subproperties
+end
+
+class String
+  def double_quote
+    Thread.new do
+      $SAFE = 12
+      begin
+        eval('"%s"' % self)
+      rescue Exception => e
+        self
+      end
+    end.value
+  end
 end

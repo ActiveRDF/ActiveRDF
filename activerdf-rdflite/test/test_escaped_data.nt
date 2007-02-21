@@ -1,0 +1,2 @@
+<http://activerdf.org/test/eyal> <http://activerdf.org/test/comment> "ümlauts and \u00ebmlauts" .
+<http://activerdf.org/test/eyal> <http://activerdf.org/test/encoded> "line\nbreaks, <p>'s and \"quotes\"" .

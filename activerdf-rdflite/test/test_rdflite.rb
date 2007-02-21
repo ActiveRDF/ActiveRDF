@@ -55,6 +55,34 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
     assert_equal 'eyaloren.org', result.uri
   end
 
+  def test_escaped_literals
+    adapter = ConnectionPool.add_data_source(:type => :rdflite)
+    eyal = RDFS::Resource.new 'eyal'
+    comment = RDFS::Resource.new 'comment'
+    string = 'test\nbreak\"quoted\"'
+    interpreted = "test\nbreak\"quoted\""
+
+    adapter.add(eyal, comment, string)
+    assert_equal interpreted, eyal.comment
+
+    description = RDFS::Resource.new 'description'
+    string = 'ümlaut and \u00ebmlaut'
+    interpreted = "ümlaut and ëmlaut"
+
+    adapter.add(eyal, description, string)
+    assert_equal interpreted, eyal.description
+  end
+
+  def test_load_escaped_literals
+    adapter = ConnectionPool.add_data_source(:type => :rdflite)
+		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_escaped_data.nt')
+    eyal = RDFS::Resource.new('http://activerdf.org/test/eyal')
+
+    assert_equal 2, adapter.size
+    assert_equal "ümlauts and ëmlauts", eyal.comment
+    assert_equal "line\nbreaks, <p>'s and \"quotes\"", eyal.encoded
+  end
+
   def test_federated_query
     adapter1 = ConnectionPool.add_data_source(:type => :rdflite)
     adapter2 = ConnectionPool.add_data_source(:type => :rdflite, :fake_symbol_to_get_unique_adapter => true)
@@ -141,16 +169,15 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
     eyal = RDFS::Resource.new 'eyaloren.org'
     age = RDFS::Resource.new 'foaf:age'
     test = RDFS::Resource.new 'test'
-    adapter.add(eyal, age, test)
+    adapter.add(eyal, age, test, 'context')
 
 		context = Query.new.distinct(:c).where(:s,:p,:o,:c).execute
 		assert_equal file_context, context[0]
-		assert_equal '', context[1]
+		assert_equal 'context', context[1]
 
-		n1 = Query.new.distinct(:s).where(:s, :p, :o, '').execute
-		n2 = Query.new.distinct(:s).where(:s, :p, :o, file_context).execute
-		assert_equal 1, n1.size
-		assert_equal 9, n2.size
+		assert_equal 10, Query.new.count.distinct(:s).where(:s, :p, :o, nil).execute
+		assert_equal 1, Query.new.count.distinct(:s).where(:s, :p, :o, 'context').execute
+		assert_equal 9, Query.new.count.distinct(:s).where(:s, :p, :o, file_context).execute
 	end
 
 	def test_person_data 
