@@ -1,4 +1,4 @@
-== activerdf_rdflite (1.3) ????
+== activerdf_rdflite (1.3) Tue, 27 Feb 2007 20:53:21 +0000
   * fixed literals with escape characters rdflite 
   * fixed parsing of content-encoded (HTML) literals
   * refactored rdflite to use generic NTriplesParser
