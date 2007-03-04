@@ -1,3 +1,7 @@
+== activerdf (1.5) ????
+  * remove ObjectManager.construct_classes (classes exist automagically after
+  Namespace.register)
+
 == activerdf (1.4) Tue, 27 Feb 2007 20:50:21 +0000
   * dynamic finders support prefixes (find_by_foaf::name)
   * ntriples parser supports encoded literals (HTML)

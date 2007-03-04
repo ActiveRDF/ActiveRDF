@@ -3,6 +3,9 @@ require 'objectmanager/object_manager'
 require 'objectmanager/namespace'
 require 'queryengine/query'
 
+# TODO: finish removal of ObjectManager.construct_classes: make dynamic finders 
+# accessible on instance level, and probably more stuff.
+
 module RDFS
 	# Represents an RDF resource and manages manipulations of that resource,
 	# including data lookup (e.g. eyal.age), data updates (e.g. eyal.age=20),
@@ -86,8 +89,8 @@ module RDFS
 
     # returns array of all instances of this class (e.g. Person.find_all)
     # (always returns collection)
-    def Resource.find_all
-      query = Query.new.distinct(:s).where(:s, Namespace.lookup(:rdf,:type), class_uri)
+    def Resource.find_all(uri=nil)
+      query = Query.new.distinct(:s).where(:s, Namespace.lookup(:rdf,:type), uri||class_uri)
       if block_given?
         query.execute do |resource|
           yield resource
@@ -100,6 +103,9 @@ module RDFS
     #####                         #####
     ##### instance level methods	#####
     #####                         #####
+    def find_all
+      self.class.find_all(self)
+    end
 
     # manages invocations such as eyal.age
     def method_missing(method, *args)
@@ -138,7 +144,7 @@ module RDFS
       # cheaper than (1)-(2) but (1) and (2) are probably more probable (getting
       # attribute values over executing custom methods)
 
-      $activerdflog.debug "RDFS::Resource: method_missing on instance: called with method name #{method}"
+      $activerdflog.debug "method_missing: #{method}"
 
       # are we doing an update or not? 
 			# checking if method ends with '='
