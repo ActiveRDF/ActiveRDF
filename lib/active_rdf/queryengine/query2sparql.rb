@@ -19,7 +19,6 @@ class Query2SPARQL
     return str
   end
 
-  private
   # concatenate each where clause using space (e.g. 's p o')
   # and concatenate the clauses using dot, e.g. 's p o . s2 p2 o2 .'
   def self.where_clauses(query)
@@ -41,7 +40,5 @@ class Query2SPARQL
 		end
 	end
 	
-  #declare the class level methods as private with these directives
-  private_class_method :where_clauses
-  private_class_method :construct_clause
+  private_class_method :where_clauses, :construct_clause
 end

@@ -24,8 +24,14 @@ module RDFS
 
     # creates new resource representing an RDF resource
     def initialize uri
-      raise ActiveRdfError, "creating resource <#{uri}>" unless uri.is_a?(String)
-      @uri = uri
+      @uri = case uri
+            when RDFS::Resource
+             uri.uri
+            when String
+              uri
+            else 
+              raise ActiveRdfError, "cannot create resource <#{uri}>"
+            end
 			@predicates = Hash.new
     end
 
@@ -89,8 +95,33 @@ module RDFS
 
     # returns array of all instances of this class (e.g. Person.find_all)
     # (always returns collection)
-    def Resource.find_all(uri=nil)
-      query = Query.new.distinct(:s).where(:s, Namespace.lookup(:rdf,:type), uri||class_uri)
+    def Resource.find_all(*args)
+      find(:all, *args)
+    end
+
+    def Resource.find(*args)
+      class_uri.find(*args)
+    end
+
+    #####                         #####
+    ##### instance level methods	#####
+    #####                         #####
+    def find(*args)
+      # extract sort options from args
+      options = args.last.is_a?(Hash) ? args.pop : {}
+
+      query = Query.new.distinct(:s)
+      query.where(:s, Namespace.lookup(:rdf,:type), self)
+
+      if options.include? :order
+        sort_predicate = options[:order]
+        query.sort(:sort_value)
+        query.where(:s, sort_predicate, :sort_value)
+      end
+
+      query.limit(options[:limit]) if options[:limit]
+      query.offset(options[:offset]) if options[:offset]
+
       if block_given?
         query.execute do |resource|
           yield resource
@@ -100,12 +131,6 @@ module RDFS
       end
     end
 
-    #####                         #####
-    ##### instance level methods	#####
-    #####                         #####
-    def find_all
-      self.class.find_all(self)
-    end
 
     # manages invocations such as eyal.age
     def method_missing(method, *args)

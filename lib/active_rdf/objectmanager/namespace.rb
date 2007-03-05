@@ -33,7 +33,7 @@ class Namespace
 
       # make some builtin methods private because lookup doesn't work otherwise 
       # on e.g. RDF::type and FOAF::name
-      [:type, :name].each {|m| private(m) }
+      [:type, :name, :id].each {|m| private(m) }
     end
 
     # return the namespace proxy object

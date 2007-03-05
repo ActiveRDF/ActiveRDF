@@ -15,6 +15,7 @@ class FederationManager
   # by distributing query over complete read-pool
   # and aggregating the results
   def FederationManager.query(q, options={:flatten => true})
+    $activerdflog.debug "querying #{q.to_sp}"
 		if ConnectionPool.read_adapters.empty?
 			raise ActiveRdfError, "cannot execute query without data sources" 
 		end

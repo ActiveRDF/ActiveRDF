@@ -40,7 +40,6 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 		assert_equal adapter1.object_id, adapter2.object_id
 	end
 
-
   def test_simple_query
     adapter = ConnectionPool.add_data_source(:type => :rdflite)
 
@@ -260,4 +259,17 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 		query.where(:Mary, :p, :Anne)
 		assert_equal 1, query.execute.size
 	end
+
+  def test_limit_and_offset
+    adapter = ConnectionPool.add_data_source :type => :rdflite
+		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')
+    Namespace.register(:test, 'http://activerdf.org/test/')
+
+    assert_equal 7, RDFS::Resource.find(:all).size
+    assert_equal 5, RDFS::Resource.find(:all, :limit => 5).size
+    assert_equal 4, RDFS::Resource.find(:all, :limit => 4, :offset => 3).size
+    assert RDFS::Resource.find(:all, :limit => 4, :offset => 3) != RDFS::Resource.find(:all, :limit => 4)
+
+    assert_equal [TEST::eyal, TEST::age, TEST::car], RDFS::Resource.find(:all, :limit => 3, :order => RDF::type)
+  end
 end

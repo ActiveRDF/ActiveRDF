@@ -57,25 +57,24 @@ class Query
 		select(*s)
 	end
 
-	# Adds sort predicates (must appear in select clause)
+	# Adds sort predicates
 	def sort *s
-		s.each do |e|
-			@sort_clauses << parametrise(e) 
-		end
-		# removing duplicate select clauses
+    # add sort clauses without duplicates
+		s.each { |clause| @sort_clauses << parametrise(clause) }
 		@sort_clauses.uniq!
+
 		self
 	end
 
 	# Adds limit clause (maximum number of results to return)
 	def limit(i)
-		@limits = i 
+		@limits = i.to_i
 		self
 	end
 
 	# Add offset clause (ignore first n results)
 	def offset(i)
-		@offsets = i
+		@offsets = i.to_i
 		self
 	end
 
@@ -128,6 +127,7 @@ class Query
   # usage:: results = query.execute
   # usage:: query.execute do |s,p,o| ... end
   def execute(options={:flatten => false}, &block)
+    $activerdflog.info("query: #{self.to_sp}")
     if block_given?
       FederationManager.query(self) do |*clauses|
         block.call(*clauses)
