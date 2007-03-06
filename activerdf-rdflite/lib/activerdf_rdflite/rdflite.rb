@@ -46,6 +46,7 @@ class RDFLite < ActiveRdfAdapter
 		@keyword_search &= @@have_ferret
 
 		@reasoning = params[:reasoning] || false
+    @subprops = {} if @reasoning
 
 		if keyword_search?
 			# we initialise the ferret index, either as a file or in memory
@@ -251,12 +252,15 @@ class RDFLite < ActiveRdfAdapter
 
 	# sort query results on variable clause (optionally)
 	def construct_sort(query)
-		return "" if query.sort_clauses.empty?
-
-		sort = query.sort_clauses.collect do |term|
-			variable_name(query, term)
-		end
-		" order by (#{sort.join(',')})"
+    if not query.sort_clauses.empty?
+      sort = query.sort_clauses.collect { |term| variable_name(query, term) }
+      " order by (#{sort.join(',')})"
+    elsif not query.reverse_sort_clauses.empty?
+      sort = query.reverse_sort_clauses.collect { |term| variable_name(query, term) }
+      " order by (#{sort.join(',')}) DESC"
+    else
+      ""
+    end
 	end
 
 	# construct join clause
@@ -368,7 +372,7 @@ class RDFLite < ActiveRdfAdapter
 		end
 
 		# if keyword clause given, convert it using keyword index
-		if query.keyword?
+		if query.keyword? && keyword_search?
 			subjects = []
 			select_subject = query.keywords.collect {|subj,key| subj}.uniq
 			raise ActiveRdfError, "cannot do keyword search over multiple subjects" if select_subject.size > 1
@@ -412,16 +416,21 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	def subproperties(resource)
-		subproperty = Namespace.lookup(:rdfs,:subPropertyOf)
-		children_query = Query.new.distinct(:sub).where(:sub, subproperty, resource)
-		children_query.reasoning = false
-		children = children_query.execute
+    # compute and store subproperties of this resource 
+    # or use earlier computed value if available
+    unless @subprops[resource]
+      subproperty = Namespace.lookup(:rdfs,:subPropertyOf)
+      children_query = Query.new.distinct(:sub).where(:sub, subproperty, resource)
+      children_query.reasoning = false
+      children = children_query.execute
 
-		if children.empty?
-			[resource]
-		else
-			[resource] + children.collect{|c| subproperties(c)}.flatten.compact
-		end
+      if children.empty?
+        @subprops[resource] = [resource]
+      else
+        @subprops[resource] = [resource] + children.collect{|c| subproperties(c)}.flatten.compact
+      end
+    end
+    @subprops[resource]
 	end
 
 	# returns sql variable name for a queryterm
