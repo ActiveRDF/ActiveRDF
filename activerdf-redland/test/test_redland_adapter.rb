@@ -34,7 +34,7 @@ class TestRedlandAdapter < Test::Unit::TestCase
     test = RDFS::Resource.new 'test'
 
     adapter.add(eyal, age, test)
-    result = Query.new.distinct(:s).where(:s, :p, :o).execute
+    result = Query.new.distinct(:s).where(:s, :p, :o).execute(:flatten)
 
     assert_instance_of RDFS::Resource, result
     assert_equal 'eyaloren.org', result.uri
@@ -53,7 +53,7 @@ class TestRedlandAdapter < Test::Unit::TestCase
     adapter2.add(eyal, age, test2)
 
     # assert only one distinct subject is found (same one in both adapters)
-    assert_equal 1, Query.new.distinct(:s).where(:s, :p, :o).execute(:flatten=>false).size
+    assert_equal 1, Query.new.distinct(:s).where(:s, :p, :o).execute.size
 
     # assert two distinct objects are found
     results = Query.new.distinct(:o).where(:s, :p, :o).execute
@@ -82,6 +82,12 @@ class TestRedlandAdapter < Test::Unit::TestCase
     # adapter.load("/home/metaman/workspaces/deri-workspace/activerdf/test/test_person_data.nt", "turtle")
     adapter.load("#{File.dirname(__FILE__)}/test_person_data.nt", "turtle")
     assert_equal 28, adapter.size  
+  end
+
+  def test_remote_load
+    adapter = ConnectionPool.add_data_source :type => :redland
+    adapter.load('http://www.eyaloren.org/foaf.rdf', 'rdfxml')
+    assert_equal 39, adapter.size
   end
 
   def test_person_data
@@ -116,7 +122,7 @@ class TestRedlandAdapter < Test::Unit::TestCase
     adapter2.add(eyal, age, test2)
 
     # assert only one distinct subject is found (same one in both adapters)
-    assert_equal 1, Query.new.distinct(:s).where(:s, :p, :o).execute(:flatten=>false).size
+    assert_equal 1, Query.new.distinct(:s).where(:s, :p, :o).execute.size
 
     # assert two distinct objects are found
     results = Query.new.distinct(:o).where(:s, :p, :o).execute
@@ -151,9 +157,7 @@ class TestRedlandAdapter < Test::Unit::TestCase
     type = Namespace.lookup(:rdf, :type)
     resource = Namespace.lookup(:rdfs,:resource)
 
-    color = Query.new.select(:o).where(eyal, eye,:o).execute
-    assert_equal 'blue', color
-    assert_instance_of String, color
+    assert_equal 'blue', eyal.test::eye
 
     ObjectManager.construct_classes
     assert eyal.instance_of?(TEST::Person)

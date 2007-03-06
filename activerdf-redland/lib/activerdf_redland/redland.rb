@@ -39,7 +39,11 @@ class RedlandAdapter < ActiveRdfAdapter
 	# use Redland syntax strings, e.g. "ntriples" or "rdfxml", defaults to "ntriples"
 	def load(location, syntax="ntriples")
     parser = Redland::Parser.new(syntax, "", nil)
-    parser.parse_into_model(@model, "file:#{location}")
+    if location =~ /^http/
+      parser.parse_into_model(@model, location)
+    else
+      parser.parse_into_model(@model, "file:#{location}")
+    end
 	end
 
 	# yields query results (as many as requested in select clauses) executed on data source
