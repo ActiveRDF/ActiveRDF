@@ -119,6 +119,19 @@ module RDFS
         query.where(:s, sort_predicate, :sort_value)
       end
 
+      if options.include? :reverse_order
+        sort_predicate = options[:reverse_order]
+        query.reverse_sort(:sort_value)
+        query.where(:s, sort_predicate, :sort_value)
+      end
+
+      if options.include? :where
+        raise ActiveRdfError, "where clause should be array of [predicate, object]" unless options[:where].size == 2
+        predicate = options[:where].first
+        object = options[:where].last
+        query.where(:s, predicate, object)
+      end
+
       query.limit(options[:limit]) if options[:limit]
       query.offset(options[:offset]) if options[:offset]
 

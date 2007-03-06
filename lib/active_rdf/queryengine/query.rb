@@ -6,7 +6,7 @@ require 'federation/federation_manager'
 # data source.  In all clauses symbols represent variables: 
 # Query.new.select(:s).where(:s,:p,:o).
 class Query
-	attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets
+	attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets, :reverse_sort_clauses
 	bool_accessor :distinct, :ask, :select, :count, :keyword, :reasoning
 
 	def initialize
@@ -18,6 +18,7 @@ class Query
 		@sort_clauses = []
 		@keywords = {}
 		@reasoning = true
+    @reverse_sort_clauses = []
 	end
 
 	# Clears the select clauses
@@ -62,6 +63,15 @@ class Query
     # add sort clauses without duplicates
 		s.each { |clause| @sort_clauses << parametrise(clause) }
 		@sort_clauses.uniq!
+
+		self
+	end
+
+  # adds reverse sorting predicates
+  def reverse_sort *s
+    # add sort clauses without duplicates
+		s.each { |clause| @reverse_sort_clauses << parametrise(clause) }
+		@reverse_sort_clauses.uniq!
 
 		self
 	end
@@ -127,7 +137,9 @@ class Query
   # usage:: results = query.execute
   # usage:: query.execute do |s,p,o| ... end
   def execute(options={:flatten => false}, &block)
-    $activerdflog.info("query: #{self.to_sp}")
+    options = {:flatten => true} if options == :flatten
+
+    $activerdflog.debug("query: #{self.to_sp}")
     if block_given?
       FederationManager.query(self) do |*clauses|
         block.call(*clauses)

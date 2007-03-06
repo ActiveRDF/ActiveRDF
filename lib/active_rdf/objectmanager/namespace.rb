@@ -83,7 +83,7 @@ class Namespace
     end
 
     delimiter = uri.rindex(/#|\//)
-    if delimiter.nil?
+    if delimiter.nil? or delimiter == uri.size-1
       uri
     else
       uri[delimiter+1..-1]

@@ -39,6 +39,10 @@ class ConnectionPool
     self.write_adapter = nil
   end
 
+  def ConnectionPool.adapters
+    @@adapter_pool.dup
+  end
+
 	# flushes all openstanding changes into the original datasource.
 	def ConnectionPool.flush
 		write_adapter.flush
