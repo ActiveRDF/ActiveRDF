@@ -29,14 +29,16 @@ class Query2SPARQL
   end
 
 	def self.construct_clause(term)
-		case term
-		when Symbol
-			'?' + term.to_s
-		when RDFS::Resource
-			'<' + term.uri + '>'
-		else
-			term.to_s
-		end
+    if term.respond_to? :uri
+      '<' + term.uri + '>'
+    else
+      case term
+      when Symbol
+        '?' + term.to_s
+      else
+        term.to_s
+      end
+    end
 	end
 	
   private_class_method :where_clauses, :construct_clause

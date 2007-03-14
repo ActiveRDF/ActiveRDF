@@ -167,14 +167,10 @@ class Query
   private
   def parametrise s
     case s
-    when Symbol
+    when Symbol, RDFS::Resource, Literal, Class
 			s
-    when RDFS::Resource
-      s
 		when nil
 			nil
-    when Literal
-      s
     else
       '"' + s.to_s + '"'
     end
