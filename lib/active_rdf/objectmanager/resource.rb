@@ -40,17 +40,18 @@ module RDFS
     # because it cannot be found in Namespace.lookup otherwise)
     self.class_uri = Namespace.lookup(:rdfs, :Resource)
 
+    def self.uri; class_uri.uri; end
+    def self.==(other)
+      other.respond_to?(:uri) ? other.uri == self.uri : false
+    end
+
     #####                        ######
     ##### start of instance-level code
     #####                        ######
 
     # a resource is same as another if they both represent the same uri
     def ==(other)
-      if other.respond_to?(:uri)
-        other.uri == self.uri
-      else
-        false
-      end
+      other.respond_to?(:uri) ? other.uri == self.uri : false
     end
     alias_method 'eql?','=='
 

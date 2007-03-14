@@ -33,10 +33,10 @@ class TestObjectManager < Test::Unit::TestCase
 		Namespace.register(:test, 'http://activerdf.org/test/')
 		ObjectManager.construct_classes
 
-		assert(defined? TEST, "class construction should have created module TEST")
-		assert(defined? RDFS, "class construction should have created module RDFS")
-		assert(defined? TEST::Person, "class construction should have created TEST::Person")
-		assert(defined? RDFS::Class, "class construction should have created RDFS::Class")
+		assert(defined? TEST)
+		assert(defined? RDFS)
+		assert(defined? TEST::Person)
+		assert(defined? RDFS::Class)
   end
 
 	def test_class_construct_class
@@ -49,4 +49,16 @@ class TestObjectManager < Test::Unit::TestCase
 		assert_instance_of Class, person_class
 		assert_equal person_resource.uri, person_class.class_uri.uri
 	end
+
+  def test_class_uri
+		adapter = get_write_adapter
+		adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
+		Namespace.register(:test, 'http://activerdf.org/test/')
+		ObjectManager.construct_classes
+
+    assert_equal RDFS::Resource.new('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), RDF::type
+    assert_equal RDF::type, RDFS::Resource.new('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+    assert_equal TEST::Person, RDFS::Resource.new('http://activerdf.org/test/Person')
+    assert_equal RDFS::Resource.new('http://activerdf.org/test/Person'), TEST::Person
+  end
 end
