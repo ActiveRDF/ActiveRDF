@@ -27,8 +27,12 @@ end
 # TODO make this work with a list of existing adapters, not only one
 def get_different_adapter(existing_adapter)
 	types = ConnectionPool.adapter_types
-	if types.include?(:rdflite) and existing_adapter.class != RDFLite
-		ConnectionPool.add :type => :rdflite
+  if types.include?(:rdflite)
+    if existing_adapter.class == RDFLite
+      ConnectionPool.add :type => :rdflite, :unique => true
+    else
+      ConnectionPool.add :type => :rdflite
+    end
 	elsif types.include?(:redland) and existing_adapter.class != RedlandAdapter
 		ConnectionPool.add :type => :redland
 	elsif types.include?(:sparql) and existing_adapter.class != SparqlAdapter
@@ -78,8 +82,12 @@ end
 # TODO use a list of exisiting adapters not only one
 def get_different_write_adapter(existing_adapter)
 	types = ConnectionPool.adapter_types
-	if types.include?(:rdflite) and existing_adapter.class != RDFLite
-		ConnectionPool.add :type => :rdflite
+	if types.include?(:rdflite)
+    if existing_adapter.class == RDFLite
+      ConnectionPool.add :type => :rdflite, :unique => true
+    else
+      ConnectionPool.add :type => :rdflite
+    end
 	elsif types.include?(:redland) and existing_adapter.class != RedlandAdapter
 		ConnectionPool.add :type => :redland
 	elsif types.include?(:yars) and existing_adapter.class != YarsAdapter

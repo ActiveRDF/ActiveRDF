@@ -1,7 +1,7 @@
 require 'logger'
 
 # use either $ACTIVE_RDF_LOG for logging or current directory
-location = ENV['ACTIVE_RDF_LOG'] || "#{Dir.pwd}/activerdf.log"
+location = ENV['ACTIVE_RDF_LOG'] || $stdout # "#{Dir.pwd}/activerdf.log"
 location = $stdout if location == "STDOUT"
 $activerdflog = Logger.new(location, 1, 100*1024)
     

@@ -1,5 +1,6 @@
 == activerdf (1.5) ????
-  * remove ObjectManager.construct_classes (classes exist automagically after
+  * allows directly using classes in query: where(:s, RDF::type, SIOC::Post)
+  * TODO: UNFINISHED remove ObjectManager.construct_classes (classes exist automagically after
   Namespace.register)
   * extended search in Resource.find (e.g. order results, pagination)
 

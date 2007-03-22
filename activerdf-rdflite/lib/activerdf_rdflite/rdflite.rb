@@ -455,7 +455,7 @@ class RDFLite < ActiveRdfAdapter
 			if query.keywords.keys.include?(term)
 				return "t0.s"
 			else
-				raise ActiveRdfError,'unbound variable in select clause'
+				raise ActiveRdfError, "unbound variable :#{term.to_s} in select of #{query.to_sp}"
 			end
 		end
 

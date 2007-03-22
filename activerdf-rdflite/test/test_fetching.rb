@@ -22,7 +22,7 @@ class TestFetchingAdapter < Test::Unit::TestCase
   
   def test_sioc_schema
     @adapter.fetch("http://rdfs.org/sioc/ns#")
-    assert_equal 461, @adapter.size 
+    assert_equal 560, @adapter.size 
   end
     
   def test_foaf_schema

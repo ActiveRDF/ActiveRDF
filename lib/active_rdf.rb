@@ -23,7 +23,7 @@ def load_adapter s
   begin
     require s
   rescue Exception => e
-    $activerdflog.warn "could not load adapter #{s}: #{e}"
+    $activerdflog.info "could not load adapter #{s}: #{e}"
   end
 end
 
