@@ -215,10 +215,7 @@ module RDFS
             if localname.to_s[-1..-1] == '='
               # set value
               predicate = Namespace.lookup(@@uri, localname.to_s[0..-2])
-              ConnectionPool.write_adapter.delete(@@subject, predicate, :any)
-              args.each do |value|
-                FederationManager.add(@@subject, predicate, value)
-              end
+              args.each { |value| FederationManager.add(@@subject, predicate, value) }
             else
               # read value
               predicate = Namespace.lookup(@@uri, localname)
