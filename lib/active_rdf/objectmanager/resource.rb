@@ -206,15 +206,29 @@ module RDFS
 				namespace = Object.new	
 				@@uri = method
 				@@subject = self
-				class <<namespace
-					def method_missing(localname, *args)
-						predicate = Namespace.lookup(@@uri, localname)
-						Query.new.distinct(:o).where(@@subject, predicate, :o).execute(:flatten => true)
-					end
+
+        # catch the invocation on the namespace
+        class <<namespace
+          def method_missing(localname, *args)
+            puts localname.to_s
+            # check if updating or reading predicate value
+            if localname.to_s[-1..-1] == '='
+              # set value
+              predicate = Namespace.lookup(@@uri, localname.to_s[0..-2])
+              ConnectionPool.write_adapter.delete(@@subject, predicate, :any)
+              args.each do |value|
+                FederationManager.add(@@subject, predicate, value)
+              end
+            else
+              # read value
+              predicate = Namespace.lookup(@@uri, localname)
+              Query.new.distinct(:o).where(@@subject, predicate, :o).execute(:flatten => true)
+            end
+          end
           private(:type)
-				end
-				return namespace
-			end
+        end
+        return namespace
+      end
 
       candidates = if update
                       (class_level_predicates + direct_predicates).compact.uniq
