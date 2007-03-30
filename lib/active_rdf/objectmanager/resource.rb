@@ -210,7 +210,6 @@ module RDFS
         # catch the invocation on the namespace
         class <<namespace
           def method_missing(localname, *args)
-            puts localname.to_s
             # check if updating or reading predicate value
             if localname.to_s[-1..-1] == '='
               # set value
