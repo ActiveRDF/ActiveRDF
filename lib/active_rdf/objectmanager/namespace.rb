@@ -31,6 +31,10 @@ class Namespace
         Namespace.lookup(self.to_s.downcase.to_sym, method)
       end
 
+      def const_missing(klass)
+        Namespace.lookup(self.to_s.downcase.to_sym, klass)
+      end
+
       # make some builtin methods private because lookup doesn't work otherwise 
       # on e.g. RDF::type and FOAF::name
       [:type, :name, :id].each {|m| private(m) }

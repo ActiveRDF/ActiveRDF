@@ -145,6 +145,10 @@ module RDFS
       end
     end
 
+    def localname
+      Namespace.localname(self)
+    end
+
     # manages invocations such as eyal.age
     def method_missing(method, *args)
       # possibilities:

@@ -9,9 +9,9 @@ require "#{File.dirname(__FILE__)}/../common"
 
 class TestNamespace < Test::Unit::TestCase
   Rdf = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
-  RdfType = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
-  RdfsResource = 'http://www.w3.org/2000/01/rdf-schema#Resource'
   Rdfs = 'http://www.w3.org/2000/01/rdf-schema#'
+  RdfType = RDFS::Resource.new('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
+  RdfsResource = RDFS::Resource.new('http://www.w3.org/2000/01/rdf-schema#Resource')
 
   def setup
   end
@@ -23,23 +23,25 @@ class TestNamespace < Test::Unit::TestCase
     rdftype = RdfType
     rdfsresource = RdfsResource
 
-    assert_equal rdftype, Namespace.expand(:rdf, :type)
-    assert_equal rdftype, Namespace.expand(:rdf, 'type')
-    assert_equal rdftype, Namespace.expand('rdf', :type)
-    assert_equal rdftype, Namespace.expand('rdf', 'type')
+    assert_equal rdftype, RDF::type
+    assert_equal rdftype, Namespace.lookup(:rdf, :type)
+    assert_equal rdftype, Namespace.lookup(:rdf, 'type')
+    assert_equal rdftype, Namespace.lookup('rdf', :type)
+    assert_equal rdftype, Namespace.lookup('rdf', 'type')
 
-    assert_equal rdfsresource, Namespace.expand(:rdfs, :Resource)
-    assert_equal rdfsresource, Namespace.expand(:rdfs, 'Resource')
-    assert_equal rdfsresource, Namespace.expand('rdfs', :Resource)
-    assert_equal rdfsresource, Namespace.expand('rdfs', 'Resource')
+    assert_equal rdfsresource, RDFS::Resource
+    assert_equal rdfsresource, Namespace.lookup(:rdfs, :Resource)
+    assert_equal rdfsresource, Namespace.lookup(:rdfs, 'Resource')
+    assert_equal rdfsresource, Namespace.lookup('rdfs', :Resource)
+    assert_equal rdfsresource, Namespace.lookup('rdfs', 'Resource')
   end
 
-  def test_default_ns_lookup
+  def test_registration_of_rdf_and_rdfs
     rdftype = RDFS::Resource.new RdfType
     rdfsresource = RDFS::Resource.new RdfsResource
 
-    assert_equal rdftype, Namespace.lookup(:rdf, :type)
-    assert_equal rdfsresource, Namespace.lookup(:rdfs, :Resource)
+    assert_equal rdftype, RDF::type
+    assert_equal rdfsresource, RDFS::Resource
   end
 
   def test_find_prefix
@@ -52,15 +54,19 @@ class TestNamespace < Test::Unit::TestCase
 
   def test_class_localname
 		assert_equal 'type', Namespace.localname(Namespace.lookup(:rdf, :type))
+		assert_equal 'type', RDF::type.localname
+
 		assert_equal 'Class', Namespace.localname(Namespace.lookup(:rdfs, :Class))
+		assert_equal 'Class', RDFS::Class.localname
   end
 
   def test_class_register
 		test = 'http://test.org/'
-		abc = "#{test}abc"
+		abc = RDFS::Resource.new("#{test}abc")
 		Namespace.register :test, test
 
-		assert_equal abc, Namespace.expand(:test, :abc)
+		assert_equal abc, Namespace.lookup(:test, :abc)
+		assert_equal abc, TEST::abc
   end
 
   def test_attributes

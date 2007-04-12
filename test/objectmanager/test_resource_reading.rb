@@ -13,7 +13,6 @@ class TestResourceReading < Test::Unit::TestCase
     @adapter = get_adapter
     @adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
     Namespace.register(:test, 'http://activerdf.org/test/')
-    ObjectManager.construct_classes
 
     @eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
   end

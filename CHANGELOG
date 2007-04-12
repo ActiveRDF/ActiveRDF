@@ -1,5 +1,6 @@
-== activerdf (1.6)
-  * TODO: remove ObjectManager.construct_classes (classes exist automagically after Namespace.register)
+== activerdf (1.6) Thu, 12 Apr 2007 23:12:40 +0100
+  * no need for ObjectManager.construct_classes anymore (classes exist automagically after Namespace.register)
+  * added resource.localname (alias for Namespace.localname(resource))
 
 == activerdf (1.5) Thu, 12 Apr 2007 22:42:28 +0100
   * allows directly using classes in query: where(:s, RDF::type, SIOC::Post)

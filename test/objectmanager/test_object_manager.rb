@@ -54,7 +54,6 @@ class TestObjectManager < Test::Unit::TestCase
 		adapter = get_write_adapter
 		adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
 		Namespace.register(:test, 'http://activerdf.org/test/')
-		ObjectManager.construct_classes
 
     assert_equal RDFS::Resource.new('http://www.w3.org/1999/02/22-rdf-syntax-ns#type'), RDF::type
     assert_equal RDF::type, RDFS::Resource.new('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
