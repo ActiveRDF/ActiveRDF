@@ -21,6 +21,7 @@ class TestResourceWriting < Test::Unit::TestCase
 
     assert_nothing_raised { eyal.ar::age = 100 }
     assert_equal '100', eyal.ar::age
+    assert_equal ['100'], eyal.all_ar::age
    
     adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
     assert_nothing_raised { eyal.age = 18 }

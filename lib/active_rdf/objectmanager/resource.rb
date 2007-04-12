@@ -178,33 +178,36 @@ module RDFS
 			# action: return namespace proxy that handles 'name' invocation, by 
 			# rewriting into predicate lookup (similar to case (5)
 
-      # maybe change order in which to check these, checking (4) is probably
-      # cheaper than (1)-(2) but (1) and (2) are probably more probable (getting
-      # attribute values over executing custom methods)
-
       $activerdflog.debug "method_missing: #{method}"
 
       # are we doing an update or not? 
 			# checking if method ends with '='
 
-      if method.to_s[-1..-1] == '='
-        methodname = method.to_s[0..-2]
-        update = true
-      else
-        methodname = method.to_s
-        update = false
+      update = method.to_s[-1..-1] == '='
+      methodname = if update 
+                     method.to_s[0..-2]
+                   else
+                     method.to_s
+                   end
+
+      # extract single values from array unless user asked for eyal.all_age
+      flatten = true
+      if method.to_s[0..3] == 'all_'
+        flatten = false
+        methodname = methodname[4..-1]
       end
 
 			# check possibility (5)
 			if @predicates.include?(methodname)
-				return predicate_invocation(@predicates[methodname], args, update)
+				return predicate_invocation(@predicates[methodname], args, update, flatten)
 			end
 
 			# check possibility (6)
-			if Namespace.abbreviations.include?(method)
+			if Namespace.abbreviations.include?(methodname.to_sym)
 				namespace = Object.new	
-				@@uri = method
+				@@uri = methodname
 				@@subject = self
+        @@flatten = flatten
 
         # catch the invocation on the namespace
         class <<namespace
@@ -217,7 +220,7 @@ module RDFS
             else
               # read value
               predicate = Namespace.lookup(@@uri, localname)
-              Query.new.distinct(:o).where(@@subject, predicate, :o).execute(:flatten => true)
+              Query.new.distinct(:o).where(@@subject, predicate, :o).execute(:flatten => @@flatten)
             end
           end
           private(:type)
@@ -234,7 +237,7 @@ module RDFS
 			# checking possibility (1) and (3)
 			candidates.each do |pred|
 				if Namespace.localname(pred) == methodname
-					return predicate_invocation(pred, args, update)
+					return predicate_invocation(pred, args, update, flatten)
 				end
 			end
 			
@@ -353,11 +356,6 @@ module RDFS
 			"<#{uri}>"
 		end
 
-	#	# label of resource (rdfs:label if available, uri otherwise)
-	#  def label
-	#    get_property_value(Namespace.lookup(:rdfs,:label)) || uri
-	#  end
-
 		private
 
 #		def ancestors(predicate)
@@ -365,23 +363,16 @@ module RDFS
 #			Query.new.distinct(:p).where(predicate, subproperty, :p).execute
 #		end
 
-		def predicate_invocation(predicate, args, update)
+		def predicate_invocation(predicate, args, update, flatten)
 			if update
 				args.each do |value|
 					FederationManager.add(self, predicate, value)
 				end
 				args
 			else
-				get_property_value(predicate, args)
+        Query.new.distinct(:o).where(self, predicate, :o).execute(:flatten => flatten)
 			end
 		end
-
-		def get_property_value(predicate, args=[])
-			return_ary = args[0][:array] if args[0].is_a?(Hash)
-			flatten_results = !return_ary
-			query = Query.new.distinct(:o).where(self, predicate, :o)
-			query.execute(:flatten => flatten_results)
-		end  
 
 		# returns all rdf:types of this resource but without a conversion to 
 		# Ruby classes (it returns an array of RDFS::Resources)

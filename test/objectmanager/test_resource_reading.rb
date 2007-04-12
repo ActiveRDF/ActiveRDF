@@ -55,9 +55,13 @@ class TestResourceReading < Test::Unit::TestCase
   def test_eyal_age
     # triple exists '<eyal> age 27'
     assert_equal '27', @eyal.age
+    assert_equal '27', @eyal.test::age
+    assert_equal ['27'], @eyal.all_age
 
     # Person has property car, but eyal has no value for it
     assert_equal nil, @eyal.car
+    assert_equal nil, @eyal.test::car
+    assert_equal [], @eyal.all_test::car
 
     # non-existent method should throw error
     assert_equal nil, @eyal.non_existing_method
@@ -101,6 +105,6 @@ class TestResourceReading < Test::Unit::TestCase
   def test_write_without_write_adapter
     ConnectionPool.clear
     get_read_only_adapter
-    assert_raises(ActiveRdfError) { @eyal.age = 18 }
+    assert_raises(ActiveRdfError) { @eyal.test::age = 18 }
   end
 end
