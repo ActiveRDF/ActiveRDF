@@ -1,8 +1,11 @@
-== activerdf (1.5) ????
+== activerdf (1.6)
+  * TODO: remove ObjectManager.construct_classes (classes exist automagically after Namespace.register)
+
+== activerdf (1.5) Thu, 12 Apr 2007 22:42:28 +0100
   * allows directly using classes in query: where(:s, RDF::type, SIOC::Post)
-  * TODO: UNFINISHED remove ObjectManager.construct_classes (classes exist automagically after
-  Namespace.register)
   * extended search in Resource.find (e.g. order results, pagination)
+  * added eyal.all_age and eyal.all_foaf::name to always return Arrays
+  * added support for writing namespaced attributes (eyal.foaf::name = ...)
 
 == activerdf (1.4) Tue, 27 Feb 2007 20:50:21 +0000
   * dynamic finders support prefixes (find_by_foaf::name)

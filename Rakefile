@@ -69,7 +69,7 @@ task :verify_rubyforge do
   raise "RUBYFORGE_PASSWORD environment variable not set!" unless ENV['RUBYFORGE_PASSWORD']
 end
 
-desc "Release files on RubyForge."
+desc "release #$name-#$version gem on RubyForge"
 task :release => [ :clean, :verify_rubyforge, :package ] do
   release_files = FileList["pkg/#$distdir.gem"]
   Rake::XForge::Release.new($project) do |release|
@@ -97,5 +97,5 @@ task :release => [ :clean, :verify_rubyforge, :package ] do
   end
 end
 
-desc "Release files on RubyForge and build documentation"
+desc "release gem on RubyForge and build documentation"
 task :release_docs => [ :release, :rdoc ]
