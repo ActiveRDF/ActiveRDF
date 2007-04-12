@@ -10,7 +10,8 @@ require "#{File.dirname(__FILE__)}/../common"
 class TestResourceReading < Test::Unit::TestCase
   def setup
 		ConnectionPool.clear
-    @adapter = get_read_only_adapter
+    @adapter = get_adapter
+    @adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
     Namespace.register(:test, 'http://activerdf.org/test/')
     ObjectManager.construct_classes
 
@@ -21,12 +22,12 @@ class TestResourceReading < Test::Unit::TestCase
   end
 
   def test_find_all_instances
-    assert_equal 36, RDFS::Resource.find_all.size
-    assert_equal [@eyal], TEST::Person.find_all
+    assert_equal 7, RDFS::Resource.find_all.size
+    assert_equal [TEST::eyal, TEST::other], TEST::Person.find_all
   end
 
   def test_class_predicates
-    assert_equal 10, RDFS::Resource.predicates.size
+    assert_equal 4, RDFS::Resource.predicates.size
   end
 
   def test_eyal_predicates
@@ -39,9 +40,9 @@ class TestResourceReading < Test::Unit::TestCase
 
 		# test class level predicates
 		class_preds = @eyal.class_level_predicates.collect {|p| p.uri }
-		# eyal.type: person and resource, has predicates age, eye, and 
-		# rdfs:label, rdfs:comment, etc.
-    assert_equal 10, class_preds.size
+		# eyal.type: person and resource, has predicates age, eye
+		# not default rdfs:label, rdfs:comment, etc. because not using rdfs reasoning
+    assert_equal 4, class_preds.size
   end
 
   def test_eyal_types
@@ -67,6 +68,22 @@ class TestResourceReading < Test::Unit::TestCase
     assert_instance_of TEST::Person, @eyal
   end
 
+  def test_find_options
+    all = [Namespace.lookup(:test,:Person), Namespace.lookup(:rdfs, :Class), Namespace.lookup(:rdf, :Property), @eyal, TEST::car, TEST::age, TEST::eye]
+    found = RDFS::Resource.find
+    assert_equal all.sort, found.sort
+
+    properties = [TEST::car, TEST::age, TEST::eye]
+    found = RDFS::Resource.find(:where => {RDFS::domain => RDFS::Resource})
+    assert_equal properties.sort, found.sort
+
+    found = RDFS::Resource.find(:where => {RDFS::domain => RDFS::Resource, :prop => :any})
+    assert_equal properties.sort, found.sort
+
+    found = TEST::Person.find(:order => TEST::age)
+    assert_equal [TEST::other, TEST::eyal], found
+  end
+
   def test_find_methods
     assert_equal @eyal, RDFS::Resource.find_by_eye('blue')
     assert_equal @eyal, RDFS::Resource.find_by_test::eye('blue')
@@ -82,6 +99,8 @@ class TestResourceReading < Test::Unit::TestCase
 
   # test for writing if no write adapter is defined (like only sparqls)
   def test_write_without_write_adapter
+    ConnectionPool.clear
+    get_read_only_adapter
     assert_raises(ActiveRdfError) { @eyal.age = 18 }
   end
 end

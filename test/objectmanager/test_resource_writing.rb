@@ -18,9 +18,12 @@ class TestResourceWriting < Test::Unit::TestCase
 
     eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
     assert_raises(ActiveRdfError) { eyal.age = 18 }
+
+    assert_nothing_raised { eyal.ar::age = 100 }
+    assert_equal '100', eyal.ar::age
    
     adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
     assert_nothing_raised { eyal.age = 18 }
-    assert_equal ['18','27'], eyal.age
+    assert_equal ['100', '18', '27'], eyal.age
   end
 end

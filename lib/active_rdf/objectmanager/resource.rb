@@ -127,10 +127,10 @@ module RDFS
       end
 
       if options.include? :where
-        raise ActiveRdfError, "where clause should be array of [predicate, object]" unless options[:where].size == 2
-        predicate = options[:where].first
-        object = options[:where].last
-        query.where(:s, predicate, object)
+        raise ActiveRdfError, "where clause should be hash of predicate => object" unless options[:where].is_a? Hash
+        options[:where].each do |p,o|
+          query.where(:s, p, o)
+        end
       end
 
       query.limit(options[:limit]) if options[:limit]
@@ -144,7 +144,6 @@ module RDFS
         query.execute(:flatten => false)
       end
     end
-
 
     # manages invocations such as eyal.age
     def method_missing(method, *args)
