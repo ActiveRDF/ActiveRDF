@@ -129,7 +129,15 @@ module RDFS
       if options.include? :where
         raise ActiveRdfError, "where clause should be hash of predicate => object" unless options[:where].is_a? Hash
         options[:where].each do |p,o|
-          query.where(:s, p, o)
+          if options.include? :context
+            query.where(:s, p, o, options[:context])
+          else
+            query.where(:s, p, o)
+          end
+        end
+      else
+        if options[:context]
+          query.where(:s, :p, :o, options[:context])
         end
       end
 
@@ -402,6 +410,7 @@ class DynamicFinderProxy
   @where = nil
   @value = nil
   attr_reader :value
+  private(:type)
 
   # construct proxy from find_by text
   # foaf::name
@@ -457,10 +466,36 @@ class DynamicFinderProxy
 
   # construct and execute finder query
   def query(*args)
+    # extract options from args or use an empty hash (no options given)
+    options = args.last.is_a?(Hash) ? args.last : {}
+
+    # build query 
     query = Query.new.distinct(:s)
     @where.each_with_index do |predicate, i|
-      query.where(:s, predicate, args[i])
+      # specify where clauses, use context if given
+      if options[:context]
+        query.where(:s, predicate, args[i], options[:context])
+      else
+        query.where(:s, predicate, args[i])
+      end
     end
+
+    # use sort order if given
+    if options.include? :order
+      sort_predicate = options[:order]
+      query.sort(:sort_value)
+      # add sort predicate where clause unless we have it already
+      query.where(:s, sort_predicate, :sort_value) unless @where.include? sort_predicate
+    end
+
+    if options.include? :reverse_order
+      sort_predicate = options[:reverse_order]
+      query.reverse_sort(:sort_value)
+      query.where(:s, sort_predicate, :sort_value) unless @where.include? sort_predicate
+    end
+
+    query.limit(options[:limit]) if options[:limit]
+    query.offset(options[:offset]) if options[:offset]
 
     $activerdflog.debug "executing dynamic finder: #{query.to_sp}"
 
@@ -468,7 +503,7 @@ class DynamicFinderProxy
     # retrieve them (we cannot return them here, since we were invoked from 
     # the initialize method so all return values are ignored, instead the proxy 
     # itself is returned)
-    @value = query.execute(:flatten => true)
+    @value = query.execute
     return value
   end
 end

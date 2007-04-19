@@ -88,16 +88,16 @@ class TestResourceReading < Test::Unit::TestCase
   end
 
   def test_find_methods
-    assert_equal @eyal, RDFS::Resource.find_by_eye('blue')
-    assert_equal @eyal, RDFS::Resource.find_by_test::eye('blue')
+    assert_equal [@eyal], RDFS::Resource.find_by_eye('blue')
+    assert_equal [@eyal], RDFS::Resource.find_by_test::eye('blue')
 
-    assert_equal @eyal, RDFS::Resource.find_by_age(27)
-    assert_equal @eyal, RDFS::Resource.find_by_test::age(27)
+    assert_equal [@eyal], RDFS::Resource.find_by_age(27)
+    assert_equal [@eyal], RDFS::Resource.find_by_test::age(27)
 
-    assert_equal @eyal, RDFS::Resource.find_by_age_and_eye(27, 'blue')
-    assert_equal @eyal, RDFS::Resource.find_by_test::age_and_test::eye(27, 'blue')
-    assert_equal @eyal, RDFS::Resource.find_by_test::age_and_eye(27, 'blue')
-    assert_equal @eyal, RDFS::Resource.find_by_age_and_test::eye(27, 'blue')
+    assert_equal [@eyal], RDFS::Resource.find_by_age_and_eye(27, 'blue')
+    assert_equal [@eyal], RDFS::Resource.find_by_test::age_and_test::eye(27, 'blue')
+    assert_equal [@eyal], RDFS::Resource.find_by_test::age_and_eye(27, 'blue')
+    assert_equal [@eyal], RDFS::Resource.find_by_age_and_test::eye(27, 'blue')
   end
 
   # test for writing if no write adapter is defined (like only sparqls)
@@ -105,5 +105,33 @@ class TestResourceReading < Test::Unit::TestCase
     ConnectionPool.clear
     get_read_only_adapter
     assert_raises(ActiveRdfError) { @eyal.test::age = 18 }
+  end
+
+  def test_finders_with_options
+		ConnectionPool.clear
+    adapter = get_adapter
+    file_one = "#{File.dirname(__FILE__)}/../small-one.nt"
+    file_two = "#{File.dirname(__FILE__)}/../small-two.nt"
+    adapter.load file_one
+    adapter.load file_two
+
+    one = RDFS::Resource.new("file:#{file_one}")
+    two = RDFS::Resource.new("file:#{file_two}")
+
+    assert_equal 2, RDFS::Resource.find.size
+    assert_equal 2, RDFS::Resource.find(:all).size
+    assert_equal 2, RDFS::Resource.find(:all, :limit => 10).size
+    assert_equal 1, RDFS::Resource.find(:all, :limit => 1).size
+    assert_equal 1, RDFS::Resource.find(:all, :context => one).size
+    assert_equal 1, RDFS::Resource.find(:all, :context => one, :limit => 1).size
+    assert_equal 0, RDFS::Resource.find(:all, :context => one, :limit => 0).size
+
+    assert_equal 1, RDFS::Resource.find_by_eye('blue').size
+    assert_equal 1, RDFS::Resource.find_by_eye('blue', :context => one).size
+    assert_equal 0, RDFS::Resource.find_by_eye('blue', :context => two).size
+
+    assert_equal 2, RDFS::Resource.find_by_rdf::type(RDFS::Resource).size
+    assert_equal 1, RDFS::Resource.find_by_rdf::type(RDFS::Resource, :context => one).size
+    assert_equal 1, RDFS::Resource.find_by_eye_and_rdf::type('blue', RDFS::Resource, :context => one).size
   end
 end
