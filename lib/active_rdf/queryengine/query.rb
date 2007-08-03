@@ -6,7 +6,8 @@ require 'federation/federation_manager'
 # data source.  In all clauses symbols represent variables: 
 # Query.new.select(:s).where(:s,:p,:o).
 class Query
-	attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets, :reverse_sort_clauses
+	attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets, :reverse_sort_clauses, :filter_clauses
+
 	bool_accessor :distinct, :ask, :select, :count, :keyword, :reasoning
 
 	def initialize
@@ -16,6 +17,7 @@ class Query
 		@select_clauses = []
 		@where_clauses = []
 		@sort_clauses = []
+    @filter_clauses = []
 		@keywords = {}
 		@reasoning = true
     @reverse_sort_clauses = []
@@ -66,6 +68,34 @@ class Query
 
 		self
 	end
+
+  # adds one or more generic filters
+  # NOTE: you have to use SPARQL syntax for variables, eg. regex(?s, 'abc')
+  def filter *s
+    # add filter clauses
+    @filter_clauses << s
+    @filter_clauses.uniq!
+
+    self
+  end
+
+  # adds regular expression filter on one variable
+  # variable is Ruby symbol that appears in select/where clause, regex is Ruby 
+  # regular expression
+  def filter_regexp(variable, regexp)
+    raise(ActiveRdfError, "variable must be a symbol") unless variable.is_a? Symbol
+    raise(ActiveRdfError, "regexp must be a ruby regexp") unless regexp.is_a? Regexp
+
+    filter "regex(?#{variable}, #{regexp.inspect.gsub('/','"')})"
+  end
+  alias :filter_regex :filter_regexp
+
+  def filter_operator(variable, operator, operand)
+    raise(ActiveRdfError, "variable must be a Symbol") unless variable.is_a? Symbol
+
+    filter "(?#{variable} #{operator} #{operand}"
+  end
+
 
   # adds reverse sorting predicates
   def reverse_sort *s

@@ -10,12 +10,17 @@ class Query2SPARQL
 			select_clauses = query.select_clauses.collect{|s| construct_clause(s)}
 
       str << "SELECT #{distinct}#{select_clauses.join(' ')} "
-      str << "WHERE { #{where_clauses(query)} }"
+      str << "WHERE { #{where_clauses(query)} #{filter_clauses(query)}}"
     elsif query.ask?
       str << "ASK { #{where_clauses(query)} }"
     end
     
     return str
+  end
+
+  # concatenate filters in query
+  def self.filter_clauses(query)
+    "FILTER #{query.filter_clauses.join(" ")}" unless query.filter_clauses.empty?
   end
 
   # concatenate each where clause using space (e.g. 's p o')
