@@ -44,12 +44,11 @@ class SparqlAdapter < ActiveRdfAdapter
 		
 	# do the real work of executing the sparql query
 	def execute_sparql_query(qs, header=nil, &block)
-		$activerdflog.debug "executing query #{qs} on url #@url"
-
     header = header(nil) if header.nil?
 
 		# encoding query string in URL
 		url = "#@url?query=#{CGI.escape(qs)}"
+		$activerdflog.debug "executing: requesting #{url}"
 
     # querying sparql endpoint
 		response = ''
