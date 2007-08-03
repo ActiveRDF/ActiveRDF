@@ -14,19 +14,59 @@ class RedlandAdapter < ActiveRdfAdapter
 	
 	# instantiate connection to Redland database
 	def initialize(params = {})
+		if params[:location] and params[:location] == :postgresql
+			initialize_postgresql(params)
+			return
+		end
+
 		if params[:location] and params[:location] != :memory
 			# setup file locations for redland database
-			path, file = File.split(params[:location])
 			type = 'bdb'
+      if params[:location].include?('/')
+        path, file = File.split(params[:location])
+      else
+        path = '.'
+        file = params[:location]
+      end
 		else
 			# fall back to in-memory redland 	
 			type = 'memory'; path = '';	file = '.'
 		end
 		
-		$activerdflog.info "RedlandAdapter: initializing with type: #{type} file: #{file} path: #{path}"
 		
 		begin
 			@store = Redland::HashStore.new(type, file, path, false)
+			@model = Redland::Model.new @store
+			@reads = true
+			@writes = true
+      $activerdflog.info "initialised Redland adapter to #{@model.inspect}"
+
+		rescue Redland::RedlandError => e
+			raise ActiveRdfError, "could not initialise Redland database: #{e.message}"
+		end
+	end	
+	
+	# instantiate connection to Redland database in Postgres
+	def initialize_postgresql(params = {})
+    # author: Richard Dale
+		type = 'postgresql'
+		name = params[:name]
+
+		options = []
+		options << "new='#{params[:new]}'" if params[:new]
+    options << "bulk='#{params[:bulk]}'" if params[:bulk]
+    options << "merge='#{params[:merge]}'" if params[:merge]
+		options << "host='#{params[:host]}'" if params[:host]
+		options << "database='#{params[:database]}'" if params[:database]
+		options << "user='#{params[:user]}'" if params[:user]
+		options << "password='#{params[:password]}'" if params[:password]
+		options << "port='#{params[:port]}'" if params[:port]
+
+		
+		$activerdflog.info "RedlandAdapter: initializing with type: #{type} name: #{name} options: #{options.join(',')}"
+		
+		begin
+			@store = Redland::TripleStore.new(type, name, options.join(','))
 			@model = Redland::Model.new @store
 			@reads = true
 			@writes = true

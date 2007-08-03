@@ -21,6 +21,12 @@ class TestRedlandAdapter < Test::Unit::TestCase
     assert_instance_of RedlandAdapter, adapter
   end
 
+  def test_redland_postgres
+    adapter = ConnectionPool.add(:type => :redland, :name => 'db1', :location => :postgresql,
+          :host => 'localhost', :database => 'redland_test',
+              :user => 'eyal', :password => 'lief1234')
+  end
+
   def test_redland_connections
     adapter = RedlandAdapter.new({})
     assert_instance_of RedlandAdapter, adapter

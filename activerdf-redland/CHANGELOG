@@ -1,2 +1,5 @@
+== activerdf_redland (1.2.1) Sat Jun 23 09:03:43 UTC 2007
+  * added support for Redland on PostgreSQL (Richard Dale)
+
 == activerdf_redland (1.2) Mon, 05 Mar 2007 20:40:55 +0000
   * added loading from remote URL (Benno Blumenthal)
