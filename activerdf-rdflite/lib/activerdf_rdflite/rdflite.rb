@@ -499,7 +499,7 @@ class RDFLite < ActiveRdfAdapter
 			@db.execute('create index if not exists pidx on triple(p)') if pidx
 			@db.execute('create index if not exists oidx on triple(o)') if oidx
 			@db.execute('create index if not exists spidx on triple(s,p)') if spidx
-			@db.execute('create index if not exists soidx on triple(s,p)') if soidx
+			@db.execute('create index if not exists soidx on triple(s,o)') if soidx
 			@db.execute('create index if not exists poidx on triple(p,o)') if poidx
 			@db.execute('create index if not exists opidx on triple(o,p)') if opidx
 		end
