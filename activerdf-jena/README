@@ -1,0 +1,9 @@
+This is the ActiveRDF adapter to the Jena backing store.
+
+It supports both memory stores and database stores, both with
+datasources and raw connection parameters.
+
+It also supports reasoners, including Pellet and the built-in Jena
+reasoners, and the Lucene query support in ARQ.
+
+It is under the LGPL license (version 2 or later).

@@ -1,0 +1,125 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext
+END
+arq-extra.jar
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/arq-extra.jar
+END
+json.jar
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/json.jar
+END
+xercesImpl.jar
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/xercesImpl.jar
+END
+jena.jar
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/jena.jar
+END
+wstx-asl-3.0.0.jar
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/wstx-asl-3.0.0.jar
+END
+concurrent.jar
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/concurrent.jar
+END
+stax-api-1.0.jar
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/stax-api-1.0.jar
+END
+arq.jar
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/arq.jar
+END
+icu4j_3_4.jar
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/icu4j_3_4.jar
+END
+iri.jar
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/iri.jar
+END
+xsdlib.jar
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/xsdlib.jar
+END
+pellet.jar
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/pellet.jar
+END
+antlr-2.7.5.jar
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/antlr-2.7.5.jar
+END
+aterm-java-1.6.jar
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/aterm-java-1.6.jar
+END
+junit.jar
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/junit.jar
+END
+xml-apis.jar
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/xml-apis.jar
+END
+relaxngDatatype.jar
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/relaxngDatatype.jar
+END
+lucene-core-2.0.0.jar
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/lucene-core-2.0.0.jar
+END
+commons-logging-1.1.jar
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/commons-logging-1.1.jar
+END
+log4j-1.2.12.jar
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/ext/log4j-1.2.12.jar
+END

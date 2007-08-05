@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/lib/activerdf_jena
+END
+jena.rb
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/lib/activerdf_jena/jena.rb
+END
+jena_adapter.rb
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/lib/activerdf_jena/jena_adapter.rb
+END
+init.rb
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/lib/activerdf_jena/init.rb
+END
+pellet.rb
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/lib/activerdf_jena/pellet.rb
+END
+lucene.rb
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/akos/!svn/ver/123/activerdf_jena/trunk/lib/activerdf_jena/lucene.rb
+END
