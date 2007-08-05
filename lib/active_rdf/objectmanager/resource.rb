@@ -322,7 +322,11 @@ module RDFS
 			end
 		end
 
-		def add_predicate localname, fulluri
+    # define a localname for a predicate URI
+    #
+    # localname should be a Symbol or String, fulluri a Resource or String, e.g. 
+    # add_predicate(:name, FOAF::lastName)
+    def add_predicate localname, fulluri
 			localname = localname.to_s
 			fulluri = RDFS::Resource.new(fulluri) if fulluri.is_a? String
 
