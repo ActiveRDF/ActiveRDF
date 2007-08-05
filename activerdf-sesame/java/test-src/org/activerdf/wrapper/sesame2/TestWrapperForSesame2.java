@@ -1,21 +1,41 @@
 package org.activerdf.wrapper.sesame2;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.activerdf.wrapper.sesame2.WrapperForSesame2;
+import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 
 import junit.framework.TestCase;
 
 public class TestWrapperForSesame2 extends TestCase {
 	
-	public void testJustGetTheWrapper() {
-		WrapperForSesame2 myFajitaOrSomething = new WrapperForSesame2(); 
+	protected WrapperForSesame2 myWrapper; 
+	
+	protected void setUp() {
+		myWrapper = new WrapperForSesame2();
 	}
 
-	public void testNativeStore() {
-		File location = new File("/home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/sesame-persistence.s2");
-		//assertTrue(location.isFile());
-		WrapperForSesame2 myStore = new WrapperForSesame2(location);
+    protected void tearDown() throws RepositoryException {
+    	myWrapper.getSesameConnection().close();
+    }
+
+	
+	public void testJustGetTheWrapper() {
+		myWrapper.callConstructor();
 	}
+
+	public void testMemoryStorePersistence() throws IOException {
+		File location = new File(new File (".").getCanonicalFile().toString() + "/../test/sesame-persistence-test1");
+		myWrapper.callConstructor(location, true);
+	}
+
+	public void NativeStorePersistence() throws IOException {
+		File location = new File(new File (".").getCanonicalFile().toString() + "/../test/sesame-persistence-test2");
+		myWrapper.callConstructor(location, "spoc,pocs", true);
+	}
+
 	
 }
+

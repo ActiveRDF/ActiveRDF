@@ -21,7 +21,7 @@ JObject = java.lang.Object
 
 # sesame specific classes: 
 WrapperForSesame2 = org.activerdf.wrapper.sesame2.WrapperForSesame2
-QueryLanguage = org.openrdf.querymodel.QueryLanguage
+QueryLanguage = org.openrdf.query.QueryLanguage
 NTriplesWriter = org.openrdf.rio.ntriples.NTriplesWriter
 RDFFormat = org.openrdf.rio.RDFFormat
 
@@ -35,13 +35,15 @@ class SesameAdapter < ActiveRdfAdapter
 	# available parameters:
 	# * :location => path to a file for persistent storing or :memory for in-memory (defaults to in-memory)
 	# * :inferencing => true or false, if sesame2 rdfs inferencing is uses (defaults to true)
+	# * :indexes => string of indexes which can be used by the persistent store, example "spoc,posc,cosp"
+	#
 	def initialize(params = {})
 		$activerdflog.info "initializing Sesame Adapter with params #{params.to_s}"
 
 		@reads = true
 		@writes = true
 	
-		# if no directory path given, we use in-memory store
+	# if no directory path given, we use in-memory store
     if params[:location]
       if params[:location] == :memory
         sesameLocation = nil      
@@ -54,6 +56,8 @@ class SesameAdapter < ActiveRdfAdapter
     
     # if no inferencing is specified, we use the sesame2 rdfs inferencing
     sesameInferencing = params[:inferencing] || nil
+	
+	sesameIndexes = params[:indexes] || nil
 	
 	# this will not work at the current state of jruby	
 #    # fancy JRuby code so that the user does not have to set the java CLASSPATH
@@ -75,20 +79,30 @@ class SesameAdapter < ActiveRdfAdapter
 
     @myWrapperInstance = WrapperForSesame2.new
 
-		if sesameLocation == nil
-		  if sesameInferencing == nil
-        @db = @myWrapperInstance.callConstructor
-		  else
-        @db = @myWrapperInstance.callConstructor(sesameInferencing)		  
-		  end
+	# we have to call the java constructor with the right number of arguments
+	
+	if sesameLocation == nil
+		if sesameInferencing == nil
+			@db = @myWrapperInstance.callConstructor
 		else
-		  if sesameInferencing == nil
-		    @db = @myWrapperInstance.callConstructor(sesameLocation)		  
-		  else
-		    @db = @myWrapperInstance.callConstructor(sesameLocation,sesameInferencing)		  
-		  end
+			@db = @myWrapperInstance.callConstructor(sesameInferencing)		  
 		end
-		
+	else
+		if sesameInferencing == nil
+			if sesameIndexes == nil
+				@db = @myWrapperInstance.callConstructor(sesameLocation)
+			else
+				@db = @myWrapperInstance.callConstructor(sesameLocation, sesameIndexes)
+			end
+		else
+			if sesameIndexes == nil
+				@db = @myWrapperInstance.callConstructor(sesameLocation, sesameInferencing)
+			else
+				@db = @myWrapperInstance.callConstructor(sesameLocation, sesameIndexes, sesameInferencing)
+			end
+		end
+	end
+			
     @valueFactory = @db.getRepository.getSail.getValueFactory
 
     # define the finalizer, which will call close on the sesame triple store

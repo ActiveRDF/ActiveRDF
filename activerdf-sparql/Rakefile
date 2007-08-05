@@ -34,7 +34,12 @@ setup_gem($name, $version) do |spec|
   spec.author="Eyal Oren <eyal.oren@deri.org"
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('activerdf', '>= 0.9.2')
-  spec.add_dependency('json')
+  # we now require json_pure instead of json. 
+  # reason: json_pure can be installed on cruby and jruby, json only on cruby. 
+  # we can not check for either the json or the json_pure gem, 
+  # but later in the code we can look if the optimsed json is installed, and maybe load it. 
+  # this makes it necessary to install both gems (json and json pure) on normal cruby systems. 
+  spec.add_dependency('json_pure', '>= 1.1.1')
 end
 
 task :verify_rubyforge do

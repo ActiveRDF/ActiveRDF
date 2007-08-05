@@ -73,12 +73,19 @@
     	  </manifest>
     	<echo>Creating JAR ...</echo>
     	<jar compress="true" manifest="temp/manifest/MANIFEST.MF" manifestencoding="UTF-8"
-    	   destfile="../ext/${product-name}.jar">
+    	   destfile="../ext/${product-name}.jar">      
 	   		<fileset dir="temp/build/">
 	    			<include name="**"/>
 	    	</fileset>
     		<fileset refid="jarfile-includes"/>
 		</jar>
+		<jar compress="true" manifest="temp/manifest/MANIFEST.MF" manifestencoding="UTF-8"
+ 	   destfile="dest/jars/${product-name}.jar">
+ 	   		<fileset dir="temp/build/">
+ 	    			<include name="**"/>
+ 	    	</fileset>
+     		<fileset refid="jarfile-includes"/>
+ 		</jar>  	
     </target>
 	
 	<!-- build manager targets -->
@@ -90,10 +97,11 @@
 			<fileset refid="export-libs" /> 
 		</copy>
 		
-<!--		<mkdir dir="dest/jars" />
+    <mkdir dir="dest/jars" />
 		<copy description="copy all libs on which this project depends" todir="dest/jars">
 			<fileset refid="all-libs" /> 
-		</copy> -->
+			<fileset refid="export-libs" /> 
+		</copy>
 	</target>
 	
 	

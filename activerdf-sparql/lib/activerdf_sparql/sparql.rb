@@ -96,6 +96,8 @@ class SparqlAdapter < ActiveRdfAdapter
 
   # parse json query results into array
 	def parse_json(s)
+	  # this will try to first load json with the native c extensions, 
+	  # and if this fails json_pure will be loaded
     require 'json'
     
     parsed_object = JSON.parse(s)

@@ -2,12 +2,16 @@ package org.activerdf.wrapper.sesame2;
 
 import java.io.File;
 
-import org.openrdf.repository.Connection;
-import org.openrdf.repository.Repository;
-import org.openrdf.repository.RepositoryImpl;
+// the new stuff
+
 import org.openrdf.sail.Sail;
-import org.openrdf.sail.inferencer.MemoryStoreRDFSInferencer;
+import org.openrdf.repository.Repository;
+import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.sail.memory.MemoryStore;
+import org.openrdf.sail.nativerdf.NativeStore;
+import org.openrdf.sail.nativerdf.NativeStoreRDFSInferencer;
+import org.openrdf.sail.memory.MemoryStoreRDFSInferencer;
+import org.openrdf.repository.RepositoryConnection;
 
 
 /**
@@ -15,13 +19,13 @@ import org.openrdf.sail.memory.MemoryStore;
  * many sesame2 classes use an initialize method, which clashes with the 
  * ruby naming requirement, to name the constructor initialize. 
  * Because of this it is currently not possible to construct such objects from jruby
- * but instead embarrsing wrappers, such as this have to be used. 
+ * but instead emberasing wrappers, such as this have to be used. 
  * 
  * check http://jira.codehaus.org/browse/JRUBY-45 to see if bug still exists.
  */
 public class WrapperForSesame2 {
 	
-	protected Connection sesameConnection;
+	protected RepositoryConnection sesameConnection;
 
 	protected Repository sesameRepository;
 	
@@ -44,25 +48,36 @@ public class WrapperForSesame2 {
 	 * 
 	 * check http://jira.codehaus.org/browse/JRUBY-45 to see if bug still exists.
 	 * 
-	 * @param File file - if given a sesame2 the file will be used for persistance and loaded if already existing
+	 * @param File dir - if given a sesame2 the file will be used for persistance and loaded if already existing
+	 * 
+	 * @param String indexes - used by the Sesame Native Store for query speed, example "spoc,posc,cosp"
 	 * 
 	 * @param boolean inferencing - if given, the sesame2 repository will use rdfs inferencing
 	 */
-	public Connection callConstructor(File file, boolean inferencing) {
+	public RepositoryConnection callConstructor(File dir, String indexes, boolean inferencing) {
 		Sail sailStack;
-		if (file == null) {
+		
+		if (dir == null) {
 			sailStack = new MemoryStore();
 		} else {
-			sailStack = new MemoryStore(file);
+			if (indexes == null) {
+				sailStack = new MemoryStore(dir);
+			} else {
+				sailStack = new NativeStore(dir, indexes);
+			}
+				
 		}
 		
 		if (inferencing) {
-			sailStack = new MemoryStoreRDFSInferencer(sailStack);
+			if (sailStack instanceof MemoryStore) 
+				sailStack = new MemoryStoreRDFSInferencer(sailStack);
+			else
+				sailStack = new NativeStoreRDFSInferencer(sailStack);
 		}
 		
 		
 		try {
-			sesameRepository = new RepositoryImpl(sailStack);
+			sesameRepository = new SailRepository(sailStack);
 			sesameRepository.initialize();
 			sesameConnection = sesameRepository.getConnection();
 			sesameConnection.setAutoCommit(true);
@@ -83,8 +98,8 @@ public class WrapperForSesame2 {
 	 *
 	 * Uses in memory repository and rdfs inferencing. 
 	 */
-	public Connection callConstructor() {
-		return callConstructor(null, true);
+	public RepositoryConnection callConstructor() {
+		return callConstructor(null, null, true);
 	}
 
 	/**
@@ -100,8 +115,8 @@ public class WrapperForSesame2 {
 	 * 
 	 * @param boolean inferencing - if given, the sesame2 repository will use rdfs inferencing
 	 */
-	public Connection callConstructor(boolean inferencing) {
-		return callConstructor(null, inferencing);
+	public RepositoryConnection callConstructor(boolean inferencing) {
+		return callConstructor(null, null, inferencing);
 	}
 
 	/**
@@ -117,14 +132,54 @@ public class WrapperForSesame2 {
 	 * 
 	 * @param File dataDir - if given a sesame2 NativeStore using this directory will be constructed
 	 */
-	public Connection callConstructor(File file) {
-		return callConstructor(file, true);
+	public RepositoryConnection callConstructor(File dataDir) {
+		return callConstructor(dataDir, null, true);
 	}
 
 	/**
+	 * construct a wrapper for a sesame2 repository. 
+	 * many sesame2 classes use an initialize method, which clashes with the 
+	 * ruby naming requirement, to name the constructor initialize. 
+	 * Because of this it is currently not possible to construct such objects from jruby
+	 * but instead embarrsing wrappers, such as this have to be used. 
+	 * 
+	 * check http://jira.codehaus.org/browse/JRUBY-45 to see if bug still exists.
+	 *  
+	 * 
+	 * @param File dataDir - if given a sesame2 NativeStore using this directory will be constructed
+	 * 
+	 * @param Boolean inferencing - specify if inferncing should be enabled
+	 */
+	public RepositoryConnection callConstructor(File dataDir, Boolean inferencing) {
+		return callConstructor(dataDir, null, inferencing);
+	}
+
+	
+	
+	/**
+	 * construct a wrapper for a sesame2 repository. 
+	 * many sesame2 classes use an initialize method, which clashes with the 
+	 * ruby naming requirement, to name the constructor initialize. 
+	 * Because of this it is currently not possible to construct such objects from jruby
+	 * but instead embarrsing wrappers, such as this have to be used. 
+	 * 
+	 * check http://jira.codehaus.org/browse/JRUBY-45 to see if bug still exists.
+	 * 
+	 * Uses rdfs inferencing. 
+	 * 
+	 * @param File dataDir - if given a sesame2 NativeStore using this directory will be constructed
+	 * 
+	 * @param String indexes - used by the Sesame Native Store for query speed, example "spoc,posc,cosp"
+	 */
+	public RepositoryConnection callConstructor(File dataDir, String indexes) {
+		return callConstructor(dataDir, indexes, true);
+	}
+	
+	
+	/**
 	 * @return the sesame connection of the sesame repository associated with this wrapper.
 	 */
-	public Connection getSesameConnection() {
+	public RepositoryConnection getSesameConnection() {
 		return sesameConnection;
 	}
 	
