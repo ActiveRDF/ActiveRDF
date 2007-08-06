@@ -1,0 +1,5 @@
+* mention JRuby in README
+* add some documentation on getting/running JRuby to README
+* add API documentation to code
+* add authors/license headers to code
+* update CHANGELOG before release
