@@ -1,3 +1,6 @@
+== activerdf (1.6.3) Thu, 09 Aug 2007 15:11:15 +0100
+  * added support for LANG filters and engine-specific keyword search in SPARQL
+
 == activerdf (1.6.2) Fri, 03 Aug 2007 14:07:54 +0100
   * initial support for FILTERs in SPARQL
 

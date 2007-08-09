@@ -4,7 +4,7 @@ require 'open-uri'
 require 'cgi'
 require 'rexml/document'
 require "#{File.dirname(__FILE__)}/sparql_result_parser"
-  
+
 # SPARQL adapter
 class SparqlAdapter < ActiveRdfAdapter
 	$activerdflog.info "loading SPARQL adapter"
@@ -14,18 +14,23 @@ class SparqlAdapter < ActiveRdfAdapter
 	# available parameters:
 	# * :url => url: endpoint location e.g. "http://m3pe.org:8080/repositories/test-people"
 	# * :results => one of :xml, :json, :sparql_xml
+  attr_reader :engine
+
 	def initialize(params = {})	
 		@reads = true
 		@writes = false
 
 		@url = params[:url] || ''
 		@result_format = params[:results] || :json
+    @engine = params[:engine]
+
+    supported_engines = [:yars2, :sesame2, :joseki, :virtuoso]
+		raise ActiveRdfError, "SPARQL engine unsupported" unless supported_engines.include?(@engine)
 		
 		known_formats = [:xml, :json, :sparql_xml]
-		raise ActiveRdfError, "Result format unsupported" unless 
-		known_formats.include?(@result_format)
+		raise ActiveRdfError, "Result format unsupported" unless known_formats.include?(@result_format)
 		
-		$activerdflog.info "Sparql adapter initialised #{inspect}"
+		$activerdflog.info "SPARQL adapter initialised #{inspect}"
 	end
 
 	def size
@@ -37,8 +42,6 @@ class SparqlAdapter < ActiveRdfAdapter
 	def query(query, &block)
 		time = Time.now
     qs = Query2SPARQL.translate(query)
-		$activerdflog.debug "executing sparql query #{query}"
-
 		execute_sparql_query(qs, header(query), &block)
 	end
 		
@@ -48,6 +51,8 @@ class SparqlAdapter < ActiveRdfAdapter
 
 		# encoding query string in URL
 		url = "#@url?query=#{CGI.escape(qs)}"
+    #url += "&content-type=#{CGI.escape('application/sparql-results+xml')}" if @yars2
+    url = url.gsub("DISTINCT", "") if @yars2
 		$activerdflog.debug "executing: requesting #{url}"
 
     # querying sparql endpoint
@@ -63,6 +68,7 @@ class SparqlAdapter < ActiveRdfAdapter
 			raise ActiveRdfError, "connection refused on SPARQL endpoint #@url"
 			return []
 	 	end
+    $activerdflog.debug "response:\n#{response}"
 
     # we parse content depending on the result format
     results = case @result_format

@@ -90,12 +90,21 @@ class Query
   end
   alias :filter_regex :filter_regexp
 
+  # adds operator filter one one variable
+  # variable is a Ruby symbol that appears in select/where clause, operator is a 
+  # SPARQL operator (e.g. '>'), operand is a SPARQL value (e.g. 15)
   def filter_operator(variable, operator, operand)
     raise(ActiveRdfError, "variable must be a Symbol") unless variable.is_a? Symbol
 
-    filter "(?#{variable} #{operator} #{operand}"
+    filter "?#{variable} #{operator} #{operand}"
   end
 
+  # filter variable on specified language tag, e.g. lang(:o, 'en')
+  def lang variable, tag
+    #filter "regex(lang(?#{variable}), '^#{tag}(-|$)', 'i')"
+    filter "lang(?#{variable}) = '#{tag}'"
+    #filter "langMatches(lang(?#{variable}), '#{tag}')"
+  end
 
   # adds reverse sorting predicates
   def reverse_sort *s
@@ -168,11 +177,11 @@ class Query
   # usage:: query.execute do |s,p,o| ... end
   def execute(options={:flatten => false}, &block)
     options = {:flatten => true} if options == :flatten
+    $activerdflog.debug("executing: #{self.to_sp}")
 
-    $activerdflog.debug("query: #{self.to_sp}")
     if block_given?
-      FederationManager.query(self) do |*clauses|
-        block.call(*clauses)
+      for result in FederationManager.query(self, options)
+        yield result
       end
     else
       FederationManager.query(self, options)
