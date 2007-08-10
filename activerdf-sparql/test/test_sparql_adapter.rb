@@ -11,7 +11,7 @@ require 'queryengine/query'
 class TestSparqlAdapter < Test::Unit::TestCase
   def setup
     ConnectionPool.clear
-    @adapter = ConnectionPool.add(:type => :sparql, :url => 'http://dbpedia.org/sparql')
+    @adapter = ConnectionPool.add(:type => :sparql, :url => 'http://dbpedia.org/sparql', :engine => :virtuoso)
   end
 
   def teardown
@@ -22,7 +22,14 @@ class TestSparqlAdapter < Test::Unit::TestCase
   end
 
   def test_language
-    Query.new.distinct(:o).where(:s,:p,:o).limit(2).lang('en').execute
+    sunset = RDFS::Resource.new("http://dbpedia.org/resource/77_Sunset_Strip")
+    abstract = RDFS::Resource.new("http://dbpedia.org/property/abstract")
+
+    german = Query.new.distinct(:o).where(sunset,abstract,:o).limit(1).lang(:o,'de').execute.first
+    english = Query.new.distinct(:o).where(sunset,abstract,:o).limit(1).lang(:o,'en').execute.first
+
+    assert english =~ /^77 Sunset Strip was one of the most popular of the detective series in early television/
+    assert german =~ /^77 Sunset Strip ist ein Serienklassiker aus den USA um das gleichnamige, in Los Angeles am Sunset Boulevard angesiedelte Detektivbüro/
   end
 
   def test_limit_offset
@@ -45,15 +52,19 @@ class TestSparqlAdapter < Test::Unit::TestCase
     Namespace.register :yago, 'http://dbpedia.org/class/yago/'
     Namespace.register :dbpedia, 'http://dbpedia.org/property/'
 
-    movies = Query.new.
-      select(:title).
-      where(:film, RDF.type, RDFS::Resource.new('http://dbpedia.org/class/yago/film')).
-      where(:film, RDFS.label, :title).
-      where(:title, RDFS::Resource.new('bif:contains'), 'kill').
-      filter_regex(:title, /Kill$/).execute
+    begin
+      movies = Query.new.
+        select(:title).
+        where(:film, RDF.type, RDFS::Resource.new('http://dbpedia.org/class/yago/film')).
+        where(:film, RDFS.label, :title).
+        where(:title, RDFS::Resource.new('bif:contains'), 'kill').
+        filter_regex(:title, /Kill$/).execute
+    rescue TimeOut::Error => e
+      puts "WARNING: SPARQL endpoint timed out"
+    end
 
-    assert !movies.empty?
-    assert movies.all? {|m| m =~ /Kill$/ }
+    assert !movies.empty?, "regex query returns empty results"
+    assert movies.all? {|m| m =~ /Kill$/ }, "regex query returns wrong results"
   end
 
   def test_query_with_block

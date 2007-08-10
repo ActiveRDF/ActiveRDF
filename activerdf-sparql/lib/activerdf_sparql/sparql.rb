@@ -53,7 +53,7 @@ class SparqlAdapter < ActiveRdfAdapter
 		url = "#@url?query=#{CGI.escape(qs)}"
     #url += "&content-type=#{CGI.escape('application/sparql-results+xml')}" if @yars2
     url = url.gsub("DISTINCT", "") if @yars2
-		$activerdflog.debug "executing: requesting #{url}"
+		$activerdflog.debug "querying #{url}"
 
     # querying sparql endpoint
 		response = ''

@@ -100,10 +100,14 @@ class Query
   end
 
   # filter variable on specified language tag, e.g. lang(:o, 'en')
-  def lang variable, tag
-    #filter "regex(lang(?#{variable}), '^#{tag}(-|$)', 'i')"
-    filter "lang(?#{variable}) = '#{tag}'"
-    #filter "langMatches(lang(?#{variable}), '#{tag}')"
+  # optionally matches exactly on language dialect, otherwise only 
+  # language-specifier is considered
+  def lang variable, tag, exact=false
+    if exact
+      filter "lang(?#{variable} = '#{tag}'"
+    else
+      filter "regex(lang(?#{variable}), '^#{tag.gsub(/_.*/,'')}$')"
+    end
   end
 
   # adds reverse sorting predicates
@@ -177,7 +181,6 @@ class Query
   # usage:: query.execute do |s,p,o| ... end
   def execute(options={:flatten => false}, &block)
     options = {:flatten => true} if options == :flatten
-    $activerdflog.debug("executing: #{self.to_sp}")
 
     if block_given?
       for result in FederationManager.query(self, options)
