@@ -1,3 +1,8 @@
+#
+# Author:  Karsten Huneycutt
+# Copyright 2007 Valkeir Corporation
+# License:  LGPL
+#
 require 'java'
 
 module Jena
@@ -24,7 +29,6 @@ module Jena
 
   module Datatypes
     include_package('com.hp.hpl.jena.datatypes')
-    include_class('com.hp.hpl.jena.datatypes.xsd.XSDDatatype')
   end
 
 end

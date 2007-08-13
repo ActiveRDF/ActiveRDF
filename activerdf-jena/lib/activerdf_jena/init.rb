@@ -1,3 +1,8 @@
+#
+# Author:  Karsten Huneycutt
+# Copyright 2007 Valkeir Corporation
+# License:  LGPL
+#
 # add the directory in which this file is located to the ruby loadpath
 file =
 if File.symlink?(__FILE__)

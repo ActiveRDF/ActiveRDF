@@ -1,9 +1,47 @@
-This is the ActiveRDF adapter to the Jena backing store.
+This is the ActiveRDF adapter to the Jena RDF library.
 
-It supports both memory stores and database stores, both with
-datasources and raw connection parameters.
+Features: 
+* supports memory, file and database stores; database
+  stores can be configured both with datasources and raw connection
+  parameters.  Jena currently supports Oracle, MySQL, HSQLDB,
+  PostgreSQL, MS SQL, and Derby.
+* supports reasoners, including Pellet and the built-in Jena reasoners
+* supports Lucene query support in ARQ
+  (since LARQ doesn't allow you to add statements
+  and reindex only those statements, whenever we've add a statement to a
+  triple store, we must rebuild the index at query time)
 
-It also supports reasoners, including Pellet and the built-in Jena
-reasoners, and the Lucene query support in ARQ.
+Requirements: 
+* JRuby is required to natively execute Jena
+* the application can only use pure ruby gems
 
-It is under the LGPL license (version 2 or later).
+License:
+included LGPL license (version 2 or later).
+
+
+------------
+
+Installing and running JRuby: 
+=============================
+
+Download the newest JRuby distribution from http://jruby.codehaus.org/
+
+Unpack it somewhere, e.g. /usr/local/jruby
+
+Then set your environement: 
+
+export JRUBY_HOME=/usr/local/jruby
+export JAVA_HOM=/path/to/java/home
+export PATH=$JRUBY_HOME/bin:$PATH
+
+check if you now have the correct jruby commands in your path: 
+which jruby -> /usr/local/jruby/bin/jruby
+which gem -> /usr/local/jruby/bin/gem
+
+Now you can install rails and activerdf:
+gem install rails --include-dependencies --no-rdoc --no-ri
+gem install activerdf --include-dependencies --no-rdoc --no-ri
+gem install activerdf_jena --include-dependencies --no-rdoc --no-ri
+
+For more information see 
+http://wiki.activerdf.org/GettingStartedGuide

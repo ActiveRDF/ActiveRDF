@@ -1,4 +1,4 @@
-# Author:: Benjamin Heitmann
+# Authors:: Benjamin Heitmann, Karsten Huneycutt
 # Copyright:: (c) 2007
 # License:: LGPL
 
@@ -11,22 +11,23 @@ require 'active_rdf'
 
 require "pp"
 
-class TestSesameAdapter < Test::Unit::TestCase
+class TestJenaAdapter < Test::Unit::TestCase
 
   def setup 
-    @adapter = ConnectionPool.add_data_source(:type => :jena, :ontology => :rdfs, :reasoner => :rdfs, :lucene => true)
+    @adapter = ConnectionPool.add_data_source(:type => :jena, :ontology => :rdfs)
     @eyal = RDFS::Resource.new 'http://eyaloren.org'
     @age = RDFS::Resource.new 'foaf:age'
+    @mbox = RDFS::Resource.new 'foaf:mbox'
     @test = RDFS::Resource.new 'test:test'
+    @mboxval = Literal.new 'aahfgiouhfg'
+    @ageval = Literal.new 23
   end
 
-  # TODO: does not support anything except uris
   # TODO: supports no contexts
-  # TODO: close is undefined...
-  # TODO: adapter clear is undefined
 
   def teardown
-    #adapter.close
+    @adapter.close
+    ConnectionPool.clear
   end
   
   def test_load_no_args
@@ -60,6 +61,80 @@ class TestSesameAdapter < Test::Unit::TestCase
     
   end
 
+  def test_retrieve_a_triple_with_string
+
+    assert_instance_of JenaAdapter, @adapter
+
+    @adapter.add(@eyal, @mbox, @mboxval)
+    result = Query.new.distinct(:o).where(@eyal, :p, :o).execute
+    assert_equal 1, result.flatten.size
+
+    result = Query.new.distinct(:p, :o).where(@eyal, :p, :o).execute
+    assert_equal 2, result.flatten.size
+
+    result = Query.new.distinct(:o).where(@eyal, @mbox, :o).execute
+    assert_equal 1, result.flatten.size
+
+    result = Query.new.distinct(:s).where(:s, @mbox, @mboxval).execute
+    assert_equal 1, result.flatten.size
+
+    result = Query.new.distinct(:p).where(@eyal, :p, @mboxval).execute
+    assert_equal 1, result.flatten.size
+    
+  end
+
+  def test_retrieve_a_triple_with_fixnum
+
+    assert_instance_of JenaAdapter, @adapter
+
+    @adapter.add(@eyal, @age, @ageval)
+    result = Query.new.distinct(:o).where(@eyal, :p, :o).execute
+    assert_equal 1, result.flatten.size
+
+    result = Query.new.distinct(:p, :o).where(@eyal, :p, :o).execute
+    assert_equal 2, result.flatten.size
+
+    result = Query.new.distinct(:o).where(@eyal, @age, :o).execute
+    assert_equal 1, result.flatten.size
+
+    result = Query.new.distinct(:s).where(:s, @age, @ageval).execute
+    assert_equal 1, result.flatten.size
+
+    result = Query.new.distinct(:p).where(@eyal, :p, @ageval).execute
+    assert_equal 1, result.flatten.size
+    
+  end
+
+  def test_load
+    # fill in
+  end
+
+  def test_remove
+    @adapter.add(@eyal, @age, @ageval)
+    @adapter.add(@eyal, @mbox, @mboxval)
+    @adapter.delete(@eyal, @age, @ageval)
+    assert_equal 1, @adapter.size
+
+    @adapter.add(@eyal, @age, @ageval)
+    @adapter.add(@eyal, @mbox, @mboxval)
+    @adapter.delete(nil, nil, @ageval)
+    assert_equal 1, @adapter.size
+
+    @adapter.add(@eyal, @age, @ageval)
+    @adapter.add(@eyal, @mbox, @mboxval)
+    @adapter.delete(nil, @age, nil)
+    assert_equal 1, @adapter.size
+
+    @adapter.add(@eyal, @age, @ageval)
+    @adapter.add(@eyal, @mbox, @mboxval)
+    @adapter.delete(@eyal, nil, nil)
+    assert_equal 0, @adapter.size
+  end
+
+  def test_persistence
+    # fill in
+  end
+
   def test_dump
     @adapter.add(@eyal, @age, @test)
 
@@ -79,18 +154,37 @@ class TestSesameAdapter < Test::Unit::TestCase
     @adapter.add(@eyal, @age, @test)
     assert 0 < @adapter.size 
 
-    # @adapter.clear
-    # assert_equal 0, @adapter.size 
+    @adapter.clear
+    assert_equal 0, @adapter.size 
   end  
 
+  # may seem redundant, but nonetheless this is needed
+  def test_close
+    @adapter.close
+    ConnectionPool.clear
+    
+    # results = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
+    # assert results.flatten.size = null
+    
+    my_adapter = ConnectionPool.add_data_source(:type => :jena, :ontology => :rdfs)
+    my_adapter.add(@eyal, @age, @test)
+    results = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
+    assert results.flatten.size > 0
+    
+    my_adapter.close
+    results = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
+    assert results.flatten.size > 0
+    
+    ConnectionPool.clear
+  end
+
   def test_rdfs_reasoning
-    adapter_rdfs = ConnectionPool.add_data_source(:type => :jena, :ontology => :rdfs, :reasoner => :rdfs_simple)
+    adapter_rdfs = ConnectionPool.add_data_source(:type => :jena, :ontology => :rdfs, :reasoner => :rdfs)
 
     adapter_rdfs.add(@eyal, @age, @test)
     result = Query.new.distinct(:o).where(@eyal, :p, :o).execute
     assert_equal 2, result.flatten.size
-    
+    adapter_rdfs.close
   end
-
 
 end

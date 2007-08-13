@@ -1,3 +1,8 @@
+#
+# Author:  Karsten Huneycutt
+# Copyright 2007 Valkeir Corporation
+# License:  LGPL
+#
 module LuceneARQ
 
   class << self

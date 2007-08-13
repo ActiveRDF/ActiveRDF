@@ -27,12 +27,13 @@ task :default => :install
 setup_gem($name, $version) do |spec|
   spec.summary = 'ActiveRDF adapter to the Jena RDF store'
   spec.description = spec.summary
-  spec.author = 'Benjamin Heitmann and Karsten Huneycutt'
+  spec.author = 'Karsten Huneycutt and Benjamin Heitmann'
   spec.email = 'benjamin.heitmann@deri.org'
   spec.homepage = 'http://www.activerdf.org'
   spec.platform = Gem::Platform::RUBY
   spec.autorequire = 'active_rdf'
   spec.add_dependency('gem_plugin', '>= 0.2.1')
+  spec.add_dependency('activerdf', '>= 1.2')
   spec.autorequire = 'init.rb'
   spec.files += Dir['ext/**/*.jar']
 end

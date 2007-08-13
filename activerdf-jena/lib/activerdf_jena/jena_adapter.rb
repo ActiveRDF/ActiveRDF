@@ -1,3 +1,12 @@
+#
+# Author:  Karsten Huneycutt
+# Copyright 2007 Valkeir Corporation
+# License:  LGPL
+#
+require 'uri'
+require 'date'
+require 'time'
+
 class JenaAdapter < ActiveRdfAdapter
 
   class JenaAdapterConfigurationError < StandardError
@@ -39,11 +48,15 @@ class JenaAdapter < ActiveRdfAdapter
   bool_accessor :using_lucene, :lucene_index_behind
   attr_accessor :ontology_type, :model_name, :reasoner, :connection
   attr_accessor :model_maker, :base_model, :model, :lucene_index
+  attr_accessor :root_directory
 
   # :database 
   #   either use :url, :type, :username, AND :password (for a
   #   regular connection) OR :datasource AND :type (for a container 
   #   connection), default to memory data store
+  # :file
+  #   database wins over this, this wins over memory store.  parameter is
+  #   a string or file indicating the root directory for all files.
   # :model
   #   name of model to use, default is jena's default
   # :ontology
@@ -61,6 +74,14 @@ class JenaAdapter < ActiveRdfAdapter
     self.reasoner = params[:reasoner]
     self.using_lucene = params[:lucene]
     self.model_name = params[:model]
+    if params[:file]
+      if params[:file].respond_to? :path
+        self.root_directory = File.expand_path(params[:file].path)
+      else
+        self.root_directory = params[:file]
+      
+      end
+    end
 
     # do some sanity checking
     if self.using_lucene? && !LuceneARQ.lucene_available?
@@ -88,15 +109,17 @@ class JenaAdapter < ActiveRdfAdapter
       end
 
       self.model_maker = Jena::Model::ModelFactory.createModelRDBMaker(connection)
-      if self.model_name
-        self.base_model = self.model_maker.openModel(model)
-      else
-        self.base_model = self.model_maker.createDefaultModel
-      end
       
+    elsif self.root_directory
+      self.model_maker = Jena::Model::ModelFactory.createFileModelMaker(self.root_directory)
     else
       self.model_maker = Jena::Model::ModelFactory.createMemModelMaker
-      self.base_model = Jena::Model::ModelFactory.createDefaultModel
+    end
+    
+    if self.model_name
+      self.base_model = self.model_maker.openModel(model)
+    else
+      self.base_model = self.model_maker.createDefaultModel
     end
     
     if self.ontology_type
@@ -181,57 +204,14 @@ class JenaAdapter < ActiveRdfAdapter
     res
   end
 
-  def clear
-    self.model.removeAll
+  def close
+    self.model.close
   end
 
-  RUBY_XSD_TYPE_MAP = [
-                       Jena::Datatypes::XSDDatatype::XSDanyURI,
-                       Jena::Datatypes::XSDDatatype::XSDbase64Binary,
-                       Jena::Datatypes::XSDDatatype::XSDboolean,
-                       Jena::Datatypes::XSDDatatype::XSDbyte,
-                       Jena::Datatypes::XSDDatatype::XSDdate,
-                       Jena::Datatypes::XSDDatatype::XSDdateTime,
-                       Jena::Datatypes::XSDDatatype::XSDdecimal,
-                       Jena::Datatypes::XSDDatatype::XSDdouble,
-                       Jena::Datatypes::XSDDatatype::XSDduration,
-                       Jena::Datatypes::XSDDatatype::XSDENTITY,
-                       Jena::Datatypes::XSDDatatype::XSDfloat,
-                       Jena::Datatypes::XSDDatatype::XSDhexBinary,
-                       Jena::Datatypes::XSDDatatype::XSDID,
-                       Jena::Datatypes::XSDDatatype::XSDIDREF,
-                       Jena::Datatypes::XSDDatatype::XSDint,
-                       Jena::Datatypes::XSDDatatype::XSDgDay,
-                       Jena::Datatypes::XSDDatatype::XSDgMonth,
-                       Jena::Datatypes::XSDDatatype::XSDgMonthDay,
-                       Jena::Datatypes::XSDDatatype::XSDgYear,
-                       Jena::Datatypes::XSDDatatype::XSDgYearMonth,
-                       Jena::Datatypes::XSDDatatype::XSDinteger,
-                       Jena::Datatypes::XSDDatatype::XSDlanguage,
-                       Jena::Datatypes::XSDDatatype::XSDlong,
-                       Jena::Datatypes::XSDDatatype::XSDName,
-                       Jena::Datatypes::XSDDatatype::XSDNCName,
-                       Jena::Datatypes::XSDDatatype::XSDnegativeInteger,
-                       Jena::Datatypes::XSDDatatype::XSDNMTOKEN,
-                       Jena::Datatypes::XSDDatatype::XSDnonNegativeInteger,
-                       Jena::Datatypes::XSDDatatype::XSDnonPositiveInteger,
-                       Jena::Datatypes::XSDDatatype::XSDnormalizedString,
-                       Jena::Datatypes::XSDDatatype::XSDNOTATION,
-                       Jena::Datatypes::XSDDatatype::XSDpositiveInteger,
-                       Jena::Datatypes::XSDDatatype::XSDQName,
-                       Jena::Datatypes::XSDDatatype::XSDshort,
-                       Jena::Datatypes::XSDDatatype::XSDstring,
-                       Jena::Datatypes::XSDDatatype::XSDtime,
-                       Jena::Datatypes::XSDDatatype::XSDtoken,
-                       Jena::Datatypes::XSDDatatype::XSDunsignedByte,
-                       Jena::Datatypes::XSDDatatype::XSDunsignedInt,
-                       Jena::Datatypes::XSDDatatype::XSDunsignedLong,
-                       Jena::Datatypes::XSDDatatype::XSDunsignedShort
-                      ]
-
-  # FIXME
-  def map_type(obj)
-    nil
+  def clear
+    self.model.removeAll
+    self.model.prepare if self.model.respond_to? :prepare
+    self.model.rebind if self.model.respond_to? :rebind
   end
 
   def build_statement(subject, predicate, object)
@@ -240,21 +220,36 @@ class JenaAdapter < ActiveRdfAdapter
     if object.respond_to? :uri
       o = self.model.getResource(object.uri)
     else
-      type = map_type(o)
-      o = self.model.createTypedLiteral(object, type)
-    end
+      #xlate to literal
+      if !object.kind_of? Literal
+        objlit = Literal.new object
+      else
+        objlit = object
+      end
+      
+      if objlit.type
+        type = Jena::Datatypes::TypeMapper.getInstance.getTypeByName(objlit.type.uri)
+        o = self.model.createTypedLiteral(objlit.value, type)
+      elsif objlit.language
+        o = self.model.createLiteral(objlit.value, objlit.language)
+      else
+        o = self.model.createTypedLiteral(objlit.value, nil)
+      end
+    end    
     self.model.createStatement(s, p, o)
   end
 
   def delete(subject, predicate, object, context = nil)
     self.lucene_index_behind = true
     self.model.remove(build_statement(subject, predicate, object))
+    self.model.prepare if self.model.respond_to? :prepare
     self.model.rebind if self.model.respond_to? :rebind
   end
 
   def add(subject, predicate, object, context = nil)
     self.lucene_index_behind = true
     self.model.add(build_statement(subject, predicate, object))
+    self.model.prepare if self.model.respond_to? :prepare
     self.model.rebind if self.model.respond_to? :rebind
   end
 

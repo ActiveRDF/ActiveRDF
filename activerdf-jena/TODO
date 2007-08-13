@@ -1,5 +1,22 @@
-* mention JRuby in README
-* add some documentation on getting/running JRuby to README
+administrative tasks:
+=========================
 * add API documentation to code
-* add authors/license headers to code
 * update CHANGELOG before release
+* describe which features work right now, and which should not be used
+* check what problems eyals rake file is causing for karsten
+
+implementation tasks:
+===================== 
+
+support for: 
+* quads/named graphs/contexts
+* keyword search (integrate ActiveRDF Query.keyword_where with Lucene keyword search)
+
+other features:
+* Pellet conjunctive query facility integration into query facility
+
+resolve: 
+* Delete with nil parts of triple indicating wildcards
+* could not verify rdfs reasoning support
+
+

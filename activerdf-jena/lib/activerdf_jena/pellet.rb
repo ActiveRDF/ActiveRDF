@@ -1,3 +1,8 @@
+#
+# Author:  Karsten Huneycutt
+# Copyright 2007 Valkeir Corporation
+# License:  LGPL
+#
 module Pellet
   
   class << self
@@ -13,6 +18,8 @@ module Pellet
     self.pellet_available = false
   end
 
-  
+  module Query
+    include_package('org.mindswap.pellet.query')
+  end
 
 end
