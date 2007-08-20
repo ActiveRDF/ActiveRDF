@@ -1,3 +1,7 @@
+== activerdf (1.6.4) 
+  * new method: ConnectionPool.remove_data_source(adapter) which should be called
+    by all adapter.close methods
+
 == activerdf (1.6.3) Thu, 09 Aug 2007 15:11:15 +0100
   * added support for LANG filters and engine-specific keyword search in SPARQL
 

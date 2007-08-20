@@ -57,6 +57,10 @@ class ConnectionPool
     @@adapter_pool.select {|adapter| adapter.reads? }
   end
 
+  def ConnectionPool.write_adapters
+    @@adapter_pool.select {|adapter| adapter.writes? }
+  end
+
   # returns adapter-instance for given parameters (either existing or new)
   def ConnectionPool.add_data_source(connection_params)
     $activerdflog.info "ConnectionPool: add_data_source with params: #{connection_params.inspect}"
@@ -83,6 +87,25 @@ class ConnectionPool
     self.write_adapter = adapter if adapter.writes?
 
     return adapter
+  end
+  
+  # remove one adapter from activerdf
+  def ConnectionPool.remove_data_source(adapter)
+    $activerdflog.info "ConnectionPool: remove_data_source with params: #{adapter.to_s}"
+    
+    index = @@adapter_pool.index(adapter)
+
+    # remove_data_source mit be called repeatedly, e.g because the adapter object is stale
+    unless index.nil?
+      @@adapter_parameters.delete_at(index)
+      @@adapter_pool.delete_at(index)
+      if self.write_adapters.empty?
+        self.write_adapter = nil
+      else
+        self.write_adapter = self.write_adapters.first
+      end
+    end
+    
   end
 
 	# sets adapter-instance for connection parameters (if you want to re-enable an existing adapter)

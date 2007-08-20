@@ -170,6 +170,7 @@ class SesameAdapter < ActiveRdfAdapter
   # if not called there may be open iterators. 
   def close
     @db.close
+    ConnectionPool.remove_data_source(self)
   end
 
   # returns all triples in the datastore
@@ -293,14 +294,14 @@ class SesameAdapter < ActiveRdfAdapter
 		[s,p,o].each_with_index do |r,i|
 			params[i] = case r
 							 when RDFS::Resource
-								 @valueFactory.createURI(s.uri)
+								 @valueFactory.createURI(r.uri)
 							 when Symbol
 								 nil
 							 else
 								 if i < 2 # subject or predicate
 									 raise ActiveRdfError, "trying to add or delete a subject, predicate, or object of type #{r.class}"
 								 else
-									 @valueFactory.createLiteral(o.to_s)
+									 @valueFactory.createLiteral(r.to_s)
 								 end
 							 end
 		end
