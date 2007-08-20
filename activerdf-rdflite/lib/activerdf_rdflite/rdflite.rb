@@ -90,6 +90,12 @@ class RDFLite < ActiveRdfAdapter
 		@db.execute('delete from triple')
 	end
 
+  # close adapter and remove it from the ConnectionPool
+  def close
+    ConnectionPool.remove_data_source(self)
+    # TODO: close rdflite data source
+  end
+
 	# deletes triple(s,p,o,c) from datastore
 	# symbol parameters match anything: delete(:s,:p,:o) will delete all triples
 	# you can specify a context to limit deletion to that context: 

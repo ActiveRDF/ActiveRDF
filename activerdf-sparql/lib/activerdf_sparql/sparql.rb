@@ -87,6 +87,10 @@ class SparqlAdapter < ActiveRdfAdapter
     end
 	end
 	
+	def close
+	  ConnectionPool.remove_data_source(self)
+	end
+	
 	private
 	# constructs correct HTTP header for selected query-result format
 	def header(query)

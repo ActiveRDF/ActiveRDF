@@ -207,6 +207,17 @@ class RedlandAdapter < ActiveRdfAdapter
 		# instead, we just dump all triples, and count them
     @model.triples.size
 	end
+
+  # clear all real triples of adapter
+  def clear
+    # TODO
+  end
+	
+	# close adapter and remove it from the ConnectionPool
+	def close
+	  ConnectionPool.remove_data_source(self)
+	  # TODO: close the redland connection
+  end
 	
 	private
 	################ helper methods ####################
