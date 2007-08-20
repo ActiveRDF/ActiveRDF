@@ -205,6 +205,7 @@ class JenaAdapter < ActiveRdfAdapter
   end
 
   def close
+    ConnectionPool.remove_data_source(self)
     self.model.close
   end
 
@@ -215,9 +216,30 @@ class JenaAdapter < ActiveRdfAdapter
   end
 
   def build_statement(subject, predicate, object)
-    s = self.model.getResource(subject.uri)
-    p = self.model.getProperty(predicate.uri)
-    if object.respond_to? :uri
+        
+    # subject
+    if subject.kind_of? Symbol
+      #s = Jena::Node.create("??") # -> Jena Node_ANY
+      #s = self.model.getResource("??")
+      res = Jena::Model::Resource.new("test:test")
+      res = Jena::Node.create("??")
+    elsif subject.kind_of? RDFS::Resource
+      s = self.model.getResource(subject.uri)      
+    else
+      raise ActiveRdfError, "trying to add or delete a subject of type #{subject.class}"
+    end
+    
+    # predicate
+    if predicate.kind_of? Symbol
+      #p = Jena::Node.create("??") # -> Jena Node_ANY
+      p = self.model.getProperty("??")
+    elsif predicate.kind_of? RDFS::Resource
+      p = self.model.getProperty(predicate.uri)      
+    else
+      raise ActiveRdfError, "trying to add or delete a predicate of type #{predicate.class}"
+    end
+    
+    if object.kind_of? RDFS::Resource
       o = self.model.getResource(object.uri)
     else
       #xlate to literal

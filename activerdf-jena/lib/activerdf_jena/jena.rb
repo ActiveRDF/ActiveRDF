@@ -31,4 +31,6 @@ module Jena
     include_package('com.hp.hpl.jena.datatypes')
   end
 
+  include_class('com.hp.hpl.jena.graph.Node')
+
 end
