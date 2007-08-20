@@ -1,10 +1,18 @@
 # ActiveRDF loader
 
-# adding active_rdf subdirectory to the ruby loadpath
-file = File.symlink?(__FILE__) ? File.readlink(__FILE__) : __FILE__
-this_dir = File.dirname(File.expand_path(file))
-$: << this_dir
-$: << this_dir + '/active_rdf/'
+if RUBY_PLATFORM =~ /java/
+  # jruby can not follow symlinks, because java does not know the symlink concept
+  # result: all paths for jruby are different
+  this_dir = File.dirname(File.expand_path(__FILE__))
+  $: << this_dir + '/activerdf/lib/active_rdf/'
+  $: << this_dir + '/activerdf/lib/'
+  # TODO: change active_rdf to activerdf
+else
+  file = File.symlink?(__FILE__) ? File.readlink(__FILE__) : __FILE__
+  this_dir = File.dirname(File.expand_path(file))  
+  $: << this_dir + '/'
+  $: << this_dir + '/active_rdf/'
+end
 
 require 'active_rdf_helpers'
 require 'active_rdf_log'
@@ -32,13 +40,18 @@ require 'rubygems'
 if Gem::cache.search(/^activerdf$/).empty?
 	# we are not running as a gem
 	$activerdflog.info 'ActiveRDF is NOT installed as a Gem'
-	load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
-	load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/fetching'
-	load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/suggesting'
-	load_adapter this_dir + '/../activerdf-redland/lib/activerdf_redland/redland'
-	load_adapter this_dir + '/../activerdf-sparql/lib/activerdf_sparql/sparql'
-	load_adapter this_dir + '/../activerdf-yars/lib/activerdf_yars/jars2'
-   load_adapter this_dir + '/../activerdf-sesame/lib/activerdf_sesame/sesame'
+	if RUBY_PLATFORM =~ /java/
+	  load_adapter this_dir + '/activerdf/activerdf-jena/lib/activerdf_jena/init'
+    #load_adapter this_dir + '/../activerdf-sesame/lib/activerdf_sesame/sesame'
+	else
+  	load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
+  	load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/fetching'
+  	load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/suggesting'
+  	load_adapter this_dir + '/../activerdf-redland/lib/activerdf_redland/redland'
+  	load_adapter this_dir + '/../activerdf-sparql/lib/activerdf_sparql/sparql'
+  	load_adapter this_dir + '/../activerdf-yars/lib/activerdf_yars/jars2'	  
+  end
+  
 else
 	# we are running as a gem
 	require 'gem_plugin'
