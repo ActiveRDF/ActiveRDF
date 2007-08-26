@@ -215,31 +215,8 @@ class JenaAdapter < ActiveRdfAdapter
     self.model.rebind if self.model.respond_to? :rebind
   end
 
-  def build_statement(subject, predicate, object)
-        
-    # subject
-    if subject.kind_of? Symbol
-      #s = Jena::Node.create("??") # -> Jena Node_ANY
-      #s = self.model.getResource("??")
-      res = Jena::Model::Resource.new("test:test")
-      res = Jena::Node.create("??")
-    elsif subject.kind_of? RDFS::Resource
-      s = self.model.getResource(subject.uri)      
-    else
-      raise ActiveRdfError, "trying to add or delete a subject of type #{subject.class}"
-    end
-    
-    # predicate
-    if predicate.kind_of? Symbol
-      #p = Jena::Node.create("??") # -> Jena Node_ANY
-      p = self.model.getProperty("??")
-    elsif predicate.kind_of? RDFS::Resource
-      p = self.model.getProperty(predicate.uri)      
-    else
-      raise ActiveRdfError, "trying to add or delete a predicate of type #{predicate.class}"
-    end
-    
-    if object.kind_of? RDFS::Resource
+  def build_object(object)
+    if object.respond_to? :uri
       o = self.model.getResource(object.uri)
     else
       #xlate to literal
@@ -258,12 +235,34 @@ class JenaAdapter < ActiveRdfAdapter
         o = self.model.createTypedLiteral(objlit.value, nil)
       end
     end    
+    return o
+  end
+
+  def build_subject(subject)
+    self.model.getResource(subject.uri)
+  end
+
+  def build_predicate(predicate)
+    self.model.getProperty(predicate.uri)
+  end
+
+  def build_statement(subject, predicate, object)
+    s = build_subject(subject)
+    p = build_predicate(predicate)
+    o = build_object(object)
     self.model.createStatement(s, p, o)
+  end
+
+  def is_wildcard?(thing)
+    (thing == nil) || thing.kind_of?(Symbol)
   end
 
   def delete(subject, predicate, object, context = nil)
     self.lucene_index_behind = true
-    self.model.remove(build_statement(subject, predicate, object))
+    s = (is_wildcard?(subject) ? nil : build_subject(subject))
+    p = (is_wildcard?(predicate) ? nil : build_predicate(predicate))
+    o = (is_wildcard?(object) ? nil : build_object(object))
+    self.model.removeAll(s, p, o)
     self.model.prepare if self.model.respond_to? :prepare
     self.model.rebind if self.model.respond_to? :rebind
   end

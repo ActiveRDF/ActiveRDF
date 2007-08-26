@@ -23,12 +23,12 @@ class TestJenaAdapter < Test::Unit::TestCase
     @ageval = Literal.new 23
   end
 
-  # TODO: supports no contexts
-
   def teardown
     @adapter.close
     # ConnectionPool.clear
   end
+  
+  
   
   def test_load_no_args
     adapter = ConnectionPool.add_data_source(:type => :jena)
@@ -104,17 +104,14 @@ class TestJenaAdapter < Test::Unit::TestCase
     assert_equal 1, result.flatten.size
     
   end
-  
-  def test_load
-    # fill in
-  end
-  
+    
   def test_remove
     @adapter.add(@eyal, @age, @ageval)
     @adapter.add(@eyal, @mbox, @mboxval)
     @adapter.delete(@eyal, @age, @ageval)
     assert_equal 1, @adapter.size
-  
+    
+
     @adapter.add(@eyal, @age, @ageval)
     @adapter.add(@eyal, @mbox, @mboxval)
     @adapter.delete(:s, :p, @ageval)
@@ -130,11 +127,7 @@ class TestJenaAdapter < Test::Unit::TestCase
     @adapter.delete(@eyal, :p, :o)
     assert_equal 0, @adapter.size
   end
-  
-  def test_persistence
-    # fill in
-  end
-  
+    
   def test_dump
     @adapter.add(@eyal, @age, @test)
   
@@ -181,13 +174,14 @@ class TestJenaAdapter < Test::Unit::TestCase
     end
   end
   
-  # def test_anynode
-  #   include_class("com.hp.hpl.jena.graph.Node")
-  #   
-  #   a = Jena::Node.create("??")
-  # 
-  #   puts "the any node: #{a.inspect}"
-  # end
+  def test_load
+    # fill in
+  end
+  
+  def test_persistence
+    # fill in
+  end
+
 
   # TODO: need a better understanding of rdfs reasoning in Jena before I can write a test for it
   # def test_rdfs_reasoning

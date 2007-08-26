@@ -16,7 +16,6 @@ other features:
 * Pellet conjunctive query facility integration into query facility
 
 resolve: 
-* Delete with nil parts of triple indicating wildcards
 * could not verify rdfs reasoning support
 
 
