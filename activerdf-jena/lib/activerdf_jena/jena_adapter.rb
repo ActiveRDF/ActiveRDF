@@ -3,9 +3,6 @@
 # Copyright 2007 Valkeir Corporation
 # License:  LGPL
 #
-require 'uri'
-require 'date'
-require 'time'
 
 class JenaAdapter < ActiveRdfAdapter
 
@@ -73,13 +70,21 @@ class JenaAdapter < ActiveRdfAdapter
     self.ontology_type = params[:ontology]
     self.reasoner = params[:reasoner]
     self.using_lucene = params[:lucene]
-    self.model_name = params[:model]
+    
+    # if the model name is not provided and file persistence is used, then jena just
+    # creates random files in the tmp dir. not good, as we need to know the model name
+    # to have persistence
+    if params[:model]
+      self.model_name = params[:model]
+    else
+      self.model_name = "default"
+    end
+    
     if params[:file]
       if params[:file].respond_to? :path
         self.root_directory = File.expand_path(params[:file].path)
       else
         self.root_directory = params[:file]
-      
       end
     end
 
@@ -116,11 +121,8 @@ class JenaAdapter < ActiveRdfAdapter
       self.model_maker = Jena::Model::ModelFactory.createMemModelMaker
     end
     
-    if self.model_name
-      self.base_model = self.model_maker.openModel(model)
-    else
-      self.base_model = self.model_maker.createDefaultModel
-    end
+
+    self.base_model = self.model_maker.openModel(model_name)
     
     if self.ontology_type
       rf = map_reasoner_factory(self.reasoner)
@@ -139,7 +141,7 @@ class JenaAdapter < ActiveRdfAdapter
     
     self.reads = true
     self.writes = true
-
+    
     self
   end
 
@@ -320,59 +322,127 @@ class JenaAdapter < ActiveRdfAdapter
     
   end
   
-  def query(query, params = {})
-    query_sparql = translate(query)
+  def perform_query(query, qexec)
+    results = qexec.execSelect
+    arr_results = []
+    
+    while results.hasNext
+      row = results.nextSolution
+      res_row = []
+      query.select_clauses.each do |kw|
+        thing = row.get(kw.to_s)
+        if thing.kind_of? Jena::Model::Resource
+          next if thing.isAnon
+          res_row << RDFS::Resource.new(thing.to_s)
+        elsif thing.kind_of? Jena::Model::Literal
+          res_row << thing.to_s
+        else
+          raise ActiveRdfError, "Returned thing other than resource or literal"
+        end
+      end
+      arr_results << res_row
+    end
+    arr_results
+  end
 
+  def query_jena(query)
+    query_sparql = translate(query)
+    
     qexec = Jena::Query::QueryExecutionFactory.create(query_sparql, self.model)
 
-    # PROBABLY A VERY EXPENSIVE OPERATION (rebuilds lucene index if ANYTHING
-    # changed...)
-    if self.using_lucene? && params[:lucene]
-      LuceneARQ::LARQ.setDefaultIndex(qxec.getContext, retrieve_lucene_index)
-    end
-
     begin 
-      results = qexec.execSelect
-      arr_results = []
-      
-      # ask queries just get a yes/no
-      if query.ask?
-        return [[true]] if results.hasNext
-        return [[false]]
-      end
-
-      while results.hasNext
-        row = results.nextSolution
-        res_row = []
-        query.select_clauses.each do |kw|
-          thing = row.get(kw.to_s)
-          if thing.kind_of? Jena::Model::Resource
-            next if thing.isAnon
-            res_row << RDFS::Resource.new(thing.to_s)
-          elsif thing.kind_of? Jena::Model::Literal
-            res_row << thing.to_s
-          else
-            raise ActiveRdfError, "Returned thing other than resource or literal"
-          end
-        end
-        arr_results << res_row
-      end
-
-      if query.count?
-        return arr_results.size
-      end
-
-      return arr_results
-
+      results = perform_query(query, qexec)
     ensure
       qexec.close
     end
+
+    results
+  end
+
+  def query_pellet(query)
+    query_sparql = translate(query)
+    jena_query = Jena::Query::QueryFactory.create(query_sparql)
+    
+    # bail if not a select
+    return [] if !query.isSelectType
+
+    qexec = Pellet::Query::PelletQueryExecution.new(jena_query, self.model)
+    
+    begin
+      results = perform_query(query, qexec)
+    ensure
+      qexec.close
+    end
+    
+    results
+  end
+
+  def query(query, params = {})
+
+    if self.using_lucene? && query.keyword?
+      
+      # PROBABLY A VERY EXPENSIVE OPERATION (rebuilds lucene index if ANYTHING
+      # changed -- this seems to be the only way, since you have to close
+      # the index after you build it...
+      LuceneARQ::LARQ.setDefaultIndex(qxec.getContext, retrieve_lucene_index)
+      
+      # duplicate the query
+      query_with_keywords = query.dup
+      
+      # now duplicate the where stuff so we can fiddle with it...
+      # this is GROSS -- fix this if Query ever sprouts a proper
+      # deep copy or a where_clauses setter
+      query_with_keywords.instance_variable_set("@where_clauses", query.where_clauses.dup)
+
+      # now, for each of the keyword clauses, set up the search
+      query.keywords.each do |var, keyword|
+        # use this if activerdf expects the subject to come back and not the
+        # literal and using indexbuilderstring
+        #query.where("lucene_literal_#{var}".to_sym, LuceneARQ::KEYWORD_PREDICATE, keyword)
+        #query.where(var, "lucene_property_#{var}".to_sym, "lucene_literal_#{var}".to_sym)
+
+        # use this if activerdf expects the literal to come back, not the 
+        # subject, or if using indexbuildersubject (which makes the subject
+        # come back instead of the literal
+        query.where(var, LuceneARQ::KEYWORD_PREDICATE, keyword)
+
+      end
+
+    else
+      query_with_keywords = query
+    end
+
+    # jena knows about lucene, so use the query object that has the keyword
+    # search requests expanded.
+    jena_results = query_jena(query_with_keywords)
+
+    # use the conjunctive query facility in pellet to get additional 
+    # answers, if we're using pellet.
+    if self.reasoner == :pellet
+      # pellet doesn't know about lucene, so we use the original query
+      # object
+      pellet_results = query_pellet(query)
+      results = (jena_results + pellet_results).uniq!
+    else
+      results = jena_results
+    end
+
+    if query.ask?
+      return [[true]] if results.size > 0
+      return [[false]]
+    end
+    
+    if query.count?
+      return results.size
+    end
+
+    results
     
   end
 
   def retrieve_lucene_index
     if self.lucene_index_behind?
-      builder = LuceneARQ::IndexBuilderString.new
+      builder = LuceneARQ::IndexBuilderSubject.new
       builder.indexStatements(self.model.listStatements)
       builder.closeForWriting
       self.lucene_index = builder.getIndex

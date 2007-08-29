@@ -1,0 +1,793 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:admin="http://webns.net/mvcb/"
+ xmlns:content="http://purl.org/rss/1.0/modules/content/"
+ xmlns:dc="http://purl.org/dc/elements/1.1/"
+ xmlns:dct="http://purl.org/dc/terms/"
+ xmlns:foaf="http://xmlns.com/foaf/0.1/"
+ xmlns:skos="http://www.w3.org/2004/02/skos/core#"
+ xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+ xmlns:trackback="http://madskills.com/public/xml/rss/module/trackback/"
+ xmlns="http://purl.org/rss/1.0/">
+
+  <channel rdf:about="http://bnode.org/blog/all">
+    <title>All Posts</title>
+    <link>http://bnode.org/blog/all</link>
+    <description>All posts from bnode.org</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-08-23T11:19:49Z</dc:date>
+    <admin:generatorAgent rdf:resource="http://semsol.com/#0.2.0"/>
+    <sy:updatePeriod>daily</sy:updatePeriod>
+    <sy:updateFrequency>1</sy:updateFrequency>
+
+    <items>
+      <rdf:Seq>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/08/23/knowee-org"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/07/17/semweb-on-a-slide-at-duesseldorfs-1st-web-monday"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/05/29/semantic-web-gets-a-mention-in-visual-x-mag-webinale-report"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/05/26/back-from-webinale-2007"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/05/21/off-to-webinale-2007"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/05/05/relocating-and-offline"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/04/22/sweo-project-knowee"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/03/20/funded"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/03/05/my-first-screencast"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/02/12/comparison-of-microformats-erdf-and-rdfa"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/02/10/seenon-timestamp-or-state-of-mind"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/01/31/sweo-community-project-task-force"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2007/01/17/got-some-semweb-doap-n-foaf"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2006/12/23/merry-x-mas"/>
+        <rdf:li rdf:resource="http://bnode.org/blog/2006/12/20/magic-x-mas-tree"/>
+      </rdf:Seq>
+    </items>
+  </channel>
+
+
+  <item rdf:about="http://bnode.org/blog/2007/08/23/knowee-org">
+    <title>knowee.org</title>
+    <link>http://bnode.org/blog/2007/08/23/knowee-org</link>
+    <description>the knowee.org site is online, next step will be a prototype</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-08-23T11:19:49Z</dc:date>
+    <dct:created>2007-08-23T11:19:49Z</dct:created>
+    <dct:modified>2007-08-23T11:39:51Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>rdf</dc:subject>
+    <dc:subject>sweo</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>social graph</dc:subject>
+    <dc:subject>knowee</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/08/23/knowee-org"/>
+    <content:encoded>
+      <![CDATA[
+Just a short update on <a href="http://esw.w3.org/topic/SweoIG/TaskForces/CommunityProjects/knowee">knowee</a>, one of the SWEO Community Projects. There is nice progress, although it took some time to get things moving. An early <a href="http://knowee.org/">site is now online</a>, and we have a <a href="http://esw.w3.org/topic/SweoIG/TaskForces/CommunityProjects/knowee/UserInterface">first design for the app</a>.<br />
+<br />
+I still have to flesh out knowee's approach to &quot;social graph portability&quot; (or whatever it's called this week), but then I'll focus on the prototype which will hopefully be available by Mid/End-September. 
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/07/17/semweb-on-a-slide-at-duesseldorfs-1st-web-monday">
+    <title>SemWeb on a Slide at Düsseldorf's 1st Web Monday</title>
+    <link>http://bnode.org/blog/2007/07/17/semweb-on-a-slide-at-duesseldorfs-1st-web-monday</link>
+    <description>Introduced semsol and gave a mini-talk on the Semantic Web at Düsseldorf's first Web Monday.</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-07-17T20:00Z</dc:date>
+    <dct:created>2007-07-17T20:15:15Z</dct:created>
+    <dct:modified>2007-07-18T09:20:15Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>semsol</dc:subject>
+    <dc:subject>talk</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>mixxt</dc:subject>
+    <dc:subject>peopleaggregator</dc:subject>
+    <dc:subject>webmontag</dc:subject>
+    <dc:subject>duesseldorf</dc:subject>
+    <dc:subject>swoas</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/07/17/semweb-on-a-slide-at-duesseldorfs-1st-web-monday"/>
+    <content:encoded>
+      <![CDATA[
+Ha, I haven't even fully made the move to my new (self-)<a href="http://semsol.com/">employer</a> yet, and <a href="http://webmontag.de/">Web Monday</a> is already coming to Düsseldorf (joining about 20 other cities in Germany). The first event was yesterday and happened in the cool (style-wise) and hot (summer is back!) Lounge of the <a href="http://www.mediadesign.de/">Mediadesign University</a>.<br />
+<br />
+I took the opportunity to introduce semsol to the local Web crowd, but also put on my <a href="http://www.w3.org/2001/sw/sweo/">SWEO</a> hat and signed up for a short presentation. For better marketing, I've been thinking a bit about distributing a set of single-page tech flyers recently (called &quot;SemWeb on a Slide&quot;, inspired by the classical &quot;Semantic Web Illustrated&quot; series, although I'm not there yet). So, I tried a first version , and given the feedback I think this sort of scoped material has a lot of potential. Someone already asked for a version covering semantic markup. Anyway, the other talks were way cooler than mine (at least for me ;), I especially liked <a href="http://www.siggibecker.de/">Siggi Becker</a>'s &quot;Utopia is not a Trend&quot;, and the <em>pre</em>sentation of <a href="http://www.mixxt.de/">MIXXT</a>, which seems to be <a href="http://www.peopleaggregator.net/">People Aggregator</a> done right.<br />
+<br />
+<a href="http://semsol.com/media/2007/07/16/swoas_from_data_to_knowledge.pdf"><img src="http://bnode.org/media/2007/07/swoas_from_data_to_knowledge.gif" title="SemWeb on a Slide - From Data to Knowledge" alt="SemWeb on a Slide - From Data to Knowledge" /></a>
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/05/29/semantic-web-gets-a-mention-in-visual-x-mag-webinale-report">
+    <title>Semantic Web gets a mention in Visual-x mag webinale report</title>
+    <link>http://bnode.org/blog/2007/05/29/semantic-web-gets-a-mention-in-visual-x-mag-webinale-report</link>
+    <description>A nice paragraph about my talk at last week's webinale</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-05-29T11:20Z</dc:date>
+    <dct:created>2007-05-29T11:21:01Z</dct:created>
+    <dct:modified>2007-05-29T11:25:38Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>webinale</dc:subject>
+    <dc:subject>paggr</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/05/29/semantic-web-gets-a-mention-in-visual-x-mag-webinale-report"/>
+    <content:encoded>
+      <![CDATA[
+The <a href="http://visualxmag.de/">visual-x</a> mag just published a <a href="http://visualxmag.de/itr/news/psecom,id,35369,nodeid,239.html">webinale report</a> that contains a nice summary of my talk (and even a link to <a href="http://paggr.com/">paggr</a>). Phew, this means that at least <em>some</em> people were not scared off, which is great personally, but also (and more importantly) from a <a href="http://www.w3.org/2001/sw/sweo/">SWEO</a> perspective.
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/05/26/back-from-webinale-2007">
+    <title>Back from webinale 2007</title>
+    <link>http://bnode.org/blog/2007/05/26/back-from-webinale-2007</link>
+    <description>slides and some impressions</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-05-26T16:45Z</dc:date>
+    <dct:created>2007-05-26T16:37:10Z</dct:created>
+    <dct:modified>2007-05-26T17:14:59Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>webinale</dc:subject>
+    <dc:subject>rdf</dc:subject>
+    <dc:subject>owl</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>pageflakes</dc:subject>
+    <dc:subject>knowee</dc:subject>
+    <dc:subject>php</dc:subject>
+    <dc:subject>slides</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/05/26/back-from-webinale-2007"/>
+    <content:encoded>
+      <![CDATA[
+<img src="http://bnode.org/media/2007/05/26/webinale_ipcse.jpg" class="fl" title="webinale/ipc sign" alt="webinale/ipc sign" />
+The <a href="http://bnode.org/2007/05/22/webinale_slides/webinale_2007_05_22.html">webinale slides are online</a> now. The session went OK, I'd say. I always make the mistake to look at the high conference prices and then end up trying to squeeze too much information into my talks to give the people some value for their money. It also was a bit hard to predict what the audience of the newly introduced webinale would be like. I did receive some great feedback from PHP coders (sneaking in from co-located <a href="http://phpconference.com/konferenzen/ipc07/index_eng.php">IPC</a>) who already had specific questions and asked about RAP and ARC. But I could see from many faces right after the session, that a very basic talk may have been better. <a href="http://leobard.twoday.net/topics/SemWeb/">Leo</a> suggested to skip the ontology stuff entirely, the amount of different flavours (SKOS, RDF Schema, OWL Lite/DL/Full/+/-/1.1) is surely a whole mess marketing-wise. Next time I'll try to stick to the more intuitive stuff. At least I had a convincing <a href="http://paggr.com/blog/2007/05/25/web-n-drop-proof-of-concept">demo</a> about how (low-level) ontologies can be useful to greatly reduce custom application code.<br />
+<br />
+I had a short chat with <a href="http://pageflakes/">pageflakes</a>' CEO <a href="http://christophjanz.blogspot.com/">Christoph Janz</a>. Semantic Web technologies are not on their radar yet (maybe they are now ;), but we talked a bit about the possibility to add some RDF functionality to their widgets (which they call &quot;flakes&quot;). They may let us try some things in the context of the <a href="http://code.google.com/p/knowee/">knowee</a> project, e.g. a flake that could store contact data retrieved via GRDDL or a SPARQL endpoint. Might be worth checking out their SDK.<br />
+<br />
+So, next time: less OWL, more wild colours:<br />
+<a href="http://bnode.org/2007/05/22/webinale_slides/webinale_2007_05_22.html"><img src="http://bnode.org/media/2007/05/26/semweb_web20_layers.gif" title="semweb web 2.0 layers" alt="semweb web 2.0 layers" /></a>
+
+
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/05/21/off-to-webinale-2007">
+    <title>Off to webinale 2007</title>
+    <link>http://bnode.org/blog/2007/05/21/off-to-webinale-2007</link>
+    <description>SWEO infiltration at webinale 2007 in Ludwigsburg, Germany</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-05-21T19:45Z</dc:date>
+    <dct:created>2007-05-21T19:25:06Z</dct:created>
+    <dct:modified>2007-05-21T20:11:35Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>webinale</dc:subject>
+    <dc:subject>talk</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>event</dc:subject>
+    <dc:subject>web2.0</dc:subject>
+    <dc:subject>clipboard</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/05/21/off-to-webinale-2007"/>
+    <content:encoded>
+      <![CDATA[
+<a href="http://webinale.de/konferenzen/psecom,id,579,track,3,nodeid,,_language,de.html#session-wk11"><img src="http://bnode.org/media/2007/05/21/webinale_speaker.jpg" class="plain" title="see me speak at webinale" alt="see me speak at webinale" /></a><br />
+I'm kindly invited to give a talk on &quot;<a href="http://webinale.de/konferenzen/psecom,id,579,track,3,nodeid,,_language,de.html#session-wk11">Semantic Web and Web 2.0</a>&quot; at tomorrow's <a href="http://webinale.de">webinale</a> in Ludwigsburg, Germany. <a href="http://leobard.twoday.net/stories/3713871/">Leo will be there</a>, too.<br />
+<br />
+Sounds like a nice SWEO infiltration opportunity. And I'm looking forward to some new drankBeerWith triples, there is a networking party on Tuesday, possibly joined by the <em>International PHP Conference</em> and the <em>AJAX in Action</em> sub-event which are colocated with the webinale.<br />
+<br />
+I'll make the slides available when I'm back, but the more interesting news is that I just finished a working little implementation based on TimBL's <a href="http://www.w3.org/DesignIssues/SemanticClipboard">Semantic Clipboard</a> idea and the &quot;Polymorphic Drag&amp;Drop&quot; functionality I experimented with during the last months (yes, that's DnD instead of CnP now). Now I just hope I'll get swiftly through the theoretical part of my presentation and save enough time for the demo at the end..
+
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/05/05/relocating-and-offline">
+    <title>Relocating, and offline</title>
+    <link>http://bnode.org/blog/2007/05/05/relocating-and-offline</link>
+    <description>Moving to a new office, offline</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-05-05T11:00Z</dc:date>
+    <dct:created>2007-05-05T10:59:10Z</dct:created>
+    <dct:modified>2007-05-05T11:04:17Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>semsol</dc:subject>
+    <dc:subject>offline</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/05/05/relocating-and-offline"/>
+    <content:encoded>
+      <![CDATA[
+Just
+in case you're waiting for email replies: I'm moving to the new office
+for my semweb startup this/next week and probably won't be online again
+before Mon 14th. Well, I'm sort-of online now, but this
+~0K dial-up can't really be called <em>online</em>... 
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/04/22/sweo-project-knowee">
+    <title>SWEO project &quot;knowee&quot;</title>
+    <link>http://bnode.org/blog/2007/04/22/sweo-project-knowee</link>
+    <description>Call for participation</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-04-22T22:25Z</dc:date>
+    <dct:created>2007-04-22T22:23:17Z</dct:created>
+    <dct:modified>2007-04-22T22:27:22Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>rdf</dc:subject>
+    <dc:subject>microformats</dc:subject>
+    <dc:subject>sweo</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>knowee</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/04/22/sweo-project-knowee"/>
+    <content:encoded>
+      <![CDATA[
+I finally sent out a <a href="http://lists.w3.org/Archives/Public/semantic-web/2007Apr/0161.html">call for participation</a> for <a href="http://code.google.com/p/knowee/">knowee</a>, one of the projects supported by <a href="http://www.w3.org/2001/sw/sweo/">SWEO</a> (just in time for the <a href="http://esw.w3.org/topic/SweoIG/Meetings/2007-04-23_Conference_Call">F2F</a> reports tomorrow).<br />
+<br />
+The project is about creating a semwebby address book thingy, but there actually is another dimension to the &quot;outreach&quot; aspect beyond running code. I'd really like to bring RDFers and microformateers closer together (from both directions). RDFers can learn a lot from the pragmatic microformats community, and adding data integration (+query) functionality to microformats can enable a whole new set of applications.
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/03/20/funded">
+    <title>Funded!</title>
+    <link>http://bnode.org/blog/2007/03/20/funded</link>
+    <description>semsol gets funding</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-03-20T14:55Z</dc:date>
+    <dct:created>2007-03-20T13:42:59Z</dct:created>
+    <dct:modified>2007-03-21T17:27:15Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>semsol</dc:subject>
+    <dc:subject>germany</dc:subject>
+    <dc:subject>rdf</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>arc</dc:subject>
+    <dc:subject>knowee</dc:subject>
+    <dc:subject>startup</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/03/20/funded"/>
+    <content:encoded>
+      <![CDATA[
+This is going to change everything. Well, almost. I will continue to work on my Semantic Web solutions, but there will be a major re-branding and finally a focused roadmap. My code experiments and projects are going to be critically reviewed and consolidated. (I can't tell yet what stuff is going to be continued, but I'll keep my <a href="http://www.w3.org/2001/sw/sweo/">SWEO</a> commitments, esp. the <a href="http://esw.w3.org/topic/SweoIG/TaskForces/CommunityProjects/knowee">knowee community project</a> which is going to start in April).<br />
+Quite some orga action coming up, but I'm looking forward to a clean bengee.reboot()
+<ul><li>I'll move from Essen to Düsseldorf, which is closer to Cologne, the DUS airport, and also a little away from the Web periphery here, with the Ruhr Valley still in reach, though.</li>
+<li>The <a href="http://appmosphere.com/">appmosphere</a> wordplay is going to be discontinued. No German really managed to pronounce or remember it correctly, and the *-osphere naming is rather overused these days anyway.</li>
+<li>The new brand will most probably be <a href="http://semsol.com">semsol.com</a> which is going to be transformed to a Semantic Web Agency. (I've always been a frontend developer, combing this with an in-house RDF system will hopefully form a nice <abbr title="Unique Selling Proposition">USP</abbr> for the anticipated move towards info-driven Web apps.)</li>
+<li>The open source RDF framework currently named semsol will get a new name (perhaps just &quot;semsol suite&quot;, we'll see), and there will be more product-style solutions (a browser, an editor, a schema manager, etc.).</li>
+<li><a href="http://arc.web-semantics.org/">ARC</a> will keep its name, but is going to be re-coded as ARC2 based on the experience and feedback obtained so far.</li>
+<li>Less research-y slippery slopes.</li>
+<li>More Germany-targeted activities.</li></ul>
+
+<img src="http://bnode.org/media/2007/03/20/semsol_logo.gif" class="plain" title="semsol" alt="semsol" />
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/03/05/my-first-screencast">
+    <title>My first screencast</title>
+    <link>http://bnode.org/blog/2007/03/05/my-first-screencast</link>
+    <description>Tools used for a screencast about forthcoming paggr collector.</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-03-05T15:16Z</dc:date>
+    <dct:created>2007-03-05T15:16:59Z</dct:created>
+    <dct:modified>2007-03-05T16:08:38Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>paggr</dc:subject>
+    <dc:subject>super</dc:subject>
+    <dc:subject>camstudio</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>screencast</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/03/05/my-first-screencast"/>
+    <content:encoded>
+      <![CDATA[
+I created <a href="http://paggr.com/2007/03/05/collector_screencast">my first screencast</a> this weekend, oh dear ;-)<br />
+<br />
+I didn't really have a lot to talk about yet (I plan to do <a href="http://paggr.com/blog/2007/03/05/screencast-paggr-collector-user-interface-tests">some screencasts</a> for the <a href="http://paggr.com">paggr</a> system), so this one was more for testing a number of different tools (the screencast itself is about paggr's soon-polymorphic drag and drop). I used a Windows box and found the following tools quite useful:
+<ul><li><a href="http://www.camstudio.org/">CamStudio</a> for screen and audio recording,</li>
+<li>a <a href="http://site.magix.net/">Magix</a> tool (commercial, I assume there are alternatives) to cut and create an mpeg version from the CamStudio avi,</li>
+<li><a href="http://www.erightsoft.net/SUPER.html">SUPER</a> for converting the mpg file to the Flash video (flv) format,</li>
+<li>and a free FLV player I found on the web somewhere. It hopefully isn't doing evil things on my server now..</li></ul>
+<br />
+The tools make the technical side of things rather convenient, but it still was more work than expected, and I sound just horrible (sometimes close to &quot;<em>zank you for traffeling wiz Deutsche Bahn</em>&quot;, if you know what I mean).
+
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/02/12/comparison-of-microformats-erdf-and-rdfa">
+    <title>A Comparison of Microformats, eRDF, and RDFa</title>
+    <link>http://bnode.org/blog/2007/02/12/comparison-of-microformats-erdf-and-rdfa</link>
+    <description>An updated (and customizable) comparison of the different approaches for semantically enhancing HTML.</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-02-12T14:10Z</dc:date>
+    <dct:created>2007-02-12T14:02:50Z</dct:created>
+    <dct:modified>2007-02-13T11:25:50Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>erdf</dc:subject>
+    <dc:subject>microcontent</dc:subject>
+    <dc:subject>rdf</dc:subject>
+    <dc:subject>comparison</dc:subject>
+    <dc:subject>microformats</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>rdfa</dc:subject>
+    <dc:subject>structured blogging</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/02/12/comparison-of-microformats-erdf-and-rdfa"/>
+    <content:encoded>
+      <![CDATA[
+Update (2006-02-13): <em>In order to avoid further flame wars with RDFa folks, I've adjusted the form to not show my personal priorities as default settings anymore (<a href="http://bnode.org/blog/2007/02/12/comparison-of-microformats-erdf-and-rdfa?mcc_html=2&amp;mcc_extensible=2&amp;mcc_ext_res=2&amp;mcc_clip=2&amp;mcc_dt=2&amp;mcc_xml=0&amp;mcc_tidy_safety=2&amp;mcc_bnodes=0">here they are</a> if you are interested, it's a 48-42-40 ranking for MFs, eRDF, and RDFa respectively). All features are set to &quot;Nice to have&quot; now. As you can see, for these settings, RDFa gets the highest ranking (I *said* the comparison is not biased against RDFa!). If you disable the features related to domain-independent resource descriptions, MFs shine, if you insist on HTML validity, eRDF moves up, etc. It's all in the mix.</em><br />
+<div class="hr"><hr /></div>
+After a <a href="http://rbach.priv.at/Microformats-IRC/2007-02-10#T130638">comment</a> of mine on the Microformats IRC channel, <a href="http://www.w3.org/2006/07/SWD/">SWD</a>'s <a href="http://www.w3.org/2006/07/SWD/wiki/MichaelHausenblas">Michael Hausenblas</a> asks for the reason why I said that I personally don't like RDFa. Damn public logs ;) OK, now I have to justify that somehow without falling into rant mode again...<br />
+<br />
+I already wrote <a href="http://bnode.org/blog/2006/05/29/arc-embedded-rdf-erdf-parser-for-php">a little comparison</a> of <a href="http://microformats.org">Microformats</a>, <a href="http://structuredblogging.org/">Structured Blogging</a>, <a href="http://research.talis.com/2005/erdf/wiki/Main/RdfInHtml">eRDF</a>, and <a href="http://www.w3.org/TR/xhtml-rdfa-primer/">RDFa</a> some time ago, sounds like a good opportunity to see how things evolved during the last 8 months. Back then I concluded that both eRDF and RDFa were preferred candidates for <a href="http://semsol.com">SemSol</a>, but that RDFa lacked the necessary deployment potential due to not being valid HTML (as far as any widespread HTML spec is concerned).<br />
+<br />
+I excluded the Structured Blogging initiative from this comparison, it seems to have died a silent death. (Their approach to redundantly embed microcontent in script tags apparently didn't convince the developer community.) I also excluded features which are equally available in all approaches, such as visible metadata, general support for plain literals, being well-formed, no negative effect on browser behaviour, etc.<br />
+<br />
+Pretending to be constructive, and in order to make things less biased, I embedded a dynamic page item that allows you to create your own, tailored comparison. <s>The default results reflect my personal requirements (and hopefully answer Michael's question).</s> As your mileage does most probably vary, you can just tweak the feature priorities (The different results are not stored, but the custom comparisons can be bookmarked). Feel free to leave a comment if you'd like me to add more criteria.<br />
+<br />
+<div id="mcc">
+      <div id="mcc-form-container">
+        <div class="mcc-form">
+          <form id="mcc-form" class="form wide" action="http://bnode.org/blog/2007/02/12/comparison-of-microformats-erdf-and-rdfa" method="get" enctype="application/x-www-form-urlencoded">
+<table cellspacing="1">
+      <tr>
+        <th>No.</th>
+        <th>Feature or Requirement</th>
+        <th>Priority</th>
+        <th>MFs</th>
+        <th>eRDF</th>
+        <th>RDFa</th>
+      </tr>
+    
+        <tr class="points first">
+          <td>1</td>
+          <td>DRY (Don't Repeat Yourself)</td>
+          <td>
+      <select size="1" name="mcc_dry">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>yes</td>
+          <td>yes</td>
+          <td>mostly</td>
+        </tr>
+      
+        <tr class="points">
+          <td>2</td>
+          <td>HTML4 / XHTML 1.0 validity</td>
+          <td>
+      <select size="1" name="mcc_html">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>yes</td>
+          <td>yes</td>
+          <td>no</td>
+        </tr>
+      
+        <tr class="points">
+          <td>3</td>
+          <td>Custom extensions / Vocabulary mixing</td>
+          <td>
+      <select size="1" name="mcc_extensible">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>no</td>
+          <td>yes</td>
+          <td>yes</td>
+        </tr>
+      
+        <tr class="points">
+          <td>4</td>
+          <td>Arbitrary resource descriptions</td>
+          <td>
+      <select size="1" name="mcc_ext_res">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>no</td>
+          <td>yes</td>
+          <td>yes</td>
+        </tr>
+      
+        <tr class="points">
+          <td>5</td>
+          <td>Explicit syntactic means for arbitrary resource descriptions</td>
+          <td>
+      <select size="1" name="mcc_ext_res_syntax">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>no</td>
+          <td>no</td>
+          <td>yes</td>
+        </tr>
+      
+        <tr class="points">
+          <td>6</td>
+          <td>Supported by the W3C</td>
+          <td>
+      <select size="1" name="mcc_w3c">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>partly</td>
+          <td>partly</td>
+          <td>yes</td>
+        </tr>
+      
+        <tr class="points">
+          <td>7</td>
+          <td>Follow <a href="http://www.dublincore.org/documents/dcq-html/">DCMI guidelines</a></td>
+          <td>
+      <select size="1" name="mcc_dc">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>no</td>
+          <td>yes</td>
+          <td>no</td>
+        </tr>
+      
+        <tr class="points">
+          <td>8</td>
+          <td>Stable/Uniform syntax specification</td>
+          <td>
+      <select size="1" name="mcc_grammar">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>partly</td>
+          <td>yes</td>
+          <td>yes</td>
+        </tr>
+      
+        <tr class="points">
+          <td>9</td>
+          <td>Predictable RDF mappings</td>
+          <td>
+      <select size="1" name="mcc_rdf">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>mostly</td>
+          <td>yes</td>
+          <td>yes</td>
+        </tr>
+      
+        <tr class="points">
+          <td>10</td>
+          <td>Live/Web Clipboard Compatibility</td>
+          <td>
+      <select size="1" name="mcc_clip">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>yes</td>
+          <td>mostly</td>
+          <td>mostly</td>
+        </tr>
+      
+        <tr class="points">
+          <td>11</td>
+          <td>Reliable copying, aggregation, and re-publishing of source chunks. (Self-containment)</td>
+          <td>
+      <select size="1" name="mcc_src">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>mostly</td>
+          <td>partly</td>
+          <td>partly</td>
+        </tr>
+      
+        <tr class="points">
+          <td>12</td>
+          <td>Support for not just plain literals (e.g. typed dates, floats, or markup).</td>
+          <td>
+      <select size="1" name="mcc_dt">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>yes</td>
+          <td>no</td>
+          <td>yes</td>
+        </tr>
+      
+        <tr class="points">
+          <td>13</td>
+          <td>Triple bloat prevention (only actively marked-up information leads to triples)</td>
+          <td>
+      <select size="1" name="mcc_nobloat">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>yes</td>
+          <td>yes</td>
+          <td>no</td>
+        </tr>
+      
+        <tr class="points">
+          <td>14</td>
+          <td>Possible integration in namespaced (non-HTML) XML languages.</td>
+          <td>
+      <select size="1" name="mcc_xml">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>no</td>
+          <td>no</td>
+          <td>yes</td>
+        </tr>
+      
+        <tr class="points">
+          <td>15</td>
+          <td>Mainstream Web developers are already adopting it.</td>
+          <td>
+      <select size="1" name="mcc_deployed">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>yes</td>
+          <td>no</td>
+          <td>no</td>
+        </tr>
+      
+        <tr class="points">
+          <td>16</td>
+          <td>Tidy-safety (Cleaning up the page will never alter the embedded semantics)</td>
+          <td>
+      <select size="1" name="mcc_tidy_safety">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>yes</td>
+          <td>yes</td>
+          <td>no</td>
+        </tr>
+      
+        <tr class="points">
+          <td>17</td>
+          <td>Explicit support for blank nodes.</td>
+          <td>
+      <select size="1" name="mcc_bnodes">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>no</td>
+          <td>no</td>
+          <td>yes</td>
+        </tr>
+      
+        <tr class="points">
+          <td>18</td>
+          <td>Compact syntax, based on existing HTML semantics like the <code>address</code> tag or rel/rev/class attributes.</td>
+          <td>
+      <select size="1" name="mcc_reuse_html">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>yes</td>
+          <td>mostly</td>
+          <td>partly</td>
+        </tr>
+      
+        <tr class="points">
+          <td>19</td>
+          <td>Inclusion of newly evolving publishing patterns (e.g. rel="nofollow").</td>
+          <td>
+      <select size="1" name="mcc_reuse_patterns">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>yes</td>
+          <td>no</td>
+          <td>partly</td>
+        </tr>
+      
+        <tr class="points">
+          <td>20</td>
+          <td>Support for head section metadata such as OpenID or Feed hooks.</td>
+          <td>
+      <select size="1" name="mcc_head">
+        <option value="2">Requirement</option>
+        <option value="1" selected="selected">Nice to have</option>
+        <option value="0">I don't care</option>
+      </select>
+    </td>
+          <td>no</td>
+          <td>partly</td>
+          <td>partly</td>
+        </tr>
+      </table><br />
+<input type="submit" class="button submit" name="mcc-form-call" value="Calculate" />
+
+      <div class="mcc-results">
+        <h4 class="pt10">Results</h4>
+        <table>
+          <tr>
+            <th>Solution</th>
+            <th>Points</th>
+            <th>Missing Requirements</th>
+          </tr>
+          <tr class="ok"><td>RDFa</td> <td>35</td> <td>-</td></tr><tr class="ok"><td>eRDF</td> <td>34</td> <td>-</td></tr><tr class="ok"><td>Microformats</td> <td>33</td> <td>-</td></tr>
+        </table>
+        <p>Max. points for selected criteria: 60</p>
+    <div class="summary"><h4>Summary:</h4><div>Your requirements are met by RDFa, or eRDF, or Microformats.</div></div><div class="notes"><h4>Feature notes/explanations:</h4><div class="ind10"><strong>DRY (Don't Repeat Yourself)</strong><ul><li>RDFa: Literals have to be redundantly put in "content" attributes in order to make them un-typed.</li></ul><strong>HTML4 / XHTML 1.0 validity</strong><ul><li>RDFa: Given the buzz around the WHATWG, it's uncertain when (if at all) XHTML 2 or XHTML 1.1 modules will be widely deployed enough.</li></ul><strong>Explicit syntactic means for arbitrary resource descriptions</strong><ul><li>eRDF: owl:sameAs statements (or other <abbr title="Inverse Functional Property">IFP</abbr>s) have to be used to describe external resources.</li></ul><strong>Supported by the W3C</strong><ul><li>MFs, eRDF: Indirectly supported by W3C's GRDDL effort.</li></ul><strong>Stable/Uniform syntax specification</strong><ul><li>MFs: Although MFs reuse HTML structures, the format syntax layered on top differs, so that each MF needs separate (though stable) parsing rules.</li></ul><strong>Predictable RDF mappings</strong><ul><li>MFs: Microformats could be mapped to different RDF structures, but the GRDDL WG will probably recommend fixed mappings.</li></ul><strong>Live/Web Clipboard Compatibility</strong><ul><li>eRDF, RDFa: Tweaks are needed to make them Live-Clipboard compatible.</li></ul><strong>Reliable copying, aggregation, and re-publishing of source chunks. (Self-containment)</strong><ul><li>MFs: Some Microformats (e.g. XFN) lose their intended semantics when regarded out of context.</li><li>eRDF/RDFa: Only chunks with nearby/embedded namespace definitions can be reliably copied.</li></ul><strong>Support for head section metadata such as OpenID or Feed hooks.</strong><ul><li>eRDF: Can support openID hooks.</li><li>RDFa: Will probably interpret any rel attribute.</li></ul></div></div>
+      </div>
+    <div class="form-info"></div></form>
+        </div>
+      </div>
+    </div><br />
+<br />
+Bottom line: For many requirement combinations a single solution alone is not enough. My tailored summary suggests for example that I should be fine with a combination of Microformats and eRDF. How does your preferred solution mix look like?
+
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/02/10/seenon-timestamp-or-state-of-mind">
+    <title>SeenOn - Timestamp or State of Mind?</title>
+    <link>http://bnode.org/blog/2007/02/10/seenon-timestamp-or-state-of-mind</link>
+    <description>fun stuff from #microformats, comments on e/RDF/a wrt to Microformats</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-02-10T14:55Z</dc:date>
+    <dct:created>2007-02-10T14:37:25Z</dct:created>
+    <dct:modified>2007-02-10T15:21:10Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>erdf</dc:subject>
+    <dc:subject>microcontent</dc:subject>
+    <dc:subject>rdf</dc:subject>
+    <dc:subject>microformats</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>rdfa</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/02/10/seenon-timestamp-or-state-of-mind"/>
+    <content:encoded>
+      <![CDATA[
+<pre class="code">&lt;tommorris&gt; Every time I see a movie from now on,
+  I'm adding the IMDB URL to my FOAF file.
+&lt;briansuda&gt; with what predicate?
+&lt;tommorris&gt; rdf.opiumfield.com/movie/0.1/seen
+...
+&lt;briansuda&gt; seenOn, is that a timestamp or a state-of-mind?
+</pre>
+(<a href="http://rbach.priv.at/Microformats-IRC/2007-02-10">microformats(!) irc channel</a>)<br />
+<br />
+Now, who said RDF was less real-word-ish than microformats?<br />
+<br />
+Related link (wrt to movies, not toxics): <a href="http://blogs.opml.org/tommorris/2007/02/10#microformats80Rdf20">Microformats 80%, RDF 20%</a> by Tom Morris about the longtail utility of (e)RDF(a). Wanted to state something like this for some time. After implementing a Microcontent parser (part of the next ARC release) that creates a merged triple set from eRDF and Microformats, I can't say anymore that MFs don't scale (even though making the meaning of nested formats explicit is sometimes tricky). I was really impressed by the amount of practical use cases covered by them (Listings and qualified review ratings even go beyond the demos I've seen in RDFer circles). However, there is still a lot of room for custom RDF extensions that can be used to extend microformatted HTML. Skill levels are just one of many longtail examples: They are currently not covered by <a href="http://microformats.org/wiki/hresume">hResume</a>, but available in <a href="http://captsolo.net/info/">Uldis</a>' <a href="http://rdfs.org/resume-rdf/">CV vocab</a>.<br />
+<br />
+The important thing IMO is that RDFers should not forget to acknowledge the amazing deployment work of the MF community and focus on what they can add to the table (storage, querying, and mixing, as a start) instead of marketing RDF-in-HTML as an alternative, replacement, or otherwise &quot;superior&quot; (likewise the other way round, btw.). I think we also shouldn't overcharge the big content re-publishers. When maintainers of sites like LinkedIn or Eventful get bombed with requests to add different semantic serializations to their pages, they may hesitate to support any of them at all. For most of these mainstream sites, Microformats do the job just fine, and often better. Why should people for example have to specify namespaces when a simple, agreed-on <code>rel-license</code> does the trick already? (We could still use RDF to specify the license details, and even the license link is only a simple conversion away from RDF.)
+
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/01/31/sweo-community-project-task-force">
+    <title>SWEO Community Project Task Force</title>
+    <link>http://bnode.org/blog/2007/01/31/sweo-community-project-task-force</link>
+    <description>Trying to gather programmers already interested in semweb technology around a few projects.</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-01-31T10:05Z</dc:date>
+    <dct:created>2007-01-31T09:58:12Z</dct:created>
+    <dct:modified>2007-01-31T10:36:34Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>rdf</dc:subject>
+    <dc:subject>microformats</dc:subject>
+    <dc:subject>sweo</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>knowee</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/01/31/sweo-community-project-task-force"/>
+    <content:encoded>
+      <![CDATA[
+<a href="http://www.kjetil.kjernsmo.net/">Kjetil Kjernsmo</a> has initiated a new <a href="http://www.w3.org/2001/sw/sweo/">Semantic Web Education and Outreach Interest Group</a> Task Force called &quot;<a href="http://esw.w3.org/topic/SweoIG/TaskForces/CommunityProjects">Community Projects</a>&quot;. A great idea.<br />
+<br />
+<div class="taj"><cite class="cite">This rally has the goal of using our collective input to generating real running code, that can help us to demonstrate the value of the Semantic Web to a wide user base. We want to encourage developers to work together to create something that will make a real difference to people's lives today
+</cite>
+</div>
+<br />
+Just added a <a href="http://esw.w3.org/topic/SweoIG/TaskForces/CommunityProjects/knowee">proposal for &quot;knowee&quot;</a>, a web-based contact organizer (a project similar to something <a href="http://ivanherman.wordpress.com/">Ivan</a> mentioned some weeks ago, and I think also similar to the work <a href="http://blogs.sun.com/bblfish/">Henry Story</a> recently started).
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2007/01/17/got-some-semweb-doap-n-foaf">
+    <title>Got some SemWeb DOAP 'n' FOAF?</title>
+    <link>http://bnode.org/blog/2007/01/17/got-some-semweb-doap-n-foaf</link>
+    <description>Starting to collect RDF descriptions of SemWeb projects at rdfer.com</description>
+    <dc:language>en</dc:language>
+    <dc:date>2007-01-17T14:40Z</dc:date>
+    <dct:created>2007-01-17T14:38:58Z</dct:created>
+    <dct:modified>2007-01-17T15:22:11Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>foaf</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>rdfer</dc:subject>
+    <dc:subject>doap</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2007/01/17/got-some-semweb-doap-n-foaf"/>
+    <content:encoded>
+      <![CDATA[
+All baby steps, but I've activated a <a href="http://rdfer.com/create/software">DOAP editor</a>, an RDF/XML loader, and a basic <a href="http://rdfer.com/explore/software"><s>browser</s> store dump</a> at <a href="http://rdfer.com">RDFer.com</a>. Would be great to get some DOAP files describing SemWeb projects in there, and maybe some FOAF files as well. That'd make coding the browsers more fun and a bit more real-world-ish.<br />
+Thanks for your help!
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2006/12/23/merry-x-mas">
+    <title>Merry X-Mas</title>
+    <link>http://bnode.org/blog/2006/12/23/merry-x-mas</link>
+    <description>FOAF and Snow</description>
+    <dc:language>en</dc:language>
+    <dc:date>2006-12-23T13:25Z</dc:date>
+    <dct:created>2006-12-23T13:29:45Z</dct:created>
+    <dct:modified>2006-12-23T13:31:35Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>foaf</dc:subject>
+    <dc:subject>semanticweb</dc:subject>
+    <dc:subject>xmas</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2006/12/23/merry-x-mas"/>
+    <content:encoded>
+      <![CDATA[
+<img src="http://bnode.org/media/2006/12/23/foaf_snow.jpg" title="FOAF in the snow" alt="FOAF in the snow" /><br />
+See you after the snow ;)
+      ]]>
+    </content:encoded>
+  </item>
+
+  <item rdf:about="http://bnode.org/blog/2006/12/20/magic-x-mas-tree">
+    <title>Magic X-Mas Tree</title>
+    <link>http://bnode.org/blog/2006/12/20/magic-x-mas-tree</link>
+    <description>Powered by Polonium?</description>
+    <dc:language>en</dc:language>
+    <dc:date>2006-12-20T15:15Z</dc:date>
+    <dct:created>2006-12-20T14:41:29Z</dct:created>
+    <dct:modified>2006-12-20T15:16:14Z</dct:modified>
+    <dc:creator>Benjamin Nowack</dc:creator>
+    <dc:subject>xmas</dc:subject>
+    <dc:subject>fun</dc:subject>
+    <trackback:ping rdf:resource="http://bnode.org/blog/tb/2006/12/20/magic-x-mas-tree"/>
+    <content:encoded>
+      <![CDATA[
+Should this be my last blog post, then please inform the police that my death may possibly have been caused by polonium used to power the growth of a magic x-mas tree, a spectacular gift Alex Troidl sent me a couple of days ago. See for yourself:<br />
+<br />
+<img src="http://bnode.org/media/2006/12/20/magic_xmas_tree.jpg" title="magic x-mas tree" alt="magic x-mas tree" />
+
+      ]]>
+    </content:encoded>
+  </item>
+
+</rdf:RDF>

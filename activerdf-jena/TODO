@@ -10,10 +10,6 @@ implementation tasks:
 
 support for: 
 * quads/named graphs/contexts
-* keyword search (integrate ActiveRDF Query.keyword_where with Lucene keyword search)
-
-other features:
-* Pellet conjunctive query facility integration into query facility
 
 resolve: 
 * could not verify rdfs reasoning support

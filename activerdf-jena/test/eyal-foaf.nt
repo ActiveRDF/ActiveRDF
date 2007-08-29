@@ -1,0 +1,39 @@
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf> <http://www.w3.org/2000/01/rdf-schema#label> "FOAF file of Eyal Oren" .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf> <http://purl.org/rss/1.0/modules/syndication/updateFrequency> "1" .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf> <http://purl.org/rss/1.0/modules/syndication/updatePeriod> "weekly" .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/name> "Eyal Oren" .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/title> "ir." .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/gender> "male" .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/mbox> <mailto:eyal.oren@deri.org> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/homepage> <http://www.eyaloren.org/> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/workplaceHomepage> <http://www.deri.ie/> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/img> <http://www.eyaloren.org/eyal.jpg> .
+<https://launchpad.net/products/activerdf/+rdf> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Project> .
+<https://launchpad.net/products/activerdf/+rdf> <http://xmlns.com/foaf/0.1/name> "ActiveRDF" .
+<https://launchpad.net/products/activerdf/+rdf> <http://xmlns.com/foaf/0.1/homepage> <http://www.activerdf.org/> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/currentProject> <https://launchpad.net/products/activerdf/+rdf> .
+<https://launchpad.net/products/browserdf/+rdf> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Project> .
+<https://launchpad.net/products/browserdf/+rdf> <http://xmlns.com/foaf/0.1/name> "BrowseRDF" .
+<https://launchpad.net/products/browserdf/+rdf> <http://xmlns.com/foaf/0.1/homepage> <http://www.browserdf.org/> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/currentProject> <https://launchpad.net/products/browserdf/+rdf> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/knows> <http://www.w3.org/People/Berners-Lee/card#i> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/knows> <http://richard.cyganiak.de/foaf.rdf#cygri> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/knows> <http://www.harth.org/~andreas/foaf.rdf#ah> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/knows> <http://www.leobard.net/rdf/foaf.xml#me> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/knows> <http://www.debruijn.net/foaf.rdf#me> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/knows> <http://platon.escet.urjc.es/~axel/foaf.rdf#me> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/knows> <http://www.kr.tuwien.ac.at/staff/roman/foaf.rdf#me> .
+<http://sw.deri.org/~knud> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+<http://sw.deri.org/~knud> <http://xmlns.com/foaf/0.1/name> "Knud M\u00F6ller" .
+<http://sw.deri.org/~knud> <http://www.w3.org/2000/01/rdf-schema#seeAlso> <http://sw.deri.org/~knud/knudfoaf.rdf> .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/knows> <http://sw.deri.org/~knud> .
+<http://www-cdr.stanford.edu/~petrie/foaf.rdf#me> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+<http://www-cdr.stanford.edu/~petrie/foaf.rdf#me> <http://xmlns.com/foaf/0.1/name> "Charles Petrie" .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/knows> <http://www-cdr.stanford.edu/~petrie/foaf.rdf#me> .
+<http://www.isi.edu/~stefan/foaf.rdf> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+<http://www.isi.edu/~stefan/foaf.rdf> <http://xmlns.com/foaf/0.1/name> "Stefan Decker" .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/knows> <http://www.isi.edu/~stefan/foaf.rdf> .
+<http://www.aifb.uni-karlsruhe.de/Personen/viewPersonOWL/id2076instance> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+<http://www.aifb.uni-karlsruhe.de/Personen/viewPersonOWL/id2076instance> <http://xmlns.com/foaf/0.1/name> "Max V\u00F6lkel" .
+<file:///home/metaman/workspaces/deri-workspace/activerdf/activerdf-sesame/test/eyal-foaf.rdf#me> <http://xmlns.com/foaf/0.1/knows> <http://www.aifb.uni-karlsruhe.de/Personen/viewPersonOWL/id2076instance> .
