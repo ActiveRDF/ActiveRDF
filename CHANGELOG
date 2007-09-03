@@ -1,4 +1,4 @@
-== activerdf (1.6.4) 
+== activerdf (1.6.4) 2007-09-03 15:34
   * new method: ConnectionPool.remove_data_source(adapter) which should be called
     by all adapter.close methods
 

@@ -1,4 +1,4 @@
-== activerdf_rdflite (1.4) ???
+== activerdf_rdflite (1.4) 2007-09-03 15:42
   * caching subproperty reasoning
   * added adapter.close method (TODO: not finished)
 
