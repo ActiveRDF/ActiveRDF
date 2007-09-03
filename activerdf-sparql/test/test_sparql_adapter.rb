@@ -2,6 +2,7 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
+require "rubygems"
 require 'active_rdf'
 require 'test/unit'
 require 'federation/federation_manager'

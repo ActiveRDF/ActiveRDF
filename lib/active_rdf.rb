@@ -2,17 +2,14 @@
 
 if RUBY_PLATFORM =~ /java/
   # jruby can not follow symlinks, because java does not know the symlink concept
-  # result: all paths for jruby are different
   this_dir = File.dirname(File.expand_path(__FILE__))
-  $: << this_dir + '/activerdf/lib/active_rdf/'
-  $: << this_dir + '/activerdf/lib/'
-  # TODO: change active_rdf to activerdf
 else
   file = File.symlink?(__FILE__) ? File.readlink(__FILE__) : __FILE__
   this_dir = File.dirname(File.expand_path(file))  
-  $: << this_dir + '/'
-  $: << this_dir + '/active_rdf/'
 end
+$: << this_dir + '/'
+$: << this_dir + '/active_rdf/'
+
 
 require 'active_rdf_helpers'
 require 'active_rdf_log'
@@ -42,6 +39,7 @@ if Gem::cache.search(/^activerdf$/).empty?
 	$activerdflog.info 'ActiveRDF is NOT installed as a Gem'
 	if RUBY_PLATFORM =~ /java/
 	  load_adapter this_dir + '/activerdf/activerdf-jena/lib/activerdf_jena/init'
+	  load_adapter this_dir + '/activerdf/activerdf-sparql/lib/activerdf_sparql/sparql'
     #load_adapter this_dir + '/../activerdf-sesame/lib/activerdf_sesame/sesame'
 	else
   	load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
