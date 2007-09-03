@@ -1,3 +1,9 @@
-== activerdf_jena (0.1) Mon, 06 Aug 2007 19:32:53 +0100 (TODO: update before release)
+== activerdf_jena (0.1) 2007-09-03 15:44
   * initial version of JRuby Jena adapter
-  * TODO: describe functionality
+  features:
+  * adding and removing triples
+  * queries
+  * queries with keywords
+  * in-memory store and simple file based persistence
+  * loading rdf data from n3, ntriples or rdf/xml serialisations
+

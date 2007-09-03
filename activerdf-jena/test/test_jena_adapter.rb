@@ -11,6 +11,8 @@ require 'active_rdf'
 
 require "pp"
 
+require "fileutils"
+
 class TestJenaAdapter < Test::Unit::TestCase
 
   def setup 
@@ -226,6 +228,7 @@ class TestJenaAdapter < Test::Unit::TestCase
     @adapter.close 
     
     this_dir = File.dirname(File.expand_path(__FILE__))
+    Dir.mkdir(this_dir + "/jena_persistence")
     persistent_adapter = ConnectionPool.add_data_source(:type => :jena,
      :file => this_dir + "/jena_persistence")
     assert_equal 0, persistent_adapter.size
@@ -246,13 +249,14 @@ class TestJenaAdapter < Test::Unit::TestCase
     assert_equal 2, result.flatten.size
 
     adapter2.close    
-    File.delete(this_dir + "/jena_persistence/default")    
+    FileUtils.rm_rf(this_dir + "/jena_persistence")    
   end
 
   def test_persistence_file_based_named_model
     @adapter.close 
     
     this_dir = File.dirname(File.expand_path(__FILE__))
+    Dir.mkdir(this_dir + "/jena_persistence")
     persistent_adapter = ConnectionPool.add_data_source(:type => :jena, :model => "superfunky",
      :file => this_dir + "/jena_persistence")
     assert_equal 0, persistent_adapter.size
@@ -273,22 +277,143 @@ class TestJenaAdapter < Test::Unit::TestCase
     assert_equal 2, result.flatten.size
 
     adapter2.close    
-    File.delete(this_dir + "/jena_persistence/superfunky")    
+    FileUtils.rm_rf(this_dir + "/jena_persistence")    
   end
 
+  def test_keyword_search
+    @adapter.close
+    
+    this_dir = File.dirname(File.expand_path(__FILE__))
+    keyword_adapter = ConnectionPool.add_data_source(:type => :jena, :model => "superfunky", :lucene => true)
+      
+    keyword_adapter.load("file://" + this_dir + "/test_data.nt", :format => :ntriples, :into => :default_model )
+
+    eyal = RDFS::Resource.new('http://activerdf.org/test/eyal')
+
+    assert keyword_adapter.keyword_search?
+      
+    assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"blue").execute(:flatten => true)
+    assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"27").execute(:flatten => true)
+    assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"eyal oren").execute(:flatten => true)
   
-  def test_database_persistence
-    # TODO: fill in
-    # what to check ? mysql and postgresql and maybe some java embedded thing? 
+    keyword_adapter.close
   end
+
+  def test_derby_embedded_persistence
+    @adapter.close
+    this_dir = File.dirname(File.expand_path(__FILE__))
+    
+    derby1 = ConnectionPool.add_data_source(:type => :jena, :model => "superfunky", 
+                                            :database => {:url => "jdbc:derby:#{this_dir}/superfunky;create=true", :type => "Derby", :username => "", :password => ""})
+    
+    derby1.add(@eyal, @age, @ageval)
+    derby1.add(@eyal, @mbox, @mboxval)
+
+    result = Query.new.distinct(:o).where(@eyal, :p, :o).execute
+    assert_equal 2, result.flatten.size
+    
+    derby1.close
+    ConnectionPool.clear
+
+    derby2 = ConnectionPool.add_data_source(:type => :jena, :model => "superfunky", :id => "2",
+                                            :database => {:url => "jdbc:derby:#{this_dir}/superfunky;create=true", :type => "Derby", :username => "", :password => ""})
+    
+    result = Query.new.distinct(:o).where(@eyal, :p, :o).execute
+    assert_equal 2, result.flatten.size
+    
+    derby2.close
+
+    begin
+      java.sql.DriverManager.getConnection("jdbc:derby:;shutdown=true")
+    rescue java.sql.SQLException
+      # expected
+    end
+    FileUtils.rm_rf(this_dir + "/superfunky")    
+  end
+    
+  # TODO: NOT TESTED until now, run this against a local mysql installation to confirm it
+  def test_mysql_persistence
+    # @adapter.close
+    # 
+    # mysql1 = ConnectionPool.add_data_source(:type => :jena, :model => "superfunky", :id => "1",
+    #   :database => {:url => "jdbc:postgresql://MyDbComputerNameOrIP/myDatabaseName;create=true", :type => "MySQL", :username => "theUser", :password => "thepassword"})
+    # 
+    #     mysql1.add(@eyal, @age, @ageval)
+    #     mysql1.add(@eyal, @mbox, @mboxval)
+    #     
+    #     result = Query.new.distinct(:o).where(@eyal, :p, :o).execute
+    #     assert_equal 2, result.flatten.size
+    # 
+    #     mysql1.close
+    #     ConnectionPool.clear
+    # 
+    # mysql2 = ConnectionPool.add_data_source(:type => :jena, :model => "superfunky", :id => "2",
+    #   :database => {:url => "jdbc:mysql://MyDbComputerNameOrIP/myDatabaseName;create=true", :type => "MySQL", :username => "theUser", :password => "thepassword"})
+    #     
+    #     result = Query.new.distinct(:o).where(@eyal, :p, :o).execute
+    #     assert_equal 2, result.flatten.size
+    #     
+    #     mysql2.close
+    #     this_dir = File.dirname(File.expand_path(__FILE__))
+    #     #FileUtils.remove_dir(this_dir + "/superfunky")    
+  end
+
+  # TODO: NOT TESTED until now, run this against a local postgres installation to confirm it
+  def test_postgres_embedded_persistence
+    # @adapter.close
+    # 
+    # postgres1 = ConnectionPool.add_data_source(:type => :jena, :model => "superfunky", :id => "1",
+    #   :database => {:url => "jdbc:postgresql://MyDbComputerNameOrIP/myDatabaseName;create=true", :type => "PostgreSQL", :username => "theUser", :password => "thepassword"})
+    # 
+    #     postgres1.add(@eyal, @age, @ageval)
+    #     postgres1.add(@eyal, @mbox, @mboxval)
+    #     
+    #     result = Query.new.distinct(:o).where(@eyal, :p, :o).execute
+    #     assert_equal 2, result.flatten.size
+    # 
+    #     postgres1.close
+    #     ConnectionPool.clear
+    # 
+    # postgres2 = ConnectionPool.add_data_source(:type => :jena, :model => "superfunky", :id => "2",
+    #   :database => {:url => "jdbc:postgresql://MyDbComputerNameOrIP/myDatabaseName;create=true", :type => "PostgreSQL", :username => "theUser", :password => "thepassword"})
+    #     
+    #     result = Query.new.distinct(:o).where(@eyal, :p, :o).execute
+    #     assert_equal 2, result.flatten.size
+    #     
+    #     postgres2.close
+    #     this_dir = File.dirname(File.expand_path(__FILE__))
+    #     #FileUtils.remove_dir(this_dir + "/superfunky")    
+  end
+
+
+  
+
 
   def test_contexts
     # TODO
   end
 
-  def test_keyword_query
-    # TODO
-  end  
+  # TODO: querying pellet does not work right now
+  def test_search_with_pellet
+    @adapter.close
+    
+    this_dir = File.dirname(File.expand_path(__FILE__))
+    adapter = ConnectionPool.add_data_source(:type => :jena, :model => "superfunky", :lucene => true, 
+                                             :reasoner => :pellet, :ontology => :owl)
+    
+    adapter.load("file://" + this_dir + "/test_data.nt", :format => :ntriples, :into => :default_model )
+    
+    eyal = RDFS::Resource.new('http://activerdf.org/test/eyal')
+    
+    # Keyword with pellet does not work.     
+    #    assert adapter.keyword_search?
+    #    assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"blue").execute(:flatten => true)
+    #    assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"27").execute(:flatten => true)
+    #    assert_equal eyal, Query.new.distinct(:s).where(:s,:keyword,"eyal oren").execute(:flatten => true)
+    
+    adapter.close
+   end
+
 
   # TODO: need a better understanding of rdfs reasoning in Jena before I can write a test for it
   # def test_rdfs_reasoning

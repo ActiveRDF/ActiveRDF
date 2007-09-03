@@ -17,8 +17,29 @@ module Jena
 
   module DB
     include_package('com.hp.hpl.jena.db')
+    
+    # this maps downcased Jena database types into drivers
+    DRIVER_MAP = {
+      'oracle' => 'oracle.jdbc.Driver',
+      'mysql' => 'com.mysql.jdbc.Driver',
+      'derby' => 'org.apache.derby.jdbc.EmbeddedDriver',
+      'postgresql' => 'org.postgresql.Driver',
+      'hsql' => 'org.hsqldb.jdbcDriver',
+      'mssql' => 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
+    }
+    
+    DRIVER_MAP.each do |name, driver| 
+      av = "#{name}_available"
+      (class << self ; self ; end).send(:bool_accessor, av.to_sym)
+      begin
+        java.lang.Class.forName driver
+        Jena::DB.send("#{av}=", true)
+      rescue
+        Jena::DB.send("#{av}=", false)
+      end
+    end
   end
-
+  
   module Query
     include_package('com.hp.hpl.jena.query')
   end

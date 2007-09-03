@@ -21,10 +21,10 @@ included LGPL license (version 2 or later).
 
 ------------
 
-Installing and running JRuby: 
+Installing and running Activerdf with Jena: 
 =============================
 
-Download the newest JRuby distribution from http://jruby.codehaus.org/
+Download the newest JRuby binary distribution from http://jruby.codehaus.org/
 
 Unpack it somewhere, e.g. /usr/local/jruby
 
@@ -40,8 +40,18 @@ which gem -> /usr/local/jruby/bin/gem
 
 Now you can install rails and activerdf:
 gem install rails --include-dependencies --no-rdoc --no-ri
-gem install activerdf --include-dependencies --no-rdoc --no-ri
-gem install activerdf_jena --include-dependencies --no-rdoc --no-ri
+gem install activerdf --include-dependencies
+gem install activerdf_jena --include-dependencies
+
+Create an instance of the jena adapter with simple file based persistence, and load some data into it:
+
+this_dir = File.dirname(File.expand_path(__FILE__))
+adapter = ConnectionPool.add_data_source(:type => :jena, 
+:model => "superfunky",
+:file => this_dir + "/jena_persistence")
+adapter.load("file://" + this_dir + "/test_data.rdf", :format => :rdfxml, :into => :default_model )
+
+For more information please see the RDoc, the adapter source code and the unit tests. Go to /path/to/jruby/lib/ruby/gems/1.8/gems/activerdf_jena-0.1/test/ for that.
 
 For more information see 
 http://wiki.activerdf.org/GettingStartedGuide

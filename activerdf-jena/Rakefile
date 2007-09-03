@@ -34,6 +34,7 @@ setup_gem($name, $version) do |spec|
   spec.autorequire = 'active_rdf'
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('activerdf', '>= 1.6.4')
+  spec.add_dependency('activerdf_sparql', '>= 1.3.3')
   spec.autorequire = 'init.rb'
   spec.files += Dir['ext/**/*.jar']
 end

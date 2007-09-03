@@ -5,13 +5,14 @@ administrative tasks:
 * describe which features work right now, and which should not be used
 * check what problems eyals rake file is causing for karsten
 
-implementation tasks:
-===================== 
 
-support for: 
-* quads/named graphs/contexts
+before initial release: 
+=======================
+* test persistance to derby and maybe mysql and postgres
 
-resolve: 
-* could not verify rdfs reasoning support
-
+after release:
+==============
+* get pellet to working (generally and specially with queries)
+* test reasoning
+* quads
 
