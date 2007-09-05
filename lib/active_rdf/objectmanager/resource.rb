@@ -77,7 +77,7 @@ module RDFS
       domain = Namespace.lookup(:rdfs, :domain)
       Query.new.distinct(:p).where(:p, domain, class_uri).execute || []
     end
-    
+       
     # quick fix for "direct" getting of a property
     # return a PropertyCollection (see PropertyCollection class)
     def [](property)
@@ -91,11 +91,6 @@ module RDFS
       PropertyList.new(property, plv, self)
     end
 
-    # quick fix for "direct" setting of a property
-    # def []=(property, value)
-    #  FederationManager.add(self, RDFS::Resource.new(property), value)
-    # end
-    
     # manages invocations such as Person.find_by_name, 
     # Person.find_by_foaf::name, Person.find_by_foaf::name_and_foaf::knows, etc.
     def Resource.method_missing(method, *args)
