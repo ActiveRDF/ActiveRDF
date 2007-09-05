@@ -1,6 +1,7 @@
 require 'active_rdf'
 require 'objectmanager/object_manager'
 require 'objectmanager/namespace'
+require 'objectmanager/property_list'
 require 'queryengine/query'
 
 # TODO: finish removal of ObjectManager.construct_classes: make dynamic finders 
@@ -78,18 +79,22 @@ module RDFS
     end
     
     # quick fix for "direct" getting of a property
+    # return a PropertyCollection (see PropertyCollection class)
     def [](property)
       if !property.instance_of?(RDFS::Resource)
         property = RDFS::Resource.new(property)
       end
    
-      Query.new.distinct(:o).where(self, property, :o).execute(:flatten => true)
+      plv = Query.new.distinct(:o).where(self, property, :o).execute
+      
+      # make and return new propertis collection
+      PropertyList.new(property, plv, self)
     end
 
     # quick fix for "direct" setting of a property
-    def []=(property, value)
-      FederationManager.add(self, RDFS::Resource.new(property), value)
-    end
+    # def []=(property, value)
+    #  FederationManager.add(self, RDFS::Resource.new(property), value)
+    # end
     
     # manages invocations such as Person.find_by_name, 
     # Person.find_by_foaf::name, Person.find_by_foaf::name_and_foaf::knows, etc.
