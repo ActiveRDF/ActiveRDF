@@ -76,7 +76,7 @@ module RDFS
     def Resource.predicates
       domain = Namespace.lookup(:rdfs, :domain)
       Query.new.distinct(:p).where(:p, domain, class_uri).execute || []
-    end
+    end   
        
     # quick fix for "direct" getting of a property
     # return a PropertyCollection (see PropertyCollection class)
@@ -171,6 +171,26 @@ module RDFS
       Namespace.localname(self)
     end
     
+    # Simple query shortcut which return a special object created on-the-fly by which is
+    # possible to directly obtain every distinct resources where:
+    # property ==> specified by the user by [] operator
+    # object   ==> current Ruby object representing an RDF resource
+    def inverse
+      @@obj_uri = self
+      inverseobj = Object.new
+      
+      class <<inverseobj     
+        
+        def [](namespace, property)
+          full_property = Namespace.lookup(namespace, property)
+          Query.new.distinct(:s).where(:s, full_property, @@obj_uri).execute
+        end
+        private(:type)
+      end
+      
+      return inverseobj
+    end
+    
     # manages invocations such as eyal.age
     def method_missing(method, *args)
       # possibilities:
@@ -230,7 +250,7 @@ module RDFS
 
 			# check possibility (6)
 			if Namespace.abbreviations.include?(methodname.to_sym)
-				namespace = Object.new	
+        namespace = Object.new	
 				@@uri = methodname
 				@@subject = self
         @@flatten = flatten
@@ -246,6 +266,7 @@ module RDFS
             else
               # read value
               predicate = Namespace.lookup(@@uri, localname)
+              puts predicate
               Query.new.distinct(:o).where(@@subject, predicate, :o).execute(:flatten => @@flatten)
             end
           end

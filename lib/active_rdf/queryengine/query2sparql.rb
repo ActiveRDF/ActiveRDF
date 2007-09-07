@@ -10,7 +10,16 @@ class Query2SPARQL
 			select_clauses = query.select_clauses.collect{|s| construct_clause(s)}
 
       str << "SELECT #{distinct}#{select_clauses.join(' ')} "
-      str << "WHERE { #{where_clauses(query)} }"
+      str << "WHERE { #{where_clauses(query)} } "
+      
+      if query.limits
+        str << "LIMIT #{query.limits.to_s} "
+      end
+      
+      if query.offsets
+        str << "OFFSET #{query.offsets.to_s}"
+      end
+      
     elsif query.ask?
       str << "ASK { #{where_clauses(query)} }"
     end

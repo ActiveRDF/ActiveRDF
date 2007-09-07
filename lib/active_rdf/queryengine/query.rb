@@ -13,12 +13,14 @@ class Query
 		distinct = false
 		limit = nil
 		offset = nil
-		@select_clauses = []
+    @select_clauses = []
 		@where_clauses = []
 		@sort_clauses = []
 		@keywords = {}
 		@reasoning = true
     @reverse_sort_clauses = []
+    @limits = nil
+    @offsets = nil
 	end
 
 	# Clears the select clauses

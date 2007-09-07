@@ -19,13 +19,15 @@ class TestTaliaSyntax < Test::Unit::TestCase
    
    Namespace.register(:test, 'http://activerdf.org/test/')
    
+   eyal    = RDFS::Resource.new 'http://activerdf.org/test/eyal'
    michele = RDFS::Resource.new 'http://activerdf.org/test/michele'
     
    # Adding some triples 
    adapter.add(michele, RDFS::subClassOf, RDF::Resource)
-   adapter.add( michele, RDF::type, Namespace.lookup(:rdfs, 'Class') )
+   adapter.add(michele, RDF::type, Namespace.lookup(:rdfs, 'Class') )
    adapter.add(michele, RDF::type, Namespace.lookup(:test, 'Person') )
-  
+   adapter.add(eyal, Namespace.lookup(:test, 'friendOf'), michele)
+   
    assert_nothing_raised(ActiveRdfError) { 
      michele.car = 'car1'
      michele.car = 'car2'
@@ -39,6 +41,11 @@ class TestTaliaSyntax < Test::Unit::TestCase
   x << 'car3'
   assert_equal ['car1', 'car2', 'car3'], x
   
+  # test inverse ===========================================================
+  y = michele.inverse
+  assert_equal '<http://activerdf.org/test/eyal>', y[:test, 'friendOf'].to_s
+  # ========================================================================
+  
   # test deletion triple with new syntax ===================================
   
   # remove a triple whose value is specified relater to TEST::car
@@ -48,7 +55,14 @@ class TestTaliaSyntax < Test::Unit::TestCase
   # remove every triples related to TEST::car
   x.remove
   assert_equal [], x
+  
+  # remove EVERY triples related to a specified resource
+  FederationManager.delete_all(michele)
+  result = Query.new.select(:p, :o).where(michele, :p, :o).execute
+  assert_equal [], result
   # ======================================================================== 
+ 
+ 
  end
   
 end

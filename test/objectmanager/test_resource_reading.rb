@@ -26,7 +26,7 @@ class TestResourceReading < Test::Unit::TestCase
   end
 
   def test_class_predicates
-    assert_equal 4, RDFS::Resource.predicates.size
+    assert_equal 5, RDFS::Resource.predicates.size
   end
 
   def test_eyal_predicates
@@ -41,7 +41,7 @@ class TestResourceReading < Test::Unit::TestCase
 		class_preds = @eyal.class_level_predicates.collect {|p| p.uri }
 		# eyal.type: person and resource, has predicates age, eye
 		# not default rdfs:label, rdfs:comment, etc. because not using rdfs reasoning
-    assert_equal 4, class_preds.size
+    assert_equal 5, class_preds.size
   end
 
   def test_eyal_types

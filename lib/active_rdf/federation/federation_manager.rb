@@ -17,6 +17,14 @@ class FederationManager
     ConnectionPool.write_adapter.delete(s,p,o)
   end
 
+  # delete every triples about a specified resource
+  def FederationManager.delete_all(resource)
+    to_delete = Query.new.select(:p, :o).where(resource, :p, :o).execute
+    to_delete.each{|p, o|
+      delete(resource, p, o)
+    }
+  end
+
   # executes read-only queries
   # by distributing query over complete read-pool
   # and aggregating the results
