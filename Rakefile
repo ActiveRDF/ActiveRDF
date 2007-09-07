@@ -1,3 +1,5 @@
+require 'rubygems'
+
 require 'meta_project'
 require 'rake'
 require 'rake/testtask'
@@ -6,7 +8,6 @@ require 'rake/gempackagetask'
 require 'rake/rdoctask'
 require 'rake/contrib/xforge'
 require 'tools/rakehelp'
-require 'rubygems'
 require 'fileutils'
 include FileUtils
 
@@ -99,3 +100,6 @@ end
 
 desc "release gem on RubyForge and build documentation"
 task :release_docs => [ :release, :rdoc ]
+
+desc "CruiseControl Task"
+task :cruise => ['rdoc', 'test']
