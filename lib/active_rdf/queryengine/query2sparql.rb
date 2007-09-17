@@ -10,7 +10,7 @@ class Query2SPARQL
 			select_clauses = query.select_clauses.collect{|s| construct_clause(s)}
 
       str << "SELECT #{distinct}#{select_clauses.join(' ')} "
-      str << "WHERE { #{where_clauses(query)} }"
+      str << "WHERE { #{where_clauses(query)} #{filter_clauses(query)}}"
       
       if query.limits
         str << " LIMIT #{query.limits.to_s}"
@@ -35,6 +35,10 @@ class Query2SPARQL
 			[s,p,o].collect {|term| construct_clause(term) }.join(' ')
 		end
     "#{where_clauses.join('. ')} ."
+  end
+
+  def self.filter_clauses(query)
+    "FILTER #{query.filter_clauses.join(" ")}" unless query.filter_clauses.empty?
   end
 
 	def self.construct_clause(term)
