@@ -181,9 +181,9 @@ module RDFS
       
       class <<inverseobj     
         
-        def [](namespace, property)
-          full_property = Namespace.lookup(namespace, property)
-          Query.new.distinct(:s).where(:s, full_property, @@obj_uri).execute
+        def [](property_uri)
+          property = RDFS::Resource.new(property_uri)
+          Query.new.distinct(:s).where(:s, property, @@obj_uri).execute
         end
         private(:type)
       end
