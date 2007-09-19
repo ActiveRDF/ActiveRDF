@@ -49,7 +49,7 @@ class Query2SPARQL
 			[s,p,o].collect {|term| construct_clause(term) }.join(' ')
 		end
 
-    "#{where_clauses.join('. ')} ."
+    "#{where_clauses.join(' . ')} ."
   end
 
 	def self.construct_clause(term)
@@ -82,7 +82,7 @@ class Query2SPARQL
 
   def self.keyword_predicate
     case sparql_engine
-    when :yars
+    when :yars, :yars2
       RDFS::Resource.new("http://sw.deri.org/2004/06/yars#keyword")
     when :virtuoso
       VirtuosoBIF.new("bif:contains")
