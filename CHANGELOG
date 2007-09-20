@@ -1,3 +1,6 @@
+== activerdf (1.6.5) Thu, 20 Sep 2007 13:39:04 +0100
+  * bugfix in SPARQL regex query (Mikael Lammentausta)
+
 == activerdf (1.6.4) 2007-09-03 15:34
   * new method: ConnectionPool.remove_data_source(adapter) which should be called
     by all adapter.close methods

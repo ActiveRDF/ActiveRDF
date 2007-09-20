@@ -86,7 +86,7 @@ class Query
     raise(ActiveRdfError, "variable must be a symbol") unless variable.is_a? Symbol
     raise(ActiveRdfError, "regexp must be a ruby regexp") unless regexp.is_a? Regexp
 
-    filter "regex(?#{variable}, #{regexp.inspect.gsub('/','"')})"
+    filter "regex(str(?#{variable}), #{regexp.inspect.gsub('/','"')})"
   end
   alias :filter_regex :filter_regexp
 
