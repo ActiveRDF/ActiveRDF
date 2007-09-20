@@ -372,6 +372,10 @@ module RDFS
 			"<#{uri}>"
 		end
 
+    def Resource.to_s
+      "<#{uri}>"
+    end
+
 		private
 
 #		def ancestors(predicate)
