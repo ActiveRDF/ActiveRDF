@@ -14,8 +14,8 @@ class Query2SPARQL
 
       str << "SELECT #{distinct}#{select_clauses.join(' ')} "
       str << "WHERE { #{where_clauses(query)} #{filter_clauses(query)}} "
-      str << "LIMIT #{query.limits}" if query.limits and sparql_engine != :yars2
-      str << "OFFSET #{query.offsets}" if query.offsets and sparql_engine !=:yars2
+      str << "LIMIT #{query.limits}" if query.limits
+      str << "OFFSET #{query.offsets}" if query.offsets
     elsif query.ask?
       str << "ASK { #{where_clauses(query)} }"
     end
