@@ -141,7 +141,7 @@ class SparqlAdapter < ActiveRdfAdapter
     when 'uri'
       RDFS::Resource.new(value)
     when 'bnode'
-      nil
+      BNode.new(value)
     when 'literal','typed-literal'
       value.to_s
     end
