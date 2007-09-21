@@ -1,3 +1,7 @@
+== activerdf (1.6.6) Fri, 21 Sep 2007 10:06:17 +0100
+  * parse bnodes in SPARQL queries
+  * bugfix when using RDFS classes in queries
+
 == activerdf (1.6.5) Thu, 20 Sep 2007 13:39:04 +0100
   * bugfix in SPARQL regex query (Mikael Lammentausta)
 
