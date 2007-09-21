@@ -3,7 +3,6 @@ require 'rake'
 require 'rake/testtask'
 require 'rake/clean'
 require 'rake/gempackagetask'
-require 'rake/rdoctask'
 require 'rake/contrib/xforge'
 require '../tools/rakehelp'
 require 'rubygems'
@@ -86,6 +85,3 @@ task :release => [ :clean, :verify_rubyforge, :package ] do
     release.release_changes = changes.join("\n")
   end
 end
-
-desc "release gem on RubyForge and build documentation"
-task :release_docs => [ :release, :rdoc ]
