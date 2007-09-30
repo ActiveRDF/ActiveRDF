@@ -331,6 +331,29 @@ class TestJenaAdapter < Test::Unit::TestCase
     FileUtils.rm_rf(this_dir + "/superfunky")    
   end
     
+  def test_querying_bnodes
+    this_dir = File.dirname(File.expand_path(__FILE__))
+    @adapter.load("file://" + this_dir + "/fun_with_bnodes.nt", :format => :ntriples, :into => :default_model)
+    
+    res1 = Array(Query.new.select(:s).where(:s, RDFS::Resource.new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), RDFS::Resource.new("http://xmlns.com/foaf/0.1/Person")).execute)
+    assert_equal 1, res1.size
+    bn1 = res1.first
+    
+    res2 = Array(Query.new.select(:s).where(:s, :p, RDFS::Resource.new("http://wordpress.org")).execute)
+    assert_equal 1, res2.size    
+    bn2 = res2.first
+    
+    assert_equal bn1, bn2
+
+    res3 = Array(Query.new.select(:o).where(bn1, :p, :o).execute)
+    assert_equal 2, res3.size
+
+    res4 = Array(Query.new.select(:p).where(bn1, :p, RDFS::Resource.new("http://wordpress.org") ).execute)
+    assert_equal 1, res4.size
+
+  end
+    
+    
   # TODO: NOT TESTED until now, run this against a local mysql installation to confirm it
   def test_mysql_persistence
     # @adapter.close

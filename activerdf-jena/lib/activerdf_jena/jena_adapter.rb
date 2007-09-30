@@ -187,19 +187,21 @@ class JenaAdapter < ActiveRdfAdapter
 
   def delete(subject, predicate, object, context = nil)
     self.lucene_index_behind = true
-    s = (is_wildcard?(subject) ? nil : build_subject(subject))
-    p = (is_wildcard?(predicate) ? nil : build_predicate(predicate))
-    o = (is_wildcard?(object) ? nil : build_object(object))
-    self.model.removeAll(s, p, o)
-    self.model.prepare if self.model.respond_to? :prepare
-    self.model.rebind if self.model.respond_to? :rebind
+    mod = get_model_for_context(context)
+    s = (is_wildcard?(subject) ? nil : build_subject(subject, mod))
+    p = (is_wildcard?(predicate) ? nil : build_predicate(predicate, mod))
+    o = (is_wildcard?(object) ? nil : build_object(object, mod))
+    mod.removeAll(s, p, o)
+    mod.prepare if mod.respond_to? :prepare
+    mod.rebind if mod.respond_to? :rebind
   end
 
   def add(subject, predicate, object, context = nil)
     self.lucene_index_behind = true
-    self.model.add(build_statement(subject, predicate, object))
-    self.model.prepare if self.model.respond_to? :prepare
-    self.model.rebind if self.model.respond_to? :rebind
+    mod = get_model_for_context(context)
+    mod.add(build_statement(subject, predicate, object))
+    mod.prepare if mod.respond_to? :prepare
+    mod.rebind if mod.respond_to? :rebind
   end
 
   def flush
@@ -236,10 +238,10 @@ class JenaAdapter < ActiveRdfAdapter
       self.model.read(uri, jena_format)
       
     when :submodel
-      self.model.add(Jena::Model::ModelFactory.createDefaultModel.read(uri, jena_format))
+      self.model.addSubModel(Jena::Model::ModelFactory.createDefaultModel.read(uri, jena_format))
       
     else
-      self.model.add(self.model_maker.createModel(into).read(uri, jena_format))
+      self.model.addSubModel(self.model_maker.createModel(into).read(uri, jena_format))
     end
     
     if rebind && self.reasoner && self.model.respond_to?(:rebind)
@@ -362,9 +364,14 @@ class JenaAdapter < ActiveRdfAdapter
     end
   end
 
-  def build_object(object)
+  def appropriate_model(submodel)
+    (submodel && (submodel != self.model))? submodel : self.model
+  end
+
+  def build_object(object, submodel = nil)
+    mod = appropriate_model(submodel)
     if object.respond_to? :uri
-      o = self.model.getResource(object.uri)
+      o = mod.getResource(object.uri)
     else
       #xlate to literal
       if !object.kind_of? Literal
@@ -375,35 +382,48 @@ class JenaAdapter < ActiveRdfAdapter
       
       if objlit.type
         type = Jena::Datatypes::TypeMapper.getInstance.getTypeByName(objlit.type.uri)
-        o = self.model.createTypedLiteral(objlit.value, type)
+        o = mod.createTypedLiteral(objlit.value, type)
       elsif objlit.language
-        o = self.model.createLiteral(objlit.value, objlit.language)
+        o = mod.createLiteral(objlit.value, objlit.language)
       else
-        o = self.model.createTypedLiteral(objlit.value, nil)
+        o = mod.createTypedLiteral(objlit.value, nil)
       end
     end    
     return o
   end
 
-  def build_subject(subject)
-    self.model.getResource(subject.uri)
+  def build_subject(subject, submodel = nil) 
+    # ensure it exists in the parent model
+    self.model.getResource(subject.uri) if submodel
+    appropriate_model(submodel).getResource(subject.uri)
   end
 
-  def build_predicate(predicate)
-    self.model.getProperty(predicate.uri)
+  def build_predicate(predicate, submodel = nil)
+    appropriate_model(submodel).getProperty(predicate.uri)
   end
 
-  def build_statement(subject, predicate, object)
-    s = build_subject(subject)
-    p = build_predicate(predicate)
-    o = build_object(object)
-    self.model.createStatement(s, p, o)
+  def build_statement(subject, predicate, object, submodel = nil)
+    s = build_subject(subject, submodel)
+    p = build_predicate(predicate, submodel)
+    o = build_object(object, submodel)
+    mod = submodel ? submodel : self.model
+    mod.createStatement(s, p, o)
   end
+
 
   def is_wildcard?(thing)
     (thing == nil) || thing.kind_of?(Symbol)
   end
 
+  def get_model_for_context(context)
+    if (context == nil || context == self.model_name)
+      self.model
+    else
+      subm = self.model_maker.openModel(context)
+      self.model.addSubModel(subm)
+      subm
+    end
+  end
 
   def query_jena(query)
     query_sparql = translate(query)    
@@ -454,10 +474,24 @@ class JenaAdapter < ActiveRdfAdapter
       query.select_clauses.each do |kw|
         thing = row.get(kw.to_s)
         if thing.kind_of? Jena::Model::Resource
-          next if thing.isAnon
-          res_row << RDFS::Resource.new(thing.to_s)
+          if thing.isAnon
+            res_row << BNode.new(thing.getId.to_s)
+          else
+            res_row << RDFS::Resource.new(thing.to_s)
+          end
         elsif thing.kind_of? Jena::Model::Literal
-          res_row << thing.to_s
+          if thing.getLanguage == "" and thing.getDatatypeURI.nil?
+            # plain literal
+            res_row << thing.getString
+          elsif thing.getLanguage == ""
+            # datatyped literal
+            res_row << Literal.new(thing.getValue, RDFS::Resource.new(thing.getDatatypeURI))
+          elsif thing.getDatatypeURI.nil?
+            # language tagged literal 
+            res_row << Literal.new(thing.getLexicalForm, "@" + thing.getLanguage)
+          else
+            raise ActiveRdfError, "Jena Sparql returned a strange literal"
+          end
         else
           raise ActiveRdfError, "Returned thing other than resource or literal"
         end

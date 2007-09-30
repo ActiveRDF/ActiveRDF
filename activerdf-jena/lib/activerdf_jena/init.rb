@@ -19,6 +19,8 @@ Dir.foreach(java_dir) do |jar|
 end
 
 require 'jena'
+require 'ng4j'
 require 'pellet'
 require 'lucene'
 require 'jena_adapter'
+require 'ng4j_adapter'
