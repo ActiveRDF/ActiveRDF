@@ -14,10 +14,10 @@ class Query2SPARQL
 
       str << "SELECT #{distinct}#{select_clauses.join(' ')} "
       str << "WHERE { #{where_clauses(query)} #{filter_clauses(query)}} "
-      str << "LIMIT #{query.limits}" if query.limits
-      str << "OFFSET #{query.offsets}" if query.offsets
+      str << "LIMIT #{query.limits} " if query.limits
+      str << "OFFSET #{query.offsets} " if query.offsets
     elsif query.ask?
-      str << "ASK { #{where_clauses(query)} }"
+      str << "ASK { #{where_clauses(query)} } "
     end
     
     return str
@@ -45,8 +45,12 @@ class Query2SPARQL
     end
 
 		where_clauses = query.where_clauses.collect do |s,p,o,c|
-			# ignore context parameter
-			[s,p,o].collect {|term| construct_clause(term) }.join(' ')
+      # does there where clause use a context ? 
+		  if c.nil?
+  			[s,p,o].collect {|term| construct_clause(term) }.join(' ')
+  		else
+  		  "GRAPH #{construct_clause(c)} { #{construct_clause(s)} #{construct_clause(p)} #{construct_clause(o)} }"
+		  end
 		end
 
     "#{where_clauses.join(' . ')} ."
