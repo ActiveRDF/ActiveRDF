@@ -1,5 +1,9 @@
+
+require 'rubygems'
+
 # ActiveRDF loader
 
+# determine the directory in which we are running depending on cruby or jruby
 if RUBY_PLATFORM =~ /java/
   # jruby can not follow symlinks, because java does not know the symlink concept
   this_dir = File.dirname(File.expand_path(__FILE__))
@@ -7,9 +11,15 @@ else
   file = File.symlink?(__FILE__) ? File.readlink(__FILE__) : __FILE__
   this_dir = File.dirname(File.expand_path(file))  
 end
-$: << this_dir + '/'
-$: << this_dir + '/active_rdf/'
 
+# set the load path, which uses the running directory, but has to be different if running on jruby directly from source. 
+if RUBY_PLATFORM =~ /java/ and Gem::cache.search(/^activerdf$/).empty?
+  $: << this_dir + '/activerdf/lib/'
+  $: << this_dir + '/activerdf/lib/active_rdf/'
+else
+  $: << this_dir + '/'
+  $: << this_dir + '/active_rdf/'
+end
 
 require 'active_rdf_helpers'
 require 'active_rdf_log'
@@ -33,7 +43,7 @@ def load_adapter s
   end
 end
 
-require 'rubygems'
+
 # determine whether activerdf is installed as a gem:
 if Gem::cache.search(/^activerdf$/).empty?
 	# we are not running as a gem
@@ -48,7 +58,7 @@ if Gem::cache.search(/^activerdf$/).empty?
   	load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/suggesting'
   	load_adapter this_dir + '/../activerdf-redland/lib/activerdf_redland/redland'
   	load_adapter this_dir + '/../activerdf-sparql/lib/activerdf_sparql/sparql'
-  	load_adapter this_dir + '/../activerdf-yars/lib/activerdf_yars/jars2'	  
+  	#load_adapter this_dir + '/../activerdf-yars/lib/activerdf_yars/jars2'	  
   end
   
 else
