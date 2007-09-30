@@ -26,12 +26,13 @@ setup_gem($name, $version) do |spec|
   spec.author="Eyal Oren <eyal.oren@deri.org"
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('activerdf', '>= 1.6.4')
-  if RUBY_PLATFORM =~ /java/
-    # require json_pure which has no native c extensions when running under jruby
-    spec.add_dependency('json_pure', '>= 1.1.1')
-  else
-    spec.add_dependency('json', '>= 1.1.1')
-  end
+  spec.add_dependency('json', '>= 1.1.1')
+#  if RUBY_PLATFORM =~ /java/
+#    # require json_pure which has no native c extensions when running under jruby
+#    spec.add_dependency('json_pure', '>= 1.1.1')
+#  else
+#    spec.add_dependency('json', '>= 1.1.1')
+#  end
 end
 
 task :verify_rubyforge do
