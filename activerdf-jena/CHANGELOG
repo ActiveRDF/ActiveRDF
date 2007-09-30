@@ -1,3 +1,8 @@
+== activerdf_jena (0.2) --pending
+  * small fixes
+  * can now handle blank nodes
+  * tried to make a ng4j adapter, but is horribly slow because of the badly written database backend code of ng4j, jenas is much much faster. 
+
 == activerdf_jena (0.1) 2007-09-03 15:44
   * initial version of JRuby Jena adapter
   features:
