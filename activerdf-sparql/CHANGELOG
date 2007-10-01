@@ -1,8 +1,7 @@
-== activerdf_sparql (1.3.5) --pending
-  * added experimental sparql query cache: it never expires
-  * changed gem dependecy back to json. 
-  * we need to release gem->json and seperate gem-ruby->json_pure in the future, 
-    which we can not automate as it seems
+== activerdf_sparql (1.3.5) Mon, 01 Oct 2007 12:03:40 +0200
+  * support for POSTing SPARQL queres (Edward Benson)
+  * added experimental sparql query cache: it never expires (Benjamin Heitmann)
+  * reverted gem dependency to json (Benjamin Heitmann)
 
 == activerdf_sparql (1.3.4) Fri, 21 Sep 2007 10:06:57 +0100
   * parse bnodes in SPARQL queries

@@ -9,38 +9,38 @@ require "#{File.dirname(__FILE__)}/sparql_result_parser"
 class SparqlAdapter < ActiveRdfAdapter
 	$activerdflog.info "loading SPARQL adapter"
 	ConnectionPool.register_adapter(:sparql, self)
+
+  attr_reader :engine
+  attr_reader :caching
+
+  @@sparql_cache = {}
+
+  def SparqlAdapter.get_cache
+    return @@sparql_cache
+  end
 	
 	# Instantiate the connection with the SPARQL Endpoint.
 	# available parameters:
 	# * :url => url: endpoint location e.g. "http://m3pe.org:8080/repositories/test-people"
 	# * :results => one of :xml, :json, :sparql_xml
-  attr_reader :engine
-  attr_reader :caching
-
-    @@sparql_cache = {}
-
-    def SparqlAdapter.get_cache
-      return @@sparql_cache
-    end
-
+  # * :request_method => :get (default) or :post
+  # * :timeout => timeout in seconds to wait for endpoint response
 	def initialize(params = {})	
 		@reads = true
 		@writes = false
 
 		@url = params[:url] || ''
+    @caching = params[:caching] || false
+    @timeout = params[:timeout] || 50
+
 		@result_format = params[:results] || :json
+		raise ActiveRdfError, "Result format unsupported" unless [:xml, :json, :sparql_xml].include? @result_format
+
     @engine = params[:engine]
-      @caching = params[:caching] || false
+		raise ActiveRdfError, "SPARQL engine unsupported" unless [:yars2, :sesame2, :joseki, :virtuoso].include? @engine
 
-
-    
-    supported_engines = [:yars2, :sesame2, :joseki, :virtuoso]
-		raise ActiveRdfError, "SPARQL engine unsupported" unless supported_engines.include?(@engine)
-		
-		known_formats = [:xml, :json, :sparql_xml]
-		raise ActiveRdfError, "Result format unsupported" unless known_formats.include?(@result_format)
-		
-		$activerdflog.info "SPARQL adapter initialised #{inspect}"
+    @request_method = params[:request_method] || :get
+    raise ActiveRdfError, "Request method unsupported" unless [:get,:post].include? @request_method
 	end
 
 	def size
@@ -51,22 +51,20 @@ class SparqlAdapter < ActiveRdfAdapter
 	# may be called with a block
 	def query(query, &block)
     qs = Query2SPARQL.translate(query)
-    
+
     if @caching
        result = query_cache(qs)
-       $activerdflog.debug "returning sparql query result from cache for query #{qs}" unless result.nil?
-       $activerdflog.debug "no cache result for query #{qs}" if result.nil?
-       return result unless result.nil?
-     end
-    
-		result = execute_sparql_query(qs, header(query), &block)
-		
+       if result.nil?
+         $activerdflog.debug "cache miss for query #{qs}"
+       else
+         $activerdflog.debug "cache hit for query #{qs}"
+         return result
+       end
+    end
+
+    result = execute_sparql_query(qs, header(query), &block)
     add_to_cache(qs, result) if @caching
-		
-    # $activerdflog.debug "in sparql adapter #{self} query result has class #{result.class} and lets try to_s #{result.to_s}, size is: #{result.size}"
-		
 		result = [] if result == "timeout"
-		
 		return result
 	end
 		
@@ -74,22 +72,26 @@ class SparqlAdapter < ActiveRdfAdapter
 	def execute_sparql_query(qs, header=nil, &block)
     header = header(nil) if header.nil?
 
-		# encoding query string in URL
-		url = "#@url?query=#{CGI.escape(qs)}"
-    #url += "&content-type=#{CGI.escape('application/sparql-results+xml')}" if @yars2
-    # url = url.gsub("DISTINCT", "") if @yars2
-		$activerdflog.debug "querying #{url}"
-
     # querying sparql endpoint
     require 'timeout'
 		response = ''
 		begin 
-      timeout(50) do
-  		  open(url, header) do |f|
-  				response = f.read
-  			end
+      case @request_method
+      when :get
+        # encoding query string in URL
+        url = "#@url?query=#{CGI.escape(qs)}"
+        $activerdflog.debug "GET #{url}"
+        timeout(@timeout) do
+          open(url, header) do |f|
+            response = f.read
+          end
+        end
+      when :post
+        $activerdflog.debug "POST #@url with #{qs}"
+        response = Net::HTTP.post_form(URI.parse(@url),{'query'=>qs}).body
       end
   	rescue Timeout::Error
+			raise ActiveRdfError, "timeout on SPARQL endpoint"
   	  return "timeout"
 		rescue OpenURI::HTTPError => e
 			raise ActiveRdfError, "could not query SPARQL endpoint, server said: #{e}"
@@ -98,7 +100,6 @@ class SparqlAdapter < ActiveRdfAdapter
 			raise ActiveRdfError, "connection refused on SPARQL endpoint #@url"
 			return []
 	 	end
-    # $activerdflog.debug "response:\n#{response}"
 
     # we parse content depending on the result format
     results = case @result_format
@@ -122,7 +123,6 @@ class SparqlAdapter < ActiveRdfAdapter
 	end
 	
 	private
-
   def add_to_cache(query_string, result)
     unless result.nil? or result.empty?
       if result == "timeout"

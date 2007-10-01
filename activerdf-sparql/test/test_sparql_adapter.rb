@@ -56,7 +56,6 @@ class TestSparqlAdapter < Test::Unit::TestCase
     begin
       movies = Query.new.
         select(:title).
-        where(:film, RDF.type, RDFS::Resource.new('http://dbpedia.org/class/yago/film')).
         where(:film, RDFS.label, :title).
         where(:title, RDFS::Resource.new('bif:contains'), 'kill').
         filter_regex(:title, /Kill$/).execute
