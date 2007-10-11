@@ -27,7 +27,7 @@ class PropertyList < Array
   
   # delete a statment which contains old_p_value
   # and insert a new statment (@s, @p, new_p_value)
-  def []=(old_p_value, new_p_value)
+  def replace(old_p_value, new_p_value)
     # delete the old statment
     self.delete(old_p_value)
     FederationManager.delete(@s, @p, old_p_value)
