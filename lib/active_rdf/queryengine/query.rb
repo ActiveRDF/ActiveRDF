@@ -1,5 +1,6 @@
 require 'active_rdf'
 require 'federation/federation_manager'
+require 'queryengine/query2sparql'
 
 # Represents a query on a datasource, abstract representation of SPARQL 
 # features. Query is passed to federation manager or adapter for execution on 
@@ -183,7 +184,6 @@ class Query
 
 	# Returns SPARQL serialisation of query
   def to_sp
-		require 'queryengine/query2sparql'
 		Query2SPARQL.translate(self)
   end
 

@@ -13,7 +13,6 @@ include FileUtils
 
 $version  = IO.read('VERSION').strip
 $name     = 'activerdf'
-$project  = MetaProject::Project::XForge::RubyForge.new('activerdf')
 $distdir  = "#$name-#$version"
 
 # setup tests and rdoc files
@@ -72,6 +71,7 @@ end
 
 desc "release #$name-#$version gem on RubyForge"
 task :release => [ :clean, :verify_rubyforge, :package ] do
+  $project  = MetaProject::Project::XForge::RubyForge.new('activerdf')
   release_files = FileList["pkg/#$distdir.gem"]
   Rake::XForge::Release.new($project) do |release|
     release.user_name     = ENV['RUBYFORGE_USER']

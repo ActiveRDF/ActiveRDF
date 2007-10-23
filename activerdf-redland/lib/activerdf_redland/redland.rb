@@ -14,12 +14,12 @@ class RedlandAdapter < ActiveRdfAdapter
 	
 	# instantiate connection to Redland database
 	def initialize(params = {})
-		if params[:location] and ( params[:location] == :postgresql or params[:location] == :mysql )
+		if params[:location] and ( params[:location].to_sym == :postgresql or params[:location].to_sym == :mysql )
 			initialize_dbs(params)
 			return
 		end
 
-		if params[:location] and params[:location] != :memory
+		if params[:location] and params[:location].to_sym != :memory
 			# setup file locations for redland database
 			path, file = File.split(params[:location])
 			type = 'bdb'

@@ -176,14 +176,14 @@ module RDFS
     # property ==> specified by the user by [] operator
     # object   ==> current Ruby object representing an RDF resource
     def inverse
-      @@obj_uri = self
       inverseobj = Object.new
+      inverseobj.instance_variable_set(:@obj_uri, self)
       
       class <<inverseobj     
         
         def [](property_uri)
           property = RDFS::Resource.new(property_uri)
-          Query.new.distinct(:s).where(:s, property, @@obj_uri).execute
+          Query.new.distinct(:s).where(:s, property, @obj_uri).execute
         end
         private(:type)
       end
@@ -250,10 +250,10 @@ module RDFS
 
 			# check possibility (6)
 			if Namespace.abbreviations.include?(methodname.to_sym)
-        namespace = Object.new	
-				@@uri = methodname
-				@@subject = self
-        @@flatten = flatten
+        namespace = Object.new
+        namespace.instance_variable_set(:@uri, methodname)
+        namespace.instance_variable_set(:@subject, self)
+        namespace.instance_variable_set(:@flatten, flatten)
 
         # catch the invocation on the namespace
         class <<namespace
@@ -261,13 +261,13 @@ module RDFS
             # check if updating or reading predicate value
             if localname.to_s[-1..-1] == '='
               # set value
-              predicate = Namespace.lookup(@@uri, localname.to_s[0..-2])
-              args.each { |value| FederationManager.add(@@subject, predicate, value) }
+              predicate = Namespace.lookup(@uri, localname.to_s[0..-2])
+              args.each { |value| FederationManager.add(@subject, predicate, value) }
             else
               # read value
-              predicate = Namespace.lookup(@@uri, localname)
+              predicate = Namespace.lookup(@uri, localname)
               puts predicate
-              Query.new.distinct(:o).where(@@subject, predicate, :o).execute(:flatten => @@flatten)
+              Query.new.distinct(:o).where(@subject, predicate, :o).execute(:flatten => @flatten)
             end
           end
           private(:type)

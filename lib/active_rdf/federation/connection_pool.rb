@@ -114,7 +114,7 @@ class ConnectionPool
   # create new adapter from connection parameters
   def ConnectionPool.create_adapter connection_params
     # lookup registered adapter klass
-    klass = @@registered_adapter_types[connection_params[:type]]
+    klass = @@registered_adapter_types[connection_params[:type].to_sym]
 
     # raise error if adapter type unknown
     raise(ActiveRdfError, "unknown adapter type #{connection_params[:type]}") if klass.nil?
