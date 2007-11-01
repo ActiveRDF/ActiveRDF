@@ -35,7 +35,7 @@ task :verify_rubyforge do
 end
 
 desc "Release files on RubyForge."
-task :release_files => [:clean, :verify_rubyforge, :package ] do
+task :release => [:clean, :verify_rubyforge, :package ] do
   release_files = FileList["pkg/#$name-#$version.gem"]
 
   Rake::XForge::Release.new($project) do |release|
