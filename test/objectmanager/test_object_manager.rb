@@ -20,6 +20,8 @@ class TestObjectManager < Test::Unit::TestCase
     r1 = RDFS::Resource.new('abc')
     r2 = RDFS::Resource.new('cde')
     r3 = RDFS::Resource.new('cde')
+    assert_equal r3, RDFS::Resource.new(r3)
+    assert_equal r3, RDFS::Resource.new(r3.to_s)
 
     assert_equal 'abc', r1.uri
     assert_equal 'cde', r2.uri

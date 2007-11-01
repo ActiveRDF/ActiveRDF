@@ -25,8 +25,13 @@ module RDFS
     # creates new resource representing an RDF resource
     def initialize uri
       @uri = case uri
+            # allow Resource.new(other_resource)
             when RDFS::Resource
              uri.uri
+            # allow Resource.new(<uri>) by stripping out <>
+            when /^<([^>]*)>$/
+              $1
+            # allow Resource.new('uri')
             when String
               uri
             else 
