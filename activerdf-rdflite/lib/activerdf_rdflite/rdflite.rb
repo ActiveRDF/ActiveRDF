@@ -7,6 +7,8 @@ require 'active_rdf'
 require 'federation/connection_pool'
 require 'uuidtools'
 require 'queryengine/ntriples_parser'
+require 'open-uri'
+require 'mime/types'
 
 $activerdflog.info "loading RDFLite adapter"
 
@@ -93,7 +95,7 @@ class RDFLite < ActiveRdfAdapter
   # close adapter and remove it from the ConnectionPool
   def close
     ConnectionPool.remove_data_source(self)
-    # TODO: close rdflite data source
+    @db.close
   end
 
 	# deletes triple(s,p,o,c) from datastore
@@ -159,14 +161,30 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	# loads triples from file in ntriples format
-	def load(file)
-		ntriples = File.readlines(file)
-		$activerdflog.debug "read #{ntriples.size} triples from file #{file}"
+	def load(location)
+    context = if URI.parse(location).host
+                location
+              else
+                internalise(RDFS::Resource.new("file:#{location}"))
+              end
 
-		# use filename as context
-		context = internalise(RDFS::Resource.new("file:#{file}"))
-
-		add_ntriples(ntriples, context)
+    case MIME::Types.of(location)
+    when MIME::Types['application/rdf+xml']
+      # check if rapper available
+      begin 
+        # can only parse rdf/xml with redland
+        # die otherwise
+        require 'rdf/redland'
+        model = Redland::Model.new
+        Redland::Parser.new.parse_into_model(model, location)
+        add_ntriples(model.to_string('ntriples'), location)
+      rescue LoadError
+        raise ActiveRdfError, "cannot parse remote rdf/xml file without Redland: please install Redland (librdf.org) and its Ruby bindings"
+      end
+    else
+      data = open(location).read
+      add_ntriples(data, context)
+    end
 	end
 
 	# adds ntriples from given context into datastore

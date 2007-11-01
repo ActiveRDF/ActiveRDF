@@ -1,3 +1,7 @@
+== activerdf_rdflite (1.4.1) Thu, 01 Nov 2007 13:45:19 +0000
+  * adapter.load can read from remote HTTP sources if Redland is available
+  * finished adapter.close
+
 == activerdf_rdflite (1.4) 2007-09-03 15:42
   * caching subproperty reasoning
   * added adapter.close method (TODO: not finished)
