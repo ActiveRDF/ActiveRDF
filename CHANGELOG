@@ -1,7 +1,8 @@
-== activerdf (1.6.8) --pending
+== activerdf (1.6.8) Thu, 01 Nov 2007 15:55:38 +0100
+  * no need for ObjectManager.construct_classes (done during namespace registration)
   * small fix to running form source on jruby
   * added spaces to query2sparql query creation
-  * sparql querys with a context now have a graph keyword
+  * sparql queries with a context now have a graph keyword
 
 == activerdf (1.6.7) Fri, 21 Sep 2007 12:56:09 +0100
   * updated bnode handling to SPARQL spec

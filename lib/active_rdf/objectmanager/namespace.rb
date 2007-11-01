@@ -32,7 +32,7 @@ class Namespace
       end
 
       def const_missing(klass)
-        Namespace.lookup(self.to_s.downcase.to_sym, klass)
+        ObjectManager.construct_class(Namespace.lookup(self.to_s.downcase.to_sym, klass))
       end
 
       # make some builtin methods private because lookup doesn't work otherwise 
@@ -80,11 +80,9 @@ class Namespace
 
   # returns local-part of URI
   def self.localname(resource)
+    raise ActiveRdfError, "localname called on something that doesn't respond to uri" unless resource.respond_to? :uri
     # get string representation of resource uri
-    uri = case resource
-    when RDFS::Resource: resource.uri
-    else resource.to_s
-    end
+    uri = resource.uri
 
     delimiter = uri.rindex(/#|\//)
     if delimiter.nil? or delimiter == uri.size-1

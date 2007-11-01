@@ -19,7 +19,7 @@ class TestQuery < Test::Unit::TestCase
     query.select(:s)
     query.where(:s, RDFS::Resource.new('predicate'), '30')
     generated = Query2SPARQL.translate(query)
-    expected = "SELECT ?s WHERE { ?s <predicate> \"30\" . }"
+    expected = "SELECT ?s WHERE { ?s <predicate> \"30\" . } "
     assert_equal expected, generated
 
     query = Query.new
@@ -27,7 +27,7 @@ class TestQuery < Test::Unit::TestCase
     query.where(:s, RDFS::Resource.new('foaf:age'), :a)
     query.where(:a, RDFS::Resource.new('rdf:type'), RDFS::Resource.new('xsd:int'))
     generated = Query2SPARQL.translate(query)
-    expected = "SELECT ?s WHERE { ?s <foaf:age> ?a. ?a <rdf:type> <xsd:int> . }"
+    expected = "SELECT ?s WHERE { ?s <foaf:age> ?a . ?a <rdf:type> <xsd:int> . } "
     assert_equal expected, generated
 	end
 
@@ -36,7 +36,7 @@ class TestQuery < Test::Unit::TestCase
     query.distinct(:s)
     query.where(:s, RDFS::Resource.new('foaf:age'), :a)
     generated = Query2SPARQL.translate(query)
-    expected = "SELECT DISTINCT ?s WHERE { ?s <foaf:age> ?a . }"
+    expected = "SELECT DISTINCT ?s WHERE { ?s <foaf:age> ?a . } "
     assert_equal expected, generated
   end
 

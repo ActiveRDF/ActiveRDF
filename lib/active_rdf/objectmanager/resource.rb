@@ -49,6 +49,7 @@ module RDFS
     def self.==(other)
       other.respond_to?(:uri) ? other.uri == self.uri : false
     end
+    def self.localname; Namespace.localname(self); end
 
     #####                        ######
     ##### start of instance-level code
@@ -377,9 +378,10 @@ module RDFS
 			"<#{uri}>"
 		end
 
-    def Resource.to_s
-      "<#{uri}>"
-    end
+    ## TODO: ensure that we don't use this anywhere before removing it!!
+    #def Resource.to_s
+    #  "<#{uri}>"
+    #end
 
 		private
 

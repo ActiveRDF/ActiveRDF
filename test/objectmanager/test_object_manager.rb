@@ -33,24 +33,27 @@ class TestObjectManager < Test::Unit::TestCase
 		adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
 
 		Namespace.register(:test, 'http://activerdf.org/test/')
-		ObjectManager.construct_classes
 
-		assert(defined? TEST)
-		assert(defined? RDFS)
-		assert(defined? TEST::Person)
-		assert(defined? RDFS::Class)
+		assert_equal RDFS::Resource.new('http://activerdf.org/test/Person'), TEST::Person
+    assert_kind_of Class, TEST::Person
+    assert TEST::Person.ancestors.include?(RDFS::Resource)
+    assert_instance_of TEST::Person, TEST::Person.new('')
+    assert TEST::Person.new('').respond_to?(:uri)
+
+		assert_equal RDFS::Resource.new('http://www.w3.org/2000/01/rdf-schema#Class'), RDFS::Class
+    assert RDFS::Class.ancestors.include?(RDFS::Resource)
+    assert_kind_of Class, RDFS::Class
+    assert_instance_of RDFS::Resource, RDFS::Class.new('')
+    assert RDFS::Class.new('').respond_to?(:uri)
   end
 
-	def test_class_construct_class
-		adapter = get_write_adapter
-		adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
-
+  def test_custom_code
 		Namespace.register(:test, 'http://activerdf.org/test/')
-		person_resource = Namespace.lookup(:test, :Person)
-		person_class = ObjectManager.construct_class(person_resource)
-		assert_instance_of Class, person_class
-		assert_equal person_resource.uri, person_class.class_uri.uri
-	end
+
+    TEST::Person.module_eval{ def hello; 'world'; end }
+    assert_respond_to TEST::Person.new(''), :hello
+    assert_equal 'world', TEST::Person.new('').hello
+  end
 
   def test_class_uri
 		adapter = get_write_adapter

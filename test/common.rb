@@ -1,25 +1,24 @@
 def get_adapter
 	types = ConnectionPool.adapter_types
 	if types.include?(:rdflite)
-		ConnectionPool.add :type => :rdflite
+    get_rdflite
 	elsif types.include?(:redland)
-		ConnectionPool.add :type => :redland
+    get_redland
 	elsif types.include?(:sparql)
-		ConnectionPool.add(:type => :sparql, :url => "http://m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
+    get_sparql
 	elsif types.include?(:yars)
-		ConnectionPool.add :type => :yars
+    get_yars
 	elsif types.include?(:jars2)
-		ConnectionPool.add :type => :jars2
+    get_jars2
 	else
 		raise ActiveRdfError, "no suitable adapter found for test"
 	end
 end
 
 def get_read_only_adapter
-	types = ConnectionPool.adapter_types
-  if types.include?(:sparql)
-		ConnectionPool.add(:type => :sparql, :url => "http://m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
-	else
+	if ConnectionPool.adapter_types.include?(:sparql)
+    get_sparql
+  else
 		raise ActiveRdfError, "no suitable read-only adapter found for test"
 	end
 end
@@ -31,16 +30,16 @@ def get_different_adapter(existing_adapter)
     if existing_adapter.class == RDFLite
       ConnectionPool.add :type => :rdflite, :unique => true
     else
-      ConnectionPool.add :type => :rdflite
+      get_rdflite
     end
 	elsif types.include?(:redland) and existing_adapter.class != RedlandAdapter
-		ConnectionPool.add :type => :redland
+    get_rdflite
 	elsif types.include?(:sparql) and existing_adapter.class != SparqlAdapter
-		ConnectionPool.add(:type => :sparql, :url => "http://m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
+    get_sparql
 	elsif types.include?(:yars) and existing_adapter.class != YarsAdapter
-		ConnectionPool.add :type => :yars
+    get_yars
 	elsif types.include?(:jars2) and existing_adapter.class != Jars2Adapter
-		ConnectionPool.add :type => :jars2
+    get_jars2
 	else
 		raise ActiveRdfError, "only one adapter on this system, or no suitable adapter found for test"
 	end
@@ -48,32 +47,26 @@ end
 
 def get_all_read_adapters
 	types = ConnectionPool.adapter_types
-	adapters = types.collect {|type| 
-		if type == :sparql
-			ConnectionPool.add(:type => :sparql, :url => "http://m3pe.org:8080/repositories/test-people", :results => :sparql_xml)
-		else
-			ConnectionPool.add :type => type 
-		end
-	}
+	adapters = types.collect {|type| self.send("get_#{type}") }
 	adapters.select {|adapter| adapter.reads?}
 end
 
 def get_all_write_adapters
 	types = ConnectionPool.adapter_types
-	adapters = types.collect {|type| ConnectionPool.add :type => type }
+	adapters = types.collect {|type| self.send("get_#{type}") }
 	adapters.select {|adapter| adapter.writes?}
 end
 
 def get_write_adapter
 	types = ConnectionPool.adapter_types
 	if types.include?(:rdflite)
-		ConnectionPool.add :type => :rdflite
+    get_rdflite
 	elsif types.include?(:redland)
-		ConnectionPool.add :type => :redland
+    get_redland
 	elsif types.include?(:yars)
-		ConnectionPool.add :type => :yars
+    get_yars
 	elsif types.include?(:jars2)
-		ConnectionPool.add :type => :jars2
+    get_jars2
 	else
 		raise ActiveRdfError, "no suitable adapter found for test"
 	end
@@ -86,13 +79,26 @@ def get_different_write_adapter(existing_adapter)
     if existing_adapter.class == RDFLite
       ConnectionPool.add :type => :rdflite, :unique => true
     else
-      ConnectionPool.add :type => :rdflite
+      get_rdflite
     end
 	elsif types.include?(:redland) and existing_adapter.class != RedlandAdapter
-		ConnectionPool.add :type => :redland
+    get_redland
 	elsif types.include?(:yars) and existing_adapter.class != YarsAdapter
-		ConnectionPool.add :type => :yars
+    get_yars
 	else
 		raise ActiveRdfError, "only one write adapter on this system, or no suitable write adapter found for test"
 	end
 end
+
+private
+def get_sparql
+  ConnectionPool.add(:type => :sparql, :url => "http://sparql.org/books",
+                     :engine => :joseki, :results => :sparql_xml)
+end
+
+def get_fetching; ConnectionPool.add(:type => :fetching); end
+def get_suggesting; ConnectionPool.add(:type => :suggesting); end
+def get_rdflite; ConnectionPool.add(:type => :rdflite); end
+def get_redland; ConnectionPool.add(:type => :redland); end
+def get_yars; ConnectionPool.add(:type => :yars); end
+def get_jars2; ConnectionPool.add(:type => :jars2); end

@@ -53,10 +53,10 @@ class TestNamespace < Test::Unit::TestCase
   end
 
   def test_class_localname
-		assert_equal 'type', Namespace.localname(Namespace.lookup(:rdf, :type))
+		assert_equal 'type', Namespace.lookup(:rdf, :type).localname
 		assert_equal 'type', RDF::type.localname
 
-		assert_equal 'Class', Namespace.localname(Namespace.lookup(:rdfs, :Class))
+		assert_equal 'Class', Namespace.lookup(:rdfs, :Class).localname
 		assert_equal 'Class', RDFS::Class.localname
   end
 
