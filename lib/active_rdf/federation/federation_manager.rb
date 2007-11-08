@@ -11,6 +11,13 @@ class FederationManager
     ConnectionPool.write_adapter.add(s,p,o)
   end
 
+  # delete triple s,p,o from the currently selected write adapter (s and p are 
+  # mandatory, o is optional, symbols are interpreted as wildcards)
+  def FederationManager.delete(s,p,o=:all)
+    raise ActiveRdfError, "cannot write without a write-adapter" unless ConnectionPool.write_adapter
+    ConnectionPool.write_adapter.delete(s,p,o)
+  end
+
   # executes read-only queries
   # by distributing query over complete read-pool
   # and aggregating the results

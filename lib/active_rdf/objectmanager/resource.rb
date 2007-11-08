@@ -2,6 +2,7 @@ require 'active_rdf'
 require 'objectmanager/object_manager'
 require 'objectmanager/namespace'
 require 'queryengine/query'
+require 'instance_exec'
 
 # TODO: finish removal of ObjectManager.construct_classes: make dynamic finders 
 # accessible on instance level, and probably more stuff.
@@ -28,7 +29,7 @@ module RDFS
             # allow Resource.new(other_resource)
             when RDFS::Resource
              uri.uri
-            # allow Resource.new(<uri>) by stripping out <>
+            # allow Resource.new('<uri>') by stripping out <>
             when /^<([^>]*)>$/
               $1
             # allow Resource.new('uri')
@@ -217,7 +218,11 @@ module RDFS
 
 			# check possibility (5)
 			if @predicates.include?(methodname)
-				return predicate_invocation(@predicates[methodname], args, update, flatten)
+        if update
+          return set_predicate(@predicates[methodname], args)
+        else
+          return get_predicate(@predicates[methodname])
+        end
 			end
 
 			# check possibility (6)
@@ -229,16 +234,18 @@ module RDFS
 
         # catch the invocation on the namespace
         class <<namespace
-          def method_missing(localname, *args)
-            # check if updating or reading predicate value
-            if localname.to_s[-1..-1] == '='
-              # set value
-              predicate = Namespace.lookup(@@uri, localname.to_s[0..-2])
-              args.each { |value| FederationManager.add(@@subject, predicate, value) }
+          def method_missing(localname, *values)
+            update = localname.to_s[-1..-1] == '='
+            predicate = if update 
+                          Namespace.lookup(@@uri, localname.to_s[0..-2])
+                        else
+                          Namespace.lookup(@@uri, localname)
+                        end
+            
+            if update
+              @@subject.set_predicate(predicate, values)
             else
-              # read value
-              predicate = Namespace.lookup(@@uri, localname)
-              Query.new.distinct(:o).where(@@subject, predicate, :o).execute(:flatten => @@flatten)
+              @@subject.get_predicate(predicate, @@flatten)
             end
           end
           private(:type)
@@ -255,7 +262,11 @@ module RDFS
 			# checking possibility (1) and (3)
 			candidates.each do |pred|
 				if Namespace.localname(pred) == methodname
-					return predicate_invocation(pred, args, update, flatten)
+          if update
+            return set_predicate(pred, args)
+          else
+            return get_predicate(pred, flatten)
+          end
 				end
 			end
 			
@@ -357,12 +368,10 @@ module RDFS
 		# returns all predicates that are directly defined for this resource
 		def direct_predicates(distinct = true)
 			if distinct
-				q = Query.new.distinct(:p)
+				Query.new.distinct(:p).where(self, :p, :o).execute
 			else
-				q = Query.new.select(:p)
+				Query.new.select(:p).where(self, :p, :o).execute
 			end
-			q.where(self,:p, :o).execute
-			#return (direct + direct.collect {|d| ancestors(d)}).flatten.uniq
 		end
 
 		def property_accessors
@@ -383,23 +392,42 @@ module RDFS
     #  "<#{uri}>"
     #end
 
-		private
+		def set_predicate(predicate, values)
+      FederationManager.delete(self, predicate)
+      values.flatten.each {|v| FederationManager.add(self, predicate, v) }
+      values
+    end
 
+    def get_predicate(predicate, flatten=false)
+      values = Query.new.distinct(:o).where(self, predicate, :o).execute(:flatten => flatten)
+
+      unless values.nil?
+        # prepare returned values for accepting << later, eg. in
+        # eyal.foaf::knows << knud
+        #
+        # store @subject, @predicate in returned values
+        values.instance_exec(self, predicate) do |s,p|
+          @subj = s
+          @pred = p
+        end
+
+        # overwrite << to add triple to db
+        values.instance_eval do
+          def <<(value)
+            FederationManager.add(@subj, @pred, value)
+          end
+        end
+      end
+
+      values
+    end
+
+		private
 #		def ancestors(predicate)
 #			subproperty = Namespace.lookup(:rdfs,:subPropertyOf)
 #			Query.new.distinct(:p).where(predicate, subproperty, :p).execute
 #		end
 
-		def predicate_invocation(predicate, args, update, flatten)
-			if update
-				args.each do |value|
-					FederationManager.add(self, predicate, value)
-				end
-				args
-			else
-        Query.new.distinct(:o).where(self, predicate, :o).execute(:flatten => flatten)
-			end
-		end
 
 		# returns all rdf:types of this resource but without a conversion to 
 		# Ruby classes (it returns an array of RDFS::Resources)

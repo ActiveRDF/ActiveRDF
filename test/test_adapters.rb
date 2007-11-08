@@ -42,11 +42,17 @@ class TestAdapter < Test::Unit::TestCase
     Namespace.register(:test, 'http://activerdf.org/test/')
     eyal = Namespace.lookup(:test, :eyal)
 
+    assert_equal 1, eyal.all_age.size
     assert_equal '27', eyal.age
-    eyal.age = 30
 
-    assert eyal.age.include?('30')
-    assert eyal.age.include?('27')
+    eyal.age << 30
+    assert_equal 2, eyal.all_age.size
+    assert eyal.all_age.include?('30')
+    assert eyal.all_age.include?('27')
+
+    eyal.age = 40
+    assert_equal 1, eyal.all_age.size
+    assert eyal.age == '40'
   end
 end
 
