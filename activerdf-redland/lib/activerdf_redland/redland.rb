@@ -52,7 +52,11 @@ class RedlandAdapter < ActiveRdfAdapter
     options << "database='#{params[:database]}'" if params[:database]
 		options << "user='#{params[:user]}'" if params[:user]
 		options << "password='#{params[:password]}'" if params[:password]
-				
+		
+    if type.downcase == "mysql"
+      options << "reconnect='#{params[:reconnect]}'" if params[:reconnect]
+    end
+    
 		$activerdflog.info "RedlandAdapter: initializing with type: #{type} name: #{name} options: #{options.join(',')}"
 		
 		begin
