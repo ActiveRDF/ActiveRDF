@@ -6,6 +6,7 @@ require 'federation/connection_pool'
 require 'queryengine/query2sparql'
 require 'rdf/redland'
 
+
 # Adapter to Redland database
 # uses SPARQL for querying
 class RedlandAdapter < ActiveRdfAdapter
@@ -159,14 +160,17 @@ class RedlandAdapter < ActiveRdfAdapter
 		  return false
 		end 
 		
-		unless s.respond_to?(:uri) && p.respond_to?(:uri)
-      $activerdflog.debug "cannot add triple where s/p are not resources, exiting"
-		  return false
-		end
+#		unless s.respond_to?(:uri) && p.respond_to?(:uri)
+#      $activerdflog.debug "cannot add triple where s/p are not resources, exiting"
+#		  return false
+#		end
 	
 		begin
-		  @model.add(wrap(s), wrap(p), wrap(o))		  
-			save if ConnectionPool.auto_flush?
+                  #puts "Sleeping"
+                  #sleep(6)
+                  #puts "Wake up"
+		  @model.add(wrap(s), wrap(p), wrap(o))
+		  save if ConnectionPool.auto_flush?
 		rescue Redland::RedlandError => e
 		  $activerdflog.warn "RedlandAdapter: adding triple failed in Redland library: #{e}"
 		  return false
@@ -184,7 +188,7 @@ class RedlandAdapter < ActiveRdfAdapter
 
 	# saves updates to the model into the redland file location
 	def save
-		Redland::librdf_model_sync(@model.model).nil?
+          Redland::librdf_model_sync(@model.model) == 0
 	end
 	alias flush save
 
@@ -240,10 +244,27 @@ class RedlandAdapter < ActiveRdfAdapter
 	
 	def wrap node
 		case node
+		when String
+                  wrapString(node)
 		when RDFS::Resource
 			Redland::Uri.new(node.uri)
 		else
 			Redland::Literal.new(node.to_s)
 		end
 	end
+        
+        
+        def wrapString node
+          if ((node[0..0] == '<') && (node[-1..-1] == '>'))
+            return Redland::Uri.new(node[1..-2])
+          elsif (node[0..1] == '_:')
+            if (node.length > 2)
+              return Redland::BNode.new(node[2..-1])
+            else
+              return Redland::BNode.new
+            end
+          else
+            return Redland::Literal.new(node)
+          end
+        end        
 end
