@@ -8,7 +8,7 @@ require "#{File.dirname(__FILE__)}/../common"
 
 class TestLiteral < Test::Unit::TestCase
   def setup
-		ConnectionPool.clear
+    ConnectionPool.clear
     @adapter = get_read_only_adapter
   end
 

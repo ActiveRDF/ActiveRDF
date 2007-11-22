@@ -43,7 +43,7 @@ class TestTaliaSyntax < Test::Unit::TestCase
   
   # test inverse ===========================================================
   y = michele.inverse
-  assert_equal '<http://activerdf.org/test/eyal>', y[:test, 'friendOf'].to_s
+  assert_equal '<http://activerdf.org/test/eyal>', y[Namespace.lookup(:test, 'friendOf')].to_s
   # ========================================================================
   
   # test deletion triple with new syntax ===================================

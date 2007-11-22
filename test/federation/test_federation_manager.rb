@@ -43,7 +43,9 @@ class TestFederationManager < Test::Unit::TestCase
   def test_class_add_no_write_adapter
     # zero write, one read -> must raise error
     adapter = get_read_only_adapter
-    assert (not adapter.writes?)
+    if (!adapter.nil?)
+      assert (not adapter.writes?)
+    end
     assert_raises(ActiveRdfError) { FederationManager.add(@@eyal, @@age, @@age_number) }
   end
 
