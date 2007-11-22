@@ -25,7 +25,7 @@ class Literal
                when Fixnum
                  XSD::integer
         end
-    elsif type_or_language[0..0] == "@"
+    elsif type_or_language.to_s[0..0] == "@"
       # a language tag has been given
       @language = type_or_language[1..type_or_language.length]
     else
