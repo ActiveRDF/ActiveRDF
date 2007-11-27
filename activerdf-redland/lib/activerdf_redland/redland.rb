@@ -89,7 +89,7 @@ class RedlandAdapter < ActiveRdfAdapter
     clauses = query.select_clauses.size
     redland_query = Redland::Query.new(qs, 'sparql')
     query_results = @model.query_execute(redland_query)
-
+    
     # return Redland's answer without parsing if ASK query
     return [[query_results.get_boolean?]] if query.ask?
 		
@@ -152,6 +152,7 @@ class RedlandAdapter < ActiveRdfAdapter
 	
   # add triple to datamodel
   def add(s, p, o)
+    result = false
     $activerdflog.debug "adding triple #{s} #{p} #{o}"
 
     # verify input
@@ -166,8 +167,11 @@ class RedlandAdapter < ActiveRdfAdapter
     end
 	
     begin
-      @model.add(wrap(s), wrap(p), wrap(o))
-      save if ConnectionPool.auto_flush?
+      result = (@model.add(wrap(s), wrap(p), wrap(o)) == 0)
+      if (result == true)
+        result = (save if ConnectionPool.auto_flush?)
+      end
+      return result
     rescue Redland::RedlandError => e
       $activerdflog.warn "RedlandAdapter: adding triple failed in Redland library: #{e}"
       return false
@@ -180,7 +184,7 @@ class RedlandAdapter < ActiveRdfAdapter
     s = wrap(s) unless s.nil?
     p = wrap(p) unless p.nil?
     o = wrap(o) unless o.nil?
-    @model.delete(s,p,o)
+    @model.delete(s,p,o) == 0
   end
 
   # saves updates to the model into the redland file location
@@ -248,5 +252,5 @@ private
       Redland::Literal.new(node.to_s)
     end
   end
-  
+ 
 end
