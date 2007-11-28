@@ -75,9 +75,9 @@ class RedlandAdapter < ActiveRdfAdapter
   def load(location, syntax="ntriples")
     parser = Redland::Parser.new(syntax, "", nil)
     if location =~ /^http/
-      parser.parse_into_model(@model, location)
+      raise ActiveRdfError, "Redland load error for #{location}" unless (parser.parse_into_model(@model, location) == 0)
     else
-      parser.parse_into_model(@model, "file:#{location}")
+      raise ActiveRdfError, "Redland load error for #{location}" unless (parser.parse_into_model(@model, "file:#{location}") == 0)
     end
   end
 
@@ -189,7 +189,7 @@ class RedlandAdapter < ActiveRdfAdapter
 
   # saves updates to the model into the redland file location
   def save
-    Redland::librdf_model_sync(@model.model) == 0
+   Redland::librdf_model_sync(@model.model) == 0
   end
   alias flush save
 
@@ -252,5 +252,5 @@ private
       Redland::Literal.new(node.to_s)
     end
   end
- 
+
 end
