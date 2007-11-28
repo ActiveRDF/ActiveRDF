@@ -45,10 +45,10 @@ if Gem::cache.search(/^activerdf$/).empty?
   else
     #load specified adapters
     #for example: ENV['ACTIVE_RDF_ADAPTERS'] = "redland,sparql"
-    ENV['ACTIVE_RDF_ADAPTERS'].split(",").uniq.collect { |adapterItem|  
+    ENV['ACTIVE_RDF_ADAPTERS'].split(",").uniq.each { |adapterItem|  
       case adapterItem.strip.downcase 
       when "rdflite"
-        load_adapter this_dir + '/../activrdf-rdflite/lib/activerdf_rdflite/rdflite'
+        load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
         load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/fetching'
         load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/suggesting'
       when "redland"
