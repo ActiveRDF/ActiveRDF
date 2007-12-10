@@ -28,8 +28,12 @@ class FederationManager
   # executes read-only queries
   # by distributing query over complete read-pool
   # and aggregating the results
-  def FederationManager.query(q, options={:flatten => true})
-    $activerdflog.debug "querying #{q.to_sp}"
+  def FederationManager.query(q, options={:flatten => true, :result_format => nil})
+    if (q.class != String)
+      $activerdflog.debug "querying #{q.to_sp}"
+    else
+      $activerdflog.debug "querying #{q}"
+    end
 		if ConnectionPool.read_adapters.empty?
 			raise ActiveRdfError, "cannot execute query without data sources" 
 		end
@@ -49,7 +53,11 @@ class FederationManager
       # were filtered out when doing results.union)
       results = []
       ConnectionPool.read_adapters.each do |source|
-				source_results = source.query(q)
+                                if (q.class != String)
+                                  source_results = source.query(q)
+                                else
+                                  source_results = source.get_sparql_query_results(q, options[:result_format])
+                                end
 				source_results.each do |clauses|
 					results << clauses
 				end
@@ -62,14 +70,18 @@ class FederationManager
       # adapters if asked for distinct query
       # (adapters return only distinct results,
       # but they cannot check duplicates against each other)
-      results.uniq! if q.distinct?
+      results.uniq! if ((q.class != String) && (q.distinct?))
 
       # flatten results array if only one select clause
       # to prevent unnecessarily nested array [[eyal],[renaud],...]
-      results.flatten! if q.select_clauses.size == 1 or q.ask?
+      if (q.class != String)
+        results.flatten! if (q.select_clauses.size == 1 or q.ask?)
+      else
+        results.flatten! if q.scan(/[?]/).length == 2
+      end
 
       # remove array (return single value or nil) if asked to
-      if options[:flatten] or q.count?
+      if options[:flatten] or ((q.class != String)  && (q.count?))
         case results.size
         when 0
           results = nil

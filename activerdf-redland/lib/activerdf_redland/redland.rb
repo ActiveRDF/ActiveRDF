@@ -42,6 +42,13 @@ class RedlandAdapter < ActiveRdfAdapter
   end	
 	
   # instantiate connection to Redland database in Postgres or MySQL
+  # * database: Database name
+  # * new: Create new database
+  # * host: Database server address
+  # * password: Password
+  # * port: Database server port
+  # * reconnect: Set automatic reconnect to database server
+  # * user: Username
   def initialize_dbs(params = {})
     type = params[:location].to_s
     name = params[:name]
@@ -53,13 +60,13 @@ class RedlandAdapter < ActiveRdfAdapter
     options << "database='#{params[:database]}'" if params[:database]
     options << "user='#{params[:user]}'" if params[:user]
     options << "password='#{params[:password]}'" if params[:password]
-		
+
     if type.downcase == "mysql"
       options << "reconnect='#{params[:reconnect]}'" if params[:reconnect]
     end
-    
+
     $activerdflog.info "RedlandAdapter: initializing with type: #{type} name: #{name} options: #{options.join(',')}"
-		
+
     begin
       @store = Redland::TripleStore.new(type, name, options.join(','))
       @model = Redland::Model.new @store
@@ -146,8 +153,13 @@ class RedlandAdapter < ActiveRdfAdapter
     redland_query = Redland::Query.new(qs, 'sparql')
     query_results = @model.query_execute(redland_query)
 
-    # get string representation in requested result_format (json or xml)
-    query_results.to_string()
+    if (result_format != :array)
+      # get string representation in requested result_format (json or xml)
+      query_results.to_string()
+    else
+      # get array result
+      query_result_to_array(query_results, true) 
+    end
   end
 	
   # add triple to datamodel
@@ -161,15 +173,21 @@ class RedlandAdapter < ActiveRdfAdapter
       return false
     end 
 		
-    unless s.respond_to?(:uri) && p.respond_to?(:uri)
+    unless (((s.class == String) && (p.class == String) && (o.class == String)) && 
+            ((s[0..0] == '<') && (s[-1..-1] == '>')) && 
+            ((p[0..0] == '<') && (p[-1..-1] == '>'))) || (s.respond_to?(:uri) && p.respond_to?(:uri))
       $activerdflog.debug "cannot add triple where s/p are not resources, exiting"
       return false
     end
-	
+
     begin
-      result = (@model.add(wrap(s), wrap(p), wrap(o)) == 0)
+      if ((s.class != String) || (p.class != String) || (o.class != String))
+        result = (@model.add(wrap(s), wrap(p), wrap(o)) == 0)
+      else
+        result = (@model.add(wrapString(s), wrapString(p), wrapString(o)) == 0)
+      end
       if (result == true)
-        result = (save if ConnectionPool.auto_flush?)
+        result = save if ConnectionPool.auto_flush?
       end
       return result
     rescue Redland::RedlandError => e
@@ -181,15 +199,22 @@ class RedlandAdapter < ActiveRdfAdapter
   # deletes triple(s,p,o) from datastore
   # nil parameters match anything: delete(nil,nil,nil) will delete all triples
   def delete(s,p,o)
-    s = wrap(s) unless s.nil?
-    p = wrap(p) unless p.nil?
-    o = wrap(o) unless o.nil?
+    if ((s.class != String) && (p.class != String) && (o.class != String))
+      s = wrap(s) unless s.nil?
+      p = wrap(p) unless p.nil?
+      o = wrap(o) unless o.nil?
+    else
+      s = wrapString(s) unless s.nil?
+      p = wrapString(p) unless p.nil?
+      o = wrapString(o) unless o.nil?
+    end
+    
     @model.delete(s,p,o) == 0
   end
 
   # saves updates to the model into the redland file location
   def save
-   Redland::librdf_model_sync(@model.model) == 0
+    Redland::librdf_model_sync(@model.model) == 0
   end
   alias flush save
 
@@ -210,7 +235,7 @@ class RedlandAdapter < ActiveRdfAdapter
 private
   ################ helper methods ####################
   #TODO: if block is given we should not parse all results into array first
-  def query_result_to_array(query_results)
+  def query_result_to_array(query_results, to_string=false)
     results = []
     number_bindings = query_results.binding_names.size
  	
@@ -231,10 +256,23 @@ private
           node.to_s
         elsif node.blank?
           # blank nodes we ignore
-          nil
+          if to_string == false
+            nil
+          else
+            # check blank node id
+            if node.blank_identifier
+              "_:#{node.blank_identifier}"
+            else
+              "_:"
+            end
+          end
         else
           # other nodes are rdfs:resources
-          RDFS::Resource.new(node.uri.to_s)
+          if to_string == false
+            RDFS::Resource.new(node.uri.to_s)
+          else
+            "<#{node.uri.to_s}>"
+          end
         end
       end
       # iterate through result set
@@ -253,4 +291,18 @@ private
     end
   end
 
+  def wrapString node 
+    if ((node[0..0] == '<') && (node[-1..-1] == '>')) 
+      return Redland::Uri.new(node[1..-2]) 
+    elsif (node[0..1] == '_:') 
+      if (node.length > 2) 
+ 	return Redland::BNode.new(node[2..-1]) 
+      else 
+ 	return Redland::BNode.new 
+      end 
+    else
+      return Redland::Literal.new(node) 
+    end 
+ end
+ 
 end

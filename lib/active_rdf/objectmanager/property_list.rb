@@ -39,21 +39,24 @@ class PropertyList < Array
   # if no papameters will be specified, delete every
   # triple related to :s and p: otherwise delete the
   # triples whose values are specified by params
-  def remove(*params)   
+  def remove(*params)
     if params.length >= 1
       # delete only triples whose values is specified by parameters
       params.each{|param|
         if self.delete(param)
-          FederationManager.delete(@s, @p, param)
+          return FederationManager.delete(@s, @p, param)
         end
       }
     else
       # delete every triple related to :s and :p whose values is contained by self...
       self.each{|value|
-        FederationManager.delete(@s, @p, value)
+        if FederationManager.delete(@s, @p, value) == false
+          return false
+        end
       }
       # ...and clear the array Poperty_list array
       self.clear
+      return true
     end
   end
 

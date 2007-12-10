@@ -284,7 +284,12 @@ module RDFS
 			# checking possibility (1) and (3)
 			candidates.each do |pred|
 				if Namespace.localname(pred) == methodname
-					return predicate_invocation(pred, args, update, flatten)
+					result = predicate_invocation(pred, args, update, flatten)
+                                        if result.class == Array
+                                          return PropertyList.new(pred, result, self)
+                                        else
+                                          return result
+                                        end
 				end
 			end
 			

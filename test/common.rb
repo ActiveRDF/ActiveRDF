@@ -15,6 +15,15 @@ def get_adapter
   end
 end
 
+# load an adapater if included
+def load_adapter(adapter)
+  if ConnectionPool.adapter_types.include?(adapter)
+    ConnectionPool.add :type => adapter
+  else
+    raise ActiveRdfError, "can't load #{adapter} adapter found for test"
+  end
+end
+
 def get_read_only_adapter
   types = ConnectionPool.adapter_types
   if types.include?(:sparql)
