@@ -291,7 +291,8 @@ private
     end
   end
 
-  def wrapString node 
+  def wrapString node
+    node = node.to_s
     if ((node[0..0] == '<') && (node[-1..-1] == '>')) 
       return Redland::Uri.new(node[1..-2]) 
     elsif (node[0..1] == '_:') 
