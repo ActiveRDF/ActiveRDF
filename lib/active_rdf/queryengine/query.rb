@@ -9,9 +9,13 @@ require 'queryengine/query2sparql'
 class Query
 	attr_reader :select_clauses, :where_clauses, :filter_clauses, :sort_clauses, :keywords, :limits, :offsets, :reverse_sort_clauses
 	bool_accessor :distinct, :ask, :select, :count, :keyword, :reasoning
-
+        class << self
+          # external class
+          attr_accessor :resource_class
+        end
+  
 	def initialize
-		distinct = false
+		@distinct = false
 		@limits = nil
     @offsets = nil
     @select_clauses = []
@@ -27,7 +31,7 @@ class Query
 	def clear_select
 		$activerdflog.debug "cleared select clause"
 		@select_clauses = []
-		distinct = false
+		@distinct = false
 	end
 
 	# Adds variables to select clause
@@ -128,10 +132,12 @@ class Query
 			# if you construct this query manually, you shouldn't! if your select 
 			# variable happens to be in one of the removed clauses: tough luck.
 
-			unless s.is_a?(RDFS::Resource) or s.is_a?(Symbol)
+			unless s.is_a?(RDFS::Resource) or s.is_a?(Symbol) or 
+                               ((!Query.resource_class.nil?) and (s.is_a?(Query.resource_class)))
 				raise(ActiveRdfError, "cannot add a where clause with s #{s}: s must be a resource or a variable")
 			end
-			unless p.is_a?(RDFS::Resource) or p.is_a?(Symbol)
+			unless p.is_a?(RDFS::Resource) or p.is_a?(Symbol) or 
+                               ((!Query.resource_class.nil?) and (p.is_a?(Query.resource_class)))
 				raise(ActiveRdfError, "cannot add a where clause with p #{p}: p must be a resource or a variable")
 			end
 
@@ -191,9 +197,15 @@ class Query
   def parametrise s
     case s
     when Symbol, RDFS::Resource, Literal, Class
-			s
-		when nil
-			nil
+      s
+    when Query.resource_class
+      if (Query.resource_class.nil?)
+        nil
+      else
+        s
+      end
+    when nil
+      nil
     else
       '"' + s.to_s + '"'
     end

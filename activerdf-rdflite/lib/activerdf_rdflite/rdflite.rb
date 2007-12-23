@@ -466,22 +466,26 @@ class RDFLite < ActiveRdfAdapter
 
 	# wrap resources into ActiveRDF resources, literals into Strings
 	def wrap(query, results)
-		results.collect do |row|
-			row.collect { |result| parse(result) }
-		end
+          results.collect do |row|
+            row.collect { |result| parse(result) }
+          end
 	end
 
 	def parse(result)
-		case result
-		when Literal
-      # replace special characters to allow string interpolation for e.g. 'test\nbreak'
-      $1.double_quote
-		when Resource
-			RDFS::Resource.new($1)
-		else
-			# when we do a count(*) query we get a number, not a resource/literal
-			result
-		end
+          case result
+          when Literal
+            # replace special characters to allow string interpolation for e.g. 'test\nbreak'
+            $1.double_quote
+          when Resource
+            if (Query.resource_class.nil?)
+              RDFS::Resource.new($1)
+            else
+              Query.resource_class.new($1)
+            end
+          else
+            # when we do a count(*) query we get a number, not a resource/literal
+            result
+          end
 	end
 
 	def create_indices(params)

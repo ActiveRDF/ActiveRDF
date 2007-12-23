@@ -30,7 +30,7 @@ module RDFS
              uri.uri
             when String
               uri
-            else 
+            else
               raise ActiveRdfError, "cannot create resource <#{uri}>"
             end
 			@predicates = Hash.new

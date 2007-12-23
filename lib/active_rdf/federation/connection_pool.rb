@@ -34,8 +34,8 @@ class ConnectionPool
   # clears the pool: removes all registered data sources
   def ConnectionPool.clear
     $activerdflog.info "ConnectionPool: clear called"
-    @@adapter_pool = []
-    @@adapter_parameters = []
+    @@adapter_pool.clear
+    @@adapter_parameters.clear
     self.write_adapter = nil
   end
 
@@ -110,7 +110,13 @@ class ConnectionPool
     $activerdflog.info "ConnectionPool: registering adapter of type #{type} for class #{klass}"
     @@registered_adapter_types[type] = klass
   end
-
+  
+  # unregister adapter-type
+  def ConnectionPool.unregister_adapter(type)
+    $activerdflog.info "ConnectionPool: registering adapter of type #{type}"
+    @@registered_adapter_types.delete type
+  end
+  
   # create new adapter from connection parameters
   def ConnectionPool.create_adapter connection_params
     # lookup registered adapter klass

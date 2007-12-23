@@ -51,27 +51,4 @@ class TestDirectAccess < Test::Unit::TestCase
     pl << "123"
     assert_equal true, pl.replace("123", @@age_number)    
   end
-  
-#  def test_add
-    # test add method
-#    assert_equal true, DirectAccess.add(@@eyal, @@age, @@age_number)
-#    assert_raise(ActiveRdfError) {DirectAccess.add(nil,nil,nil)}
-#    assert_equal false, DirectAccess.add(@@age_number,@@age_number,@@age_number)
-#    assert_raise(ActiveRdfError) {DirectAccess.add(123,123,123)}
-    
-    # check added triple
-#    assert_equal true, DirectAccess.query("SELECT ?o WHERE {#{@@eyal} #{@@age} ?o}").flatten!.include?(@@age_number)
-#  end
-  
-#  def test_delete
-    # test delete method
-#    assert_equal true, DirectAccess.add(@@eyal, @@age, @@age_number)
-#    assert_equal true, DirectAccess.query("SELECT ?o WHERE {#{@@eyal} #{@@age} ?o}").flatten!.include?(@@age_number)
-#    assert_equal true, DirectAccess.delete(@@eyal,@@age,@@age_number)
-#    assert_equal false, DirectAccess.query("SELECT ?o WHERE {#{@@eyal} #{@@age} ?o}").flatten!.include?(@@age_number)
-    
-#    assert_raise(ActiveRdfError) {DirectAccess.delete(nil,nil,nil)}
-#    assert_raise(ActiveRdfError) {DirectAccess.delete(123,123,123)}
-#  end
-  
 end

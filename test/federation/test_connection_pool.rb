@@ -38,6 +38,9 @@ class TestConnectionPool < Test::Unit::TestCase
   def test_class_register_adapter
     ConnectionPool.register_adapter(:funkytype, ActiveRdfAdapter)
     assert ConnectionPool.adapter_types.include?(:funkytype)
+    # unregister test adapter
+    ConnectionPool.unregister_adapter(:funkytype)
+    assert !ConnectionPool.adapter_types.include?(:funkytype)
   end
 
   def test_class_auto_flush_equals

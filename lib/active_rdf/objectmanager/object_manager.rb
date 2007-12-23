@@ -74,8 +74,8 @@ class ObjectManager
       $activerdflog.debug "ObjectManager: construct_class: creating given class #{klassname}"
 			# otherwise: create it, inside that module, as subclass of RDFS::Resource
 			# (using toplevel Class.new to prevent RDFS::Class.new from being called)
-			klass = _module.module_eval("#{klassname} = Object::Class.new(RDFS::Resource)")
-			klass.class_uri = RDFS::Resource.new(resource.uri)
+                        klass = _module.module_eval("#{klassname} = Object::Class.new(RDFS::Resource)")
+                        klass.class_uri = RDFS::Resource.new(resource.uri)
 			klass
 		end
 	end
