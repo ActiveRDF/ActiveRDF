@@ -106,3 +106,17 @@ def get_different_write_adapter(existing_adapter)
     raise ActiveRdfError, "only one write adapter on this system, or no suitable write adapter found for test"
   end
 end
+
+# get all adapters used in Talia
+def get_talia_adapters
+  types = ConnectionPool.adapter_types
+  ConnectionPool.add :type => :rdflite if types.include?(:rdflite)
+  ConnectionPool.add :type => :fetching if types.include?(:fetching)
+  ConnectionPool.add :type => :suggesting if types.include?(:suggesting)
+  ConnectionPool.add :type => :redland if types.include?(:redland)
+  if ConnectionPool.adapters.size > 0
+    return ConnectionPool.adapters
+  else
+    raise ActiveRdfError, "no one adapter for Talia found on this system, or no suitable write adapter found for Talia test"
+  end
+end

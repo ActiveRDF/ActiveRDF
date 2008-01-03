@@ -158,8 +158,12 @@ class RDFLite < ActiveRdfAdapter
 		$activerdflog.debug "read #{ntriples.size} triples from file #{file}"
 
 		# use filename as context
-		context = internalise(RDFS::Resource.new("file:#{file}"))
-
+                if Query.resource_class.nil?
+                  context = internalise(RDFS::Resource.new("file:#{file}"))
+                else
+                  context = internalise(Query.resource_class.new("file:#{file}"))
+                end
+                
 		add_ntriples(ntriples, context)
 	end
 
@@ -526,7 +530,11 @@ class RDFLite < ActiveRdfAdapter
     when RDFS::Resource
       "<#{r.uri}>"
     else
-      "\"#{r.to_s}\""
+      if ((!Query.resource_class.nil?) && (r == Query.resource_class))
+        "<#{r.uri}>"
+      else
+        "\"#{r.to_s}\""
+      end
     end
   end
 

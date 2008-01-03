@@ -269,7 +269,11 @@ private
         else
           # other nodes are rdfs:resources
           if to_string == false
-            RDFS::Resource.new(node.uri.to_s)
+            if (Query.resource_class.nil?)
+              RDFS::Resource.new(node.uri.to_s)
+            else
+              Query.resource_class.new(node.uri.to_s)
+            end
           else
             "<#{node.uri.to_s}>"
           end
@@ -287,7 +291,11 @@ private
     when RDFS::Resource
       Redland::Uri.new(node.uri)
     else
-      Redland::Literal.new(node.to_s)
+      if ((!Query.resource_class.nil?) && (node.class == Query.resource_class))
+        Redland::Uri.new(node.uri)
+      else
+        Redland::Literal.new(node.to_s)
+      end
     end
   end
 

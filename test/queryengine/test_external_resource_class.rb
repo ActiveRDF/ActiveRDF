@@ -22,19 +22,24 @@ class TestExternalResourceClass < Test::Unit::TestCase
   @@age = RDFS::MyExternalResource.new("http://activerdf.org/test/age")
   
   def test_query_external_resource
-    adapter = get_adapter
+    adapters = get_talia_adapters
+    adapters.each { |adapter|
     
     # load test data
     adapter.load(File.join(File.dirname(__FILE__),"..","test_person_data.nt"))
 
     # execute query and check the result classes
     result = Query.new.select(:p,:o).where(@@eyal, :p, :o).execute
+    assert result.size > 0
     assert_kind_of RDFS::MyExternalResource, result[0][0]
-
+    
     # add data
     pl = PropertyList.new(@@age, Query.new.select(:o).where(@@eyal, @@age, :o).execute, @@eyal)
     assert(pl.size > 0, "PropertyList empty")
     assert_nothing_raised {pl << "18"}
+    result = Query.new.select(:o).where(@@eyal, @@age, :o).execute
+    assert result.include?("18")
+    }
   end
   
   def test_namespace_external_resource

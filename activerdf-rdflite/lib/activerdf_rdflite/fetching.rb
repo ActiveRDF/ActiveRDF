@@ -28,7 +28,11 @@ class FetchingAdapter < RDFLite
 		lines = triples.split($/)
 		$activerdflog.debug "found #{lines.size} triples"
 
-		context = RDFS::Resource.new(url)
+                if (Query.resource_class.nil?)
+                  context = RDFS::Resource.new(url)
+                else
+                  context = Query.resource_class.new(url)
+                end
 		add_ntriples(triples, context)
   end
 end
