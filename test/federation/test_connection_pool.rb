@@ -62,10 +62,17 @@ class TestConnectionPool < Test::Unit::TestCase
   end
 
   def test_class_write_adapter_equals
-		adapter1 = get_write_adapter
-		adapter2 = get_different_write_adapter(adapter1)
-    assert_equal adapter2, ConnectionPool.write_adapter
+    # get 2 adapter
+    adapter1 = get_write_adapter
+    
+    # if another write adapter is present
+    adapter2 = get_different_write_adapter(adapter1)
+    # check if the selected write adapter is the second
+    assert_equal adapter2, ConnectionPool.write_adapter if !adapter2.nil?
+    
+    # change write adatper
     ConnectionPool.write_adapter = adapter1
+    #check if the selected write adapter is the first
     assert_equal adapter1, ConnectionPool.write_adapter
   end
 end

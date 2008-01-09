@@ -106,7 +106,11 @@ class Jars2Adapter < ActiveRdfAdapter
 		case string
 		when /<(.*)>/
 			# <http://foaf/Person> is a resource
-			RDFS::Resource.new($1)
+			if Query.resource_class.nil?
+                          RDFS::Resource.new($1)
+                        else
+                          Query.resource_class.new($1)
+                        end
 		when /"(.*)"/
 			# "30" is a literal
 			# TODO: handle datatypes

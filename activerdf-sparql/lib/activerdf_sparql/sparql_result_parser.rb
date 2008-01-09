@@ -40,7 +40,11 @@ class SparqlResultParser
   def create_node(type, value)
     case type
     when 'uri'
-      RDFS::Resource.new(value)
+      if Query.resource_class.nil?
+        RDFS::Resource.new(value)
+      else
+        Query.resource_class.new(value)
+      end
     when 'bnode'
       nil
     when 'literal','typed-literal'
