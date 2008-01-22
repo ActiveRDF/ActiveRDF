@@ -266,7 +266,6 @@ module RDFS
             else
               # read value
               predicate = Namespace.lookup(@uri, localname)
-              puts predicate
               Query.new.distinct(:o).where(@subject, predicate, :o).execute(:flatten => @flatten)
             end
           end
