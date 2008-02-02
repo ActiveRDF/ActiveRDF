@@ -7,9 +7,10 @@ class Query2SPARQL
     str = ""
     if query.select?
       distinct = query.distinct? ? "DISTINCT " : ""
-			select_clauses = query.select_clauses.collect{|s| construct_clause(s)}
-
+      select_clauses = query.select_clauses.collect{|s| construct_clause(s)}
+      
       str << "SELECT #{distinct}#{select_clauses.join(' ')} "
+      str << "#{from_clauses(query)}"
       str << "WHERE { #{where_clauses(query)} #{filter_clauses(query)}}"
       
       if query.limits
@@ -26,22 +27,38 @@ class Query2SPARQL
     
     return str
   end
-
+  
+  # concatenate each from clause using space
+  def self.from_clauses(query)
+    params = []
+    # construct single context clauses if context is present
+    query.where_clauses.each {|s,p,o,c|
+      params << "FROM #{construct_clause(c)}" unless c.nil?
+    }
+    
+    # return FROM sintax or "" if no context is speficied
+    if (params.empty?)
+      ""
+    else
+      "#{params.join(' ')} "
+    end
+  end
+  
   # concatenate each where clause using space (e.g. 's p o')
   # and concatenate the clauses using dot, e.g. 's p o . s2 p2 o2 .'
   def self.where_clauses(query)
-		where_clauses = query.where_clauses.collect do |s,p,o,c|
-			# ignore context parameter
-			[s,p,o].collect {|term| construct_clause(term) }.join(' ')
-		end
+    where_clauses = query.where_clauses.collect do |s,p,o,c|
+      # ignore context parameter
+      [s,p,o].collect {|term| construct_clause(term) }.join(' ')
+    end
     "#{where_clauses.join('. ')} ."
   end
-
+  
   def self.filter_clauses(query)
     "FILTER #{query.filter_clauses.join(" ")}" unless query.filter_clauses.empty?
   end
-
-	def self.construct_clause(term)
+  
+  def self.construct_clause(term)
     if term.respond_to? :uri
       '<' + term.uri + '>'
     else
@@ -52,7 +69,7 @@ class Query2SPARQL
         term.to_s
       end
     end
-	end
-	
+  end
+  
   private_class_method :where_clauses, :construct_clause
 end

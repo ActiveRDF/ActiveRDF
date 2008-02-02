@@ -9,7 +9,7 @@ require "#{File.dirname(__FILE__)}/../common"
 
 class TestResourceReading < Test::Unit::TestCase
   def setup
-		ConnectionPool.clear
+    ConnectionPool.clear
     @adapter = get_adapter
     @adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
     Namespace.register(:test, 'http://activerdf.org/test/')
@@ -37,18 +37,18 @@ class TestResourceReading < Test::Unit::TestCase
       assert preds.any? {|uri| uri =~ /.*#{pr}$/ }, "Eyal should have predicate #{pr}"
     end
 
-		# test class level predicates
-		class_preds = @eyal.class_level_predicates.collect {|p| p.uri }
-		# eyal.type: person and resource, has predicates age, eye
-		# not default rdfs:label, rdfs:comment, etc. because not using rdfs reasoning
+    # test class level predicates
+    class_preds = @eyal.class_level_predicates.collect {|p| p.uri }
+    # eyal.type: person and resource, has predicates age, eye
+    # not default rdfs:label, rdfs:comment, etc. because not using rdfs reasoning
     assert_equal 5, class_preds.size
   end
 
   def test_eyal_types
     types = @eyal.type
-		assert_equal 2, types.size
-		assert types.include?(TEST::Person)
-		assert types.include?(RDFS::Resource)
+    assert_equal 2, types.size
+    assert types.include?(TEST::Person)
+    assert types.include?(RDFS::Resource)
   end
 
   def test_eyal_age
@@ -75,16 +75,16 @@ class TestResourceReading < Test::Unit::TestCase
     all = [Namespace.lookup(:test,:Person), Namespace.lookup(:rdfs, :Class), Namespace.lookup(:rdf, :Property), @eyal, TEST::car, TEST::age, TEST::eye]
     found = RDFS::Resource.find
     assert_equal all.sort, found.sort
-
+    
     properties = [TEST::car, TEST::age, TEST::eye]
     found = RDFS::Resource.find(:where => {RDFS::domain => RDFS::Resource})
     assert_equal properties.sort, found.sort
-
+    
     found = RDFS::Resource.find(:where => {RDFS::domain => RDFS::Resource, :prop => :any})
     assert_equal properties.sort, found.sort
-
+    
     found = TEST::Person.find(:order => TEST::age)
-    assert_equal [TEST::other, TEST::eyal], found
+    assert_equal [TEST::other, TEST::eyal].sort, found.sort
   end
 
   def test_find_methods
@@ -108,15 +108,20 @@ class TestResourceReading < Test::Unit::TestCase
   end
 
   def test_finders_with_options
-		ConnectionPool.clear
+    ConnectionPool.clear
     adapter = get_adapter
     file_one = "#{File.dirname(__FILE__)}/../small-one.nt"
     file_two = "#{File.dirname(__FILE__)}/../small-two.nt"
-    adapter.load file_one
-    adapter.load file_two
-
     one = RDFS::Resource.new("file:#{file_one}")
     two = RDFS::Resource.new("file:#{file_two}")
+
+    if (adapter.class != SesameAdapter)
+      adapter.load file_one
+      adapter.load file_two
+    else
+      adapter.load(file_one, one)
+      adapter.load(file_two, two)
+    end
 
     assert_equal 2, RDFS::Resource.find.size
     assert_equal 2, RDFS::Resource.find(:all).size

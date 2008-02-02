@@ -33,12 +33,12 @@
 	" />
 	
 	<fileset id="all-libs" dir="lib">
-    	<include name="openrdf-sesame-2.0-alpha4-onejar.jar"/>
+    	<include name="openrdf-sesame-2.0-onejar.jar"/>
     	<include name="junit-3.8.2.jar"/>
 	</fileset>
 
 	<fileset id="export-libs" dir="lib">
-    	<include name="openrdf-sesame-2.0-alpha4-onejar.jar"/>
+    	<include name="openrdf-sesame-2.0-onejar.jar"/>
 	</fileset>
 	
 	

@@ -143,11 +143,11 @@ class RedlandAdapter < ActiveRdfAdapter
     # set uri for result formatting
     result_uri = 
       case result_format
-      when :json
-        Redland::Uri.new('http://www.w3.org/2001/sw/DataAccess/json-sparql/')
-      when :xml
-        Redland::Uri.new('http://www.w3.org/TR/2004/WD-rdf-sparql-XMLres-20041221/')
-      end
+    when :json
+      Redland::Uri.new('http://www.w3.org/2001/sw/DataAccess/json-sparql/')
+    when :xml
+      Redland::Uri.new('http://www.w3.org/TR/2004/WD-rdf-sparql-XMLres-20041221/')
+    end
 
     # query redland
     redland_query = Redland::Query.new(qs, 'sparql')
@@ -163,7 +163,7 @@ class RedlandAdapter < ActiveRdfAdapter
   end
 	
   # add triple to datamodel
-  def add(s, p, o)
+  def add(s, p, o, c=nil)
     result = false
     $activerdflog.debug "adding triple #{s} #{p} #{o}"
 
@@ -174,8 +174,8 @@ class RedlandAdapter < ActiveRdfAdapter
     end 
 		
     unless (((s.class == String) && (p.class == String) && (o.class == String)) && 
-            ((s[0..0] == '<') && (s[-1..-1] == '>')) && 
-            ((p[0..0] == '<') && (p[-1..-1] == '>'))) || (s.respond_to?(:uri) && p.respond_to?(:uri))
+          ((s[0..0] == '<') && (s[-1..-1] == '>')) && 
+          ((p[0..0] == '<') && (p[-1..-1] == '>'))) || (s.respond_to?(:uri) && p.respond_to?(:uri))
       $activerdflog.debug "cannot add triple where s/p are not resources, exiting"
       return false
     end
@@ -198,7 +198,7 @@ class RedlandAdapter < ActiveRdfAdapter
 
   # deletes triple(s,p,o) from datastore
   # nil parameters match anything: delete(nil,nil,nil) will delete all triples
-  def delete(s,p,o)
+  def delete(s,p,o,c=nil)
     if ((s.class != String) && (p.class != String) && (o.class != String))
       s = wrap(s) unless s.nil?
       p = wrap(p) unless p.nil?
@@ -232,7 +232,7 @@ class RedlandAdapter < ActiveRdfAdapter
     @model.triples.size
   end
 	
-private
+  private
   ################ helper methods ####################
   #TODO: if block is given we should not parse all results into array first
   def query_result_to_array(query_results, to_string=false)
@@ -312,6 +312,6 @@ private
     else
       return Redland::Literal.new(node) 
     end 
- end
+  end
  
 end

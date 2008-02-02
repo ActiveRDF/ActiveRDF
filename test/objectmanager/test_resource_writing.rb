@@ -9,22 +9,22 @@ require "#{File.dirname(__FILE__)}/../common"
 
 class TestResourceWriting < Test::Unit::TestCase
   def setup
-		ConnectionPool.clear
+    ConnectionPool.clear
   end
-
+  
   def test_update_value
     Namespace.register(:ar, 'http://activerdf.org/test/')
     adapter = get_write_adapter
-
+    
     eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
     assert_raises(ActiveRdfError) { eyal.age = 18 }
-
+    
     assert_nothing_raised { eyal.ar::age = 100 }
     assert_equal '100', eyal.ar::age
     assert_equal ['100'], eyal.all_ar::age
-   
+    
     adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
     assert_nothing_raised { eyal.age = 18 }
-    assert_equal ['100', '18', '27'], eyal.age
+    assert_equal ['100', '18', '27'], eyal.age.sort
   end
 end

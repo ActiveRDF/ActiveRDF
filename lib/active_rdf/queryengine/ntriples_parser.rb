@@ -61,7 +61,7 @@ class NTriplesParser
 
   # fixes unicode characters in literals (because we parse them wrongly somehow)
   def self.fix_unicode(str)
-    tmp = str.gsub(/\\\u([0-9a-fA-F]{4,4})/u){ "U+#$1" }
+    tmp = str.gsub(/\\\U([0-9a-fA-F]{4,4})/u){ "U+#$1" }
     tmp.gsub(/U\+([0-9a-fA-F]{4,4})/u){["#$1".hex ].pack('U*')}
   end
 end

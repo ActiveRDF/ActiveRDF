@@ -127,13 +127,13 @@
 
 	<!-- prepare for the distribution -->
 	
-	<target name="javadoc" depends="temp" description="generate javadoc into temp/doc/javadoc">
+	<target name="javadoc" depends="temp" description="generate javadoc into javadoc">
 		<echo>Generating javadocs ...</echo>
-		<mkdir dir="temp/javadoc" />
+		<mkdir dir="javadoc" />
 		<javadoc
 			access="public" 
 			author="true" 
-			destdir="temp/javadoc" 
+			destdir="javadoc" 
 			doctitle="${product-title}"
 			failonerror="true"
 			linksource="true"
@@ -142,7 +142,7 @@
 			noindex="false" 
 			nonavbar="false" 
 			notree="false" 
-			overview="src/overview.html" 
+			overview="javadoc/overview.html" 
 			source="1.5"
 			splitindex="true" 
 			use="true"
