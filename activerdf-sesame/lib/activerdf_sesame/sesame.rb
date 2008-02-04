@@ -199,7 +199,7 @@ class SesameAdapter < ActiveRdfAdapter
   # loads triples from file in ntriples format
   # * file => file to load
   # * context => context (optional)
-  def load(file, context=nil)
+  def load(file, syntax="ntriples", context=nil)
     # wrap Context
     sesame_context = nil
     sesame_context = wrapContext(context) unless (context.nil?)
