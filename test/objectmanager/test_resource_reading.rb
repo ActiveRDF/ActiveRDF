@@ -119,8 +119,8 @@ class TestResourceReading < Test::Unit::TestCase
       adapter.load file_one
       adapter.load file_two
     else
-      adapter.load(file_one, one)
-      adapter.load(file_two, two)
+      adapter.load(file_one, 'ntriples', one)
+      adapter.load(file_two, 'ntriples', two)
     end
 
     assert_equal 2, RDFS::Resource.find.size

@@ -198,14 +198,33 @@ class SesameAdapter < ActiveRdfAdapter
 
   # loads triples from file in ntriples format
   # * file => file to load
+  # * syntax => syntax of file to load. The syntax can be: n3, ntriples, rdfxml, trig, trix, turtle
   # * context => context (optional)
   def load(file, syntax="ntriples", context=nil)
     # wrap Context
     sesame_context = nil
     sesame_context = wrapContext(context) unless (context.nil?)
    
+    # rdf syntax type
+    case syntax
+    when 'n3'
+      syntaxType = RDFFormat::N3      
+    when 'ntriples'
+      syntaxType = RDFFormat::NTRIPLES
+    when 'rdfxml'
+      syntaxType = RDFFormat::RDFXML
+    when 'trig'
+      syntaxType = RDFFormat::TRIG
+    when 'trix'
+      syntaxType = RDFFormat::TRIX
+    when 'turtle'
+      syntaxType = RDFFormat::TURTLE 
+    else
+      raise ActiveRdfError, "Sesame load file failed: syntax not valid."
+    end
+    
     begin
-      @myWrapperInstance.load(file,"",RDFFormat::NTRIPLES, sesame_context)
+      @myWrapperInstance.load(file,"",syntaxType,sesame_context)
     rescue Exception => e
       raise ActiveRdfError, "Sesame load file failed: #{e.message}"
     end
