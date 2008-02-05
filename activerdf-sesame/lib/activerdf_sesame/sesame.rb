@@ -41,16 +41,16 @@ class SesameAdapter < ActiveRdfAdapter
     # if no directory path given, we use in-memory store
     if params[:location]
       if params[:location] == :memory
-        sesameLocation = nil      
+        sesame_location = nil      
       else
-        sesameLocation = JFile.new(params[:location])
+        sesame_location = JFile.new(params[:location])
       end
     else
-      sesameLocation = nil
+      sesame_location = nil
     end
     
     # if no inferencing is specified, we use the sesame2 rdfs inferencing
-    sesameInferencing = params[:inferencing] || false
+    sesame_inferencing = params[:inferencing] || false
 	
     # this will not work at the current state of jruby	
     #    # fancy JRuby code so that the user does not have to set the java CLASSPATH
@@ -72,17 +72,17 @@ class SesameAdapter < ActiveRdfAdapter
 
     @myWrapperInstance = WrapperForSesame2.new
 
-    if sesameLocation == nil
-      if sesameInferencing == nil
+    if sesame_location == nil
+      if sesame_inferencing == nil
         @db = @myWrapperInstance.callConstructor
       else
-        @db = @myWrapperInstance.callConstructor(sesameInferencing)		  
+        @db = @myWrapperInstance.callConstructor(sesame_inferencing)		  
       end
     else
-      if sesameInferencing == nil
-        @db = @myWrapperInstance.callConstructor(sesameLocation)		  
+      if sesame_inferencing == nil
+        @db = @myWrapperInstance.callConstructor(sesame_location)		  
       else
-	@db = @myWrapperInstance.callConstructor(sesameLocation,sesameInferencing)		  
+	@db = @myWrapperInstance.callConstructor(sesame_location,sesame_inferencing)		  
       end
     end
 		
