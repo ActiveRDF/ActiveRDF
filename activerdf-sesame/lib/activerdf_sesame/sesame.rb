@@ -208,23 +208,23 @@ class SesameAdapter < ActiveRdfAdapter
     # rdf syntax type
     case syntax
     when 'n3'
-      syntaxType = RDFFormat::N3      
+      syntax_type = RDFFormat::N3      
     when 'ntriples'
-      syntaxType = RDFFormat::NTRIPLES
+      syntax_type = RDFFormat::NTRIPLES
     when 'rdfxml'
-      syntaxType = RDFFormat::RDFXML
+      syntax_type = RDFFormat::RDFXML
     when 'trig'
-      syntaxType = RDFFormat::TRIG
+      syntax_type = RDFFormat::TRIG
     when 'trix'
-      syntaxType = RDFFormat::TRIX
+      syntax_type = RDFFormat::TRIX
     when 'turtle'
-      syntaxType = RDFFormat::TURTLE 
+      syntax_type = RDFFormat::TURTLE 
     else
       raise ActiveRdfError, "Sesame load file failed: syntax not valid."
     end
     
     begin
-      @myWrapperInstance.load(file,"",syntaxType,sesame_context)
+      @myWrapperInstance.load(file,"",syntax_type,sesame_context)
     rescue Exception => e
       raise ActiveRdfError, "Sesame load file failed: #{e.message}"
     end
@@ -246,7 +246,7 @@ class SesameAdapter < ActiveRdfAdapter
 
     # what are the variables of the query ?
     variables = tuplequeryresult.getBindingNames
-    sizeOfVariables = variables.size
+    size_of_variables = variables.size
 
     # a solution is a binding of a variable to all entities that matched this variable in the sparql query
     # TODO: null handling, if a value is null...
@@ -254,12 +254,12 @@ class SesameAdapter < ActiveRdfAdapter
     # process all query result
     while tuplequeryresult.hasNext()
       # get next result
-      resultItem = tuplequeryresult.next
+      result_item = tuplequeryresult.next
         
       temparray = []
       # get the value associated with a variable in this specific solution
-      (1..sizeOfVariables).each { |i|
-        temparray << convertSesame2ActiveRDF(resultItem.getValue(variables[i-1]))
+      (1..size_of_variables).each { |i|
+        temparray << convertSesame2ActiveRDF(result_item.getValue(variables[i-1]))
       }
       results << temparray
     end    
