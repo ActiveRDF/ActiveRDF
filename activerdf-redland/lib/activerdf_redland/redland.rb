@@ -14,6 +14,14 @@ class RedlandAdapter < ActiveRdfAdapter
   ConnectionPool.register_adapter(:redland,self)
 	
   # instantiate connection to Redland database
+  # * location: Data location (:memory, :mysql, :postgresql)
+  # * database: Database name
+  # * new: Create new database
+  # * host: Database server address
+  # * password: Password
+  # * port: Database server port
+  # * reconnect: Set automatic reconnect to database server
+  # * user: Username
   def initialize(params = {})
     if params[:location] and ( params[:location].to_sym == :postgresql or params[:location].to_sym == :mysql )
       initialize_dbs(params)
@@ -79,6 +87,8 @@ class RedlandAdapter < ActiveRdfAdapter
 	
   # load a file from the given location with the given syntax into the model.
   # use Redland syntax strings, e.g. "ntriples" or "rdfxml", defaults to "ntriples"
+  # * location: location of file to load.
+  # * syntax: syntax of file
   def load(location, syntax="ntriples")
     parser = Redland::Parser.new(syntax, "", nil)
     if location =~ /^http/
@@ -163,6 +173,9 @@ class RedlandAdapter < ActiveRdfAdapter
   end
 	
   # add triple to datamodel
+  # * s: subject
+  # * p: predicate
+  # * o: object
   def add(s, p, o, c=nil)
     result = false
     $activerdflog.debug "adding triple #{s} #{p} #{o}"
@@ -198,6 +211,9 @@ class RedlandAdapter < ActiveRdfAdapter
 
   # deletes triple(s,p,o) from datastore
   # nil parameters match anything: delete(nil,nil,nil) will delete all triples
+  # * s: subject
+  # * p: predicate
+  # * o: object
   def delete(s,p,o,c=nil)
     if ((s.class != String) && (p.class != String) && (o.class != String))
       s = wrap(s) unless s.nil?
@@ -219,6 +235,7 @@ class RedlandAdapter < ActiveRdfAdapter
   alias flush save
 
   # returns all triples in the datastore
+  # * type: dump syntax
   def dump(type = 'ntriples')
     Redland.librdf_model_to_string(@model.model, nil, type)
   end
