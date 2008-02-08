@@ -53,9 +53,9 @@ class TestResourceReading < Test::Unit::TestCase
 
   def test_eyal_age
     # triple exists '<eyal> age 27'
-    assert_equal '27', @eyal.age
-    assert_equal '27', @eyal.test::age
-    assert_equal ['27'], @eyal.all_age
+    assert_equal 27, @eyal.age
+    assert_equal 27, @eyal.test::age
+    assert_equal [27], @eyal.all_age
 
     # Person has property car, but eyal has no value for it
     assert_equal nil, @eyal.car

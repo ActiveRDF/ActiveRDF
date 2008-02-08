@@ -65,4 +65,30 @@ class TestObjectManager < Test::Unit::TestCase
     assert_equal TEST::Person, RDFS::Resource.new('http://activerdf.org/test/Person')
     assert_equal RDFS::Resource.new('http://activerdf.org/test/Person'), TEST::Person
   end
+
+  def test_to_xml
+    get_adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
+    Namespace.register(:test, 'http://activerdf.org/test/')
+
+    eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
+    eyal.age = 29
+    assert_equal 29, eyal.age
+    snippet =
+'<rdf:Description rdf:about="#eyal">
+  <test:age rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">29</test:age>
+  <test:eye rdf:datatype="http://www.w3.org/2001/XMLSchema#string">blue</test:eye>
+  <rdf:type rdf:resource="http://activerdf.org/test/Person"/>
+  <rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+</rdf:Description>
+</rdf:RDF>'
+    assert eyal.to_xml.include?(snippet)
+
+
+    url = 'http://gollem.swi.psy.uva.nl/cgi-bin/rdf-parser'
+    uri = URI.parse(url)
+    req = Net::HTTP::Post.new(url)
+    req.set_form_data('rdf' => eyal.to_xml)
+    res = Net::HTTP.new(uri.host, uri.port).start { |http| http.request(req) }
+    assert_match /RDF statement parsed successfully/, res.body, "SWI-Prolog failed to parse XML output"
+  end
 end

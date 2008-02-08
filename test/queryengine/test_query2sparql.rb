@@ -8,22 +8,18 @@ require 'queryengine/query2sparql'
 require "#{File.dirname(__FILE__)}/../common"
 
 class TestQuery2Sparql < Test::Unit::TestCase
-  def setup
-  end
-
-  def teardown
-  end
+  def setup; end
+  def teardown; end
 
   def test_sparql_generation
-
     # TODO: write tests for distinct, ask
 
     query = Query.new
     query.select(:s)
-    query.where(:s, RDFS::Resource.new('predicate'), '30')
+    query.where(:s, RDFS::Resource.new('predicate'), 30)
 
     generated = Query2SPARQL.translate(query)
-    expected = "SELECT ?s WHERE { ?s <predicate> \"30\" . } "
+    expected = "SELECT ?s WHERE { ?s <predicate> \"30\"^^<http://www.w3.org/2001/XMLSchema#integer> . } "
     assert_equal expected, generated
 
     query = Query.new
@@ -33,13 +29,15 @@ class TestQuery2Sparql < Test::Unit::TestCase
     generated = Query2SPARQL.translate(query)
     expected = "SELECT ?s WHERE { ?s <foaf:age> ?a . ?a <rdf:type> <xsd:int> . } "
     assert_equal expected, generated
+  end
 
-    #		query = Query.new
-    #		query.select(:s).select(:a)
-    #		query.where(:s, 'foaf:age', :a)
-    #		generated = Query2SPARQL.translate(query)
-    #		expected = "SELECT DISTINCT ?s ?a WHERE { ?s foaf:age ?a .}"
-    #		assert_equal expected, generated
+	def test_sparql_distinct
+    query = Query.new
+    query.distinct(:s)
+    query.where(:s, RDFS::Resource.new('foaf:age'), :a)
+    generated = Query2SPARQL.translate(query)
+    expected = "SELECT DISTINCT ?s WHERE { ?s <foaf:age> ?a . } "
+    assert_equal expected, generated
   end
 
   def test_query_omnipotent

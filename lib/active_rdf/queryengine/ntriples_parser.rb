@@ -7,6 +7,24 @@ require 'strscan'
 
 # ntriples parser
 class NTriplesParser
+  def self.parse_node input
+    case input
+    when MatchBNode
+      RDFS::Resource.new("http://www.activerdf.org/bnode/#{UUID.random_create}/#$1")
+    when MatchLiteral
+      value = fix_unicode($1)
+      if $2
+        Literal.typed(value, RDFS::Resource.new($2))
+      else
+        value
+      end
+    when MatchResource
+      RDFS::Resource.new($1)
+    else
+      nil
+    end
+  end
+
   # parses an input string of ntriples and returns a nested array of [s, p, o] 
   # (which are in turn ActiveRDF objects)
   def self.parse(input)
@@ -19,31 +37,36 @@ class NTriplesParser
       scanner = StringScanner.new(triple)
       scanner.skip(/\s+/)
       while not scanner.eos?
-        nodes << scanner.scan(Node)
+        nodes << scanner.scan(MatchNode)
         scanner.skip(/\s+/)
         scanner.terminate if nodes.size == 3 
       end
 
 			# handle bnodes if necessary (bnodes need to have uri generated)
 			subject = case nodes[0]
-								when BNode
+								when MatchBNode
 									RDFS::Resource.new("http://www.activerdf.org/bnode/#{uuid}/#$1")
-                when Resource
+                when MatchResource
 									RDFS::Resource.new($1)
 								end
 
       predicate = case nodes[1]
-                  when Resource
+                  when MatchResource
                     RDFS::Resource.new($1)
                   end
 
 			# handle bnodes and literals if necessary (literals need unicode fixing)
 			object = case nodes[2]
-							 when BNode
+							 when MatchBNode
 								 RDFS::Resource.new("http://www.activerdf.org/bnode/#{uuid}/#$1")
-							 when Literal
-								 fix_unicode($1)
-               when Resource
+							 when MatchLiteral
+                 value = fix_unicode($1)
+                 if $2
+                   Literal.typed(value, RDFS::Resource.new($2))
+                 else
+                   value
+                 end
+               when MatchResource
 								 RDFS::Resource.new($1)
 							 end
 
@@ -54,10 +77,10 @@ class NTriplesParser
 
 	private
 	# constants for extracting resources/literals from sql results
-	Node = Regexp.union(/"(?:\\"|[^"])*"/,/_:\S*/,/<[^>]*>/)
-	BNode = /_:(\S*)/
-	Resource = /<([^>]*)>/
-	Literal = /"((?:\\"|[^"])*)"/
+	MatchNode = Regexp.union(/"(?:\\"|[^"])*"(?:\^\^\S+)?/,/_:\S*/,/<[^>]*>/)
+	MatchBNode = /_:(\S*)/
+	MatchResource = /<([^>]*)>/
+	MatchLiteral = /"((?:\\"|[^"])*)"(?:\^\^<(\S+)>)?/
 
 	# fixes unicode characters in literals (because we parse them wrongly somehow)
 	def self.fix_unicode(str)

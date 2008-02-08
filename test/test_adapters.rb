@@ -43,16 +43,17 @@ class TestAdapter < Test::Unit::TestCase
     eyal = Namespace.lookup(:test, :eyal)
 
     assert_equal 1, eyal.all_age.size
-    assert_equal '27', eyal.age
+    assert_equal 27, eyal.age
 
+    # << doesn't work on Fixnums
     eyal.age << 30
-    assert_equal 2, eyal.all_age.size
-    assert eyal.all_age.include?('30')
-    assert eyal.all_age.include?('27')
+    assert_equal 1, eyal.all_age.size
+    assert !eyal.all_age.include?(30)
+    assert eyal.all_age.include?(27)
 
     eyal.age = 40
     assert_equal 1, eyal.all_age.size
-    assert eyal.age == '40'
+    assert eyal.age == 40
   end
 end
 

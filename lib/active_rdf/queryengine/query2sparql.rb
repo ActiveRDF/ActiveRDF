@@ -57,15 +57,10 @@ class Query2SPARQL
   end
 
 	def self.construct_clause(term)
-    if term.respond_to? :uri
-      term.to_s
+    if term.is_a?(Symbol)
+      "?#{term}"
     else
-      case term
-      when Symbol
-        '?' + term.to_s
-      else
-        term.to_s
-      end
+      term.to_ntriple
     end
 	end
 

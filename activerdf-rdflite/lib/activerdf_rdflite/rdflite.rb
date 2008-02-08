@@ -140,8 +140,10 @@ class RDFLite < ActiveRdfAdapter
 		raise(ActiveRdfError, "adding non-resource #{s} while adding (#{s},#{p},#{o},#{c})") unless s.respond_to?(:uri)
 		raise(ActiveRdfError, "adding non-resource #{p} while adding (#{s},#{p},#{o},#{c})") unless p.respond_to?(:uri)
 
+    
     triple = [s, p, o].collect{|r| serialise(r) }
-    add_ntriples(triple.join(' ') + " .\n", serialise(c) )
+    ntriple = triple.join(' ') + " .\n"
+    add_ntriples(ntriple, serialise(c))
 
 		## get internal representation (array)
 		#quad = [s,p,o,c].collect {|r| internalise(r) }
@@ -189,7 +191,6 @@ class RDFLite < ActiveRdfAdapter
 
 	# adds ntriples from given context into datastore
 	def add_ntriples(ntriples, context)
-
 		# add each triple to db
 		@db.transaction
 		insert = @db.prepare('insert into triple values (?,?,?,?);')
@@ -436,7 +437,8 @@ class RDFLite < ActiveRdfAdapter
 		end
 
 		# convert conditions into internal format
-		conditions.collect { |c| c.respond_to?(:uri) ? "<#{c.uri}>" : c.to_s }
+		#conditions.collect { |c| c.respond_to?(:uri) ? "<#{c.uri}>" : c.to_s }
+		conditions.collect { |c| internalise(c) }
 	end
 
 	def subproperties(resource)
@@ -496,16 +498,17 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	def parse(result)
-		case result
-		when Literal
-      # replace special characters to allow string interpolation for e.g. 'test\nbreak'
-      $1.double_quote
-		when Resource
-			RDFS::Resource.new($1)
-		else
-			# when we do a count(*) query we get a number, not a resource/literal
-			result
-		end
+    NTriplesParser.parse_node(result) || result
+#		case result
+#		when Literal
+#      # replace special characters to allow string interpolation for e.g. 'test\nbreak'
+#      $1.double_quote
+#		when Resource
+#			RDFS::Resource.new($1)
+#		else
+#			# when we do a count(*) query we get a number, not a resource/literal
+#			result
+#		end
 	end
 
 	def create_indices(params)
@@ -531,22 +534,19 @@ class RDFLite < ActiveRdfAdapter
 
 	# transform triple into internal format <uri> and "literal"
 	def internalise(r)
-		if r.respond_to?(:uri)
-			"<#{r.uri}>"
-		elsif r.is_a?(Symbol)
-			nil
-		else
-			"\"#{r.to_s}\""
-		end
+    if r.nil? or r.is_a? Symbol
+      nil
+    else
+      r.to_ntriple
+    end
 	end
 
   # transform resource/literal into ntriples format
   def serialise(r)
-    case r
-    when RDFS::Resource
-      "<#{r.uri}>"
+    if r.nil?
+      nil
     else
-      "\"#{r.to_s}\""
+      r.to_ntriple
     end
   end
 

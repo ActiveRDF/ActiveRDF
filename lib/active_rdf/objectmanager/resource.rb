@@ -4,9 +4,6 @@ require 'objectmanager/namespace'
 require 'queryengine/query'
 require 'instance_exec'
 
-# TODO: finish removal of ObjectManager.construct_classes: make dynamic finders 
-# accessible on instance level, and probably more stuff.
-
 module RDFS
 	# Represents an RDF resource and manages manipulations of that resource,
 	# including data lookup (e.g. eyal.age), data updates (e.g. eyal.age=20),
@@ -56,21 +53,53 @@ module RDFS
     ##### start of instance-level code
     #####                        ######
 
+    def abbreviation; [Namespace.prefix(uri).to_s, localname]; end
     # a resource is same as another if they both represent the same uri
-    def ==(other)
+    def ==(other);
       other.respond_to?(:uri) ? other.uri == self.uri : false
     end
     alias_method 'eql?','=='
 
     # overriding hash to use uri.hash
     # needed for array.uniq
-    def hash
-      uri.hash
-    end
+    def hash; uri.hash; end
 
     # overriding sort based on uri
-    def <=>(other)
-      uri <=> other.uri
+    def <=>(other); uri <=> other.uri; end
+    def to_ntriple; "<#{uri}>"; end
+    def self.to_ntriple; "<#{class_uri.uri}>"; end
+
+    def to_xml
+      base = Namespace.expand(Namespace.prefix(self),'').chop
+
+      xml = "<?xml version=\"1.0\"?>\n"
+      xml += "<rdf:RDF xmlns=\"#{base}\#\"\n"
+      Namespace.abbreviations.each { |p| uri = Namespace.expand(p,''); xml += "  xmlns:#{p.to_s}=\"#{uri}\"\n" if uri != base + '#' }
+      xml += "  xml:base=\"#{base}\">\n"
+
+      xml += "<rdf:Description rdf:about=\"\##{localname}\">\n"
+      direct_predicates.each do |p|
+        objects = Query.new.distinct(:o).where(self, p, :o).execute
+        objects.each do |obj|
+          prefix, localname = Namespace.prefix(p), Namespace.localname(p)
+          pred_xml = if prefix
+                       "%s:%s" % [prefix, localname]
+                     else
+                       p.uri
+                     end
+
+          case obj
+          when RDFS::Resource
+            xml += "  <#{pred_xml} rdf:resource=\"#{obj.uri}\"/>\n"
+          when LocalizedString
+            xml += "  <#{pred_xml} xml:lang=\"#{obj.lang}\">#{obj}</#{pred_xml}>\n"
+          else
+            xml += "  <#{pred_xml} rdf:datatype=\"#{obj.xsd_type.uri}\">#{obj}</#{pred_xml}>\n"
+          end
+        end
+      end
+      xml += "</rdf:Description>\n"
+      xml += "</rdf:RDF>"
     end
 
     #####                   	#####
@@ -387,11 +416,6 @@ module RDFS
 			"<#{uri}>"
 		end
 
-    ## TODO: ensure that we don't use this anywhere before removing it!!
-    #def Resource.to_s
-    #  "<#{uri}>"
-    #end
-
 		def set_predicate(predicate, values)
       FederationManager.delete(self, predicate)
       values.flatten.each {|v| FederationManager.add(self, predicate, v) }
@@ -401,7 +425,9 @@ module RDFS
     def get_predicate(predicate, flatten=false)
       values = Query.new.distinct(:o).where(self, predicate, :o).execute(:flatten => flatten)
 
-      unless values.nil?
+      # TODO: fix '<<' for Fixnum values etc (we cannot use values.instance_eval 
+      # because Fixnum cannot do instace_eval, they're not normal classes)
+      if values.is_a?(RDFS::Resource) and !values.nil?
         # prepare returned values for accepting << later, eg. in
         # eyal.foaf::knows << knud
         #
@@ -547,6 +573,6 @@ class DynamicFinderProxy
     # the initialize method so all return values are ignored, instead the proxy 
     # itself is returned)
     @value = query.execute
-    return value
+    return @value
   end
 end
