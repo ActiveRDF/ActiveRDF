@@ -115,7 +115,7 @@ class TestResourceReading < Test::Unit::TestCase
     one = RDFS::Resource.new("file:#{file_one}")
     two = RDFS::Resource.new("file:#{file_two}")
 
-    if (adapter.class != SesameAdapter)
+    if (adapter.class.to_s != "SesameAdapter")
       adapter.load file_one
       adapter.load file_two
     else
