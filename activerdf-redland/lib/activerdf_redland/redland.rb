@@ -158,11 +158,11 @@ class RedlandAdapter < ActiveRdfAdapter
     when :xml
       Redland::Uri.new('http://www.w3.org/TR/2004/WD-rdf-sparql-XMLres-20041221/')
     end
-
+    
     # query redland
     redland_query = Redland::Query.new(qs, 'sparql')
     query_results = @model.query_execute(redland_query)
-
+    
     if (result_format != :array)
       # get string representation in requested result_format (json or xml)
       query_results.to_string()
@@ -286,11 +286,7 @@ class RedlandAdapter < ActiveRdfAdapter
         else
           # other nodes are rdfs:resources
           if to_string == false
-            if (Query.resource_class.nil?)
-              RDFS::Resource.new(node.uri.to_s)
-            else
-              Query.resource_class.new(node.uri.to_s)
-            end
+            Query.resource_class.new(node.uri.to_s)
           else
             "<#{node.uri.to_s}>"
           end
@@ -305,14 +301,10 @@ class RedlandAdapter < ActiveRdfAdapter
 	
   def wrap node
     case node
-    when RDFS::Resource
+    when Query.resource_class
       Redland::Uri.new(node.uri)
     else
-      if ((!Query.resource_class.nil?) && (node.class == Query.resource_class))
-        Redland::Uri.new(node.uri)
-      else
-        Redland::Literal.new(node.to_s)
-      end
+      Redland::Literal.new(node.to_s)
     end
   end
 

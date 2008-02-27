@@ -158,11 +158,7 @@ class RDFLite < ActiveRdfAdapter
     $activerdflog.debug "read #{ntriples.size} triples from file #{file}"
 
     # use filename as context
-    if Query.resource_class.nil?
-      context = internalise(RDFS::Resource.new("file:#{file}"))
-    else
-      context = internalise(Query.resource_class.new("file:#{file}"))
-    end
+    context = internalise(Query.resource_class.new("file:#{file}"))
                 
     add_ntriples(ntriples, context)
   end
@@ -481,11 +477,7 @@ class RDFLite < ActiveRdfAdapter
       # replace special characters to allow string interpolation for e.g. 'test\nbreak'
       $1.double_quote
     when Resource
-      if (Query.resource_class.nil?)
-        RDFS::Resource.new($1)
-      else
-        Query.resource_class.new($1)
-      end
+      Query.resource_class.new($1)
     else
       # when we do a count(*) query we get a number, not a resource/literal
       result
@@ -527,14 +519,10 @@ class RDFLite < ActiveRdfAdapter
   # transform resource/literal into ntriples format
   def serialise(r)
     case r
-    when RDFS::Resource
+    when Query.resource_class
       "<#{r.uri}>"
     else
-      if ((!Query.resource_class.nil?) && (r == Query.resource_class))
-        "<#{r.uri}>"
-      else
-        "\"#{r.to_s}\""
-      end
+      "\"#{r.to_s}\""
     end
   end
 

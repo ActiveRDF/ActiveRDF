@@ -290,11 +290,7 @@ class SesameAdapter < ActiveRdfAdapter
     jclassLiteral = Java::JavaClass.for_name("org.openrdf.model.Literal")	
     
     if jInstanceOf(input.java_class, jclassURI)
-      if Query.resource_class.nil?
-        return RDFS::Resource.new(input.toString)
-      else
-        return Query.resource_class.new(input.toString)
-      end
+      return Query.resource_class.new(input.toString)
     elsif jInstanceOf(input.java_class, jclassLiteral)
       return input.toString[1..-2]
     else
@@ -322,7 +318,7 @@ class SesameAdapter < ActiveRdfAdapter
   # valueFactory.createURI etc.)
   def wrap(item)
     result = case item
-    when RDFS::Resource
+    when Query.resource_class
       if (item.uri[0..4].match(/http:/).nil?)
         @valueFactory.createLiteral(item.uri)
       else
@@ -333,22 +329,14 @@ class SesameAdapter < ActiveRdfAdapter
     when NilClass
       nil
     else
-      if ((!Query.resource_class.nil?) && (item.class == Query.resource_class))
-        if (item.uri[0..4].match(/http:/).nil?)
-          @valueFactory.createLiteral(item.uri)
-        else
-          @valueFactory.createURI(item.uri)
-        end
-      else
-        @valueFactory.createLiteral(item.to_s)
-      end
+      @valueFactory.createLiteral(item.to_s)
     end  
     return result      
   end
   
   def wrapContext(context)
     # context must be Resource
-    raise ActiveRdfError, "context must be a Resource" if (context.class != RDFS::Resource)
+    raise ActiveRdfError, "context must be a Resource" if (context.class != Query.resource_class)
     
     # return context
     @valueFactory.createURI(context.uri)

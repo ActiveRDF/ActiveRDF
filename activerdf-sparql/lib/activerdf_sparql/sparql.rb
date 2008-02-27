@@ -128,11 +128,7 @@ class SparqlAdapter < ActiveRdfAdapter
   def create_node(type, value)
     case type
     when 'uri'
-      if Query.resource_class.nil?
-        RDFS::Resource.new(value)
-      else
-        Query.resource_class.new(value)
-      end
+      Query.resource_class.new(value)
     when 'bnode'
       nil
     when 'literal','typed-literal'

@@ -9,14 +9,14 @@ class SparqlResultParser
   end
   
   def tag_start(name, attrs)
-		case name
-		when 'variable'
+    case name
+    when 'variable'
       @vars << attrs['name']
-		when 'result'
+    when 'result'
       @current_result = []
-		when 'binding'
+    when 'binding'
       @index = @vars.index(attrs['name'])
-		when 'bnode', 'literal', 'typed-literal', 'uri'
+    when 'bnode', 'literal', 'typed-literal', 'uri'
       @current_type = name
     end
   end
@@ -40,11 +40,7 @@ class SparqlResultParser
   def create_node(type, value)
     case type
     when 'uri'
-      if Query.resource_class.nil?
-        RDFS::Resource.new(value)
-      else
-        Query.resource_class.new(value)
-      end
+      Query.resource_class.new(value)
     when 'bnode'
       nil
     when 'literal','typed-literal'

@@ -47,11 +47,7 @@ class Namespace
   # returns a resource whose URI is formed by concatenation of prefix and localname
   def self.lookup(prefix, localname)
     #full_resource = expand(prefix, localname)
-    if (Query.resource_class.nil?)
-      RDFS::Resource.new(expand(prefix, localname))
-    else
-      Query.resource_class.new(expand(prefix, localname))
-    end
+    Query.resource_class.new(expand(prefix, localname))
   end
 
   # returns URI (string) formed by concatenation of prefix and localname
@@ -64,14 +60,10 @@ class Namespace
   def self.prefix(resource)
     # get string representation of resource uri
     uri = case resource
-    when RDFS::Resource: 
+    when Query.resource_class: 
       resource.uri
     else 
-      if ((!Query.resource_class.nil?) and (resource.respond_to?(:uri)))
-        resource.uri
-      else
-        resource.to_s
-      end
+      resource.to_s
     end
 
     # uri.to_s gives us the uri of the resource (if resource given)
@@ -92,14 +84,10 @@ class Namespace
   def self.localname(resource)
     # get string representation of resource uri
     uri = case resource
-    when RDFS::Resource: 
+    when Query.resource_class: 
       resource.uri
     else 
-      if ((!Query.resource_class.nil?) and (resource.respond_to?(:uri)))
-        resource.uri
-      else
-        resource.to_s
-      end
+      resource.to_s
     end
 
     delimiter = uri.rindex(/#|\//)
