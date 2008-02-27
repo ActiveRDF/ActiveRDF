@@ -125,7 +125,7 @@ class RedlandAdapter < ActiveRdfAdapter
 
     # convert the result to array
     #TODO: if block is given we should not parse all results into array first
-    results = query_result_to_array(query_results) 
+    results = query_result_to_array(query_results, false, query.resource_class) 
 	
     if block_given?
       results.each do |clauses|
@@ -141,13 +141,14 @@ class RedlandAdapter < ActiveRdfAdapter
   # * query: ActiveRDF Query object
   # * result_format: :json or :xml
   def get_query_results(query, result_format=nil)
-    get_sparql_query_results(Query2SPARQL.translate(query), result_format)
+    get_sparql_query_results(Query2SPARQL.translate(query), result_format, query.resource_class)
   end
 
   # executes sparql query and returns results as SPARQL JSON or XML results
   # * query: sparql query string
   # * result_format: :json or :xml
-  def get_sparql_query_results(qs, result_format=nil)
+  # * result_type: Is the type that is used for "resource" results
+  def get_sparql_query_results(qs, result_type, result_format=nil)
     # author: Eric Hanson
 
     # set uri for result formatting
@@ -168,7 +169,7 @@ class RedlandAdapter < ActiveRdfAdapter
       query_results.to_string()
     else
       # get array result
-      query_result_to_array(query_results, true) 
+      query_result_to_array(query_results, true, result_type) 
     end
   end
 	
@@ -252,7 +253,8 @@ class RedlandAdapter < ActiveRdfAdapter
   private
   ################ helper methods ####################
   #TODO: if block is given we should not parse all results into array first
-  def query_result_to_array(query_results, to_string=false)
+  # result_type is the type that should be used for "resource" properties.
+  def query_result_to_array(query_results, to_string, result_type)
     results = []
     number_bindings = query_results.binding_names.size
  	
@@ -286,7 +288,7 @@ class RedlandAdapter < ActiveRdfAdapter
         else
           # other nodes are rdfs:resources
           if to_string == false
-            Query.resource_class.new(node.uri.to_s)
+            result_type.new(node.uri.to_s)
           else
             "<#{node.uri.to_s}>"
           end
@@ -300,8 +302,7 @@ class RedlandAdapter < ActiveRdfAdapter
   end	 	
 	
   def wrap node
-    case node
-    when Query.resource_class
+    if(node.respond_to?(:uri))
       Redland::Uri.new(node.uri)
     else
       Redland::Literal.new(node.to_s)

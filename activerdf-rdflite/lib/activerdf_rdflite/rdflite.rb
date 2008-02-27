@@ -158,7 +158,7 @@ class RDFLite < ActiveRdfAdapter
     $activerdflog.debug "read #{ntriples.size} triples from file #{file}"
 
     # use filename as context
-    context = internalise(Query.resource_class.new("file:#{file}"))
+    context = internalise(RDFS::Resource.new("file:#{file}"))
                 
     add_ntriples(ntriples, context)
   end
@@ -202,7 +202,7 @@ class RDFLite < ActiveRdfAdapter
       return [[results[0][0].to_i]]
     else
       # otherwise we convert results to ActiveRDF nodes and return them
-      return wrap(query, results)
+      return wrap(results, query.resource_class)
     end
   end
 
@@ -464,20 +464,23 @@ class RDFLite < ActiveRdfAdapter
     return "#{termtable}.#{termspo}"
   end
 
-  # wrap resources into ActiveRDF resources, literals into Strings
-  def wrap(query, results)
+  # wrap resources into ActiveRDF resources, literals into Strings. result_type
+  # is the type that should be used for ActiveRDF resources
+  def wrap(results, result_type)
     results.collect do |row|
-      row.collect { |result| parse(result) }
+      row.collect { |result| parse(result, result_type) }
     end
   end
 
-  def parse(result)
+  # Return the result as a correct type. result_type is the type that should 
+  # be used for "resouce" elements
+  def parse(result, result_type = RDFS::Resource)
     case result
     when Literal
       # replace special characters to allow string interpolation for e.g. 'test\nbreak'
       $1.double_quote
     when Resource
-      Query.resource_class.new($1)
+      result_type.new($1)
     else
       # when we do a count(*) query we get a number, not a resource/literal
       result
@@ -518,8 +521,7 @@ class RDFLite < ActiveRdfAdapter
 
   # transform resource/literal into ntriples format
   def serialise(r)
-    case r
-    when Query.resource_class
+    if(r.respond_to?(:uri))
       "<#{r.uri}>"
     else
       "\"#{r.to_s}\""

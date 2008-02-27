@@ -12,25 +12,10 @@ require 'ruby-debug'
 class Query
   attr_reader :select_clauses, :where_clauses, :filter_clauses, :sort_clauses, :keywords, :limits, :offsets, :reverse_sort_clauses
   bool_accessor :distinct, :ask, :select, :count, :keyword, :reasoning
-  class << self
-    # This returns the class that is be used for resources, by default this
-    # is RDFS::Resource
-    def resource_class
-      @resource_class ||= RDFS::Resource
-    end
-    
-    # Sets the resource_class. Any class may be used, however it is required
-    # that it can be created using the uri of the resource as it's only 
-    # parameter and that it has an 'uri' property
-    def resource_class=(resource_class)
-      raise(ArgumentError, "resource_class must be a class") unless(resource_class.is_a?(Class))
-      test = resource_class.new("http://uri")
-      raise(ArgumentError, "Must have a uri property") unless(test.respond_to?(:uri))
-      @resource_class = resource_class
-    end
-  end
   
-  def initialize
+  # Creates a new query. You may pass a different class that is used for "resource"
+  # type objects instead of RDFS::Resource
+  def initialize(resource_type = RDFS::Resource)
     @distinct = false
     @limits = nil
     @offsets = nil
@@ -41,15 +26,32 @@ class Query
     @keywords = {}
     @reasoning = true
     @reverse_sort_clauses = []
+    set_resource_class(resource_type)
   end
-
+  
+  # This returns the class that is be used for resources, by default this
+  # is RDFS::Resource
+  def resource_class
+    @resource_class ||= RDFS::Resource
+  end
+  
+  # Sets the resource_class. Any class may be used, however it is required
+  # that it can be created using the uri of the resource as it's only 
+  # parameter and that it has an 'uri' property
+  def set_resource_class(resource_class)
+    raise(ArgumentError, "resource_class must be a class") unless(resource_class.is_a?(Class))
+    test = resource_class.new("http://uri")
+    raise(ArgumentError, "Must have a uri property") unless(test.respond_to?(:uri))
+    @resource_class = resource_class
+  end
+  
   # Clears the select clauses
   def clear_select
     $activerdflog.debug "cleared select clause"
     @select_clauses = []
     @distinct = false
   end
-
+  
   # Adds variables to select clause
   def select *s
     @select = true
@@ -133,7 +135,7 @@ class Query
   end
 
   # Adds where clauses (s,p,o) where each constituent is either variable (:s) or 
-  # an RDFS::Resource. Keyword queries are specified with the special :keyword 
+  # an RDFS::Resource (or equivalent class). Keyword queries are specified with the special :keyword 
   # symbol: Query.new.select(:s).where(:s, :keyword, 'eyal')
   def where s,p,o,c=nil
     case p
@@ -148,11 +150,11 @@ class Query
       # if you construct this query manually, you shouldn't! if your select 
       # variable happens to be in one of the removed clauses: tough luck.
 
-      unless s.is_a?(Query.resource_class) or s.is_a?(Symbol)
-        raise(ActiveRdfError, "cannot add a where clause with s #{s}: s must be a resource (of #{Query.resource_class}) or a variable")
+      unless s.respond_to?(:uri) or s.is_a?(Symbol)
+        raise(ActiveRdfError, "cannot add a where clause with s #{s}: s must be a resource or a variable")
       end
-      unless p.is_a?(Query.resource_class) or p.is_a?(Symbol)
-        raise(ActiveRdfError, "cannot add a where clause with p #{p}: p must be a resource (of #{Query.resource_class}) or a variable")
+      unless p.respond_to?(:uri) or p.is_a?(Symbol)
+        raise(ActiveRdfError, "cannot add a where clause with p #{p}: p must be a resource or a variable")
       end
 
       @where_clauses << [s,p,o,c].collect{|arg| parametrise(arg)}
@@ -210,12 +212,14 @@ class Query
   private
   def parametrise s
     case s
-    when Symbol, Literal, Class, Query.resource_class
+    when Symbol, Literal, Class, nil
       s
-    when nil
-      nil
     else
-      '"' + s.to_s + '"'
+      if(s.respond_to?(:uri))
+        s
+      else
+        '"' + s.to_s + '"'
+      end
     end
   end
 end

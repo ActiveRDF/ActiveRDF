@@ -39,11 +39,12 @@ class SparqlAdapter < ActiveRdfAdapter
     qs = Query2SPARQL.translate(query)
     $activerdflog.debug "executing sparql query #{query}"
 
-    execute_sparql_query(qs, header(query), &block)
+    execute_sparql_query(qs, query.resource_class, header(query), &block)
   end
 		
-  # do the real work of executing the sparql query
-  def execute_sparql_query(qs, header=nil, &block)
+  # do the real work of executing the sparql query. resource_type is the class
+  # to be used for "resource" elements
+  def execute_sparql_query(qs, resource_type, header=nil, &block)
     $activerdflog.debug "executing query #{qs} on url #@url"
 
     header = header(nil) if header.nil?
@@ -68,9 +69,9 @@ class SparqlAdapter < ActiveRdfAdapter
     # we parse content depending on the result format
     results = case @result_format
     when :json 
-      parse_json(response)
+      parse_json(response, resource_type)
     when :xml, :sparql_xml
-      parse_xml(response)
+      parse_xml(response, resource_type)
     end
 
     if block_given?
@@ -95,8 +96,9 @@ class SparqlAdapter < ActiveRdfAdapter
     end
   end
 
-  # parse json query results into array
-  def parse_json(s)
+  # parse json query results into array. resource_type is the type to be used
+  # for "resource" objects.
+  def parse_json(s, resource_type)
     require 'json'
     
     parsed_object = JSON.parse(s)
@@ -109,7 +111,7 @@ class SparqlAdapter < ActiveRdfAdapter
     objects.each do |obj|
       result = []
       vars.each do |v|
-        result << create_node( obj[v]['type'], obj[v]['value'])
+        result << create_node( obj[v]['type'], obj[v]['value'], resource_type)
       end
       results << result
     end
@@ -118,17 +120,18 @@ class SparqlAdapter < ActiveRdfAdapter
   end
   
   # parse xml stream result into array
-  def parse_xml(s)
-    parser = SparqlResultParser.new
+  def parse_xml(s, resource_type)
+    parser = SparqlResultParser.new(resource_type)
     REXML::Document.parse_stream(s, parser)
     parser.result
   end
   
-  # create ruby objects for each RDF node
-  def create_node(type, value)
+  # create ruby objects for each RDF node. resource_type is the class to be used
+  # for "resource" objects.
+  def create_node(type, value, resource_type)
     case type
     when 'uri'
-      Query.resource_class.new(value)
+      resource_type.new(value)
     when 'bnode'
       nil
     when 'literal','typed-literal'

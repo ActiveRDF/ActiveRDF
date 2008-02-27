@@ -93,7 +93,7 @@ class Jars2Adapter < ActiveRdfAdapter
       # location in the result row to our answer
       row = query.select_clauses.collect do |clause|
         clause_index = bindings.index(clause)
-        convert_into_activerdf(row[clause_index])
+        convert_into_activerdf(row[clause_index], query.resource_class)
       end
       answers << row
     end
@@ -101,12 +101,14 @@ class Jars2Adapter < ActiveRdfAdapter
     answers
   end
 
-  # converts ntriples serialisation of resource or literal into ActiveRDF object
-  def convert_into_activerdf(string)
+  # converts ntriples serialisation of resource or literal into ActiveRDF object.
+  #
+  # resource_type is the class to be used for "resource" objects.
+  def convert_into_activerdf(string, resource_type)
     case string
     when /<(.*)>/
       # <http://foaf/Person> is a resource
-      Query.resource_class.new($1)
+      resource_type.new($1)
     when /"(.*)"/
       # "30" is a literal
       # TODO: handle datatypes

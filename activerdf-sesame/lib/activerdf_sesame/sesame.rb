@@ -259,7 +259,7 @@ class SesameAdapter < ActiveRdfAdapter
       temparray = []
       # get the value associated with a variable in this specific solution
       (1..size_of_variables).each { |i|
-        temparray << convertSesame2ActiveRDF(result_item.getValue(variables[i-1]))
+        temparray << convertSesame2ActiveRDF(result_item.getValue(variables[i-1]), query.resource_class)
       }
       results << temparray
     end    
@@ -284,13 +284,16 @@ class SesameAdapter < ActiveRdfAdapter
   # takes a part of a sesame statement, and converts it to a RDFS::Resource if it is a URI, 
   # or to a String if it is a Literal. The assumption currently, is that we will only get stuff out of sesame, 
   # which we put in there ourselves, and currently we only put URIs or Literals there. 
+  # 
+  # result_type is the class that will be used for "resource" objects.
+  # 
   # TODO: do we need to think about handling blank nodes ? e.g. if the are part of a graph read from a file ? 
-  def convertSesame2ActiveRDF(input)
+  def convertSesame2ActiveRDF(input, result_type)
     jclassURI = Java::JavaClass.for_name("org.openrdf.model.URI")
     jclassLiteral = Java::JavaClass.for_name("org.openrdf.model.Literal")	
     
     if jInstanceOf(input.java_class, jclassURI)
-      return Query.resource_class.new(input.toString)
+      return result_type.new(input.toString)
     elsif jInstanceOf(input.java_class, jclassLiteral)
       return input.toString[1..-2]
     else
@@ -317,26 +320,29 @@ class SesameAdapter < ActiveRdfAdapter
   # converts item into sesame object (RDFS::Resource into 
   # valueFactory.createURI etc.)
   def wrap(item)
-    result = case item
-    when Query.resource_class
+    result = 
+    if(item.respond_to?(:uri))
       if (item.uri[0..4].match(/http:/).nil?)
         @valueFactory.createLiteral(item.uri)
       else
         @valueFactory.createURI(item.uri)
       end
-    when Symbol
-      nil
-    when NilClass
-      nil
     else
-      @valueFactory.createLiteral(item.to_s)
-    end  
+      case item
+      when Symbol
+        nil
+      when NilClass
+        nil
+      else
+        @valueFactory.createLiteral(item.to_s)
+      end
+    end
     return result      
   end
   
   def wrapContext(context)
     # context must be Resource
-    raise ActiveRdfError, "context must be a Resource" if (context.class != Query.resource_class)
+    raise ActiveRdfError, "context must be a Resource" unless(context.respond_to?(:uri))
     
     # return context
     @valueFactory.createURI(context.uri)
