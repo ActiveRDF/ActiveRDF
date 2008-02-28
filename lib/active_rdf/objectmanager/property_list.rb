@@ -5,19 +5,23 @@ class PropertyList < Array
   
   # Add reader accessor
   attr_reader :s, :p
+  attr_accessor :writeable
   
   # Initialize a new list of properties' values
   # * p           the original property
   # * pv_list     the list of properties' values
   # * s           the sobject which property is related to
-  def initialize(p, pv_list, s)
+  # * writeable   if set to false, the list will be write-protected
+  def initialize(p, pv_list, s, writeable = true)
     super pv_list
     @s, @p = s, p
+    @writeable = writeable
   end
 
   # add a new property value realated to @p property and @s subject
   alias :add :<<
   def <<(pv)
+    check_writeable!
     # update the array list
     add pv
     
@@ -28,6 +32,7 @@ class PropertyList < Array
   # delete a statment which contains old_p_value
   # and insert a new statment (@s, @p, new_p_value)
   def replace(old_p_value, new_p_value)
+    check_writeable!
     # delete the old statment
     self.delete(old_p_value)
     FederationManager.delete(@s, @p, old_p_value)
@@ -40,6 +45,7 @@ class PropertyList < Array
   # triple related to :s and p: otherwise delete the
   # triples whose values are specified by params
   def remove(*params)
+    check_writeable!
     if params.length >= 1
       # delete only triples whose values is specified by parameters
       params.each{|param|
@@ -58,6 +64,13 @@ class PropertyList < Array
       self.clear
       return true
     end
+  end
+  
+  private
+  
+  # Checks if the list is writeable, raise an error otherwise
+  def check_writeable!
+    raise(RuntimeError, "List is not writeable!") unless(@writeable)
   end
 
 end

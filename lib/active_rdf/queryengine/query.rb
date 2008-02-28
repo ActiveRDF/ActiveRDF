@@ -40,6 +40,7 @@ class Query
   # parameter and that it has an 'uri' property
   def set_resource_class(resource_class)
     raise(ArgumentError, "resource_class must be a class") unless(resource_class.is_a?(Class))
+    
     test = resource_class.new("http://uri")
     raise(ArgumentError, "Must have a uri property") unless(test.respond_to?(:uri))
     @resource_class = resource_class
