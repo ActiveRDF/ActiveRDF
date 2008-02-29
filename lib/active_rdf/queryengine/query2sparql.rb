@@ -60,7 +60,7 @@ class Query2SPARQL
   
   def self.construct_clause(term)
     if term.respond_to? :uri
-      '<' + term.uri + '>'
+      '<' + term.uri.to_s + '>'
     else
       case term
       when Symbol

@@ -412,7 +412,7 @@ class RDFLite < ActiveRdfAdapter
     end
 
     # convert conditions into internal format
-    conditions.collect { |c| c.respond_to?(:uri) ? "<#{c.uri}>" : c.to_s }
+    conditions.collect { |c| c.respond_to?(:uri) ? "<#{c.uri.to_s}>" : c.to_s }
   end
 
   def subproperties(resource)
@@ -511,7 +511,7 @@ class RDFLite < ActiveRdfAdapter
   # transform triple into internal format <uri> and "literal"
   def internalise(r)
     if r.respond_to?(:uri)
-      "<#{r.uri}>"
+      "<#{r.uri.to_s}>"
     elsif r.is_a?(Symbol)
       nil
     else
@@ -522,7 +522,7 @@ class RDFLite < ActiveRdfAdapter
   # transform resource/literal into ntriples format
   def serialise(r)
     if(r.respond_to?(:uri))
-      "<#{r.uri}>"
+      "<#{r.uri.to_s}>"
     else
       "\"#{r.to_s}\""
     end

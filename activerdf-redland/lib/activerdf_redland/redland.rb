@@ -303,7 +303,7 @@ class RedlandAdapter < ActiveRdfAdapter
 	
   def wrap node
     if(node.respond_to?(:uri))
-      Redland::Uri.new(node.uri)
+      Redland::Uri.new(node.uri.to_s)
     else
       Redland::Literal.new(node.to_s)
     end

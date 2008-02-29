@@ -322,10 +322,10 @@ class SesameAdapter < ActiveRdfAdapter
   def wrap(item)
     result = 
     if(item.respond_to?(:uri))
-      if (item.uri[0..4].match(/http:/).nil?)
-        @valueFactory.createLiteral(item.uri)
+      if (item.uri.to_s[0..4].match(/http:/).nil?)
+        @valueFactory.createLiteral(item.uri.to_s)
       else
-        @valueFactory.createURI(item.uri)
+        @valueFactory.createURI(item.uri.to_s)
       end
     else
       case item

@@ -60,7 +60,7 @@ class Namespace
   def self.prefix(resource)
     # get string representation of resource uri
     uri = if(resource.respond_to?(:uri))
-      resource.uri
+      resource.uri.to_s
     else 
       resource.to_s
     end
@@ -83,7 +83,7 @@ class Namespace
   def self.localname(resource)
     # get string representation of resource uri
     uri = if(resource.respond_to?(:uri))
-      resource.uri
+      resource.uri.to_s
     else 
       resource.to_s
     end
