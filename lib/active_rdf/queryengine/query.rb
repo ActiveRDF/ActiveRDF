@@ -3,7 +3,6 @@ require 'federation/federation_manager'
 require 'queryengine/query2sparql'
 
 require 'rubygems'
-require 'ruby-debug'
 
 # Represents a query on a datasource, abstract representation of SPARQL 
 # features. Query is passed to federation manager or adapter for execution on 
