@@ -10,19 +10,28 @@ require 'queryengine/ntriples_parser'
 
 $activerdflog.info "loading RDFLite adapter"
 
-begin 
-  require 'ferret'
-  @@have_ferret = true
-rescue LoadError
-  $activerdflog.info "Keyword search is disabled since we could not load Ferret. To 
-	enable, please do \"gem install ferret\""
-  @@have_ferret = false
-end
+
 
 # RDFLite is a lightweight RDF database on top of sqlite3. It can act as adapter 
 # in ActiveRDF. It supports on-disk and in-memory usage, and allows keyword 
 # search if ferret is installed.
 class RDFLite < ActiveRdfAdapter
+  
+  class << self
+    begin 
+      require 'ferret'
+      @have_ferret = true
+    rescue LoadError
+      $activerdflog.info "Keyword search is disabled since we could not load Ferret. To 
+          enable, please do \"gem install ferret\""
+      @have_ferret = false
+    end
+    
+    def has_ferret?
+      @have_ferret
+    end
+  end
+    
   ConnectionPool.register_adapter(:rdflite,self)
   bool_accessor :keyword_search, :reasoning
 
@@ -43,7 +52,7 @@ class RDFLite < ActiveRdfAdapter
 
     # disable keyword search by default, enable only if ferret is found
     @keyword_search = params[:keyword].nil? ? false : params[:keyword]
-    @keyword_search &= @@have_ferret
+    @keyword_search &= self.class.has_ferret?
 
     @reasoning = params[:reasoning] || false
     @subprops = {} if @reasoning
