@@ -149,6 +149,21 @@ class TestFederationManager < Test::Unit::TestCase
     # in parallel for distinct data, actually gives same results as querying
     # only the one set
     uniq = Query.new.distinct(:s,:p,:o).where(:s,:p,:o).execute
+    assert_equal first.size, uniq.size
+    # Sort the arrays - the results need to be the same, but not in the same
+    # order
+    first = first.sort { |a,b| triple_sort(a,b) }
+    uniq = uniq.sort { |a,b| triple_sort(a,b) }
     assert_equal first, uniq
+  end
+
+  private
+
+  # Helper for sorting triples
+  def triple_sort(t1, t2)
+    result = t1[0] <=> t2[0]
+    result = t1[1] <=> t2[1] if(result == 0)
+    result = t1[2] <=> t2[2] if(result == 0)
+    result
   end
 end
