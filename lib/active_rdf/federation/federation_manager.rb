@@ -51,12 +51,13 @@ class FederationManager
       # TODO: write test for sebastian's select problem
       # (without distinct, should get duplicates, they
       # were filtered out when doing results.union)
+      # FIXME: Calling get_sparql_query_results? This *only* exists on the redland adapter
       results = []
       ConnectionPool.read_adapters.each do |source|
         if (q.class != String)
           source_results = source.query(q)
         else
-          source_results = source.get_sparql_query_results(q, options[:result_format])
+          source_results = source.get_sparql_query_results(q, RDFS::Resource,options[:result_format])
         end
         source_results.each do |clauses|
           results << clauses

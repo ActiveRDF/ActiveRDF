@@ -1,4 +1,4 @@
-$:.unshift File.join(File.dirname(__FILE__),'..','lib')
+$:.unshift File.join(File.dirname(__FILE__),'..', '..','lib', 'active_rdf')
 
 require 'test/unit'
 require 'directaccess/direct_access'
@@ -44,6 +44,7 @@ class TestDirectAccess < Test::Unit::TestCase
       
       # test add
       pl = DirectAccess.find_all_by_subject_and_predicate(@@eyal, @@age)
+      assert_kind_of(PropertyList, pl)
       assert_equal false, pl.include?(@@age_number)
       assert_equal true, (pl << @@age_number)
       assert_equal true, pl.include?(@@age_number)
