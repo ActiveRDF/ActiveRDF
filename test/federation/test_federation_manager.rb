@@ -102,7 +102,7 @@ class TestFederationManager < Test::Unit::TestCase
     FederationManager.add(@@eyal, @@age, @@age_number)
     age_result = Query.new.select(:o).where(@@eyal, @@age, :o).execute
     assert "27", age_result
-
+    
     # if there are another adapter
     if !write2.nil?
       ConnectionPool.write_adapter = write2
