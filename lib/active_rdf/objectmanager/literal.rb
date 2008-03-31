@@ -1,4 +1,5 @@
 require 'active_rdf'
+require 'time'
 
 module Literal
   Namespace.register :xsd, 'http://www.w3.org/2001/XMLSchema#'
