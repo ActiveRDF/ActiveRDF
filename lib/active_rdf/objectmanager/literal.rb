@@ -8,6 +8,8 @@ module Literal
       XSD::string
     when Integer
       XSD::integer
+    when Float
+      XSD::double
     when TrueClass, FalseClass
       XSD::boolean
     when DateTime, Date, Time
@@ -25,6 +27,8 @@ module Literal
       value == 'true' or value == 1
     when XSD::integer
       value.to_i
+    when XSD::double
+      value.to_f
     end
   end
 
@@ -39,6 +43,7 @@ end
 
 class String; include Literal; end
 class Integer; include Literal; end
+class Float; include Literal; end
 class DateTime; include Literal; end
 class Date; include Literal; end
 class Time; include Literal; end
