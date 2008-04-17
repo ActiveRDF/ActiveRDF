@@ -114,12 +114,23 @@ class Query
     filter "(?#{variable} #{operator} #{operand})"
   end
   
-  # adds regular expression filter on one variable variable is Ruby symbol that appears in select/where clause, regex is Ruby regular expression
+  # adds regular expression filter on one variable variable is Ruby symbol that appears in select/where clause, 
+  # regex is a regular expression string
   def filter_regexp(variable, regexp)
     raise(ActiveRdfError, "variable must be a symbol") unless variable.is_a? Symbol
-    raise(ActiveRdfError, "regexp must be a ruby regexp") unless regexp.is_a? Regexp
  
-    filter "regex(?#{variable}, #{regexp.inspect.gsub('/','"')})"
+    filter "regex(?#{variable}, \"#{regexp}\")"
+  end
+  
+  # adds regular expression filter on one variable variable is Ruby symbol that 
+  # appears in select/where clause, regex is a regular expression string.
+  # 
+  # This version of the regexp filter will match in case the variable represents
+  # an URI
+  def filter_uri_regexp(variable, regexp)
+    raise(ActiveRdfError, "variable must be a symbol") unless variable.is_a? Symbol
+ 
+    filter "regex(str(?#{variable}), \"#{regexp}\")"
   end
   
   # Adds limit clause (maximum number of results to return)
