@@ -10,6 +10,10 @@ $activerdflog.info "loading Sesame adapter"
 # ----- java imports and extentsions
 require 'java'
 
+# Import the jars
+Dir[File.join(File.dirname(__FILE__), '..', '..', 'ext', '*.jar')].each { |jar| require jar}
+
+
 StringWriter = java.io.StringWriter
 JFile = java.io.File
 URLClassLoader = java.net.URLClassLoader 
@@ -295,7 +299,11 @@ class SesameAdapter < ActiveRdfAdapter
     if jInstanceOf(input.java_class, jclassURI)
       return result_type.new(input.toString)
     elsif jInstanceOf(input.java_class, jclassLiteral)
-      return input.toString[1..-2]
+      # The string is wrapped in quotationn marks. However, there may be a language
+      # indetifier outside the quotation marks, e.g. "The label"@en
+      # We try to unwrap this correctly. For now we assume that there may be
+      # no quotation marks inside the string
+      return input.toString.gsub('"', '')
     else
       raise ActiveRdfError, "the Sesame Adapter tried to return something which is neither a URI nor a Literal, but is instead a #{input.java_class.name}"
     end
@@ -330,9 +338,9 @@ class SesameAdapter < ActiveRdfAdapter
     else
       case item
       when Symbol
-        nil
+        @valueFactory.createLiteral('')
       when NilClass
-        nil
+        @valueFactory.createLiteral('')
       else
         @valueFactory.createLiteral(item.to_s)
       end
