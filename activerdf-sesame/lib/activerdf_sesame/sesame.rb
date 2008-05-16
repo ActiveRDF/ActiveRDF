@@ -35,7 +35,7 @@ class SesameAdapter < ActiveRdfAdapter
   # instantiates Sesame database
   # available parameters:
   # * :location => path to a file for persistent storing or :memory for in-memory (defaults to in-memory)
-  # * :inferencing => true or false, if sesame2 rdfs inferencing is uses (defaults to true)
+  # * :inferencing => true or false, if sesame2 rdfs inferencing is uses (defaults to false)
   def initialize(params = {})
     $activerdflog.info "initializing Sesame Adapter with params #{params.to_s}"
 
@@ -53,7 +53,7 @@ class SesameAdapter < ActiveRdfAdapter
       sesame_location = nil
     end
     
-    # if no inferencing is specified, we use the sesame2 rdfs inferencing
+    # if no inferencing is specified, we don't activate sesame2 rdfs inferencing
     sesame_inferencing = params[:inferencing] || false
 	
     # this will not work at the current state of jruby	
