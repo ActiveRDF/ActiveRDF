@@ -38,6 +38,7 @@ class SesameAdapter < ActiveRdfAdapter
 	# * :indexes => string of indexes which can be used by the persistent store, example "spoc,posc,cosp"
 	#
 	def initialize(params = {})
+    super()
 		$activerdflog.info "initializing Sesame Adapter with params #{params.to_s}"
 
 		@reads = true

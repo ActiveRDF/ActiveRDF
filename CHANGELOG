@@ -1,3 +1,6 @@
+== activerdf (1.6.11) 
+  * added support for enabling/disabling adapters (Samur Saraujo)
+
 == activerdf (1.6.10) Wed, 23 Apr 2008 10:43:44 +0200
   * convert float <-> xsd:double (Richard Dale)
   * fix #202979: superclass mismatch in literal.rb (Slava Kravchenko)

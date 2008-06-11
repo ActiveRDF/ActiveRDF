@@ -54,11 +54,11 @@ class ConnectionPool
 
   # returns the set of currently registered read-access datasources
   def ConnectionPool.read_adapters
-    @@adapter_pool.select {|adapter| adapter.reads? }
+    @@adapter_pool.select {|adapter| adapter.reads? && adapter.enabled?}
   end
 
   def ConnectionPool.write_adapters
-    @@adapter_pool.select {|adapter| adapter.writes? }
+    @@adapter_pool.select {|adapter| adapter.writes? && adapter.enabled?}
   end
 
   # returns adapter-instance for given parameters (either existing or new)

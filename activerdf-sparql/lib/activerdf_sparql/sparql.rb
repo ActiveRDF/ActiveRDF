@@ -27,6 +27,7 @@ class SparqlAdapter < ActiveRdfAdapter
   # * :timeout => timeout in seconds to wait for endpoint response
   # * :auth => [user, pass]
 	def initialize(params = {})	
+    super()
 		@reads = true
 		@writes = false
 
@@ -96,7 +97,7 @@ class SparqlAdapter < ActiveRdfAdapter
 			raise ActiveRdfError, "timeout on SPARQL endpoint"
   	  return "timeout"
 		rescue OpenURI::HTTPError => e
-			raise ActiveRdfError, "could not query SPARQL endpoint, server said: #{e}"
+			raise ActiveRdfError, "error on SPARQL endpoint, server said: \n%s:\n%s" % [e,e.io.read]
 			return []
 		rescue Errno::ECONNREFUSED
 			raise ActiveRdfError, "connection refused on SPARQL endpoint #@url"

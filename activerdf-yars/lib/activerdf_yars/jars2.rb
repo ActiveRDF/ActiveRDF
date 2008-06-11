@@ -18,13 +18,14 @@ class Jars2Adapter < ActiveRdfAdapter
 	# * :host (default 'm3pe.org')
 	# * :port (default 2020)
 	def initialize(params = {})
-		@host = params[:host] || 'm3pe.org'
-		@port = params[:port] || 2020
-		$activerdflog.info "Jars2Adapter: initializing new instance with host: #{@host} port: #{@port}"
-		@yars = Net::HTTP.new(@host, @port)
-
+    super()
 		@reads = true
 		@writes = false
+
+		@host = params[:host] || 'm3pe.org'
+		@port = params[:port] || 2020
+		$activerdflog.info "Initialising Jars2 adapter on host %s:%s" % [@host,@port]
+		@yars = Net::HTTP.new(@host, @port)
 	end
 
 	def translate query

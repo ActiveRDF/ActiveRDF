@@ -34,6 +34,7 @@ class RDFLite < ActiveRdfAdapter
 	# * :keyword => true/false (defaults to false)
 	# * :pidx, :oidx, etc. => true/false (enable/disable these indices)
 	def initialize(params = {})
+    super()
 		$activerdflog.info "initialised rdflite with params #{params.to_s}"
 
 		@reads = true

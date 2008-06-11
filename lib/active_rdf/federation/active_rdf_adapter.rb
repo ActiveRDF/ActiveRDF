@@ -5,7 +5,11 @@ require 'queryengine/query2sparql'
 
 class ActiveRdfAdapter
 	# indicate if adapter can read and write
-	bool_accessor :reads, :writes
+	bool_accessor :reads, :writes, :enabled
+
+  def initialize
+    @enabled = true
+  end
 
 	# translate a query to its string representation
 	def translate(query)

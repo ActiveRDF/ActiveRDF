@@ -29,7 +29,7 @@ class TestSparqlAdapter < Test::Unit::TestCase
     german = Query.new.distinct(:o).where(sunset,abstract,:o).limit(1).lang(:o,'de').execute.first
     english = Query.new.distinct(:o).where(sunset,abstract,:o).limit(1).lang(:o,'en').execute.first
 
-    assert english =~ /^77 Sunset Strip was one of the most popular of the detective series in early television/
+    assert english =~ /^77 Sunset Strip was the first hour-length private detective series in American television history/
     assert german =~ /^77 Sunset Strip ist ein Serienklassiker aus den USA um das gleichnamige, in Los Angeles am Sunset Boulevard angesiedelte Detektivbüro/
   end
 
@@ -53,15 +53,10 @@ class TestSparqlAdapter < Test::Unit::TestCase
     Namespace.register :yago, 'http://dbpedia.org/class/yago/'
     Namespace.register :dbpedia, 'http://dbpedia.org/property/'
 
-    begin
-      movies = Query.new.
-        select(:title).
-        where(:film, RDFS.label, :title).
-        where(:title, RDFS::Resource.new('bif:contains'), 'kill').
-        filter_regex(:title, /Kill$/).execute
-    rescue TimeOut::Error => e
-      puts "WARNING: SPARQL endpoint timed out"
-    end
+    movies = Query.new.
+      select(:title).
+      where(:film, RDFS.label, :title).
+      filter_regex(:title, /Kill$/).limit(5).execute
 
     assert !movies.empty?, "regex query returns empty results"
     assert movies.all? {|m| m =~ /Kill$/ }, "regex query returns wrong results"

@@ -14,6 +14,8 @@ class RedlandAdapter < ActiveRdfAdapter
 	
 	# instantiate connection to Redland database
 	def initialize(params = {})
+    super()
+
 		if params[:location] and params[:location] == :postgresql
 			initialize_postgresql(params)
 			return
