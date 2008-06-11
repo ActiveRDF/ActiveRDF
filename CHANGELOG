@@ -1,3 +1,7 @@
+== activerdf (1.6.10) Wed, 23 Apr 2008 10:43:44 +0200
+  * convert float <-> xsd:double (Richard Dale)
+  * fix #202979: superclass mismatch in literal.rb (Slava Kravchenko)
+
 == activerdf (1.6.9) Fri, 08 Feb 2008 13:36:31 +0100
   * automatic conversion from typed literals to Ruby internal datatypes
   * added Resource#to_xml (José Ignacio)

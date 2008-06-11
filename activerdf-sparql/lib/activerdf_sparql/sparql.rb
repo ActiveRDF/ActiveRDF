@@ -25,6 +25,7 @@ class SparqlAdapter < ActiveRdfAdapter
 	# * :results => one of :xml, :json, :sparql_xml
   # * :request_method => :get (default) or :post
   # * :timeout => timeout in seconds to wait for endpoint response
+  # * :auth => [user, pass]
 	def initialize(params = {})	
 		@reads = true
 		@writes = false
@@ -32,6 +33,7 @@ class SparqlAdapter < ActiveRdfAdapter
 		@url = params[:url] || ''
     @caching = params[:caching] || false
     @timeout = params[:timeout] || 50
+    @auth = params[:auth] || nil
 
 		@result_format = params[:results] || :json
 		raise ActiveRdfError, "Result format unsupported" unless [:xml, :json, :sparql_xml].include? @result_format
@@ -145,14 +147,19 @@ class SparqlAdapter < ActiveRdfAdapter
 
 	# constructs correct HTTP header for selected query-result format
 	def header(query)
-		case @result_format
-		when :json
-			{ 'accept' => 'application/sparql-results+json' }
-		when :xml
-			{ 'accept' => 'application/rdf+xml' }
-		when :sparql_xml
-		  { 'accept' => 'application/sparql-results+xml' }
-		end
+		header = case @result_format
+             when :json
+               { 'accept' => 'application/sparql-results+json' }
+             when :xml
+               { 'accept' => 'application/rdf+xml' }
+             when :sparql_xml
+               { 'accept' => 'application/sparql-results+xml' }
+             end
+    if @auth
+      header.merge( :http_basic_authentication => @auth )
+    else
+      header
+    end
 	end
 
   # parse json query results into array
