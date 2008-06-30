@@ -26,6 +26,7 @@ setup_gem($name, $version) do |spec|
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('uuidtools')
   spec.add_dependency('activerdf', '>= 1.6.4')
+  spec.add_dependency('mime-types')
   spec.add_dependency('sqlite3-ruby', '>= 1.2.1')
 end
 
