@@ -66,6 +66,11 @@ class PropertyList < Array
     end
   end
   
+  # Clear all the triples related to @s and @p
+  def clear
+    remove
+  end
+  
   private
   
   # Checks if the list is writeable, raise an error otherwise
