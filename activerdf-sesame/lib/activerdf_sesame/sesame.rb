@@ -30,6 +30,10 @@ RDFFormat = org.openrdf.rio.RDFFormat
 
 # TODO: about this adapter
 class SesameAdapter < ActiveRdfAdapter
+  
+  # This adapter supports context operations
+  supports_context
+  
   ConnectionPool.register_adapter(:sesame,self)
 
   # instantiates Sesame database
