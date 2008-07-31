@@ -8,7 +8,7 @@ require 'rubygems'
 # features. Query is passed to federation manager or adapter for execution on 
 # data source.  In all clauses symbols represent variables: 
 # Query.new.select(:s).where(:s,:p,:o).
-  class Query
+class Query
   attr_reader :select_clauses, :where_clauses, :filter_clauses, :sort_clauses, :keywords, :limits, :offsets, :reverse_sort_clauses
   bool_accessor :distinct, :ask, :select, :count, :keyword, :reasoning
   
