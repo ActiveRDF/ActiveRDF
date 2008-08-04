@@ -48,4 +48,34 @@ class TestQuery2Sparql < Test::Unit::TestCase
     q2 = Query.new.select(:s).select(:a)
     assert_equal Query2SPARQL.translate(q1),Query2SPARQL.translate(q2)
   end
+  
+  def test_sort
+    q1 = Query.new.select(:s).sort(:s)
+    q2 = Query.new.select(:s).sort(:s, :p, :o)
+    q3 = Query.new.select(:s).reverse_sort(:s)
+    q4 = Query.new.select(:s).reverse_sort(:s, :p, :o)
+    q5 = Query.new.select(:s).sort(:s).reverse_sort(:p)
+    assert_equal "SELECT ?s WHERE {  . } ORDER BY ASC(?s)", Query2SPARQL.translate(q1)
+    assert_equal "SELECT ?s WHERE {  . } ORDER BY ASC(?s ?p ?o)", Query2SPARQL.translate(q2)
+    assert_equal "SELECT ?s WHERE {  . } ORDER BY DESC(?s)", Query2SPARQL.translate(q3)
+    assert_equal "SELECT ?s WHERE {  . } ORDER BY DESC(?s ?p ?o)", Query2SPARQL.translate(q4)
+    assert_equal "SELECT ?s WHERE {  . } ORDER BY ASC(?s) DESC(?p)", Query2SPARQL.translate(q5)
+  end
+  
+  def test_execute_sort_query
+    ConnectionPool.clear
+    file_one = "#{File.dirname(__FILE__)}/../small-one.nt"
+    adapter = get_adapter
+    
+    if (adapter.class.to_s != "SesameAdapter")
+      adapter.load file_one
+    else
+      adapter.load(file_one, 'ntriples', one)
+    end
+    @eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
+    @eye = RDFS::Resource.new 'http://activerdf.org/test/eye'
+    @eyal.eye = "green"
+    assert_equal ["blue", "green"], Query.new.select(:o).where(@eyal, @eye, :o).sort(:o).execute
+    assert_equal ["green", "blue"], Query.new.select(:o).where(@eyal, @eye, :o).reverse_sort(:o).execute
+  end
 end

@@ -21,6 +21,12 @@ class Query2SPARQL
         str << " OFFSET #{query.offsets.to_s}"
       end
       
+      if (!query.sort_clauses.empty? || !query.reverse_sort_clauses.empty?)
+        str << " ORDER BY"
+        str << " ASC(#{sort_clauses(query)})" if !query.sort_clauses.empty?
+        str << " DESC(#{reverse_sort_clauses(query)})" if !query.reverse_sort_clauses.empty?
+      end
+      
     elsif query.ask?
       str << "ASK { #{where_clauses(query)} }"
     end
@@ -56,6 +62,22 @@ class Query2SPARQL
   
   def self.filter_clauses(query)
     "FILTER #{query.filter_clauses.join(" ")}" unless query.filter_clauses.empty?
+  end
+  
+  def self.sort_clauses(query)
+    sort_clauses = query.sort_clauses.collect do |term|     
+      construct_clause(term)
+    end
+
+    "#{sort_clauses.join(' ')}"
+  end
+  
+  def self.reverse_sort_clauses(query)
+    reverse_sort_clauses = query.reverse_sort_clauses.collect do |term|
+      construct_clause(term)
+    end
+
+     "#{reverse_sort_clauses.join(' ')}"
   end
   
   def self.construct_clause(term)
