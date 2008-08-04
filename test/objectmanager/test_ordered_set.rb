@@ -37,6 +37,26 @@ class TestOrderedSet < Test::Unit::TestCase
     
     # check if all items are inserted
     assert_equal 3, @ordered_set.elements.size
+    
+    # check elements array
+    assert @ordered_set.elements.include?(@item_1)
+    assert @ordered_set.elements.include?(@item_2)
+    assert @ordered_set.elements.include?(@item_3)
+  end
+  
+    def test_at
+    # add items to container
+    @ordered_set.add @item_1
+    @ordered_set.add @item_2
+    @ordered_set.add @item_3
+    
+    # check if all items are inserted
+    assert_equal 3, @ordered_set.elements.size
+    
+    # check item for each position
+    assert_equal @item_1.uri, @ordered_set.at(1).uri
+    assert_equal @item_2.uri, @ordered_set.at(2).uri
+    assert_equal @item_3.uri, @ordered_set.at(3).uri
   end
   
   def test_order
