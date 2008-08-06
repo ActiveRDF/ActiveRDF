@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.7.0
+Created-By: 10.0-b22 (Sun Microsystems Inc.)
+Built-By: root
+Built-Number: 51
+
+Name: common
+Specification-Title: Example
+Specification-Version: 0.1
+Specification-Vendor: DERI Galway, Benjamin Heitmann
+Implementation-Title: Wrapper-Sesame2
+Implementation-Version: 0.1 ${TODAY}
+Implementation-Vendor: DERI Galway, Benjamin Heitmann
+
