@@ -75,7 +75,7 @@ class TestQuery2Sparql < Test::Unit::TestCase
     @eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
     @eye = RDFS::Resource.new 'http://activerdf.org/test/eye'
     @eyal.eye = "green"
-    assert_equal ["blue", "green"], Query.new.select(:o).where(@eyal, @eye, :o).sort(:o).execute
-    assert_equal ["green", "blue"], Query.new.select(:o).where(@eyal, @eye, :o).reverse_sort(:o).execute
+    assert_equal ["blue", "green"], Query.new.select(:o).where(@eyal, @eye, :o).limit(100).sort(:o).execute
+    assert_equal ["green", "blue"], Query.new.select(:o).where(@eyal, @eye, :o).limit(100).reverse_sort(:o).execute
   end
 end

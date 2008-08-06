@@ -13,18 +13,18 @@ class Query2SPARQL
       str << "#{from_clauses(query)}"
       str << "WHERE { #{where_clauses(query)} #{filter_clauses(query)}}"
       
+      if (!query.sort_clauses.empty? || !query.reverse_sort_clauses.empty?)
+        str << " ORDER BY"
+        str << " ASC(#{sort_clauses(query)})" if !query.sort_clauses.empty?
+        str << " DESC(#{reverse_sort_clauses(query)})" if !query.reverse_sort_clauses.empty?
+      end
+      
       if query.limits
         str << " LIMIT #{query.limits.to_s}"
       end
       
       if query.offsets
         str << " OFFSET #{query.offsets.to_s}"
-      end
-      
-      if (!query.sort_clauses.empty? || !query.reverse_sort_clauses.empty?)
-        str << " ORDER BY"
-        str << " ASC(#{sort_clauses(query)})" if !query.sort_clauses.empty?
-        str << " DESC(#{reverse_sort_clauses(query)})" if !query.reverse_sort_clauses.empty?
       end
       
     elsif query.ask?
@@ -77,7 +77,7 @@ class Query2SPARQL
       construct_clause(term)
     end
 
-     "#{reverse_sort_clauses.join(' ')}"
+    "#{reverse_sort_clauses.join(' ')}"
   end
   
   def self.construct_clause(term)
