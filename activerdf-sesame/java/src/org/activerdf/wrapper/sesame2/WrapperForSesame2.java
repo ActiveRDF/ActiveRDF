@@ -241,7 +241,10 @@ public class WrapperForSesame2 {
      */
     public boolean clear(Resource context) {
         try {
-            sesameConnection.clear(context);
+            if (context == null)
+                sesameConnection.clear();
+            else
+                sesameConnection.clear(context);
             return true;
         } catch (RepositoryException e) {
             throw new RuntimeException(e);
