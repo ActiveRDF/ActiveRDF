@@ -143,7 +143,7 @@ class SesameAdapter < ActiveRdfAdapter
     begin
       # remove triple or tiples
       @myWrapperInstance.remove(params[0], params[1], params[2],params[3])
-    rescue
+    rescue Exception => e
       raise ActiveRdfError, "Sesame add triple failed: #{e.message}"
     end
   end
