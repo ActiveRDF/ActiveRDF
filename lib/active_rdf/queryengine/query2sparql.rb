@@ -66,18 +66,18 @@ class Query2SPARQL
   
   def self.sort_clauses(query)
     sort_clauses = query.sort_clauses.collect do |term|     
-      construct_clause(term)
+      "ASC(#{construct_clause(term)})"
     end
 
-    "ASC(#{sort_clauses.join(' ')})"
+    "#{sort_clauses.join(' ')}"
   end
   
   def self.reverse_sort_clauses(query)
     reverse_sort_clauses = query.reverse_sort_clauses.collect do |term|
-      construct_clause(term)
+      "DESC(#{construct_clause(term)})"
     end
 
-    "DESC(#{reverse_sort_clauses.join(' ')})"
+    "#{reverse_sort_clauses.join(' ')}"
   end
   
   def self.construct_clause(term)

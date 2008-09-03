@@ -56,9 +56,9 @@ class TestQuery2Sparql < Test::Unit::TestCase
     q4 = Query.new.select(:s).reverse_sort(:s, :p, :o)
     q5 = Query.new.select(:s).sort(:s).reverse_sort(:p)
     assert_equal "SELECT ?s WHERE {  . } ORDER BY ASC(?s)", Query2SPARQL.translate(q1)
-    assert_equal "SELECT ?s WHERE {  . } ORDER BY ASC(?s ?p ?o)", Query2SPARQL.translate(q2)
+    assert_equal "SELECT ?s WHERE {  . } ORDER BY ASC(?s) ASC(?p) ASC(?o)", Query2SPARQL.translate(q2)
     assert_equal "SELECT ?s WHERE {  . } ORDER BY DESC(?s)", Query2SPARQL.translate(q3)
-    assert_equal "SELECT ?s WHERE {  . } ORDER BY DESC(?s ?p ?o)", Query2SPARQL.translate(q4)
+    assert_equal "SELECT ?s WHERE {  . } ORDER BY DESC(?s) DESC(?p) DESC(?o)", Query2SPARQL.translate(q4)
     assert_equal "SELECT ?s WHERE {  . } ORDER BY ASC(?s) DESC(?p)", Query2SPARQL.translate(q5)
   end
   
@@ -70,7 +70,7 @@ class TestQuery2Sparql < Test::Unit::TestCase
     if (adapter.class.to_s != "SesameAdapter")
       adapter.load file_one
     else
-      adapter.load(file_one, 'ntriples', one)
+      adapter.load(file_one, 'ntriples')
     end
     @eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
     @eye = RDFS::Resource.new 'http://activerdf.org/test/eye'
