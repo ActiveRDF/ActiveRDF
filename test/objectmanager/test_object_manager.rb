@@ -89,6 +89,6 @@ class TestObjectManager < Test::Unit::TestCase
     req = Net::HTTP::Post.new(url)
     req.set_form_data('rdf' => eyal.to_xml)
     res = Net::HTTP.new(uri.host, uri.port).start { |http| http.request(req) }
-    assert_match /RDF statement parsed successfully/, res.body, "SWI-Prolog failed to parse XML output"
+    assert_match /RDF statement parsed successfully/, res.body, "invalid XML generated (according to online RDF parser on gollem.swi.psy.uva.nl)"
   end
 end

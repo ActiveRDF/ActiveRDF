@@ -1,5 +1,6 @@
-== activerdf_redland (1.2.2) UNRELEASED
-  * added close and clear method (TODO: not finished)
+== activerdf_redland (1.2.2) Tue, 16 Sep 2008 12:44:39 +0200
+  * added close and clear method
+  * added support for full Redland options (Benno Blumenthal)
 
 == activerdf_redland (1.2.1) Sat Jun 23 09:03:43 UTC 2007
   * added support for Redland on PostgreSQL (Richard Dale)

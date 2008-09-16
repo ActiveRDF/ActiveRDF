@@ -21,11 +21,11 @@ class TestRedlandAdapter < Test::Unit::TestCase
     assert_instance_of RedlandAdapter, adapter
   end
 
-  def test_redland_postgres
-    adapter = ConnectionPool.add(:type => :redland, :name => 'db1', :location => :postgresql,
-          :host => 'localhost', :database => 'redland_test',
-              :user => 'eyal', :password => 'lief1234')
-  end
+  #def test_redland_postgres
+  #  adapter = ConnectionPool.add(:type => :redland, :name => 'db1', :location => :postgresql,
+  #        :host => 'localhost', :database => 'redland_test',
+  #            :user => 'eyal', :password => 'lief1234')
+  #end
 
   def test_redland_connections
     adapter = RedlandAdapter.new({})
@@ -93,7 +93,23 @@ class TestRedlandAdapter < Test::Unit::TestCase
   def test_remote_load
     adapter = ConnectionPool.add_data_source :type => :redland
     adapter.load('http://www.eyaloren.org/foaf.rdf', 'rdfxml')
-    assert_equal 39, adapter.size
+    assert_equal 9, adapter.size
+  end
+
+  def test_load_and_clear
+    adapter = ConnectionPool.add_data_source :type => :redland
+    adapter.load('http://www.eyaloren.org/foaf.rdf', 'rdfxml')
+    assert_equal 9, adapter.size
+    adapter.clear
+    assert_equal 0, adapter.size
+  end
+
+  def test_close
+    adapter = ConnectionPool.add_data_source :type => :redland, :location => '/tmp/test.db'
+    adapter.load('http://www.eyaloren.org/foaf.rdf', 'rdfxml')
+    assert_equal 9, adapter.size
+    adapter.close
+    assert_equal 0, ConnectionPool.adapters.size
   end
 
   def test_person_data

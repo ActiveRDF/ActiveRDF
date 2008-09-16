@@ -22,8 +22,22 @@ class RedlandAdapter < ActiveRdfAdapter
 		end
 
 		if params[:location] and params[:location] != :memory
-			# setup file locations for redland database
+			# setup file defaults for redland database
 			type = 'bdb'
+                        want_new = false    # create new or use existing store
+                        write = true
+                        contexts = true
+
+                        if params[:want_new] == true
+                           want_new = true
+                        end
+                        if params[:write] == false
+                           write = false
+                        end
+                        if params[:contexts] == false
+                           contexts = false
+                        end
+
       if params[:location].include?('/')
         path, file = File.split(params[:location])
       else
@@ -32,12 +46,12 @@ class RedlandAdapter < ActiveRdfAdapter
       end
 		else
 			# fall back to in-memory redland 	
-			type = 'memory'; path = '';	file = '.'
+			type = 'memory'; path = '';	file = '.'; want_new = false; write = true; contexts = true
 		end
 		
 		
 		begin
-			@store = Redland::HashStore.new(type, file, path, false)
+			@store = Redland::HashStore.new(type, file, path, want_new, write, contexts)
 			@model = Redland::Model.new @store
 			@reads = true
 			@writes = true
@@ -212,13 +226,12 @@ class RedlandAdapter < ActiveRdfAdapter
 
   # clear all real triples of adapter
   def clear
-    # TODO
+    @model.find(nil, nil, nil) {|s,p,o| @model.delete(s,p,o)}
   end
 	
 	# close adapter and remove it from the ConnectionPool
 	def close
-	  ConnectionPool.remove_data_source(self)
-	  # TODO: close the redland connection
+    ConnectionPool.remove_data_source(self)
   end
 	
 	private
@@ -242,7 +255,7 @@ class RedlandAdapter < ActiveRdfAdapter
 				# we determine the node type
  				if node.literal?
  					# for literal nodes we just return the value
- 					node.to_s
+ 					Redland.librdf_node_get_literal_value(node.node)
  				elsif node.blank?
  				  # blank nodes we ignore
  				  nil
