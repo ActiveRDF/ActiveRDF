@@ -29,7 +29,7 @@ class TestSparqlAdapter < Test::Unit::TestCase
     german = Query.new.distinct(:o).where(sunset,abstract,:o).limit(1).lang(:o,'de').execute.first
     english = Query.new.distinct(:o).where(sunset,abstract,:o).limit(1).lang(:o,'en').execute.first
 
-    assert english =~ /^77 Sunset Strip was the first hour-length private detective series in American television history/
+    assert english =~ /^77 Sunset Strip is the first hour-length private detective series in American television history/
     assert german =~ /^77 Sunset Strip ist ein Serienklassiker aus den USA um das gleichnamige, in Los Angeles am Sunset Boulevard angesiedelte Detektivbüro/
   end
 
