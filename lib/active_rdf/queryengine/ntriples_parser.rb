@@ -14,7 +14,7 @@ class NTriplesParser
     when MatchLiteral
       value = fix_unicode($1)
       if $2
-        Literal.typed(value, RDFS::Resource.new($2))
+        RDFS::Literal.typed(value, RDFS::Resource.new($2))
       else
         value
       end
@@ -62,7 +62,7 @@ class NTriplesParser
 							 when MatchLiteral
                  value = fix_unicode($1)
                  if $2
-                   Literal.typed(value, RDFS::Resource.new($2))
+                   RDFS::Literal.typed(value, RDFS::Resource.new($2))
                  else
                    value
                  end

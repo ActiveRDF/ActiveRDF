@@ -66,8 +66,8 @@ module RDFS
 
     # overriding sort based on uri
     def <=>(other); uri <=> other.uri; end
-    def to_ntriple; "<#{uri}>"; end
-    def self.to_ntriple; "<#{class_uri.uri}>"; end
+    def to_literal_s; "<#{uri}>"; end
+    def self.to_literal_s; "<#{class_uri.uri}>"; end
 
     def to_xml
       base = Namespace.expand(Namespace.prefix(self),'').chop

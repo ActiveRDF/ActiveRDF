@@ -47,6 +47,9 @@ class FederationManager
 				end
 			end
 
+      # count
+      return results.flatten.inject{|mem,c| mem + c} if q.count?
+
       # filter the empty results
       results.reject {|ary| ary.empty? }
 
@@ -61,7 +64,7 @@ class FederationManager
       results.flatten! if q.select_clauses.size == 1 or q.ask?
 
       # remove array (return single value or nil) if asked to
-      if options[:flatten] or q.count?
+      if options[:flatten]
         case results.size
         when 0
           results = nil

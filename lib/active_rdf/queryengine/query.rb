@@ -209,7 +209,7 @@ class Query
   private
   def parametrise s
     case s
-    when Symbol, RDFS::Resource, Literal, Class
+    when Symbol, RDFS::Resource, RDFS::Literal, Class
 			s
 		when nil
 			nil

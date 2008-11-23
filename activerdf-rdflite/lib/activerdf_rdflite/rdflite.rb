@@ -538,7 +538,7 @@ class RDFLite < ActiveRdfAdapter
     if r.nil? or r.is_a? Symbol
       nil
     else
-      r.to_ntriple
+      r.to_literal_s
     end
 	end
 
@@ -547,7 +547,7 @@ class RDFLite < ActiveRdfAdapter
     if r.nil?
       nil
     else
-      r.to_ntriple
+      r.to_literal_s
     end
   end
 

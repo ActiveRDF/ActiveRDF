@@ -60,7 +60,7 @@ class Query2SPARQL
     if term.is_a?(Symbol)
       "?#{term}"
     else
-      term.to_ntriple
+      term.to_literal_s
     end
 	end
 
