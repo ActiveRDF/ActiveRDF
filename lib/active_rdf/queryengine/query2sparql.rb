@@ -57,10 +57,20 @@ class Query2SPARQL
   end
 
 	def self.construct_clause(term)
-    if term.is_a?(Symbol)
-      "?#{term}"
-    else
-      term.to_literal_s
+    case term
+      when Symbol
+        "?#{term}"
+      when RDFS::Resource
+        term.to_s    # Resource.to_s adds necessary brackets to uri: <uri>         
+      when RDFS::Literal
+        term.to_literal_s
+      when Class
+        raise ActiveRdfError, "class must inherit from RDFS::Resource" unless term.ancestors.include?(RDFS::Resource)
+        term.class_uri.to_s
+      when nil
+        nil
+      else
+        "\"#{term.to_s}\""
     end
 	end
 
