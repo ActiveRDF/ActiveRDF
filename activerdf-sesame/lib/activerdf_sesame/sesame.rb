@@ -136,9 +136,10 @@ class SesameAdapter < ActiveRdfAdapter
   # * p => predicate
   # * o => object
   # * c => context (optional)
+  # Nil parameters are treated as :s, :p, :o respectively.
   def delete(s, p, o, c=nil)
     # convert variables
-    params = activerdf_to_sesame(s, p, o, c)
+    params = activerdf_to_sesame(s, p, o, c, true)
 
     begin
       # remove triple or tiples
@@ -315,12 +316,12 @@ class SesameAdapter < ActiveRdfAdapter
 
   # converts spoc input into sesame objects (RDFS::Resource into 
   # valueFactory.createURI etc.)
-  def activerdf_to_sesame(s, p, o, c)
+  def activerdf_to_sesame(s, p, o, c, use_nil = false)
     params = []
     
     # construct sesame parameters from s,p,o,c
     [s,p,o].each { |item|
-      params << wrap(item)
+      params << wrap(item, use_nil)
     }
     
     # wrap Context
@@ -330,8 +331,9 @@ class SesameAdapter < ActiveRdfAdapter
   end
   
   # converts item into sesame object (RDFS::Resource into 
-  # valueFactory.createURI etc.)
-  def wrap(item)
+  # valueFactory.createURI etc.). You can opt to preserve the
+  # nil values, otherwise they'll be transformed
+  def wrap(item, use_nil = false)
     result = 
     if(item.respond_to?(:uri))
       if (item.uri.to_s[0..4].match(/http:/).nil?)
@@ -344,7 +346,7 @@ class SesameAdapter < ActiveRdfAdapter
       when Symbol
         @valueFactory.createLiteral('')
       when NilClass
-        @valueFactory.createLiteral('')
+        use_nil ? nil : @valueFactory.createLiteral('')
       else
         @valueFactory.createLiteral(item.to_s)
       end
