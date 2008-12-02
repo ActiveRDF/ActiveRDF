@@ -11,100 +11,18 @@ module RDFS
 	# (eyal.class ...Person).
 
   class RDFS::Resource
-    # adding accessor to the class uri:
-    # the uri of the rdf resource being represented by this class
-    class << self
-      attr_accessor :class_uri
-    end
+    #####                     #####
+    ##### class level methods #####
+    #####                     #####
+    
+    cattr_accessor :class_uri
 
-    # uri of the resource (for instances of this class: rdf resources)
-    attr_reader :uri
-
-    # creates new resource representing an RDF resource
-    def initialize uri
-      @uri = case uri
-            # allow Resource.new(other_resource)
-            when RDFS::Resource
-             uri.uri
-            # allow Resource.new('<uri>') by stripping out <>
-            when /^<([^>]*)>$/
-              $1
-            # allow Resource.new('uri')
-            when String
-              uri
-            else 
-              raise ActiveRdfError, "cannot create resource <#{uri}>"
-            end
-			@predicates = Hash.new
-    end
-
-    # setting our own class uri to rdfs:resource
-    # (has to be done after defining our RDFS::Resource.new
-    # because it cannot be found in Namespace.lookup otherwise)
-    self.class_uri = Namespace.lookup(:rdfs, :Resource)
-
-    def self.uri; class_uri.uri; end
-    def self.==(other)
+    def Resource.uri; class_uri.uri; end
+    def Resource.==(other)
       other.respond_to?(:uri) ? other.uri == self.uri : false
     end
-    def self.localname; Namespace.localname(self); end
-
-    #####                        ######
-    ##### start of instance-level code
-    #####                        ######
-
-    def abbreviation; [Namespace.prefix(uri).to_s, localname]; end
-    # a resource is same as another if they both represent the same uri
-    def ==(other);
-      other.respond_to?(:uri) ? other.uri == self.uri : false
-    end
-    alias_method 'eql?','=='
-
-    # overriding hash to use uri.hash
-    # needed for array.uniq
-    def hash; uri.hash; end
-
-    # overriding sort based on uri
-    def <=>(other); uri <=> other.uri; end
-    def to_literal_s; "<#{uri}>"; end
-    def self.to_literal_s; "<#{class_uri.uri}>"; end
-
-    def to_xml
-      base = Namespace.expand(Namespace.prefix(self),'').chop
-
-      xml = "<?xml version=\"1.0\"?>\n"
-      xml += "<rdf:RDF xmlns=\"#{base}\#\"\n"
-      Namespace.abbreviations.each { |p| uri = Namespace.expand(p,''); xml += "  xmlns:#{p.to_s}=\"#{uri}\"\n" if uri != base + '#' }
-      xml += "  xml:base=\"#{base}\">\n"
-
-      xml += "<rdf:Description rdf:about=\"\##{localname}\">\n"
-      direct_predicates.each do |p|
-        objects = Query.new.distinct(:o).where(self, p, :o).execute
-        objects.each do |obj|
-          prefix, localname = Namespace.prefix(p), Namespace.localname(p)
-          pred_xml = if prefix
-                       "%s:%s" % [prefix, localname]
-                     else
-                       p.uri
-                     end
-
-          case obj
-          when RDFS::Resource
-            xml += "  <#{pred_xml} rdf:resource=\"#{obj.uri}\"/>\n"
-          when LocalizedString
-            xml += "  <#{pred_xml} xml:lang=\"#{obj.lang}\">#{obj}</#{pred_xml}>\n"
-          else
-            xml += "  <#{pred_xml} rdf:datatype=\"#{obj.xsd_type.uri}\">#{obj}</#{pred_xml}>\n"
-          end
-        end
-      end
-      xml += "</rdf:Description>\n"
-      xml += "</rdf:RDF>"
-    end
-
-    #####                   	#####
-    ##### class level methods	#####
-    #####                    	#####
+    def Resource.localname; Namespace.localname(self); end
+    def Resource.to_literal_s; "<#{class_uri.uri}>"; end
 
     # returns the predicates that have this resource as their domain (applicable
     # predicates for this resource)
@@ -140,9 +58,84 @@ module RDFS
       class_uri.find(*args)
     end
 
+    # uri of the resource (for instances of this class: rdf resources)
+    attr_reader :uri
+
+    # creates new resource representing an RDF resource
+    def initialize uri
+      @uri = case uri
+            # allow Resource.new(other_resource)
+            when RDFS::Resource
+             uri.uri
+            # allow Resource.new('<uri>') by stripping out <>
+            when /^<([^>]*)>$/
+              $1
+            # allow Resource.new('uri')
+            when String
+              uri
+            else 
+              raise ActiveRdfError, "cannot create resource <#{uri}>"
+            end
+			@predicates = Hash.new
+    end
+
+    # setting our own class uri to rdfs:resource
+    # (has to be done after defining our RDFS::Resource.new
+    # because it cannot be found in Namespace.lookup otherwise)
+    self.class_uri = Namespace.lookup(:rdfs, :Resource)
+
     #####                         #####
-    ##### instance level methods	#####
+    ##### instance level methods  #####
     #####                         #####
+
+    def abbreviation; [Namespace.prefix(uri).to_s, localname]; end
+    # a resource is same as another if they both represent the same uri
+    def ==(other);
+      other.respond_to?(:uri) ? other.uri == self.uri : false
+    end
+    alias_method 'eql?','=='
+
+    # overriding hash to use uri.hash
+    # needed for array.uniq
+    def hash; uri.hash; end
+
+    # overriding sort based on uri
+    def <=>(other); uri <=> other.uri; end
+    def to_literal_s; "<#{uri}>"; end
+
+    def to_xml
+      base = Namespace.expand(Namespace.prefix(self),'').chop
+
+      xml = "<?xml version=\"1.0\"?>\n"
+      xml += "<rdf:RDF xmlns=\"#{base}\#\"\n"
+      Namespace.abbreviations.each { |p| uri = Namespace.expand(p,''); xml += "  xmlns:#{p.to_s}=\"#{uri}\"\n" if uri != base + '#' }
+      xml += "  xml:base=\"#{base}\">\n"
+
+      xml += "<rdf:Description rdf:about=\"\##{localname}\">\n"
+      direct_predicates.each do |p|
+        objects = Query.new.distinct(:o).where(self, p, :o).execute
+        objects.each do |obj|
+          prefix, localname = Namespace.prefix(p), Namespace.localname(p)
+          pred_xml = if prefix
+                       "%s:%s" % [prefix, localname]
+                     else
+                       p.uri
+                     end
+
+          case obj
+          when RDFS::Resource
+            xml += "  <#{pred_xml} rdf:resource=\"#{obj.uri}\"/>\n"
+          when LocalizedString
+            xml += "  <#{pred_xml} xml:lang=\"#{obj.lang}\">#{obj}</#{pred_xml}>\n"
+          else
+            xml += "  <#{pred_xml} rdf:datatype=\"#{obj.xsd_type.uri}\">#{obj}</#{pred_xml}>\n"
+          end
+        end
+      end
+      xml += "</rdf:Description>\n"
+      xml += "</rdf:RDF>"
+    end
+
     def find(*args)
       # extract sort options from args
       options = args.last.is_a?(Hash) ? args.pop : {}
