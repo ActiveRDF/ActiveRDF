@@ -5,7 +5,7 @@ require 'queryengine/query2sparql'
 
 class ActiveRdfAdapter
 	# indicate if adapter can read and write
-	bool_accessor :reads, :writes, :enabled
+	bool_accessor :reads, :writes, :contexts, :enabled
 
   def initialize
     @enabled = true

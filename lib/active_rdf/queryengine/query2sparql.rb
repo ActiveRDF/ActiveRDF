@@ -61,12 +61,13 @@ class Query2SPARQL
       when Symbol
         "?#{term}"
       when RDFS::Resource
-        term.to_s    # Resource.to_s adds necessary brackets to uri: <uri>         
+        raise ActiveRdfError, "emtpy RDFS::Resources not allowed" if term.uri.size == 0
+        term.to_literal_s
       when RDFS::Literal
         term.to_literal_s
       when Class
         raise ActiveRdfError, "class must inherit from RDFS::Resource" unless term.ancestors.include?(RDFS::Resource)
-        term.class_uri.to_s
+        term.class_uri.to_literal_s
       when nil
         nil
       else

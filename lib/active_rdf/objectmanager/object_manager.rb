@@ -7,22 +7,16 @@ class ObjectManager
 	# users to invoke methods on classes (e.g. FOAF::Person) without
 	# getting symbol undefined errors (because e.g. foaf:person wasnt encountered
   # before so no class was created for it)
-  def self.construct_classes
+  def ObjectManager.construct_classes
     # find all rdf:types and construct class for each of them
     #q = Query.new.select(:t).where(:s,Namespace.lookup(:rdf,:type),:t)
 		
-		# find everything defined as rdfs:class or owl:class
-		type = Namespace.lookup(:rdf,:type)
-		rdfsklass = Namespace.lookup(:rdfs,:Class)
-
 		# TODO: we should not do this, we should not support OWL
 		# instead, owl:Class is defined as subclass-of rdfs:Class, so if the 
 		# reasoner has access to owl definition it should work out fine.
-		owlklass = Namespace.lookup(:owl,:Class)
-
 		klasses = []
-    klasses << Query.new.distinct(:s).where(:s,type,rdfsklass).execute
-    klasses << Query.new.distinct(:s).where(:s,type,owlklass).execute
+    klasses << Query.new.distinct(:s).where(:s,RDF::type,RDFS::Class).execute
+    klasses << Query.new.distinct(:s).where(:s,RDF::type,OWL::Class).execute
 
 		# flattening to get rid of nested arrays
 		# compacting array to get rid of nil (if one of these queries returned nil)
@@ -36,7 +30,8 @@ class ObjectManager
 
   # constructs Ruby class for the given resource (and puts it into the module as
   # defined by the registered namespace abbreviations)
-  def self.construct_class(resource)
+  def ObjectManager.construct_class(resource)
+    raise ActiveRdfError, "must be a resource: #{resource.class}" unless resource.is_a?(RDFS::Resource)
     # get prefix abbreviation and localname from type
     # e.g. :foaf and Person
     localname = Namespace.localname(resource)
@@ -59,10 +54,10 @@ class ObjectManager
     # else: create it
     _module = if Object.const_defined?(modulename.to_sym)
         $activerdflog.debug "ObjectManager: construct_class: module name #{modulename} previously defined"
-				Object.const_get(modulename.to_sym)
+        Object.const_get(modulename.to_sym)
 			else
         $activerdflog.debug "ObjectManager: construct_class: defining module name #{modulename} now"
-				Object.const_set(modulename, Module.new)
+        Object.const_set(modulename, Module.new)
 			end
 
 		# look whether class defined in that module
@@ -80,18 +75,18 @@ class ObjectManager
 		end
 	end
 
-	def self.prefix_to_module(prefix)
-		# TODO: remove illegal characters
-		prefix.to_s.upcase
-	end
+  def ObjectManager.prefix_to_module(prefix)
+    # TODO: remove illegal characters
+    prefix.to_s.upcase
+  end
 
-	def self.localname_to_class(localname)
+	def ObjectManager.localname_to_class(localname)
 		# replace illegal characters inside the uri
 		# and capitalize the classname
-		replace_illegal_chars(localname).capitalize
+		replace_illegal_chars(localname)
 	end
 
-	def self.create_module_name(resource)
+	def ObjectManager.create_module_name(resource)
 		# TODO: write unit test to verify replacement of all illegal characters
 		
 		# extract non-local part (including delimiter)
@@ -107,7 +102,7 @@ class ObjectManager
 		replace_illegal_chars(cleaned_non_local).upcase
 	end
 
-	def self.replace_illegal_chars(name)
+	def ObjectManager.replace_illegal_chars(name)
 		name.gsub(/[^a-zA-Z0-9]+/, '_')
 	end
 

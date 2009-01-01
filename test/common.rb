@@ -1,18 +1,59 @@
-def get_adapter
-	types = ConnectionPool.adapter_types
-	if types.include?(:rdflite)
-    get_rdflite
-	elsif types.include?(:redland)
-    get_redland
-	elsif types.include?(:sparql)
-    get_sparql
-	elsif types.include?(:yars)
-    get_yars
-	elsif types.include?(:jars2)
-    get_jars2
-	else
-		raise ActiveRdfError, "no suitable adapter found for test"
-	end
+def get_primary_adapter
+#### Fetching default
+#  ConnectionPool.add(:type => :fetching)
+#### Suggesting default
+#  ConnectionPool.add(:type => :suggesting)
+#### Rdflite default
+#  ConnectionPool.add(:type => :rdflite)
+#### Redland default
+#  ConnectionPool.add(:type => :redland)
+#### Redland file
+#  ConnectionPool.add(:type => :redland, :name => 'db1', :location => '/path/to/file')
+#### Redland memory
+#  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'memory')
+#### Redland sqlite
+#  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'sqlite')
+#### Redland MySql
+  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'mysql',
+                     :host => 'localhost', :database => 'redland_test',
+                     :user => 'redland_test', :password => 'oneo5many', :new => 'yes', :contexts => 'no')
+#### Redland Postgresql
+#  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'postgresql',
+#                     :host => 'localhost', :database => 'redland_test',
+#                     :user => '', :password => '', :new => 'yes')
+#### Redland Yars
+#  ConnectionPool.add(:type => :yars)
+#### Redland Jars2
+#  ConnectionPool.add(:type => :jars2)
+end
+
+def get_secondary_adapter
+#### Fetching default
+#  ConnectionPool.add(:type => :fetching)
+#### Suggesting default
+#  ConnectionPool.add(:type => :suggesting)
+#### Rdflite default
+#  ConnectionPool.add(:type => :rdflite)
+#### Redland default
+#  ConnectionPool.add(:type => :redland)
+#### Redland file
+#  ConnectionPool.add(:type => :redland, :name => 'db2', :location => '/path/to/file')
+#### Redland memory
+#  ConnectionPool.add(:type => :redland, :name => 'db2', :location => 'memory')
+#### Redland sqlite
+  ConnectionPool.add(:type => :redland, :name => 'db2', :location => 'sqlite', :new => 'yes')
+#### Redland MySql
+#  ConnectionPool.add(:type => :redland, :name => 'db2', :location => 'mysql',
+#                     :host => 'localhost', :database => 'redland_test',
+#                     :user => '', :password => '', :new => 'yes')
+#### Redland Postgresql
+#  ConnectionPool.add(:type => :redland, :name => 'db2', :location => 'postgresql',
+#                     :host => 'localhost', :database => 'redland_test',
+#                     :user => '', :password => '', :new => 'yes')
+#### Redland Yars
+#  ConnectionPool.add(:type => :yars)
+#### Redland Jars2
+#  ConnectionPool.add(:type => :jars2)
 end
 
 def get_read_only_adapter
@@ -23,71 +64,16 @@ def get_read_only_adapter
 	end
 end
 
-# TODO make this work with a list of existing adapters, not only one
-def get_different_adapter(existing_adapter)
-	types = ConnectionPool.adapter_types
-  if types.include?(:rdflite)
-    if existing_adapter.class == RDFLite
-      ConnectionPool.add :type => :rdflite, :unique => true
-    else
-      get_rdflite
-    end
-	elsif types.include?(:redland) and existing_adapter.class != RedlandAdapter
-    get_rdflite
-	elsif types.include?(:sparql) and existing_adapter.class != SparqlAdapter
-    get_sparql
-	elsif types.include?(:yars) and existing_adapter.class != YarsAdapter
-    get_yars
-	elsif types.include?(:jars2) and existing_adapter.class != Jars2Adapter
-    get_jars2
-	else
-		raise ActiveRdfError, "only one adapter on this system, or no suitable adapter found for test"
-	end
+def get_primary_write_adapter
+  adapter = get_primary_adapter
+  raise "No writable adapter" unless adapter.writes?
+  adapter
 end
 
-def get_all_read_adapters
-	types = ConnectionPool.adapter_types
-	adapters = types.collect {|type| self.send("get_#{type}") }
-	adapters.select {|adapter| adapter.reads?}
-end
-
-def get_all_write_adapters
-	types = ConnectionPool.adapter_types
-	adapters = types.collect {|type| self.send("get_#{type}") }
-	adapters.select {|adapter| adapter.writes?}
-end
-
-def get_write_adapter
-	types = ConnectionPool.adapter_types
-	if types.include?(:rdflite)
-    get_rdflite
-	elsif types.include?(:redland)
-    get_redland
-	elsif types.include?(:yars)
-    get_yars
-	elsif types.include?(:jars2)
-    get_jars2
-	else
-		raise ActiveRdfError, "no suitable adapter found for test"
-	end
-end
-
-# TODO use a list of exisiting adapters not only one
-def get_different_write_adapter(existing_adapter)
-	types = ConnectionPool.adapter_types
-	if types.include?(:rdflite)
-    if existing_adapter.class == RDFLite
-      ConnectionPool.add :type => :rdflite, :unique => true
-    else
-      get_rdflite
-    end
-	elsif types.include?(:redland) and existing_adapter.class != RedlandAdapter
-    get_redland
-	elsif types.include?(:yars) and existing_adapter.class != YarsAdapter
-    get_yars
-	else
-		raise ActiveRdfError, "only one write adapter on this system, or no suitable write adapter found for test"
-	end
+def get_secondary_write_adapter
+  adapter = get_secondary_adapter
+  raise "No writable adapter" unless adapter.writes?
+  adapter
 end
 
 private
@@ -96,9 +82,3 @@ def get_sparql
                      :engine => :joseki, :results => :sparql_xml)
 end
 
-def get_fetching; ConnectionPool.add(:type => :fetching); end
-def get_suggesting; ConnectionPool.add(:type => :suggesting); end
-def get_rdflite; ConnectionPool.add(:type => :rdflite); end
-def get_redland; ConnectionPool.add(:type => :redland); end
-def get_yars; ConnectionPool.add(:type => :yars); end
-def get_jars2; ConnectionPool.add(:type => :jars2); end

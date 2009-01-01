@@ -17,8 +17,8 @@ class TestAdapter < Test::Unit::TestCase
 	end
 
 	def test_ensure_adapter_behaviour
-		read_adapters = get_all_read_adapters
-		write_adapters = get_all_write_adapters
+		read_adapters = ConnectionPool.read_adapters
+		write_adapters = ConnectionPool.write_adapters
 		read_behaviour = [:query, :translate, :writes?, :reads?]
 		write_behaviour = [:add, :delete, :flush, :load]
 
@@ -34,26 +34,5 @@ class TestAdapter < Test::Unit::TestCase
 			end
 		end
 	end
-
-  def test_update_value
-		adapter = get_write_adapter
-		adapter.load "#{File.dirname(__FILE__)}/test_person_data.nt"
-
-    Namespace.register(:test, 'http://activerdf.org/test/')
-    eyal = Namespace.lookup(:test, :eyal)
-
-    assert_equal 1, eyal.all_age.size
-    assert_equal 27, eyal.age
-
-    # << doesn't work on Fixnums
-    eyal.age << 30
-    assert_equal 1, eyal.all_age.size
-    assert !eyal.all_age.include?(30)
-    assert eyal.all_age.include?(27)
-
-    eyal.age = 40
-    assert_equal 1, eyal.all_age.size
-    assert eyal.age == 40
-  end
 end
 

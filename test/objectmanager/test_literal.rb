@@ -6,11 +6,6 @@ require 'test/unit'
 require 'active_rdf'
 
 class TestLiteral < Test::Unit::TestCase
-  def setup
-		ConnectionPool.clear
-    @adapter = get_adapter
-  end
-
   def test_automatic_conversion
     test = 'test'
     assert_equal '"test"^^<http://www.w3.org/2001/XMLSchema#string>', test.to_literal_s
@@ -30,15 +25,14 @@ class TestLiteral < Test::Unit::TestCase
     # infer Date
     test = Time.parse("Sat Nov 22 00:33:23 -0800 2008")
     assert_equal '"2008-11-22T00:33:23-08:00"^^<http://www.w3.org/2001/XMLSchema#date>', test.to_literal_s
-  
   end
-  
+
   def test_equality
     test1 = 'test'
     test2 = RDFS::Literal.typed('test', XSD::string)  
     assert_equal test2.to_literal_s, test1.to_literal_s
   end
-  
+
   def test_language_tag
     cat = 'cat'
     cat_en = LocalizedString.new('cat', '@en')

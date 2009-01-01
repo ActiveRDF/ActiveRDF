@@ -9,26 +9,39 @@ module RDFS
 	# including data lookup (e.g. eyal.age), data updates (e.g. eyal.age=20),
 	# class-level lookup (Person.find_by_name 'eyal'), and class-membership
 	# (eyal.class ...Person).
-
   class RDFS::Resource
     #####                     #####
     ##### class level methods #####
     #####                     #####
     
-    cattr_accessor :class_uri
+    class << self
+      attr_accessor :class_uri
+    end
 
     def Resource.uri; class_uri.uri; end
     def Resource.==(other)
       other.respond_to?(:uri) ? other.uri == self.uri : false
     end
+    def Resource.eql?(other)
+      self == other
+    end
+    # TODO: check if these are needed in the class
+    # def Resource.eql?(other)
+    #   self.hash == other.hash
+    # end
+    # alias :== :eql?
+    # def Resource.===(other)
+    #   super(other) || (other.is_a?(RDFS::Resource) and other.type.include?(self))
+    # end
+
     def Resource.localname; Namespace.localname(self); end
     def Resource.to_literal_s; "<#{class_uri.uri}>"; end
 
     # returns the predicates that have this resource as their domain (applicable
     # predicates for this resource)
     def Resource.predicates
-      domain = Namespace.lookup(:rdfs, :domain)
-      Query.new.distinct(:p).where(:p, domain, class_uri).execute || []
+      Query.new.distinct(:p).where(:p, RDFS::domain, class_uri).execute |
+        Query.new.distinct(:p).where(class_uri, :p, :o).execute(:flatten=>false) || []
     end
 
     # manages invocations such as Person.find_by_name, 
@@ -76,7 +89,6 @@ module RDFS
             else 
               raise ActiveRdfError, "cannot create resource <#{uri}>"
             end
-			@predicates = Hash.new
     end
 
     # setting our own class uri to rdfs:resource
@@ -89,6 +101,7 @@ module RDFS
     #####                         #####
 
     def abbreviation; [Namespace.prefix(uri).to_s, localname]; end
+
     # a resource is same as another if they both represent the same uri
     def ==(other);
       other.respond_to?(:uri) ? other.uri == self.uri : false
@@ -101,6 +114,8 @@ module RDFS
 
     # overriding sort based on uri
     def <=>(other); uri <=> other.uri; end
+
+    alias :to_s :uri
     def to_literal_s; "<#{uri}>"; end
 
     def to_xml
@@ -138,10 +153,10 @@ module RDFS
 
     def find(*args)
       # extract sort options from args
-      options = args.last.is_a?(Hash) ? args.pop : {}
+      options = args.extract_options!
 
       query = Query.new.distinct(:s)
-      query.where(:s, Namespace.lookup(:rdf,:type), self)
+      query.where(:s, RDF::type, self)
 
       if options.include? :order
         sort_predicate = options[:order]
@@ -186,38 +201,30 @@ module RDFS
       Namespace.localname(self)
     end
 
-    # manages invocations such as eyal.age
+    # Searches for property belonging to this resource. Returns RDF::Property. 
+    # Replaces any existing values if method is an assignment: resource.prop=(new_value)
     def method_missing(method, *args)
       # possibilities:
-      # 1. eyal.age is a property of eyal (triple exists <eyal> <age> "30")
+      # 1. eyal.age is registered abbreviation 
+      # evidence: age in @predicates
+      # action: return RDF::Property(age,self) and store value if assignment
+      #
+      # 2. eyal.foaf::name, where foaf is a registered abbreviation
+      # evidence: foaf in Namespace.
+      # action: return namespace proxy that handles 'name' invocation, by 
+      # rewriting into predicate lookup (similar to case (1)
+      #
+      # 3. eyal.age is a property of eyal (triple exists <eyal> <age> "30")
       # evidence: eyal age ?a, ?a is not nil (only if value exists)
-      # action: return ?a
+      # action: return RDF::Property(age,self) and store value if assignment
       #
-      # 2. eyal's class is in domain of age, but does not have value for eyal
-      # explain: eyal is a person and some other person (not eyal) has an age
-      # evidence: eyal type ?c, age domain ?c
-      # action: return nil
+      # 4. eyal's class is in the domain of age, but does not have value for eyal
+      # evidence: eyal age ?a is nil and eyal type ?c, age domain ?c
+      # action: return RDF::Property(age,self) and store value if assignment
       #
-      # 3. eyal.age = 30 (setting a value for a property)
-      # explain: eyal has (or could have) a value for age, and we update that value
-      # complication: we need to find the full URI for age (by looking at
-      # possible predicates to use
-      # evidence: eyal age ?o  (eyal has a value for age now, we're updating it)
-      # evidence: eyal type ?c, age domain ?c (eyal could have a value for age, we're setting it)
-      # action: add triple (eyal, age, 30), return 30
-      #
-      # 4. eyal.age is a custom-written method in class Person
+      # 5. eyal.age is a custom-written method in class Person
       # evidence: eyal type ?c, ?c.methods includes age
-      # action: inject age into eyal and invoke
-			#
-			# 5. eyal.age is registered abbreviation 
-			# evidence: age in @predicates
-			# action: return object from triple (eyal, @predicates[age], ?o)
-			#
-			# 6. eyal.foaf::name, where foaf is a registered abbreviation
-			# evidence: foaf in Namespace.
-			# action: return namespace proxy that handles 'name' invocation, by 
-			# rewriting into predicate lookup (similar to case (5)
+      # action: return results from calling custom method 
 
       $activerdflog.debug "method_missing: #{method}"
 
@@ -225,107 +232,39 @@ module RDFS
 			# checking if method ends with '='
 
       update = method.to_s[-1..-1] == '='
-      methodname = if update 
-                     method.to_s[0..-2]
-                   else
-                     method.to_s
-                   end
+      methodname = update ? method.to_s[0..-2] : method.to_s
 
-      # extract single values from array unless user asked for eyal.all_age
-      flatten = true
-      if method.to_s[0..3] == 'all_'
-        flatten = false
-        methodname = methodname[4..-1]
+      # check possibility (1)
+      if @predicates and @predicates.include?(methodname)
+        property = RDF::Property.new(@predicates[methodname],self)
+        property.replace(args) if update
+        return property
       end
 
-			# check possibility (5)
-			if @predicates.include?(methodname)
-        if update
-          return set_predicate(@predicates[methodname], args)
-        else
-          return get_predicate(@predicates[methodname])
-        end
-			end
-
-			# check possibility (6)
+      # check possibility (2)
 			if Namespace.abbreviations.include?(methodname.to_sym)
-				namespace = Object.new	
-				@@uri = methodname
-				@@subject = self
-        @@flatten = flatten
-
         # catch the invocation on the namespace
-        class <<namespace
-          def method_missing(localname, *values)
-            update = localname.to_s[-1..-1] == '='
-            predicate = if update 
-                          Namespace.lookup(@@uri, localname.to_s[0..-2])
-                        else
-                          Namespace.lookup(@@uri, localname)
-                        end
-            
-            if update
-              @@subject.set_predicate(predicate, values)
-            else
-              @@subject.get_predicate(predicate, @@flatten)
-            end
-          end
-          private(:type)
-        end
-        return namespace
+        return NamespaceProxy.new(methodname,self)
       end
 
-      candidates = if update
-                      (class_level_predicates + direct_predicates).compact.uniq
-                    else
-                      direct_predicates
-                    end
+      # checking possibility (3) and (4)
+      pred = all_predicates.find{|pred| Namespace.localname(pred) == methodname}
+      if pred
+        property = RDF::Property.new(pred, self)
+        property.replace(*args) if update
+        return property
+      end
 
-			# checking possibility (1) and (3)
-			candidates.each do |pred|
-				if Namespace.localname(pred) == methodname
-          if update
-            return set_predicate(pred, args)
-          else
-            return get_predicate(pred, flatten)
-          end
-				end
-			end
-			
-			raise ActiveRdfError, "could not set #{methodname} to #{args}: no suitable 
-			predicate found. Maybe you are missing some schema information?" if update
-
-			# get/set attribute value did not succeed, so checking option (2) and (4)
-			
-			# checking possibility (2), it is not handled correctly above since we use
-			# direct_predicates instead of class_level_predicates. If we didn't find
-			# anything with direct_predicates, we need to try the
-			# class_level_predicates. Only if we don't find either, we
-			# throw "method_missing"
-			candidates = class_level_predicates
-
-			# if any of the class_level candidates fits the sought method, then we
-			# found situation (2), so we return nil or [] depending on the {:array =>
-			# true} value
-			if candidates.any?{|c| Namespace.localname(c) == methodname}
-				return_ary = args[0][:array] if args[0].is_a? Hash
-				if return_ary
-					return []
-				else
-					return nil
-				end
-			end
-
-			# checking possibility (4)
-			# TODO: implement search strategy to select in which class to invoke
-			# e.g. if to_s defined in Resource and in Person we should use Person
-			$activerdflog.debug "RDFS::Resource: method_missing option 4: custom class method"
-			self.type.each do |klass|
-				if klass.instance_methods.include?(method.to_s)
-					_dup = klass.new(uri)
-					return _dup.send(method,*args)
-				end
-			end
+      # check possibility (5)
+      self.type.each do |klass|
+        klass = ObjectManager.construct_class(klass)
+        if klass.instance_methods.include?(method.to_s)
+          _dup = klass.new(uri)
+          return _dup.send(method,*args)
+        end
+      end
+      
+      raise ActiveRdfError, "could not set #{methodname} to #{args}: no suitable predicate found. Maybe you are missing some schema information?" if update
 
 			# if none of the three possibilities work out, we don't know this method
 			# invocation, but we don't want to throw NoMethodError, instead we return
@@ -338,132 +277,92 @@ module RDFS
 		# saves instance into datastore
 		def save
 			db = ConnectionPool.write_adapter
-			rdftype = Namespace.lookup(:rdf, :type)
-			types.each do |t|
-				db.add(self, rdftype, t)
-			end
-
 			Query.new.distinct(:p,:o).where(self, :p, :o).execute do |p, o|
 				db.add(self, p, o)
 			end
 		end
 
-		# returns all rdf:type of this instance, e.g. [RDFS::Resource, 
-		# FOAF::Person]
+		# returns an RDF::Property for RDF::type's of this resource, e.g. [RDFS::Resource, FOAF::Person]
 		#
-		# Note: this method performs a database lookup for { self rdf:type ?o }. For 
-		# simple type-checking (to know if you are handling an ActiveRDF object, use 
-		# self.class, which does not do a database query, but simply returns 
+		# Note: this method performs a database lookup for { self rdf:type ?o }.
+		# For simple type-checking (to know if you are handling an ActiveRDF object,
+		# use self.class, which does not do a database query, but simply returns 
 		# RDFS::Resource.
-		def type
-			types.collect do |type|
-				ObjectManager.construct_class(type)
-			end
-		end
+    def type
+      RDF::Property.new(RDF::type, self)
+    end
+
+    # overrides built-in instance_of? to use rdf:type definitions
+    def instance_of?(klass)
+      self.type.include?(klass.respond_to?(:class_uri) ? klass.class_uri : klass) || self.class.ancestors.include?(klass)
+    end
 
     # define a localname for a predicate URI
     #
     # localname should be a Symbol or String, fulluri a Resource or String, e.g. 
-    # add_predicate(:name, FOAF::lastName)
-    def add_predicate localname, fulluri
+    # register_predicate(:name, FOAF::lastName)
+    def register_predicate(localname, fulluri)
 			localname = localname.to_s
 			fulluri = RDFS::Resource.new(fulluri) if fulluri.is_a? String
 
 			# predicates is a hash from abbreviation string to full uri resource
-			@predicates[localname] = fulluri
-		end
-
-
-		# overrides built-in instance_of? to use rdf:type definitions
-		def instance_of?(klass)
-			self.type.include?(klass)
+      (@predicates ||= {})[localname] = fulluri
 		end
 
 		# returns all predicates that fall into the domain of the rdf:type of this
 		# resource
-		def class_level_predicates
-			type = Namespace.lookup(:rdf, 'type')
-			domain = Namespace.lookup(:rdfs, 'domain')
-			Query.new.distinct(:p).where(self,type,:t).where(:p, domain, :t).execute || []
+		def class_predicates
+      Query.new.distinct(:p).where(self,RDF::type,:t).where(:p,RDFS::domain,:t).execute(:flatten=>false) | RDFS::Resource.predicates
 		end
+    alias class_level_predicates class_predicates
 
 		# returns all predicates that are directly defined for this resource
-		def direct_predicates(distinct = true)
-			if distinct
-				Query.new.distinct(:p).where(self, :p, :o).execute
-			else
-				Query.new.select(:p).where(self, :p, :o).execute
-			end
+    def direct_predicates
+      Query.new.distinct(:p).where(self,:p,:o).execute(:flatten=>false)
 		end
 
+    def all_predicates
+      direct_predicates | class_predicates
+    end
+  
 		def property_accessors
-			direct_predicates.collect {|pred| Namespace.localname(pred) }
+      all_predicates.collect {|pred| Namespace.localname(pred) }
 		end
 
-		# alias include? to ==, so that you can do paper.creator.include?(eyal)
-		# without worrying whether paper.creator is single- or multi-valued
-		alias include? ==
-
-		# returns uri of resource, can be overridden in subclasses
-		def to_s
-			"<#{uri}>"
-		end
-
-		def set_predicate(predicate, values)
-      FederationManager.delete(self, predicate)
-      values.flatten.each {|v| FederationManager.add(self, predicate, v) }
-      values
-    end
-
-    def get_predicate(predicate, flatten=false)
-      values = Query.new.distinct(:o).where(self, predicate, :o).execute(:flatten => flatten)
-
-      # TODO: fix '<<' for Fixnum values etc (we cannot use values.instance_eval 
-      # because Fixnum cannot do instace_eval, they're not normal classes)
-      if values.is_a?(RDFS::Resource) and !values.nil?
-        # prepare returned values for accepting << later, eg. in
-        # eyal.foaf::knows << knud
-        #
-        # store @subject, @predicate in returned values
-        values.instance_exec(self, predicate) do |s,p|
-          @subj = s
-          @pred = p
+    # like class_predicates, but returns predicates for this class instead of parent class for resources of type RDFS::Class or OWL::Class
+    def instance_predicates
+      if type.any?{|t| t == RDFS::Class or t == OWL::Class}
+        if instance_of?(RDFS::Resource)
+          Query.new.distinct(:s).where(:s,RDFS::domain,self).execute(:flatten=>false) | RDFS::Resource.predicates
+        else
+          self.class.predicates
         end
-
-        # overwrite << to add triple to db
-        values.instance_eval do
-          def <<(value)
-            FederationManager.add(@subj, @pred, value)
-          end
-        end
+      else
+        all_predicates
       end
-
-      values
     end
 
-		private
-#		def ancestors(predicate)
-#			subproperty = Namespace.lookup(:rdfs,:subPropertyOf)
-#			Query.new.distinct(:p).where(predicate, subproperty, :p).execute
-#		end
-
-
-		# returns all rdf:types of this resource but without a conversion to 
-		# Ruby classes (it returns an array of RDFS::Resources)
-		def types
-			type = Namespace.lookup(:rdf, :type)
-
-			# we lookup the type in the database
-			types = Query.new.distinct(:t).where(self,type,:t).execute
-
-			# we are also always of type rdfs:resource and of our own class (e.g. foaf:Person)
-			defaults = []
-			defaults << Namespace.lookup(:rdfs,:Resource)
-			defaults << self.class.class_uri
-
-			(types + defaults).uniq
-		end
+    # returns array containing predicates that do not have a value
+    def empty_predicates
+      all_predicates.reject{|pred| pred.size > 0}.uniq
+    end
 	end
+end
+
+class NamespaceProxy
+  def initialize(ns, subject)
+    @ns = ns
+    @subject = subject
+  end
+  def method_missing(localname, *values)
+    update = localname.to_s[-1..-1] == '='
+    localname = update ? localname.to_s[0..-2] : localname.to_s
+
+    property = RDF::Property.new(Namespace.lookup(@ns, localname),@subject)
+    property.replace(*values) if update
+    property
+  end
+  private(:type)
 end
 
 # proxy to manage find_by_ invocations

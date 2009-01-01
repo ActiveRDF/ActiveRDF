@@ -18,20 +18,19 @@ class TestConnectionPool < Test::Unit::TestCase
 
   def test_class_add_data_source    
     # test for successfull adding of an adapter
-    adapter = get_adapter
+    adapter = get_primary_adapter
     assert_kind_of ActiveRdfAdapter, adapter
     assert ConnectionPool.adapter_pool.include?(adapter)
     
-    # now check that we get the same adapter if we supply the same parameters
-    adapter2 = get_adapter
-    assert_equal adapter, adapter2
-    # test same object_id
+    # now check that we have different adapters for primary and secondary
+    adapter2 = get_secondary_adapter
+    assert adapter != adapter2
   end
 
   def test_class_adapter_pool
-		#ConnectionPool.clear
+    ConnectionPool.clear
     assert_equal 0, ConnectionPool.adapter_pool.size
-    adapter = get_adapter
+    get_primary_adapter
     assert_equal 1, ConnectionPool.adapter_pool.size
   end
 
@@ -51,19 +50,6 @@ class TestConnectionPool < Test::Unit::TestCase
     ConnectionPool.clear
     assert ConnectionPool.adapter_pool.empty?
     assert_nil ConnectionPool.write_adapter
-  end
-
-  def test_class_write_adapter
-    adapter = get_write_adapter
-    assert_kind_of ActiveRdfAdapter, adapter
-  end
-
-  def test_class_write_adapter_equals
-		adapter1 = get_write_adapter
-		adapter2 = get_different_write_adapter(adapter1)
-    assert_equal adapter2, ConnectionPool.write_adapter
-    ConnectionPool.write_adapter = adapter1
-    assert_equal adapter1, ConnectionPool.write_adapter
   end
 end
 

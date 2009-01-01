@@ -15,6 +15,7 @@ module RDFS
       Class_uri
     end
 
+    # convert value to class type
     def self.typed(value, type)
       case type
       when XSD::String
@@ -50,7 +51,7 @@ module RDFS
     def to_literal_s
       unless $activerdf_without_xsdtype
         s = kind_of?(Time) ? xmlschema : to_s
-        "\"#{s}\"^^#{xsd_type}"
+        "\"#{s}\"^^<#{xsd_type}>"
       else
         "\"#{to_s}\""
       end
@@ -78,7 +79,7 @@ class LocalizedString < String
       if @lang
         "\"#{self}\"@#@lang"
       else
-        "\"#{self}\"^^#{XSD::String}"
+        "\"#{self}\"^^<#{XSD::String}>"
       end
     else
       "\"#{self}\""

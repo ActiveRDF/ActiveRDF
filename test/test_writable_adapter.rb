@@ -4,38 +4,35 @@ module TestWritableAdapter
   include TestActiveRdfAdapter
 
   dir = File.dirname(File.expand_path(__FILE__))
-  @@test_data =  File.join(dir,'test_data.nt')
   @@test_person_data = File.join(dir,'test_person_data.nt')
   @@test_escaped_data = File.join(dir,'test_escaped_data.nt')
 
   def test_count_query
-    @adapter.load(@@test_data)
+    @adapter.load(@@test_person_data)
     assert_kind_of Fixnum, Query.new.count(:s).where(:s,:p,:o).execute
-    assert_equal 29, Query.new.count(:s).where(:s,:p,:o).execute
+    assert_equal 21, Query.new.count(:s).where(:s,:p,:o).execute
   end
 
   def test_update_value
     @adapter.load @@test_person_data
 
-    assert_equal 1, @@eyal.all_age.size
-    assert_equal 27, @@eyal.age
-    assert_equal ['27'], @@eyal.get_predicate(TEST::age)
+    assert_equal 1, @@eyal.age.size
+    assert_equal 27, @@eyal.age.to_a.first
     
-    # << doesn't work on Fixnums
-    @@eyal.age << 30
-    assert_equal 1, @@eyal.all_age.size
-    assert !@@eyal.all_age.include?(30)
-    assert @@eyal.all_age.include?(27)
+    # add a Fixnum
+    @@eyal.age += 30
+    assert_equal 2, @@eyal.age.size
+    assert @@eyal.age.include?(30)
+    assert @@eyal.age.include?(27)
 
     @@eyal.age = 40
-    assert_equal 1, @@eyal.all_age.size
-    assert @@eyal.age == 40
+    assert_equal 1, @@eyal.age.size
+    assert_equal @@eyal.age, 40
   end
   
 #  def test_load_escaped_literals
 #    @adapter.load(@@test_escaped_data)
 #
-#    assert_equal 2, @adapter.size
 #    assert_equal "ümlauts and ëmlauts", @@eyal.comment
 #    assert_equal "line\nbreaks, <p>'s and \"quotes\"", @@eyal.encoded
 #  end
@@ -46,8 +43,8 @@ module TestWritableAdapter
     color = Query.new.select(:o).where(@@eyal,@@eye,:o).execute(:flatten => true)
 
     assert_instance_of String, color
-    assert 'blue', color
-    assert_equal 'blue', @@eyal.test::eye
+    assert_equal 'blue', color
+    assert @@eyal.test::eye == color 
 
     assert @@eyal.instance_of?(TEST::Person)
     assert @@eyal.instance_of?(RDFS::Resource)
@@ -72,11 +69,11 @@ module TestWritableAdapter
     @adapter.delete(@@eyal, :p, :o)
     assert_equal 0, @adapter.size
 
-    @adapter.load(@@test_data)
-    assert_equal 29, @adapter.size
+    @adapter.load(@@test_person_data)
+    assert_equal 21, @adapter.size
 
     @adapter.delete(@@eyal, nil, nil)
-    assert_equal 24, @adapter.size
+    assert_equal 15, @adapter.size
 
     @adapter.delete(nil, nil, nil)
     assert_equal 0, @adapter.size
@@ -92,7 +89,7 @@ module TestWritableAdapter
 
   def test_load_from_file_and_clear
     @adapter.load(@@test_person_data)
-    assert_equal 30, @adapter.size  
+    assert_equal 21, @adapter.size
     @adapter.clear
     assert_equal 0, @adapter.size
   end
