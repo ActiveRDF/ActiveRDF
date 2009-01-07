@@ -12,9 +12,15 @@ class FederationManager
   end
 
   # delete triple s,p,o from the currently selected write adapter (s and p are 
-  # mandatory, o is optional, symbols are interpreted as wildcards)
+  # mandatory, o is optional, nil arguments and all symbols are interpreted as wildcards)
   def FederationManager.delete(s,p,o=:all)
     raise ActiveRdfError, "cannot write without a write-adapter" unless ConnectionPool.write_adapter
+
+    # transform wildcard symbols to nil (for the adaptors)
+    s = nil if s.is_a? Symbol
+    p = nil if p.is_a? Symbol
+    o = nil if o.is_a? Symbol
+
     ConnectionPool.write_adapter.delete(s,p,o)
   end
 

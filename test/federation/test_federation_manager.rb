@@ -138,6 +138,6 @@ class TestFederationManager < Test::Unit::TestCase
     # in parallel for distinct data, actually gives same results as querying
     # only the one set
     uniq = Query.new.distinct(:s,:p,:o).where(:s,:p,:o).execute
-    assert_equal first, uniq
+    assert_equal first.sort, uniq.sort
   end
 end

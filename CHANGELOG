@@ -1,5 +1,9 @@
-== activerdf (1.6.11) 
+== activerdf (1.6.12)
+  * FederationManager passes delete correctly to adaptors
+
+== activerdf (1.6.11) Thu, 27 Nov 2008 11:27:24 +0100
   * added support for enabling/disabling adapters (Samur Saraujo)
+  * RDFS::Resource accepts block (Aleksander Pohl)
 
 == activerdf (1.6.10) Wed, 23 Apr 2008 10:43:44 +0200
   * convert float <-> xsd:double (Richard Dale)

@@ -78,11 +78,13 @@ class TestObjectManager < Test::Unit::TestCase
       assert xml.include?(str), "xml does not contain #{str}"
     end
 
-#    url = 'http://gollem.swi.psy.uva.nl/cgi-bin/rdf-parser'
-#    uri = URI.parse(url)
-#    req = Net::HTTP::Post.new(url)
-#    req.set_form_data('rdf' => eyal.to_xml)
-#    res = Net::HTTP.new(uri.host, uri.port).start { |http| http.request(req) }
-#    assert_match /RDF statement parsed successfully/, res.body, "invalid XML generated (according to online RDF parser on gollem.swi.psy.uva.nl)"
+    require 'net/http'
+    url = 'http://librdf.org/parse'
+    uri = URI.parse(url)
+    req = Net::HTTP::Post.new(url)
+    req.set_form_data('content'=>eyal.to_xml, 'language'=>'rdfxml')
+    res = Net::HTTP.new(uri.host,uri.port).start {|http| http.request(req) }
+    result = res.body.match(/Found.*triples/)[0]
+    assert_equal "Found 6 triples", result, 'invalid XML generated (according to online parser at librdf.org)'
   end
 end

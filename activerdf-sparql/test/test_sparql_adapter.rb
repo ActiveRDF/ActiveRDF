@@ -52,14 +52,15 @@ class TestSparqlAdapter < Test::Unit::TestCase
   def test_regex_filter
     Namespace.register :yago, 'http://dbpedia.org/class/yago/'
     Namespace.register :dbpedia, 'http://dbpedia.org/property/'
+    Namespace.register :dbresource, 'http://dbpedia.org/resource/'
 
     movies = Query.new.
-      select(:title).
-      where(:film, RDFS.label, :title).
-      filter_regex(:title, /Kill$/).limit(5).execute
+      distinct(:title).
+      where(DBRESOURCE::Kill_Bill, RDFS.label, :title).
+      filter_regex(:title, /^Kill/).limit(10).execute
 
     assert !movies.empty?, "regex query returns empty results"
-    assert movies.all? {|m| m =~ /Kill$/ }, "regex query returns wrong results"
+    assert movies.all? {|m| m =~ /^Kill/ }, "regex query returns wrong results"
   end
 
   def test_query_with_block
