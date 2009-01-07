@@ -16,10 +16,10 @@ module RDF
   #
   #  email = RDF::Property.new('http://activerdf.org/test/email', 'http://activerdf.org/test/eyal')
   #  email.replace("eyal@cs.cu.nl")                                 # replace any existing values
-  #  email.store("eyal.oren@deri.com")                              # add new value to this property
+  #  email.add("eyal.oren@deri.com")                                # add new value to this property
   #  email += ("eyal.oren@deri.net")                                # alternative way to add new value
   #  email.clear                                                    # delete any existing values
-  #  email.store(["eyal@cs.cu.nl","eyal.oren@deri.com"])            # add enumerable containing values
+  #  email.add(["eyal@cs.cu.nl","eyal.oren@deri.com"])              # add enumerable containing values
   #  email["eyal.oren@deri.com"] = "eyal.oren@deri.net"             # replace existing value
   #  email[p.index("eyal.oren@deri.net")] = "eyal.oren@deri.org"    # replace existing value by key
   #  email.include?("eyal@cs.cu.nl") => true                        # check for existing value
@@ -51,17 +51,31 @@ module RDF
       value = self[md5_or_value]
       raise IndexError, "Couldn't find existing value to replace: #{md5_or_value}" unless value
       FederationManager.delete(@subject, self, value)
-      store(new_value)
+      add(new_value)
     end
 
-    # Returns an array with the object appended 
+    # Returns a new array with the object appended 
     def +(obj)
       to_a + [*obj]
     end
 
-    # Returns an array with the object removed 
+    # Returns a new array with the object removed 
     def -(obj)
       to_a - [*obj]
+    end
+
+    # Append. Adds the given object(s) to the values for this property belonging to @subject
+    # This expression returns the property itself, so several appends may be chained together.
+    def add(*args)
+      raise ActiveRdfError, "#{self}: no associated subject" unless @subject 
+      args.each do |arg|
+        if arg.is_a?(Enumerable) && !arg.is_a?(String)
+          arg.each {|item| FederationManager.add(@subject, self, item)}
+        else
+          FederationManager.add(@subject, self, arg)
+        end
+      end
+      self
     end
 
     # Removes all values
@@ -76,7 +90,7 @@ module RDF
       to_a.each do |item|
         new_item = yield(item)
         delete(item)
-        store(new_item)
+        add(new_item)
       end
       self
     end
@@ -193,6 +207,14 @@ module RDF
     end
     alias :size :length
 
+    # Ensure the return of only one value assigned to this property for this @subject. 
+    # If more than 1 value is found, ActiveRdfError is thrown.
+    def only
+      arr = to_a
+      raise ActiveRdfError if arr.size > 1
+      arr[0]
+    end
+
     # Equivalent to Property#delete_if, but returns nil if no changes were made
     def reject!(&block)  # :yields: key, value
       change = false
@@ -208,27 +230,13 @@ module RDF
     # Value replacement. Replaces all current value(s) with the new value
     def replace(new)
       clear
-      store(new)
+      add(new)
       self
     end
     alias :size :length
 
-    # Append. Adds the given object(s) to the values for this property belonging to @subject
-    # This expression returns the property itself, so several appends may be chained together.
-    def store(*args)
-      raise ActiveRdfError, "#{self}: no associated subject" unless @subject 
-      args.each do |arg|
-        if arg.is_a?(Enumerable) && !arg.is_a?(String)
-          arg.each {|item| FederationManager.add(@subject, self, item)}
-        else
-          FederationManager.add(@subject, self, arg)
-        end
-      end
-      self
-    end
-
     # Returns an array of copies of all values for this property of the given @subject
-    # Changes to this array will not effect the underlying values. Use #store or #replace to persist changes.
+    # Changes to this array will not effect the underlying values. Use #add or #replace to persist changes.
     # Raises ActiveRdfError if @subject is not defined for this property.
     def to_a
       raise ActiveRdfError, "#{self}: no associated subject" unless @subject 
@@ -237,7 +245,7 @@ module RDF
     alias :to_ary :to_a 
 
     # Returns a hash of copies of all values with indexes.
-    # Changes to this hash will not effect the underlying values. Use #store or #replace to persist changes.
+    # Changes to this hash will not effect the underlying values. Use #add or #replace to persist changes.
     # See also #each_pair
     def to_h
       hash = {}
@@ -245,11 +253,6 @@ module RDF
         hash[get_key(value)] = value
       end
       hash
-    end
-
-    # Returns the values of the property joined if @subject is set, otherwise calls Resource.to_s
-    def to_s
-      @subject ? to_a.join(", ") : super
     end
 
     # Return an array containing the values for the given keys.

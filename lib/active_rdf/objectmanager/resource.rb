@@ -100,8 +100,6 @@ module RDFS
     ##### instance level methods  #####
     #####                         #####
 
-    def abbreviation; [Namespace.prefix(uri).to_s, localname]; end
-
     # a resource is same as another if they both represent the same uri
     def ==(other);
       other.respond_to?(:uri) ? other.uri == self.uri : false
@@ -117,6 +115,31 @@ module RDFS
 
     alias :to_s :uri
     def to_literal_s; "<#{uri}>"; end
+    def inspect
+      type = self.type
+      type = (type and type.size > 0) ? type.collect{|t| t.abbr } : self.class 
+      if abbr?
+        label = abbr
+      else
+        label = self.label
+        label = (label and label.size > 0) ? label.inspect : uri
+      end
+      "#<#{type} #{label}>"
+    end
+
+    def abbreviation; [Namespace.prefix(uri).to_s, localname]; end
+
+    # get an abbreviation from to_s
+    # returns a copy of uri if no abbreviation found
+    def abbr
+      str = to_s
+      (abbr = Namespace.abbreviate(str)) ? abbr : str
+    end
+
+    # checks if an abbrivation exists for this resource
+    def abbr?
+      Namespace.prefix(self) ? true : false
+    end
 
     def to_xml
       base = Namespace.expand(Namespace.prefix(self),'').chop
@@ -209,22 +232,22 @@ module RDFS
       # evidence: age in @predicates
       # action: return RDF::Property(age,self) and store value if assignment
       #
-      # 2. eyal.foaf::name, where foaf is a registered abbreviation
+      # 2. eyal.age is a custom-written method in class Person
+      # evidence: eyal type ?c, ?c.methods includes age
+      # action: return results from calling custom method 
+      #
+      # 3. eyal.foaf::name, where foaf is a registered abbreviation
       # evidence: foaf in Namespace.
       # action: return namespace proxy that handles 'name' invocation, by 
       # rewriting into predicate lookup (similar to case (1)
       #
-      # 3. eyal.age is a property of eyal (triple exists <eyal> <age> "30")
+      # 4. eyal.age is a property of eyal (triple exists <eyal> <age> "30")
       # evidence: eyal age ?a, ?a is not nil (only if value exists)
       # action: return RDF::Property(age,self) and store value if assignment
       #
-      # 4. eyal's class is in the domain of age, but does not have value for eyal
+      # 5. eyal's class is in the domain of age, but does not have value for eyal
       # evidence: eyal age ?a is nil and eyal type ?c, age domain ?c
       # action: return RDF::Property(age,self) and store value if assignment
-      #
-      # 5. eyal.age is a custom-written method in class Person
-      # evidence: eyal type ?c, ?c.methods includes age
-      # action: return results from calling custom method 
 
       $activerdflog.debug "method_missing: #{method}"
 
@@ -242,20 +265,6 @@ module RDFS
       end
 
       # check possibility (2)
-			if Namespace.abbreviations.include?(methodname.to_sym)
-        # catch the invocation on the namespace
-        return NamespaceProxy.new(methodname,self)
-      end
-
-      # checking possibility (3) and (4)
-      pred = all_predicates.find{|pred| Namespace.localname(pred) == methodname}
-      if pred
-        property = RDF::Property.new(pred, self)
-        property.replace(*args) if update
-        return property
-      end
-
-      # check possibility (5)
       self.type.each do |klass|
         klass = ObjectManager.construct_class(klass)
         if klass.instance_methods.include?(method.to_s)
@@ -263,7 +272,21 @@ module RDFS
           return _dup.send(method,*args)
         end
       end
-      
+
+      # check possibility (3)
+			if Namespace.abbreviations.include?(methodname.to_sym)
+        # catch the invocation on the namespace
+        return PropertyNamespaceProxy.new(methodname,self)
+      end
+
+      # checking possibility (4) and (5)
+      pred = all_predicates.find{|pred| Namespace.localname(pred) == methodname}
+      if pred
+        property = RDF::Property.new(pred, self)
+        property.replace(*args) if update
+        return property
+      end
+
       raise ActiveRdfError, "could not set #{methodname} to #{args}: no suitable predicate found. Maybe you are missing some schema information?" if update
 
 			# if none of the three possibilities work out, we don't know this method
@@ -346,10 +369,14 @@ module RDFS
     def empty_predicates
       all_predicates.reject{|pred| pred.size > 0}.uniq
     end
+
+    def new_record?
+      Query.new.count(:p).where(self,:p,:o).execute == 0
+    end
 	end
 end
 
-class NamespaceProxy
+class PropertyNamespaceProxy
   def initialize(ns, subject)
     @ns = ns
     @subject = subject
