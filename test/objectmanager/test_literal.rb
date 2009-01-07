@@ -22,9 +22,13 @@ class TestLiteral < Test::Unit::TestCase
     test = true
     assert_equal '"true"^^<http://www.w3.org/2001/XMLSchema#boolean>', test.to_literal_s
 
-    # infer Date
+    # infer Time
     test = Time.parse("Sat Nov 22 00:33:23 -0800 2008")
-    assert_equal '"2008-11-22T00:33:23-08:00"^^<http://www.w3.org/2001/XMLSchema#date>', test.to_literal_s
+    assert_equal '"2008-11-22T00:33:23-08:00"^^<http://www.w3.org/2001/XMLSchema#time>', test.to_literal_s
+
+    $activerdf_without_xsdtype = true
+    assert_equal '"2008-11-22T00:33:23-08:00"', test.to_literal_s
+    $activerdf_without_xsdtype = false
   end
 
   def test_equality
@@ -41,5 +45,28 @@ class TestLiteral < Test::Unit::TestCase
 
     assert_equal '"dog"@en-GB', LocalizedString.new('dog', '@en-GB').to_literal_s
     assert_equal '"dog"@en@test', LocalizedString.new('dog', '@en@test').to_literal_s
+  end
+end
+
+class TestLocalizedString < Test::Unit::TestCase
+  def setup
+    @ls_en = LocalizedString.new('localized string','@en')
+  end
+
+  def test_lang
+    assert_equal 'en', @ls_en.lang
+    assert_equal @ls_en, LocalizedString.new('localized string','en')
+  end
+
+  def test_equals
+    assert @ls_en == "localized string"
+    assert @ls_en == LocalizedString.new('localized string','en')
+    assert @ls_en != LocalizedString.new('localized string','@gb')
+  end
+  
+  def test_to_literal_s
+    assert_equal '"localized string"@en', @ls_en.to_literal_s
+    $activerdf_without_xsdtype = true
+    assert_equal '"localized string"', @ls_en.to_literal_s
   end
 end

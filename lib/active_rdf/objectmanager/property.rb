@@ -34,7 +34,11 @@ module RDF
     def initialize(pred, subject = nil)
       super(pred)
       @subject = subject
+      @lang = nil
+      @exact_lang = true
+      @xsd_type = nil
     end
+    
     self.class_uri = Namespace.lookup(:rdf, :Property)
 
     # Value reference. Retrieves a copy of the value by the key or value. Returns nil if not found.
@@ -201,6 +205,38 @@ module RDF
       collect{|value| get_key(value)}
     end
 
+    # Returns the language tag and the match settings for the property if tag is nil. 
+    # Returns a new RDF::Property object with the @lang value set if tag is provided
+    # see also #xsd_type
+    def lang(tag = nil, exact = true)
+      if tag.nil?
+        [@lang,@exact_lang]
+      else
+        p = RDF::Property.new(self, @subject)
+        p.instance_eval do
+          raise ActiveRdfError, "cannot set @lang. @xsd_type is already set to '#{@xsd_type}'. only one may be set at a time" if @xsd_type
+          @lang, @exact_lang = tag.sub(/^@/,''), exact
+        end
+        p
+      end
+    end
+
+    # Returns the xsd_type if type is nil. 
+    # Returns a new RDF::Property object with the @xsd_type set if type is provided
+    # see also #lang
+    def xsd_type(type = nil)
+      if type.nil? 
+        @xsd_type
+      else
+        p = RDF::Property.new(self, @subject)
+        p.instance_eval do 
+          raise ActiveRdfError, "cannot set @xsd_type. @lang is already set to '#{@lang}'. only one may be set at a time" if @lang
+          @xsd_type = type
+        end
+        p
+      end
+    end
+
     # Returns the number of values assigned to this property for this @subject
     def length
       to_a.length
@@ -240,7 +276,15 @@ module RDF
     # Raises ActiveRdfError if @subject is not defined for this property.
     def to_a
       raise ActiveRdfError, "#{self}: no associated subject" unless @subject 
-      Query.new.distinct(:o).where(@subject,self,:o).execute(:flatten => false)
+      q = Query.new.distinct(:o).where(@subject,self,:o)
+      if @lang and !@xsd_type
+        q.lang(:o,"@#@lang",@exact_lang)
+      elsif @xsd_type and !@lang
+        q.xsd_type(:o, @xsd_type)
+      elsif @lang and @xsd_type
+        raise ActiveRdfError, "@xsd_type and @lang may not both be set"
+      end
+      q.execute(:flatten => false)
     end
     alias :to_ary :to_a 
 

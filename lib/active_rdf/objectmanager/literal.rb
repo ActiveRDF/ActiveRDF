@@ -68,25 +68,26 @@ class LocalizedString < String
   attr_reader :lang
   def initialize(value, lang)
     super(value)
-    @lang = lang =~ /^@/ ? lang[1..-1] : lang
+    @lang = lang.sub(/^@/,'')
   end
 
-  def xsd_type
-    XSD::string unless @lang   # don't return xsd_type if language is set (only lang or datatype may be set)
+  def ==(other)
+    if other.is_a?(LocalizedString)
+      super && @lang == other.lang
+    else
+      super
+    end
+  end
+  alias_method :eql?, :==
+  
+  def inspect
+    super + "@#@lang"
   end
 
   # returns quoted string with language type if present. 
   # xsd:string isn't appended when lang missing (xsd:string should be considered the default type)
   def to_literal_s
-    unless $activerdf_without_xsdtype
-      if @lang
-        "\"#{self}\"@#@lang"
-      else
-        "\"#{self}\"^^<#{XSD::string}>"
-      end
-    else
-      "\"#{self}\""
-    end
+    $activerdf_without_xsdtype ? "\"#{self}\"" : "\"#{self}\"@#@lang"
   end
 end
 

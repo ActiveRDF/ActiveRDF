@@ -133,6 +133,44 @@ class TestProperty < Test::Unit::TestCase
     assert @eyal.email.keys.include?("48ba5c9312b3400d28a72b637b0b3748")
   end
 
+  def test_only
+    assert_equal "blue", @eyal.eye.only
+    @eyal.eye.add "white"
+    assert_raise ActiveRdfError do
+      @eyal.eye.only
+    end
+  end
+
+  def test_lang
+    @adapter.load "#{File.dirname(__FILE__)}/../rdfs.nt"
+    ls_en = LocalizedString.new('ActiveRdf developer', '@en')
+    ls_de = LocalizedString.new('ActiveRdf entwickler', '@de')
+    @eyal.comment = ls_en
+    @eyal.comment.add ls_de
+
+    assert_equal ['en',true], @eyal.comment.lang('@en').lang
+    assert_equal ['de',false], @eyal.comment.lang('de', false).lang
+
+    assert_equal [ls_en], @eyal.comment.lang('@en')
+    assert_equal @eyal.comment.lang('@en'), @eyal.comment.lang('en')   # @en and en should equate
+
+    assert_equal [ls_de], @eyal.comment.lang('@de')
+    assert_equal [ls_en, ls_de], @eyal.comment
+
+    @eyal.comment.add LocalizedString.new('ActiveRdf developer', 'en')
+    assert_equal 1, @eyal.comment.lang('en').size      # no duplicates
+  end
+
+  def test_xsd_type
+    @adapter.load "#{File.dirname(__FILE__)}/../rdfs.nt"
+    t = Time.parse("Tue Jan 20 12:00:00 -0800 2009")
+    @eyal.comment = [1, LocalizedString.new('localized string', '@en'), "string", t]
+    assert_equal XSD::integer, @eyal.comment.xsd_type(XSD::integer).xsd_type
+    assert_equal [1], @eyal.comment.xsd_type(XSD::integer)
+    assert_equal ["string"], @eyal.comment.xsd_type(XSD::string)   # LocalizedString != XSD::string
+    assert_equal [t], @eyal.comment.xsd_type(XSD::time)
+  end
+
   def test_length
     assert_equal 2, @eyal.email.length
     assert_equal 2, @eyal.email.size

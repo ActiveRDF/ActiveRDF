@@ -95,12 +95,17 @@ class Query
   # filter variable on specified language tag, e.g. lang(:o, 'en')
   # optionally matches exactly on language dialect, otherwise only 
   # language-specifier is considered
-  def lang variable, tag, exact=false
+  def lang(variable, tag, exact=false)
+    tag = tag.sub(/^@/,'')
     if exact
-      filter "lang(?#{variable} = '#{tag}'"
+      filter "lang(?#{variable}) = '#{tag}'"
     else
       filter "regex(lang(?#{variable}), '^#{tag.gsub(/_.*/,'')}$')"
     end
+  end
+
+  def xsd_type(variable, type)
+    filter "datatype(?#{variable}) = #{type.to_literal_s}"
   end
 
   # adds reverse sorting predicates

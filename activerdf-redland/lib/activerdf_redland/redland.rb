@@ -152,7 +152,7 @@ class RedlandAdapter < ActiveRdfAdapter
   def add(s,p,o,c=nil)
     raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
     $activerdflog.warn "RedlandAdapter: adapter does not support contexts" if (!@contexts and !c.nil?)
-    $activerdflog.debug "RedlandAdapter: adding triple #{s} #{p} #{o} #{c}"
+    #$activerdflog.debug "RedlandAdapter: adding triple #{s} #{p} #{o} #{c}"
 
     # verify input
     if s.nil? || p.nil? || o.nil?
@@ -252,10 +252,20 @@ class RedlandAdapter < ActiveRdfAdapter
 
         # we determine the node type
         if node.literal?
-          dt_uri_ref = Redland.librdf_node_get_literal_value_datatype_uri(node.node)
-          type = RDFS::Resource.new(Redland::Uri.new(dt_uri_ref).to_s) if dt_uri_ref
           value = Redland.librdf_node_get_literal_value(node.node)
-          RDFS::Literal.typed(value,type)
+
+          lang_uri_ref = Redland.librdf_node_get_literal_value_language(node.node)
+          dt_uri_ref = Redland.librdf_node_get_literal_value_datatype_uri(node.node)
+          if lang_uri_ref
+            LocalizedString.new(value,Redland::Uri.new(lang_uri_ref).to_s)
+          elsif dt_uri_ref
+            type = RDFS::Resource.new(Redland::Uri.new(dt_uri_ref).to_s) 
+            RDFS::Literal.typed(value,type)
+          elsif lang_uri_ref and dt_uri_ref
+            raise ActiveRdfError, "cannot have both datatype and lang set"
+          else
+            RDFS::Literal.typed(value,XSD::string)   # string is default type if none specified
+          end
         elsif node.blank?
           # blank nodes are not currently supported
           nil
@@ -282,7 +292,7 @@ class RedlandAdapter < ActiveRdfAdapter
     when RDFS::Literal
       str = obj.kind_of?(Time) ? obj.xmlschema : obj.to_s
       if not $activerdf_without_xsdtype
-        if obj.kind_of?(RDFS::LocalizedString)
+        if obj.kind_of?(LocalizedString)
           Redland::Literal.new(str, obj.lang)
         else
           Redland::Literal.new(str,nil,Redland::Uri.new(obj.xsd_type.uri))
