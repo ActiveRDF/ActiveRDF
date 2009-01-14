@@ -22,10 +22,10 @@ module RDF
   #  email.add(["eyal@cs.cu.nl","eyal.oren@deri.com"])              # add enumerable containing values
   #  email["eyal.oren@deri.com"] = "eyal.oren@deri.net"             # replace existing value
   #  email[p.index("eyal.oren@deri.net")] = "eyal.oren@deri.org"    # replace existing value by key
-  #  email.include?("eyal@cs.cu.nl") => true                        # check for existing value
-  #  email == ["eyal.oren@deri.net","eyal@cs.cu.nl"] => true        # compare value(s) to enumerable (order is ignored)
+  #  email.include?("eyal.oren@deri.org") => true                   # check for existing value
+  #  email == ["eyal.oren@deri.org","eyal@cs.cu.nl"] => true        # compare value(s) to enumerable (order is ignored)
   #  email.delete("eyal@cs.cu.nl")                                  # delete specific value
-  #  email == "eyal.oren@deri.net" => true                          # compare value(s) to single value
+  #  email == "eyal.oren@deri.org" => true                          # compare value(s) to single value
   #  email.collect!{|val| val.gsub(/@/,' at ').gsub(/\./,' dot ')}  # update value(s) with result of block
   class Property < RDFS::Resource
     include Enumerable

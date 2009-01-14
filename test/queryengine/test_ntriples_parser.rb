@@ -59,7 +59,7 @@ EOF
 <s> <p> "blue" .
 <s> <p> "29"^^<http://www.w3.org/2001/XMLSchema#integer> .
 <s> <p> "false"^^<http://www.w3.org/2001/XMLSchema#boolean> .
-<s> <p> "2002-10-10T00:00:00+13"^^<http://www.w3.org/2001/XMLSchema#date> .
+<s> <p> "2002-10-10T00:00:00+13"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
 EOF
     triples = NTriplesParser.parse(string)
     assert_equal 4, triples.size
