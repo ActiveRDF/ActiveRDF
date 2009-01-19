@@ -12,7 +12,8 @@ require 'rdf/redland'
 class RedlandAdapter < ActiveRdfAdapter
   $activerdflog.info "loading Redland adapter"
   ConnectionPool.register_adapter(:redland,self)
-	
+	supports_context
+
   # instantiate connection to Redland database
   # * location: Data location (:memory, :mysql, :postgresql)
   # * database: Database name
