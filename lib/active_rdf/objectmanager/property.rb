@@ -19,28 +19,57 @@ module RDF
   #  email.add("eyal.oren@deri.com")                                # add new value to this property
   #  email += ("eyal.oren@deri.net")                                # alternative way to add new value
   #  email.clear                                                    # delete any existing values
-  #  email.add(["eyal@cs.cu.nl","eyal.oren@deri.com"])              # add enumerable containing values
+  #  email.add(["eyal@cs.cu.nl","eyal.oren@deri.com"])              # add array containing values
   #  email["eyal.oren@deri.com"] = "eyal.oren@deri.net"             # replace existing value
   #  email[p.index("eyal.oren@deri.net")] = "eyal.oren@deri.org"    # replace existing value by key
   #  email.include?("eyal.oren@deri.org") => true                   # check for existing value
-  #  email == ["eyal.oren@deri.org","eyal@cs.cu.nl"] => true        # compare value(s) to enumerable (order is ignored)
+  #  email == ["eyal.oren@deri.org","eyal@cs.cu.nl"] => true        # compare value(s) to array (order is ignored)
   #  email.delete("eyal@cs.cu.nl")                                  # delete specific value
   #  email == "eyal.oren@deri.org" => true                          # compare value(s) to single value
   #  email.collect!{|val| val.gsub(/@/,' at ').gsub(/\./,' dot ')}  # update value(s) with result of block
   class Property < RDFS::Resource
-    include Enumerable
     attr_reader :subject
 
-    def initialize(pred, subject = nil)
-      super(pred)
+    def initialize(property, subject = nil)
+      super(property)
       @subject = subject
       @lang = nil
       @exact_lang = true
       @xsd_type = nil
+      
+      if @subject
+        class<<self
+          include AssociatedProperty
+        end
+      end
     end
-    
+
     self.class_uri = Namespace.lookup(:rdf, :Property)
 
+    # Returns the property object for this property without @subject set
+    def property
+      RDF::Property.new(self)
+    end
+
+    # Returns a Set of RDF::Property objects that are subproperties of this property. An optional boolean recursive argument is available.
+    def subproperties(recursive = false)
+      subprops = Set.new(Query.new.distinct(:p).where(:p, RDFS::subPropertyOf, self.property).execute)
+      if recursive
+        all_subprops = Set.new
+        subprops.each do |subprop|
+          all_subprops.add(subprop)
+          all_subprops.merge(subprop.subproperties(true))
+        end
+        all_subprops
+      else
+        subprops
+      end
+    end
+  end
+  
+  # Provides methods for accessing property values when @subject is set 
+  module AssociatedProperty
+    include Enumerable
     # Value reference. Retrieves a copy of the value by the key or value. Returns nil if not found.
     def [](md5_or_value)
       unless md5_or_value.nil?
@@ -54,7 +83,7 @@ module RDF
     def []=(md5_or_value,new_value)
       value = self[md5_or_value]
       raise IndexError, "Couldn't find existing value to replace: #{md5_or_value}" unless value
-      FederationManager.delete(@subject, self, value)
+      FederationManager.delete(@subject, self.property, value)
       add(new_value)
     end
 
@@ -68,15 +97,28 @@ module RDF
       to_a - [*obj]
     end
 
+    def ==(other)
+      if other.respond_to?(:to_ary)
+        Set.new(other) == Set.new(to_a)
+      else
+        arr = to_a
+        if arr.size == 1
+          other == arr[0] || super
+        else
+          super
+        end
+      end
+    end
+    alias :eql? :==
+
     # Append. Adds the given object(s) to the values for this property belonging to @subject
     # This expression returns the property itself, so several appends may be chained together.
     def add(*args)
-      raise ActiveRdfError, "#{self}: no associated subject" unless @subject 
       args.each do |arg|
-        if arg.is_a?(Enumerable) && !arg.is_a?(String)
-          arg.each {|item| FederationManager.add(@subject, self, item)}
+        if arg.respond_to?(:to_ary)
+          arg.to_ary.each {|item| FederationManager.add(@subject, self.property, item)}
         else
-          FederationManager.add(@subject, self, arg)
+          FederationManager.add(@subject, self.property, arg)
         end
       end
       self
@@ -84,8 +126,7 @@ module RDF
 
     # Removes all values
     def clear
-      raise ActiveRdfError, "#{self}: no associated subject" unless @subject
-      FederationManager.delete(@subject, self)
+      FederationManager.delete(@subject, self.property)
       self
     end
 
@@ -105,7 +146,7 @@ module RDF
     def delete(md5_or_value) 
       value = self[md5_or_value]
       if value
-        FederationManager.delete(@subject, self, value)
+        FederationManager.delete(@subject, self.property, value)
         value
       elsif block_given?
         yield
@@ -118,9 +159,17 @@ module RDF
       self
     end
 
-    # Calls block once for each value, passing the value as a parameter
+    # Calls block once for each value, passing a copy of the value as a parameter
     def each(&block)  # :yields: value
-      to_a.each(&block)
+      q = Query.new.distinct(:o).where(@subject,self,:o)
+      if @lang and !@xsd_type
+        q.lang(:o,"@#@lang",@exact_lang)
+      elsif @xsd_type and !@lang
+        q.xsd_type(:o, @xsd_type)
+      elsif @lang and @xsd_type
+        raise ActiveRdfError, "@xsd_type and @lang may not both be set"
+      end
+      q.execute(&block)
       self
     end
     alias :each_value :each
@@ -143,26 +192,6 @@ module RDF
       to_a.empty?
     end
     alias :blank? :empty?
-
-    # Equality. Two properties are the same. If @subject is given, compare by values. If no match by value or no @subject was given, compare as Resource 
-    def ==(other)
-      # compare to property values if subject is set
-      if @subject
-        if other.is_a?(Enumerable)
-          Set.new(other) == Set.new(to_a)
-        else
-          arr = to_a
-          if arr.size == 1
-            other == arr[0] || super
-          else
-            super
-          end
-        end
-      else
-        super
-      end
-    end
-    alias :eql? :==
 
     # Returns a value from the property for the given key. If the key can't be found, there are several options: 
     # With no other arguments, it will raise an IndexError exception; if default is given, then that will be returned; 
@@ -197,7 +226,7 @@ module RDF
 
     # Return the value(s) of this property as a string. 
     def inspect
-      @subject ? "[#{to_a.collect{|obj| obj.inspect}.join(", ")}]" : super
+      "[#{to_a.collect{|obj| obj.inspect}.join(", ")}]"
     end
 
     # Returns a new array populated with the keys to the values
@@ -212,29 +241,17 @@ module RDF
       if tag.nil?
         [@lang,@exact_lang]
       else
-        p = RDF::Property.new(self, @subject)
-        p.instance_eval do
-          raise ActiveRdfError, "cannot set @lang. @xsd_type is already set to '#{@xsd_type}'. only one may be set at a time" if @xsd_type
-          @lang, @exact_lang = tag.sub(/^@/,''), exact
-        end
-        p
+        property_with_lang = RDF::Property.new(self, @subject)
+        property_with_lang.lang = tag, exact
+        property_with_lang
       end
     end
 
-    # Returns the xsd_type if type is nil. 
-    # Returns a new RDF::Property object with the @xsd_type set if type is provided
-    # see also #lang
-    def xsd_type(type = nil)
-      if type.nil? 
-        @xsd_type
-      else
-        p = RDF::Property.new(self, @subject)
-        p.instance_eval do 
-          raise ActiveRdfError, "cannot set @xsd_type. @lang is already set to '#{@lang}'. only one may be set at a time" if @lang
-          @xsd_type = type
-        end
-        p
-      end
+    # Sets lang and match settings
+    def lang=(*args)
+      args.flatten!
+      @lang = args[0].sub(/^@/,'')
+      @exact_lang = truefalse(args[1],true)
     end
 
     # Returns the number of values assigned to this property for this @subject
@@ -246,9 +263,9 @@ module RDF
     # Ensure the return of only one value assigned to this property for this @subject. 
     # If more than 1 value is found, ActiveRdfError is thrown.
     def only
-      arr = to_a
-      raise ActiveRdfError if arr.size > 1
-      arr[0]
+      entries = self.entries
+      raise ActiveRdfError if entries.size > 1
+      entries[0]
     end
 
     # Equivalent to Property#delete_if, but returns nil if no changes were made
@@ -271,22 +288,8 @@ module RDF
     end
     alias :size :length
 
-    # Returns an array of copies of all values for this property of the given @subject
-    # Changes to this array will not effect the underlying values. Use #add or #replace to persist changes.
-    # Raises ActiveRdfError if @subject is not defined for this property.
-    def to_a
-      raise ActiveRdfError, "#{self}: no associated subject" unless @subject 
-      q = Query.new.distinct(:o).where(@subject,self,:o)
-      if @lang and !@xsd_type
-        q.lang(:o,"@#@lang",@exact_lang)
-      elsif @xsd_type and !@lang
-        q.xsd_type(:o, @xsd_type)
-      elsif @lang and @xsd_type
-        raise ActiveRdfError, "@xsd_type and @lang may not both be set"
-      end
-      q.execute(:flatten => false)
-    end
-    alias :to_ary :to_a 
+    # Allow this Property to be automatically converted to array
+    alias :to_ary :to_a
 
     # Returns a hash of copies of all values with indexes.
     # Changes to this hash will not effect the underlying values. Use #add or #replace to persist changes.
@@ -303,7 +306,26 @@ module RDF
     def values_at(*args)
       args.collect{|md5| self[md5]}
     end
-    
+
+    # Returns the xsd_type if type is nil. 
+    # Returns a new RDF::Property object with the @xsd_type set if type is provided
+    # see also #lang
+    def xsd_type(type = nil)
+      if type.nil?
+        @xsd_type
+      else
+        property_with_xsd_type = RDF::Property.new(self, @subject)
+        property_with_xsd_type.xsd_type = type
+        property_with_xsd_type
+      end
+    end
+
+    # Sets xsd_type
+    def xsd_type=(type)
+      @xsd_type = type
+      self
+    end
+
     private
     def get_key(value)
       Digest::MD5.hexdigest(value.to_s)

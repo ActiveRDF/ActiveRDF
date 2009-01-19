@@ -1,4 +1,4 @@
-require File.join(File.dirname(File.expand_path(__FILE__)), 'test_activerdf_adapter')
+require File.dirname(File.expand_path(__FILE__)) + '/test_activerdf_adapter'
 
 module TestReadOnlyAdapter
   include TestActiveRdfAdapter

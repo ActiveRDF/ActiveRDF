@@ -1,3 +1,19 @@
+require 'active_rdf'
+
+Namespace.register(:test, 'http://activerdf.org/test/')
+
+module SetupAdapter
+  def setup(adapter_args = nil)
+    @adapter_args = adapter_args
+    ConnectionPool.clear
+    @adapter = adapter_args ? ConnectionPool.add(adapter_args) : get_primary_adapter
+  end
+
+  def teardown
+    ConnectionPool.close(@adapter)
+  end
+end
+
 def get_primary_adapter
 #### Fetching default
 #  ConnectionPool.add(:type => :fetching)
@@ -6,17 +22,17 @@ def get_primary_adapter
 #### Rdflite default
 #  ConnectionPool.add(:type => :rdflite)
 #### Redland default
-#  ConnectionPool.add(:type => :redland)
+  ConnectionPool.add(:type => :redland)
 #### Redland file
 #  ConnectionPool.add(:type => :redland, :name => 'db1', :location => '/path/to/file')
 #### Redland memory
 #  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'memory')
 #### Redland sqlite
-#  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'sqlite')
+#  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'sqlite', :new => 'yes')
 #### Redland MySql
-  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'mysql',
-                     :host => 'localhost', :database => 'redland_test',
-                     :user => 'redland_test', :password => 'oneo5many', :new => 'yes', :contexts => 'no')
+#  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'mysql',
+#                     :host => 'localhost', :database => 'redland_test',
+#                     :user => '', :password => '', :new => 'yes', :contexts => 'no')
 #### Redland Postgresql
 #  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'postgresql',
 #                     :host => 'localhost', :database => 'redland_test',

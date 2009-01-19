@@ -8,16 +8,16 @@ require 'federation/connection_pool'
 require "#{File.dirname(__FILE__)}/../common"
 
 class TestResourceReading < Test::Unit::TestCase
+  include SetupAdapter
+
+  @@eyal = TEST::eyal
+  
   def setup
-		ConnectionPool.clear
-    @adapter = get_primary_adapter
+    super
     test_dir = "#{File.dirname(__FILE__)}/.."
     @adapter.load "#{test_dir}/rdf.nt"
     @adapter.load "#{test_dir}/rdfs.nt"
     @adapter.load "#{test_dir}/test_person_data.nt"
-    Namespace.register(:test, 'http://activerdf.org/test/')
-
-    @eyal = TEST::eyal
   end
 
   def test_class_resource_equality
@@ -48,14 +48,14 @@ class TestResourceReading < Test::Unit::TestCase
   end
   
   def test_property_accessors
-    properties = @eyal.property_accessors
+    properties = @@eyal.property_accessors
     assert_equal 11, properties.size
     %w(type value comment label seeAlso isDefinedBy member age eye car email).each{|prop| assert properties.include?(prop), "missing property #{prop}"}
   end
 
   def test_resource_predicates
     # assert that eyal's three direct predicates are eye, age, and type
-    preds = @eyal.direct_predicates
+    preds = @@eyal.direct_predicates
     assert_equal 4, preds.size
     assert preds.include?(TEST::age)
     assert preds.include?(TEST::eye)
@@ -63,12 +63,12 @@ class TestResourceReading < Test::Unit::TestCase
   end
 
   def test_resource_type
-    assert_instance_of RDFS::Resource, @eyal
-    assert_instance_of TEST::Person, @eyal
+    assert_instance_of RDFS::Resource, @@eyal
+    assert_instance_of TEST::Person, @@eyal
   end
 
   def test_resource_types
-    type = @eyal.type
+    type = @@eyal.type
     assert_equal 2, type.size
     assert type.include?(TEST::Person.class_uri)
     assert type.include?(RDFS::Resource.class_uri)
@@ -76,29 +76,29 @@ class TestResourceReading < Test::Unit::TestCase
 
   def test_resource_values
     # triple exists '<eyal> age 27'
-    assert_kind_of RDF::Property, @eyal.age
-    assert_equal 1, @eyal.age.size
-    assert_equal 27, @eyal.age.to_a.first
-    assert_equal @eyal.age.to_a.first, 27 
-    assert_equal [27], @eyal.age
-    assert_equal @eyal.age, [27]
-    assert_kind_of RDF::Property, @eyal.test::age
-    assert_equal 1, @eyal.test::age.size
-    assert_equal 27, @eyal.test::age.to_a.first
-    assert_equal @eyal.test::age.to_a.first, 27
+    assert_kind_of RDF::Property, @@eyal.age
+    assert_equal 1, @@eyal.age.size
+    assert_equal 27, @@eyal.age.to_a.first
+    assert_equal @@eyal.age.to_a.first, 27 
+    assert_equal [27], @@eyal.age
+    assert_equal @@eyal.age, [27]
+    assert_kind_of RDF::Property, @@eyal.test::age
+    assert_equal 1, @@eyal.test::age.size
+    assert_equal 27, @@eyal.test::age.to_a.first
+    assert_equal @@eyal.test::age.to_a.first, 27
 
     # Person has property car, but eyal has no value for it
-    assert @eyal.car.empty?
-    assert_equal [], @eyal.car
-    assert @eyal.test::car.empty?
-    assert_equal [], @eyal.test::car
+    assert @@eyal.car.empty?
+    assert_equal [], @@eyal.car
+    assert @@eyal.test::car.empty?
+    assert_equal [], @@eyal.test::car
 
     # non-existent property returns nil
-    assert_nil @eyal.non_existing_property
+    assert_nil @@eyal.non_existing_property
 
     # non-existent properties thrown errors on assignment
     assert_raise ActiveRdfError do
-      @eyal.non_existing_property = "value"
+      @@eyal.non_existing_property = "value"
     end
   end
 
@@ -110,38 +110,38 @@ class TestResourceReading < Test::Unit::TestCase
 
   def test_custom_method
     TEST::Person.class_eval{def foo; "foo"; end}
-    assert_equal "foo", @eyal.foo
+    assert_equal "foo", @@eyal.foo
     TEST::Graduate.class_eval{def bar; "bar"; end}
-    assert_nil @eyal.bar
-    @eyal.type += TEST::Graduate
-    assert_equal "bar", @eyal.bar
+    assert_nil @@eyal.bar
+    @@eyal.type += TEST::Graduate
+    assert_equal "bar", @@eyal.bar
   end
 
   def test_find_all
     found = RDFS::Resource.find_all
     assert_equal 2, found.size
-    assert found.include?(@eyal)
+    assert found.include?(@@eyal)
     assert found.include?(TEST::Person)
   end
 
   def test_finders
     found = RDFS::Resource.find
     assert_equal 2, found.size
-    assert found.include?(@eyal)
+    assert found.include?(@@eyal)
     assert found.include?(TEST::Person)
   end
 
   def test_find_methods
-    assert_equal [@eyal], RDFS::Resource.find_by_eye('blue')
-    assert_equal [@eyal], RDFS::Resource.find_by_test::eye('blue')
+    assert_equal [@@eyal], RDFS::Resource.find_by_eye('blue')
+    assert_equal [@@eyal], RDFS::Resource.find_by_test::eye('blue')
 
-    assert_equal [@eyal], RDFS::Resource.find_by_age(27)
-    assert_equal [@eyal], RDFS::Resource.find_by_test::age(27)
+    assert_equal [@@eyal], RDFS::Resource.find_by_age(27)
+    assert_equal [@@eyal], RDFS::Resource.find_by_test::age(27)
 
-    assert_equal [@eyal], RDFS::Resource.find_by_age_and_eye(27, 'blue')
-    assert_equal [@eyal], RDFS::Resource.find_by_test::age_and_test::eye(27, 'blue')
-    assert_equal [@eyal], RDFS::Resource.find_by_test::age_and_eye(27, 'blue')
-    assert_equal [@eyal], RDFS::Resource.find_by_age_and_test::eye(27, 'blue')
+    assert_equal [@@eyal], RDFS::Resource.find_by_age_and_eye(27, 'blue')
+    assert_equal [@@eyal], RDFS::Resource.find_by_test::age_and_test::eye(27, 'blue')
+    assert_equal [@@eyal], RDFS::Resource.find_by_test::age_and_eye(27, 'blue')
+    assert_equal [@@eyal], RDFS::Resource.find_by_age_and_test::eye(27, 'blue')
 
     found = RDFS::Resource.find_by_rdf::type(RDFS::Resource)
     assert_equal 2, found.size
@@ -187,6 +187,6 @@ class TestResourceReading < Test::Unit::TestCase
   def test_write_without_write_adapter
     ConnectionPool.clear
     get_read_only_adapter
-    assert_raises(ActiveRdfError) { @eyal.test::age = 18 }
+    assert_raises(ActiveRdfError) { @@eyal.test::age = 18 }
   end
 end

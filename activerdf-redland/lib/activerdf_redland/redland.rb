@@ -201,7 +201,9 @@ class RedlandAdapter < ActiveRdfAdapter
   # returns all triples in the datastore
   def dump
     raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
-    @model.to_string('ntriples')
+    arr = []
+    @model.triples{|s,p,o| arr << [s.to_s,p.to_s,o.to_s]}
+    arr
   end
 
   # returns size of datasources as number of triples
@@ -222,23 +224,16 @@ class RedlandAdapter < ActiveRdfAdapter
 
   # close adapter and remove it from the ConnectionPool
   def close
-    ConnectionPool.remove_data_source(self)
-    flush   # sync model with datastore
-    @model = nil   # remove reference to model for removal by GC
-    @enabled = false
+    if @enabled
+      ConnectionPool.remove_data_source(self)
+      flush   # sync model with datastore
+      @model = nil   # remove reference to model for removal by GC
+      @enabled = false
+    end
   end
 
   private
   ################ helper methods ####################
-  def truefalse(val, default)
-    raise ArgumentError, "truefalse: default must be true or false" unless default == true || default == false
-    case val
-    when true,/^yes|y$/i then true
-    when false,/^no|n$/i then false
-    else default
-    end
-  end
-
   def query_result_to_array(query_results, &block)
     results = []
     number_bindings = query_results.binding_names.size

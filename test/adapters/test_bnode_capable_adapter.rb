@@ -1,6 +1,6 @@
 module TestBnodeCapableAdapter
   def test_load_bnodes
-    @adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_bnode_data.nt')
+    @adapter.load(File.dirname(File.expand_path(__FILE__)) + '/../test_bnode_data.nt')
 
     # loaded five triples in total
     assert_equal 8, @adapter.size
@@ -20,7 +20,7 @@ module TestBnodeCapableAdapter
   end
 
   def test_bnodes
-    @adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_bnode_data.nt')
+    @adapter.load(File.dirname(File.expand_path(__FILE__)) + '/../test_bnode_data.nt')
 
     #ObjectManager.construct_classes
     people = TEST::Person.find_all

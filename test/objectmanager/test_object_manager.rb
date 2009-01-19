@@ -7,12 +7,7 @@ require 'active_rdf'
 require "#{File.dirname(__FILE__)}/../common"
 
 class TestObjectManager < Test::Unit::TestCase
-  def setup
-    ConnectionPool.clear
-    @adapter = get_primary_adapter
-    @adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
-    Namespace.register(:test, 'http://activerdf.org/test/')
-  end
+  include SetupAdapter
 
   def test_resource_creation
     assert_nothing_raised { RDFS::Resource.new('abc') }
@@ -64,12 +59,13 @@ class TestObjectManager < Test::Unit::TestCase
   end
 
   def test_to_xml#
+    @adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
     eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
     eyal.age = 29
     assert_equal 29, eyal.age
     xml = eyal.to_xml
     ['<rdf:Description rdf:about="#eyal">',
-    '<test:eye rdf:datatype="http://www.w3.org/2001/XMLSchema#string">blue</test:eye>',
+    '<test:eye xml:lang="en">blue</test:eye>',
     '<test:email rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eyal@cs.vu.nl</test:email>',
     '<test:email rdf:datatype="http://www.w3.org/2001/XMLSchema#string">eyal.oren@deri.org</test:email>',
     '<rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>',

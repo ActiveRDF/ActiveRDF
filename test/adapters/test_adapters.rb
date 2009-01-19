@@ -6,7 +6,7 @@ require 'test/unit'
 require 'active_rdf'
 require 'federation/federation_manager'
 require 'queryengine/query'
-require "#{File.dirname(__FILE__)}/common"
+require "#{File.dirname(__FILE__)}/../common"
 
 class TestAdapter < Test::Unit::TestCase
 	def setup

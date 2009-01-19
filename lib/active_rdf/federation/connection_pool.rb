@@ -108,6 +108,12 @@ class ConnectionPool
     
   end
 
+  # closes and removes adapter from pool
+  def ConnectionPool.close_data_source(adapter)
+    remove_data_source(adapter)
+    adapter.close
+  end
+
 	# sets adapter-instance for connection parameters (if you want to re-enable an existing adapter)
 	def ConnectionPool.set_data_source(adapter, connection_params = {})
 		index = @@adapter_parameters.index(connection_params)
@@ -125,6 +131,7 @@ class ConnectionPool
 	# (code bit more complicad since they are class methods)
 	class << self
 		alias add add_data_source
+    alias close close_data_source
 	end
 
   # adapter-types can register themselves with connection pool by

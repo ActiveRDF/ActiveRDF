@@ -116,24 +116,29 @@ module RDFS
     alias :to_s :uri
     def to_literal_s; "<#{uri}>"; end
     def inspect
-      type = self.type
-      if type and type.size > 0
-        type = type.collect{|t| t.abbr }
-        type = type.size > 1 ? type.inspect : type.first
-      else
-        self.class
-      end
-      if abbr?
-        label = abbr
-      else
-        label = self.label
-        label = 
-          if label and label.size > 0
-            if label.size == 1 then label.only
-            elsif label.size > 1 then label.inspect
+      if ConnectionPool.adapters.size > 0
+        type = self.type
+        if type and type.size > 0
+          type = type.collect{|t| t.abbr }
+          type = type.size > 1 ? type.inspect : type.first
+        else
+          type = self.class
+        end
+        if abbr?
+          label = abbr
+        else
+          label = self.label
+          label = 
+            if label and label.size > 0
+              if label.size == 1 then label.only
+              elsif label.size > 1 then label.inspect
+              end
+            else uri
             end
-          else uri
-          end
+        end
+      else
+        type = self.class
+        label = self.uri
       end
       "#<#{type} #{label}>"
     end
@@ -310,10 +315,8 @@ module RDFS
 
 		# saves instance into datastore
 		def save
-			db = ConnectionPool.write_adapter
-			Query.new.distinct(:p,:o).where(self, :p, :o).execute do |p, o|
-				db.add(self, p, o)
-			end
+      ConnectionPool.write_adapter.add(self,RDF::type,self.class)
+      self
 		end
 
 		# returns an RDF::Property for RDF::type's of this resource, e.g. [RDFS::Resource, FOAF::Person]
@@ -358,7 +361,7 @@ module RDFS
     def all_predicates
       direct_predicates | class_predicates
     end
-  
+
 		def property_accessors
       all_predicates.collect {|pred| Namespace.localname(pred) }
 		end

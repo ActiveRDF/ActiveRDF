@@ -15,6 +15,8 @@ class NTriplesParser
       value = fix_unicode($1)
       if $2
         RDFS::Literal.typed(value, RDFS::Resource.new($2))
+      elsif $3
+        LocalizedString.new(value,$3)
       else
         value
       end
@@ -32,7 +34,8 @@ class NTriplesParser
 		# same bnodes _:#1
 		uuid = UUID.random_create.to_s
 
-    input.collect do |triple|
+    input.split(/\r|\n/).collect do |triple|
+      next if  triple =~ /^\s*#|^\s*$/ 
       nodes = []
       scanner = StringScanner.new(triple)
       scanner.skip(/\s+/)
@@ -63,6 +66,8 @@ class NTriplesParser
                  value = fix_unicode($1)
                  if $2
                    RDFS::Literal.typed(value, RDFS::Resource.new($2))
+                 elsif $3
+                   LocalizedString.new(value, $3)
                  else
                    value
                  end
@@ -72,15 +77,15 @@ class NTriplesParser
 
       # collect s, p, o into array to be returned
       [subject, predicate, object]
-    end
+    end.compact
   end
 
 	private
 	# constants for extracting resources/literals from sql results
-	MatchNode = Regexp.union(/"(?:\\"|[^"])*"(?:\^\^\S+)?/,/_:\S*/,/<[^>]*>/)
 	MatchBNode = /_:(\S*)/
 	MatchResource = /<([^>]*)>/
-	MatchLiteral = /"((?:\\"|[^"])*)"(?:\^\^<(\S+)>)?/
+	MatchLiteral = /"((?:\\"|[^"])*)"(?:\^\^<(\S+)>|@(\S+))?/
+  MatchNode = Regexp.union(MatchBNode,MatchResource,MatchLiteral)
 
 	# fixes unicode characters in literals (because we parse them wrongly somehow)
 	def self.fix_unicode(str)

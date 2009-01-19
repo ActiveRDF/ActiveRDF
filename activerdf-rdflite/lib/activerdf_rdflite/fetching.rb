@@ -10,7 +10,7 @@ class FetchingAdapter < RDFLite
 
 	# fetches RDF/XML data from given url and adds it to the datastore, using the 
 	# source url as context identifier.
-  def fetch url
+  def fetch(url, syntax = nil)
     # check if url starts with http://
 		return unless url.match(/http:\/\/(.*)/)
 
@@ -24,11 +24,13 @@ class FetchingAdapter < RDFLite
 		#parser.parse_into_model(model, url)
 		#triples = Redland::Serializer.ntriples.model_to_string(nil, model)
 
-		triples = `rapper --scan --quiet "#{url}"`
+    opts = syntax ? "-i #{syntax}" : "--scan" 
+		triples = `rapper #{opts} --quiet "#{url}"`
 		lines = triples.split($/)
 		$activerdflog.debug "found #{lines.size} triples"
 
 		context = RDFS::Resource.new(url)
 		add_ntriples(triples, context)
   end
+  alias :load :fetch
 end

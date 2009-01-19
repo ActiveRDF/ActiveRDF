@@ -1,4 +1,4 @@
-require File.join(File.dirname(File.expand_path(__FILE__)), 'test_writable_adapter')
+require File.dirname(File.expand_path(__FILE__)) + '/test_writable_adapter'
 
 module TestPersistentAdapter
   include TestWritableAdapter
@@ -18,15 +18,4 @@ module TestPersistentAdapter
     assert_equal dump1, adapter2.dump
     adapter2.close
   end
-
-  def test_clear_on_new
-    @adapter.load(@@test_person_data)
-    @adapter.close
-    ConnectionPool.clear
-    (args = @adapter_args.dup).update(:new => 'yes')
-    adapter = ConnectionPool.add args
-    assert_equal 0, adapter.size, "datastore not cleared when requested"
-    adapter.close
-  end
-
 end

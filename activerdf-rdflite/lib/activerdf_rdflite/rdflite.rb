@@ -38,17 +38,16 @@ class RDFLite < ActiveRdfAdapter
 		$activerdflog.info "initialised rdflite with params #{params.to_s}"
 
 		@reads = true
-		@writes = true
+		@writes = truefalse(params[:write], true)
+    @reasoning = truefalse(params[:reasoning], false)
 
 		# if no file-location given, we use in-memory store
 		file = params[:location] || ':memory:'
 		@db = SQLite3::Database.new(file) 
 
 		# disable keyword search by default, enable only if ferret is found
-		@keyword_search = params[:keyword].nil? ? false : params[:keyword]
-		@keyword_search &= @@have_ferret
+		@keyword_search = truefalse(params[:keyword], false) && @@have_ferret 
 
-		@reasoning = params[:reasoning] || false
     @subprops = {} if @reasoning
 
 		if keyword_search?
@@ -68,6 +67,9 @@ class RDFLite < ActiveRdfAdapter
 
 		# turn off filesystem synchronisation for speed
 		@db.synchronous = 'off'
+
+    # drop the table if a new datastore is requested
+    @db.execute('drop table if exists triple') if truefalse(params[:new],false)
 
 		# create triples table. ignores duplicated triples
 		@db.execute('create table if not exists triple(s,p,o,c, unique(s,p,o,c) on conflict ignore)')
@@ -103,19 +105,16 @@ class RDFLite < ActiveRdfAdapter
 	# symbol parameters match anything: delete(:s,:p,:o) will delete all triples
 	# you can specify a context to limit deletion to that context: 
 	# delete(:s,:p,:o, 'http://context') will delete all triples with that context
-	def delete(s, p, o, c=nil)
-		# convert non-nil input to internal format
-		quad = [s,p,o,c].collect {|r| r.nil? ? nil : internalise(r) }
+	def delete(s, p, o=nil, c=nil)
+    where_clauses = []
+    conditions = []   
 
-		# construct where clause for deletion (for all non-nil input)
-		where_clauses = []
-		conditions = []		
-		quad.each_with_index do |r,i|
-			unless r.nil?
-				conditions << r
-				where_clauses << "#{SPOC[i]} = ?"
-			end
-		end
+    [s,p,o,c].each_with_index do |r,i|
+      unless r.nil? or r.is_a?(Symbol)
+        where_clauses << "#{SPOC[i]} = ?"
+        conditions << r.to_literal_s
+      end
+    end
 
 		# construct delete string
 		ds = 'delete from triple'
@@ -141,16 +140,8 @@ class RDFLite < ActiveRdfAdapter
 		raise(ActiveRdfError, "adding non-resource #{s} while adding (#{s},#{p},#{o},#{c})") unless s.respond_to?(:uri)
 		raise(ActiveRdfError, "adding non-resource #{p} while adding (#{s},#{p},#{o},#{c})") unless p.respond_to?(:uri)
 
-    
-    triple = [s, p, o].collect{|r| serialise(r) }
-    ntriple = triple.join(' ') + " .\n"
-    add_ntriples(ntriple, serialise(c))
-
-		## get internal representation (array)
-		#quad = [s,p,o,c].collect {|r| internalise(r) }
-
-		## insert the triple into the datastore
-		#@db.execute('insert into triple values (?,?,?,?)', *quad)
+    # insert triple into database
+    @db.execute('insert into triple values (?,?,?,?);',s.to_literal_s,p.to_literal_s,o.to_literal_s,c)
 
 		## if keyword-search available, insert the object into keyword search
 		#@ferret << {:subject => s, :object => o} if keyword_search?
@@ -164,22 +155,21 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	# loads triples from file in ntriples format
-	def load(location)
+	def load(location, syntax = nil)
     context = if URI.parse(location).host
                 location
               else
-                internalise(RDFS::Resource.new("file:#{location}"))
+                RDFS::Resource.new("file:#{location}").uri
               end
 
-    case MIME::Types.of(location)
-    when MIME::Types['application/rdf+xml']
+    if MIME::Types.of(location) == MIME::Types['application/rdf+xml'] or syntax == 'rdfxml' 
       # check if rapper available
       begin 
         # can only parse rdf/xml with redland
         # die otherwise
         require 'rdf/redland'
         model = Redland::Model.new
-        Redland::Parser.new.parse_into_model(model, location)
+        Redland::Parser.new(syntax).parse_into_model(model, location)
         add_ntriples(model.to_string('ntriples'), location)
       rescue LoadError
         raise ActiveRdfError, "cannot parse remote rdf/xml file without Redland: please install Redland (librdf.org) and its Ruby bindings"
@@ -194,18 +184,13 @@ class RDFLite < ActiveRdfAdapter
 	def add_ntriples(ntriples, context)
 		# add each triple to db
 		@db.transaction
-		insert = @db.prepare('insert into triple values (?,?,?,?);')
 
     ntriples = NTriplesParser.parse(ntriples)
     ntriples.each do |s,p,o|
-      # convert triples into internal db format
-      subject, predicate, object = [s,p,o].collect {|r| internalise(r) }
-
-			# insert triple into database
-			insert.execute(subject, predicate, object, context)
+      add(s,p,o,context)
 
 			# if keyword-search available, insert the object into keyword search
-			@ferret << {:subject => subject, :object => object} if keyword_search?
+      @ferret << {:subject => s.to_literal_s, :object => o.to_literal_s} if keyword_search?
 		end
 
 		@db.commit
@@ -290,84 +275,64 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	# construct join clause
-	# TODO: joins don't work this way, they have to be linear (in one direction 
-	# only, and we should only alias tables we didnt alias yet)
-	# we should only look for one join clause in each where-clause: when we find 
-	# one, we skip the rest of the variables in this clause.
+	# begins with first element of construct traverses tables referenced by 
 	def construct_join(query)
-		join_stmt = ''
+    join_stmt = []
+    seen_aliases = ['t0']  # first table already seen
+    seen_vars = []
 
-		# no join necessary if only one where clause given
-		return ' from triple as t0 ' if query.where_clauses.size == 1
+    # get a hash with indices for for all terms
+    # if the term doesnt have a join-buddy, we can skip it
+    occurances = term_occurances(query).reject{|var,terms| terms.size < 2} 
 
-		where_clauses = query.where_clauses.flatten
-		considering = where_clauses.uniq.select{|w| w.is_a?(Symbol)}
+    # start with variables in first where clause
+    var_queue = query.where_clauses[0].find_all{|obj| obj.is_a?(Symbol) and occurances.include?(obj)}
 
-		# constructing hash with indices for all terms
-		# e.g. {?s => [1,3,5], ?p => [2], ... }
-		term_occurrences = Hash.new()
-		where_clauses.each_with_index do |term, index|
-			ary = (term_occurrences[term] ||= [])
-			ary << index 
-		end
+    while !var_queue.empty? do
+      var = var_queue.shift
+      seen_vars << var
+      terms = occurances[var]
 
-		aliases = {}
+      # look for a term in a table that has already been seen
+      table,field = terms.find{|table,field| seen_aliases.include?(table)}
+      raise ActiveRdfError, "query is confused. haven't seen #{table} for :#{var} yet." unless table
+      terms -= [[table,field]]   # ignore this previously seen buddy term table
+      first_term = "#{table}.#{field}"
 
-		where_clauses.each_with_index do |term, index|
-			# if the term has been joined with his buddy already, we can skip it
-			next unless considering.include?(term)
+      terms.each do |table,field|
+        join = ''
+        unless seen_aliases.include?(table)
+          seen_aliases << table 
+          join << "join triple as #{table} on " 
+        else
+          join << "and "
+        end
+        join << "#{first_term}=#{table}.#{field} "
+        join_stmt << join
 
-			# we find all (other) occurrences of this term
-			indices = term_occurrences[term]
+        # add any terms from this table that haven't been seen yet to the queue
+        var_queue.concat query.where_clauses[table[1..-1].to_i].find_all{|obj| obj.is_a?(Symbol) and !seen_vars.include?(obj) and occurances.include?(obj)}
+      end
+    end
 
-			# if the term doesnt have a join-buddy, we can skip it
-			next if indices.size == 1
+    join = ' from triple as t0 ' 
+    join_stmt.empty? ? join : join + "#{join_stmt.join(' ')} " 
+  end
 
-			# construct t0,t1,... as aliases for term
-			# and construct join condition, e.g. t0.s
-			termalias = "t#{index / 4}"
-			termjoin = "#{termalias}.#{SPOC[index % 4]}"
-
-			join = if join_stmt.include?(termalias)
-							 ""
-						 else
-							 "triple as #{termalias}"
-						 end
-
-			indices.each do |i|
-				# skip the current term itself
-				next if i==index
-
-				# construct t0,t1, etc. as aliases for buddy,
-				# and construct join condition, e.g. t0.s = t1.p
-				buddyalias = "t#{i/4}"
-				buddyjoin = "#{buddyalias}.#{SPOC[i%4]}"
-
-				# TODO: fix reuse of same table names as aliases, e.g.
-				# "from triple as t1 join triple as t2 on ... join t1 on ..."
-				# is not allowed as such by sqlite
-				# but on the other hand, restating the aliases gives ambiguity:
-				# "from triple as t1 join triple as t2 on ... join triple as t1 ..."
-				# is ambiguous
-				if join_stmt.include?(buddyalias)
-					join << "and #{termjoin} = #{buddyjoin}"
-				else
-					join << " join triple as #{buddyalias} on #{termjoin} = #{buddyjoin} "
-				end
-			end
-			join_stmt << join
-			
-			# remove term from 'todo' list of still-considered terms
-			considering.delete(term)
-		end
-
-		if join_stmt == ''
-			return " from triple as t0 "
-		else
-			return " from #{join_stmt} "
-		end
-	end
-
+  # Returns a hash of arrays, keyed by the term symbol. Each element of the array is nested array of a pair of values: [table alias, field('s'|'p'|'o'|'c')]
+  # {:s => [[table,field],['t0','s'],...], :p => [['t0','p'],['t1','p']]}
+  def term_occurances(query)
+    term_occurances = {}
+    query.where_clauses.each_with_index do |clause, table_index|
+      clause.zip(SPOC).each do |obj,field|
+        if obj.is_a?(Symbol)
+          (term_occurances[obj] ||= []) << ["t#{table_index}",field]
+        end
+      end
+    end
+    term_occurances
+  end
+  
 	# construct where clause
 	def construct_where(query)
 		# collecting where clauses, these will be added to the sql string later
@@ -378,24 +343,28 @@ class RDFLite < ActiveRdfAdapter
 		# sqlite will automatically encode quoted literals correctly
 		right_hand_sides = []
 
-		# convert each where clause to SQL:
-		# add where clause for each subclause, except if it's a variable
-		query.where_clauses.each_with_index do |clause,level|
-			raise ActiveRdfError, "where clause #{clause} is not a triple" unless clause.is_a?(Array)
-			clause.each_with_index do |subclause, i|
-				# dont add where clause for variables
-				unless subclause.is_a?(Symbol) || subclause.nil?
-					conditions = compute_where_condition(i, subclause, query.reasoning? && reasoning?)
-					if conditions.size == 1
-						where << "t#{level}.#{SPOC[i]} = ?"
-						right_hand_sides << conditions.first
-					else
-						conditions = conditions.collect {|c| "'#{c}'"}
-						where << "t#{level}.#{SPOC[i]} in (#{conditions.join(',')})"
-					end
-				end
-			end
-		end
+    query.where_clauses.each_with_index do |clause, table_index|
+      clause.zip(SPOC).each do |obj,field|
+        unless obj.is_a?(Symbol) || obj.nil?
+
+          if ((@reasoning and query.reasoning? != false) or query.reasoning?) && field == 'p'
+            # include subproperty fields as possible matches
+            conditions = [obj] + obj.subproperties(true).to_a
+          else
+            # this will flatten any object that responds to to_ary such as RDF::Property when @subject is set
+            conditions = Array[obj]
+          end
+
+          conditions.collect!{|val| val.to_literal_s}
+          if conditions.size == 1
+            where << "t#{table_index}.#{field} = ?"
+            right_hand_sides << conditions[0]
+          else
+            where << "t#{table_index}.#{field} in ('#{conditions.join("','")}')"
+          end
+        end
+      end
+    end
 
 		# if keyword clause given, convert it using keyword index
 		if query.keyword? && keyword_search?
@@ -419,77 +388,13 @@ class RDFLite < ActiveRdfAdapter
 		end
 	end
 
-	def compute_where_condition(index, subclause, reasoning)
-		conditions = [subclause]
-
-		# expand conditions with rdfs rules if reasoning enabled
-		if reasoning
-			case index
-			when 0: ;
-				# no rule for subjects
-			when 1:
-				# expand properties to include all subproperties
-				conditions = subproperties(subclause) if subclause.respond_to?(:uri)
-			when 2:
-				# no rule for objects
-			when 3:
-				# no rule for contexts
-			end
-		end
-
-		# convert conditions into internal format
-		#conditions.collect { |c| c.respond_to?(:uri) ? "<#{c.uri}>" : c.to_s }
-		conditions.collect { |c| internalise(c) }
-	end
-
-	def subproperties(resource)
-    # compute and store subproperties of this resource 
-    # or use earlier computed value if available
-    unless @subprops[resource]
-      subproperty = Namespace.lookup(:rdfs,:subPropertyOf)
-      children_query = Query.new.distinct(:sub).where(:sub, subproperty, resource)
-      children_query.reasoning = false
-      children = children_query.execute
-
-      if children.empty?
-        @subprops[resource] = [resource]
-      else
-        @subprops[resource] = [resource] + children.collect{|c| subproperties(c)}.flatten.compact
-      end
+  # returns first sql variable name found for a queryterm
+  def variable_name(query,term)
+    if (indices = term_occurances(query)[term])
+      table, field = indices[0]
+      "#{table}.#{field}"
     end
-    @subprops[resource]
-	end
-
-	# returns sql variable name for a queryterm
-	def variable_name(query,term)
-		# look up the first occurence of this term in the where clauses, and compute 
-		# the level and s/p/o position of it
-		index = query.where_clauses.flatten.index(term)
-
-		if index.nil? 
-			# term does not appear in where clause
-			# but maybe it appears in a keyword clause
-				
-			# index would not be nil if we had:
-			# select(:o).where(knud, knows, :o).where(:o, :keyword, 'eyal')
-			#
-			# the only possibility that index is nil is if we have:
-			# select(:o).where(:o, :keyword, :eyal) (selecting subject)
-			# or if we use a select clause that does not appear in any where clause
-
-			# so we check if we find the term in the keyword clauses, otherwise we throw 
-			# an error
-			if query.keywords.keys.include?(term)
-				return "t0.s"
-			else
-				raise ActiveRdfError, "unbound variable :#{term.to_s} in select of #{query.to_sp}"
-			end
-		end
-
-		termtable = "t#{index / 4}"
-		termspo = SPOC[index % 4]
-		return "#{termtable}.#{termspo}"
-	end
+  end
 
 	# wrap resources into ActiveRDF resources, literals into Strings
 	def wrap(query, results)
@@ -499,17 +404,7 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	def parse(result)
-    NTriplesParser.parse_node(result) || result
-#		case result
-#		when Literal
-#      # replace special characters to allow string interpolation for e.g. 'test\nbreak'
-#      $1.double_quote
-#		when Resource
-#			RDFS::Resource.new($1)
-#		else
-#			# when we do a count(*) query we get a number, not a resource/literal
-#			result
-#		end
+    NTriplesParser.parse_node(result)
 	end
 
 	def create_indices(params)
@@ -532,40 +427,4 @@ class RDFLite < ActiveRdfAdapter
 			@db.execute('create index if not exists opidx on triple(o,p)') if opidx
 		end
 	end
-
-	# transform triple into internal format <uri> and "literal"
-	def internalise(r)
-    if r.nil? or r.is_a? Symbol
-      nil
-    else
-      r.to_literal_s
-    end
-	end
-
-  # transform resource/literal into ntriples format
-  def serialise(r)
-    if r.nil?
-      nil
-    else
-      r.to_literal_s
-    end
-  end
-
-  Resource = /<([^>]*)>/
-  Literal = /"((?:\\"|[^"])*)"/
-
-	public :subproperties
-end
-
-class String
-  def double_quote
-    Thread.new do
-      $SAFE = 12
-      begin
-        eval('"%s"' % self)
-      rescue Exception => e
-        self
-      end
-    end.value
-  end
 end

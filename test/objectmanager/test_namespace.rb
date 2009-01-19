@@ -61,7 +61,7 @@ class TestNamespace < Test::Unit::TestCase
   end
 
   def test_class_register
-		test = 'http://test.org/'
+		test = 'http://activerdf.org/test/'
 		abc = RDFS::Resource.new("#{test}abc")
 		Namespace.register :test, test
 

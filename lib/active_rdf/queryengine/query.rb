@@ -8,7 +8,7 @@ require 'federation/federation_manager'
 class Query
 	attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets, :reverse_sort_clauses, :filter_clauses
 
-	bool_accessor :distinct, :ask, :select, :count, :keyword, :reasoning
+	bool_accessor :distinct, :ask, :select, :count, :keyword
 
 	def initialize
 		@distinct = false
@@ -19,7 +19,7 @@ class Query
 		@sort_clauses = []
     @filter_clauses = []
 		@keywords = {}
-		@reasoning = true
+		@reasoning = nil
     @reverse_sort_clauses = []
 	end
 
@@ -44,7 +44,18 @@ class Query
 		self
 	end
 
-	# Adds variables to select distinct clause
+  def reasoning(bool)
+    @reasoning = truefalse(bool)
+    self
+  end
+  def reasoning=(bool)
+    self.reasoning(bool)
+  end
+  def reasoning?
+    @reasoning
+  end
+
+  # Adds variables to select distinct clause
 	def distinct *s
 		@distinct = true
 		select(*s)
@@ -150,7 +161,16 @@ class Query
 				raise(ActiveRdfError, "cannot add a where clause with p #{p}: p must be a resource or a variable")
 			end
 
-      @where_clauses << [s,p,o,c]
+      # disconnect RDF::Propertys from subjects for subject,predicate. disables enumerable methods and #to_ary to prevent recursive loops
+      #s,p = [s,p].collect!{|r| r.is_a?(RDF::Property) && r.subject ? r.property : r}
+
+      # if object responds to :to_ary, create a where clause for each value of object rather than the object itself
+      if o.respond_to?(:to_ary)
+        o.to_ary.each{|val| @where_clauses << [s,p,val,c] }
+      else
+        @where_clauses << [s,p,o,c]
+      end
+
 		end
     self
   end
