@@ -10,7 +10,7 @@ module TestActiveRdfAdapter
   @@name = TEST::name
   @@mbox = TEST::mbox
   @@age = TEST::age
-  @@ageval = 23
+  @@ageval = 27
   @@mboxval = 'aahfgiouhfg'
 
   # override setup in TestCase. define @adapter_args & finally call super
@@ -23,7 +23,7 @@ module TestActiveRdfAdapter
     assert_equal @@eyal.uri, result.uri
 
     result = Query.new.distinct(:o).where(@@eyal,@@age,:o).execute(:flatten => true)
-    assert_equal 23, result
+    assert_equal @@ageval, result
   end
 
   def test_query_with_block
@@ -31,7 +31,7 @@ module TestActiveRdfAdapter
     Query.new.select(:s,:p,:o).where(:s,:p,:o).execute(:flatten => false) do |s,p,o|
       assert_equal @@eyal.uri, s.uri
       assert_equal @@age.uri, p.uri
-      assert_equal 23, o
+      assert_equal @@ageval, o
     end
   end
 
@@ -135,20 +135,4 @@ module TestActiveRdfAdapter
     result = Query.new.distinct(:p).where(@@eyal, :p, @@ageval).execute
     assert_equal 1, result.flatten.size
   end
-
-#  def test_retrieve_a_triple_with_property
-#    @adapter.add(@@eyal, @@age, @@ageval)
-#
-#    p = RDF::Property.new(@@age)
-#    assert !p.respond_to?(:to_ary)
-#
-#    result = Query.new.distinct(:p).where(@@eyal, p, @@ageval).execute
-#    assert_equal 1, result.flatten.size
-#
-#    p = RDF::Property.new(@@age, @@eyal)
-#    assert p.respond_to?(:to_ary)
-#
-#    result = Query.new.distinct(:p).where(@@eyal, p, p).execute
-#    assert_equal 1, result.flatten.size
-#  end
 end

@@ -132,16 +132,17 @@ class TestResourceReading < Test::Unit::TestCase
   end
 
   def test_find_methods
-    assert_equal [@@eyal], RDFS::Resource.find_by_eye('blue')
-    assert_equal [@@eyal], RDFS::Resource.find_by_test::eye('blue')
+    blue = LocalizedString.new('blue','en')
+    assert_equal [@@eyal], RDFS::Resource.find_by_eye(blue)
+    assert_equal [@@eyal], RDFS::Resource.find_by_test::eye(blue)
 
     assert_equal [@@eyal], RDFS::Resource.find_by_age(27)
     assert_equal [@@eyal], RDFS::Resource.find_by_test::age(27)
 
-    assert_equal [@@eyal], RDFS::Resource.find_by_age_and_eye(27, 'blue')
-    assert_equal [@@eyal], RDFS::Resource.find_by_test::age_and_test::eye(27, 'blue')
-    assert_equal [@@eyal], RDFS::Resource.find_by_test::age_and_eye(27, 'blue')
-    assert_equal [@@eyal], RDFS::Resource.find_by_age_and_test::eye(27, 'blue')
+    assert_equal [@@eyal], RDFS::Resource.find_by_age_and_eye(27, blue)
+    assert_equal [@@eyal], RDFS::Resource.find_by_test::age_and_test::eye(27, blue)
+    assert_equal [@@eyal], RDFS::Resource.find_by_test::age_and_eye(27, blue)
+    assert_equal [@@eyal], RDFS::Resource.find_by_age_and_test::eye(27, blue)
 
     found = RDFS::Resource.find_by_rdf::type(RDFS::Resource)
     assert_equal 2, found.size

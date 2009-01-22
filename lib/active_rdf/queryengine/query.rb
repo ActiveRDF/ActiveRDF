@@ -8,7 +8,7 @@ require 'federation/federation_manager'
 class Query
 	attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets, :reverse_sort_clauses, :filter_clauses
 
-	bool_accessor :distinct, :ask, :select, :count, :keyword
+	bool_accessor :distinct, :ask, :select, :count, :keyword, :all_types
 
 	def initialize
 		@distinct = false
@@ -17,11 +17,24 @@ class Query
 		@select_clauses = []
 		@where_clauses = []
 		@sort_clauses = []
-    @filter_clauses = []
+    @filter_clauses = {}
 		@keywords = {}
 		@reasoning = nil
+    @all_types = false
     @reverse_sort_clauses = []
 	end
+  
+  def initialize_copy(orig)
+    # dup the instance variables so we're not messing with the original query's values
+    instance_variables.each do |iv|
+      orig_val = instance_variable_get(iv)
+      case orig_val
+        when Array,Hash
+          instance_variable_set(iv,orig_val.dup)
+      end
+    end
+  end
+  
 
 	# Clears the select clauses
 	def clear_select
@@ -54,6 +67,11 @@ class Query
   def reasoning?
     @reasoning
   end
+  
+  def all_types(bool)
+    @all_types = truefalse(bool)
+    self
+  end
 
   # Adds variables to select distinct clause
 	def distinct *s
@@ -75,48 +93,33 @@ class Query
 		self
 	end
 
-  # adds one or more generic filters
-  # NOTE: you have to use SPARQL syntax for variables, eg. regex(?s, 'abc')
-  def filter *s
-    # add filter clauses
-    @filter_clauses.concat(s).uniq!
+  # adds operator filter on one variable
+  # variable is a Ruby symbol that appears in select/where clause, operator is a 
+  # SPARQL operator (e.g. '>','lang','datatype'), operand is a SPARQL value (e.g. 15)
+  def filter(variable, operator, operand)
+    raise(ActiveRdfError, "variable must be a Symbol") unless variable.is_a? Symbol
+    @filter_clauses[variable] = [operator.to_sym,operand]
     self
   end
 
   # adds regular expression filter on one variable
   # variable is Ruby symbol that appears in select/where clause, regex is Ruby 
   # regular expression
-  def filter_regexp(variable, regexp)
-    raise(ActiveRdfError, "variable must be a symbol") unless variable.is_a? Symbol
+  def regexp(variable, regexp)
     raise(ActiveRdfError, "regexp must be a ruby regexp") unless regexp.is_a? Regexp
-
-    filter "regex(str(?#{variable}), #{regexp.inspect.gsub('/','"')})"
+    filter(variable,:regexp,regexp.inspect.gsub('/','"'))
   end
-  alias :filter_regex :filter_regexp
+  alias :regex :regexp
 
-  # adds operator filter one one variable
-  # variable is a Ruby symbol that appears in select/where clause, operator is a 
-  # SPARQL operator (e.g. '>'), operand is a SPARQL value (e.g. 15)
-  def filter_operator(variable, operator, operand)
-    raise(ActiveRdfError, "variable must be a Symbol") unless variable.is_a? Symbol
-
-    filter "?#{variable} #{operator} #{operand}"
-  end
-
-  # filter variable on specified language tag, e.g. lang(:o, 'en')
+  # filter variable on specified language tag, e.g. lang(:o, 'en', true)
   # optionally matches exactly on language dialect, otherwise only 
   # language-specifier is considered
-  def lang(variable, tag, exact=false)
-    tag = tag.sub(/^@/,'')
-    if exact
-      filter "lang(?#{variable}) = '#{tag}'"
-    else
-      filter "regex(lang(?#{variable}), '^#{tag.gsub(/_.*/,'')}$')"
-    end
+  def lang(variable, tag, exact=true)
+    filter(variable,:lang,[tag.sub(/^@/,''),exact])
   end
 
   def datatype(variable, type)
-    filter "datatype(?#{variable}) = #{type.to_literal_s}"
+    filter(variable,:datatype,type)
   end
 
   # adds reverse sorting predicates
@@ -161,15 +164,7 @@ class Query
 				raise(ActiveRdfError, "cannot add a where clause with p #{p}: p must be a resource or a variable")
 			end
 
-      # disconnect RDF::Propertys from subjects for subject,predicate. disables enumerable methods and #to_ary to prevent recursive loops
-      #s,p = [s,p].collect!{|r| r.is_a?(RDF::Property) && r.subject ? r.property : r}
-
-      # if object responds to :to_ary, create a where clause for each value of object rather than the object itself
-      if o.respond_to?(:to_ary)
-        o.to_ary.each{|val| @where_clauses << [s,p,val,c] }
-      else
-        @where_clauses << [s,p,o,c]
-      end
+      @where_clauses << [s,p,o,c]
 
 		end
     self
@@ -197,12 +192,14 @@ class Query
   def execute(options={:flatten => false}, &block)
     options = {:flatten => true} if options == :flatten
 
+    prepared_query = prepare_query
+    
     if block_given?
-      for result in FederationManager.execute(self, options)
+      for result in FederationManager.execute(prepared_query, options)
         yield result
       end
     else
-      FederationManager.execute(self, options)
+      FederationManager.execute(prepared_query, options)
     end
   end
 
@@ -211,7 +208,7 @@ class Query
 		if ConnectionPool.read_adapters.empty?
 			inspect 
 		else
-			ConnectionPool.read_adapters.first.translate(self)
+			ConnectionPool.read_adapters.first.translate(prepare_query)
 		end
   end
 
@@ -221,5 +218,33 @@ class Query
 		Query2SPARQL.translate(self)
   end
 
-  # Parameterization removed. This should be handled by the adapter.
+  private
+  def prepare_query
+    # leave the original query intact
+    dup = self.dup
+    dup.expand_obj_values
+    # dup.reasoned_query if dup.reasoning?
+    dup
+  end
+  
+  protected
+  def expand_obj_values
+    new_where_clauses = []
+    @where_clauses.each do |s,p,o,c|
+      if o.respond_to?(:to_ary)
+        o.to_ary.each{|elem| new_where_clauses << [s,p,elem,c]}
+      else
+        new_where_clauses << [s,p,o,c]
+      end
+    end
+    @where_clauses = new_where_clauses
+  end
+
+#  def reasoned_query
+#    new_where_clauses = []
+#    @where_clauses.each do |s,p,o,c|
+#      # other reasoning should be added here
+#    end
+#    @where_clauses += new_where_clauses
+#  end
 end

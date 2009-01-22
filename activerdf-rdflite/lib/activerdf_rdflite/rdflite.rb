@@ -344,23 +344,39 @@ class RDFLite < ActiveRdfAdapter
 		right_hand_sides = []
 
     query.where_clauses.each_with_index do |clause, table_index|
-      clause.zip(SPOC).each do |obj,field|
-        unless obj.is_a?(Symbol) || obj.nil?
-
-          if ((@reasoning and query.reasoning? != false) or query.reasoning?) && field == 'p'
-            # include subproperty fields as possible matches
-            conditions = [obj] + obj.subproperties(true).to_a
+      clause.zip(SPOC).each do |clause_elem,field|
+        if !(clause_elem.is_a?(Symbol) or clause_elem.nil?)
+          # include querying on subproperty fields
+          if field == 'p' and query.reasoning?
+            property = clause_elem
+            properties = [property] + property.subproperties(true).to_a
+            if properties.size > 1
+              where << "t#{table_index}.#{field} in ('#{properties.collect{|val| val.to_literal_s}.join("','")}')"
+            else
+              where << "t#{table_index}.#{field} = ?"
+              right_hand_sides << properties[0].to_literal_s
+            end
           else
-            # this will flatten any object that responds to to_ary such as RDF::Property when @subject is set
-            conditions = Array[obj]
+            # match plain strings to all strings
+            if query.all_types? and clause_elem.is_a?(String) and !clause_elem.is_a?(LocalizedString)
+              where << "t#{table_index}.#{field} like ?"
+              right_hand_sides << "\"#{clause_elem}\"%"
+            else
+              where << "t#{table_index}.#{field} = ?"
+              right_hand_sides << clause_elem.to_literal_s
+            end
           end
-
-          conditions.collect!{|val| val.to_literal_s}
-          if conditions.size == 1
-            where << "t#{table_index}.#{field} = ?"
-            right_hand_sides << conditions[0]
-          else
-            where << "t#{table_index}.#{field} in ('#{conditions.join("','")}')"
+        # process filters
+        elsif field == 'o' and clause_elem.is_a?(Symbol) and (filter = query.filter_clauses[clause_elem])
+          operator, operand = filter
+          case operator
+            when :datatype
+              where << "t#{table_index}.o like ?"
+              right_hand_sides << "%\"^^<#{operand}>"
+            when :lang
+              lang, exact = operand
+              where << "t#{table_index}.o like ?"
+              right_hand_sides << (exact ? "%\"@#{lang}" : "%\"@%#{lang}%")
           end
         end
       end
