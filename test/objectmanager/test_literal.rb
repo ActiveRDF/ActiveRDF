@@ -26,9 +26,9 @@ class TestLiteral < Test::Unit::TestCase
     test = Time.parse("Sat Nov 22 00:33:23 -0800 2008")
     assert_equal '"2008-11-22T00:33:23-08:00"^^<http://www.w3.org/2001/XMLSchema#time>', test.to_literal_s
 
-    $activerdf_without_xsdtype = true
+    $activerdf_without_datatype = true
     assert_equal '"2008-11-22T00:33:23-08:00"', test.to_literal_s
-    $activerdf_without_xsdtype = false
+    $activerdf_without_datatype = false
   end
 
   def test_equality
@@ -66,8 +66,8 @@ class TestLocalizedString < Test::Unit::TestCase
   
   def test_to_literal_s
     assert_equal '"localized string"@en', @ls_en.to_literal_s
-    $activerdf_without_xsdtype = true
+    $activerdf_without_datatype = true
     assert_equal '"localized string"', @ls_en.to_literal_s
-    $activerdf_without_xsdtype = false
+    $activerdf_without_datatype = false
   end
 end

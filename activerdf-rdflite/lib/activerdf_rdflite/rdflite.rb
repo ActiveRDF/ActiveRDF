@@ -198,7 +198,7 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	# executes ActiveRDF query on datastore
-	def query(query)
+	def execute(query)
 		# construct query clauses
 		sql, conditions = translate(query)
 

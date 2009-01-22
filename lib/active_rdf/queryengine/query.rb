@@ -115,7 +115,7 @@ class Query
     end
   end
 
-  def xsd_type(variable, type)
+  def datatype(variable, type)
     filter "datatype(?#{variable}) = #{type.to_literal_s}"
   end
 
@@ -198,11 +198,11 @@ class Query
     options = {:flatten => true} if options == :flatten
 
     if block_given?
-      for result in FederationManager.query(self, options)
+      for result in FederationManager.execute(self, options)
         yield result
       end
     else
-      FederationManager.query(self, options)
+      FederationManager.execute(self, options)
     end
   end
 

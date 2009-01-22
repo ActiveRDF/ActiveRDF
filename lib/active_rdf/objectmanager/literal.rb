@@ -49,10 +49,11 @@ module RDFS
         XSD::time
       end
     end
+    alias :datatype :xsd_type
       
     def to_literal_s
       s = kind_of?(Time) ? xmlschema : to_s
-      unless $activerdf_without_xsdtype
+      unless $activerdf_without_datatype
         "\"#{s}\"^^<#{xsd_type}>"
       else
         "\"#{s}\""
@@ -87,7 +88,7 @@ class LocalizedString < String
   # returns quoted string with language type if present. 
   # xsd:string isn't appended when lang missing (xsd:string should be considered the default type)
   def to_literal_s
-    $activerdf_without_xsdtype ? "\"#{self}\"" : "\"#{self}\"@#@lang"
+    $activerdf_without_datatype ? "\"#{self}\"" : "\"#{self}\"@#@lang"
   end
 end
 

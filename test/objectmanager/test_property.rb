@@ -185,14 +185,14 @@ class TestAssociatedProperty < Test::Unit::TestCase
     assert_equal 1, @@eyal.comment.lang('en').size      # no duplicates
   end
 
-  def test_xsd_type
+  def test_datatype
     @adapter.load "#{File.dirname(__FILE__)}/../rdfs.nt"
     t = Time.parse("Tue Jan 20 12:00:00 -0800 2009")
     @@eyal.comment = [1, LocalizedString.new('localized string', '@en'), "string", t]
-    assert_equal XSD::integer, @@eyal.comment.xsd_type(XSD::integer).xsd_type
-    assert_equal [1], @@eyal.comment.xsd_type(XSD::integer)
-    assert_equal ["string"], @@eyal.comment.xsd_type(XSD::string)   # LocalizedString != XSD::string
-    assert_equal [t], @@eyal.comment.xsd_type(XSD::time)
+    assert_equal XSD::integer, @@eyal.comment.datatype(XSD::integer).datatype
+    assert_equal [1], @@eyal.comment.datatype(XSD::integer)
+    assert_equal ["string"], @@eyal.comment.datatype(XSD::string)   # LocalizedString != XSD::string
+    assert_equal [t], @@eyal.comment.datatype(XSD::time)
   end
 
   def test_length

@@ -105,7 +105,7 @@ class TestFederationManager < Test::Unit::TestCase
     age_result = Query.new.select(:o).where(@@eyal, @@eye, :o).execute(:flatten=>true)
     assert_equal "blue", age_result
 
-    second_result = write2.query(Query.new.select(:o).where(@@eyal, @@eye, :o))
+    second_result = write2.execute(Query.new.select(:o).where(@@eyal, @@eye, :o))
     assert_equal [["blue"]], second_result   # results returned as array of arrays directly from adapter
   end
 

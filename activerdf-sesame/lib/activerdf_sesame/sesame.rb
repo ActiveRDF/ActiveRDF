@@ -194,7 +194,7 @@ class SesameAdapter < ActiveRdfAdapter
 	end
 
 	# executes ActiveRDF query on the sesame triple store associated with this adapter
-	def query(query)
+	def execute(query)
 	
     # we want to put the results in here
     results = []

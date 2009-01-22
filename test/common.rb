@@ -4,7 +4,7 @@ Namespace.register(:test, 'http://activerdf.org/test/')
 
 module SetupAdapter
   def setup(adapter_args = nil)
-    @adapter_args = adapter_args
+    @adapter_args = adapter_args || {}
     ConnectionPool.clear
     @adapter = adapter_args ? ConnectionPool.add(adapter_args) : get_primary_adapter
   end
@@ -22,7 +22,7 @@ def get_primary_adapter
 #### Rdflite default
 #  ConnectionPool.add(:type => :rdflite)
 #### Redland default
-  ConnectionPool.add(:type => :redland)
+  ConnectionPool.add(:type => :redland, :contexts => 'no')
 #### Redland file
 #  ConnectionPool.add(:type => :redland, :name => 'db1', :location => '/path/to/file')
 #### Redland memory

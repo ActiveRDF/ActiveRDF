@@ -1,0 +1,31 @@
+<http://activerdf.org/test/relative> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> .
+<http://activerdf.org/test/relative> <http://www.w3.org/2000/01/rdf-schema#domain> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/relative> <http://www.w3.org/2000/01/rdf-schema#range> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/sibling> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> .
+<http://activerdf.org/test/sibling> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://activerdf.org/test/relative> .
+<http://activerdf.org/test/sibling> <http://www.w3.org/2000/01/rdf-schema#domain> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/sibling> <http://www.w3.org/2000/01/rdf-schema#range> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/ancestor> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> .
+<http://activerdf.org/test/ancestor> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://activerdf.org/test/relative> .
+<http://activerdf.org/test/ancestor> <http://www.w3.org/2000/01/rdf-schema#domain> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/ancestor> <http://www.w3.org/2000/01/rdf-schema#range> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/parent> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> .
+<http://activerdf.org/test/parent> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://activerdf.org/test/ancestor> .
+<http://activerdf.org/test/parent> <http://www.w3.org/2002/07/owl#inverseOf> <http://activerdf.org/test/child> .
+<http://activerdf.org/test/parent> <http://www.w3.org/2000/01/rdf-schema#domain> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/parent> <http://www.w3.org/2000/01/rdf-schema#range> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/child> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> .
+<http://activerdf.org/test/child> <http://www.w3.org/2000/01/rdf-schema#subPropertyOf> <http://activerdf.org/test/relative> .
+<http://activerdf.org/test/child> <http://www.w3.org/2002/07/owl#inverseOf> <http://activerdf.org/test/parent> .
+<http://activerdf.org/test/child> <http://www.w3.org/2000/01/rdf-schema#domain> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/child> <http://www.w3.org/2000/01/rdf-schema#range> <http://activerdf.org/test/Person> .
+
+<http://activerdf.org/test/grandmother> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/mother> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/daughter> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://activerdf.org/test/Person> .
+<http://activerdf.org/test/son> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://activerdf.org/test/Person> .
+
+<http://activerdf.org/test/grandmother> <http://activerdf.org/test/parent> <http://activerdf.org/test/mother>
+<http://activerdf.org/test/mother> <http://activerdf.org/test/parent> <http://activerdf.org/test/daughter>
+<http://activerdf.org/test/mother> <http://activerdf.org/test/parent> <http://activerdf.org/test/son>
+<http://activerdf.org/test/son> <http://activerdf.org/test/sibling> <http://activerdf.org/test/daughter>

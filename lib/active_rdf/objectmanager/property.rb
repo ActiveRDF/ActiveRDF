@@ -35,7 +35,7 @@ module RDF
       @subject = subject
       @lang = nil
       @exact_lang = true
-      @xsd_type = nil
+      @datatype = nil
       
       if @subject
         class<<self
@@ -141,6 +141,24 @@ module RDF
     end
     alias :map! :collect!
 
+    # Returns the datatype if type is nil. 
+    # Returns a new RDF::Property object with the @datatype set if type is provided
+    # see also #lang
+    def datatype(type = nil)
+      if type.nil?
+        @datatype
+      else
+        property_with_datatype =  RDF::Property.new(self, @subject)
+        property_with_datatype.datatype = type
+        property_with_datatype
+      end
+    end
+
+    # Sets datatype for this property
+    def datatype=(type)
+      @datatype = type
+    end
+
     # Deletes value given by key or value. If the item is not found, returns nil.
     # If the optional code block is given, returns the result of block if the item is not found
     def delete(md5_or_value) 
@@ -162,12 +180,12 @@ module RDF
     # Calls block once for each value, passing a copy of the value as a parameter
     def each(&block)  # :yields: value
       q = Query.new.distinct(:o).where(@subject,self,:o)
-      if @lang and !@xsd_type
+      if @lang and !@datatype
         q.lang(:o,"@#@lang",@exact_lang)
-      elsif @xsd_type and !@lang
-        q.xsd_type(:o, @xsd_type)
-      elsif @lang and @xsd_type
-        raise ActiveRdfError, "@xsd_type and @lang may not both be set"
+      elsif @datatype and !@lang
+        q.datatype(:o, @datatype)
+      elsif @lang and @datatype
+        raise ActiveRdfError, "@datatype and @lang may not both be set"
       end
       q.execute(&block)
       self
@@ -236,7 +254,7 @@ module RDF
 
     # Returns the language tag and the match settings for the property if tag is nil. 
     # Returns a new RDF::Property object with the @lang value set if tag is provided
-    # see also #xsd_type
+    # see also #datatype
     def lang(tag = nil, exact = true)
       if tag.nil?
         [@lang,@exact_lang]
@@ -305,25 +323,6 @@ module RDF
     # Return an array containing the values for the given keys.
     def values_at(*args)
       args.collect{|md5| self[md5]}
-    end
-
-    # Returns the xsd_type if type is nil. 
-    # Returns a new RDF::Property object with the @xsd_type set if type is provided
-    # see also #lang
-    def xsd_type(type = nil)
-      if type.nil?
-        @xsd_type
-      else
-        property_with_xsd_type = RDF::Property.new(self, @subject)
-        property_with_xsd_type.xsd_type = type
-        property_with_xsd_type
-      end
-    end
-
-    # Sets xsd_type
-    def xsd_type=(type)
-      @xsd_type = type
-      self
     end
 
     private

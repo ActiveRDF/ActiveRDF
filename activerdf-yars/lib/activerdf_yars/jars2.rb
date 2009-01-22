@@ -33,7 +33,7 @@ class Jars2Adapter < ActiveRdfAdapter
 	end
 
 	# executes query on jars2 datastore
-	def query(query)
+	def execute(query)
 		qs = Query2Jars2.translate(query)
 		header = { 'Accept' => 'application/rdf+n3' }
 

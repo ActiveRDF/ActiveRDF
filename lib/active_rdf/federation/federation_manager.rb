@@ -27,7 +27,7 @@ class FederationManager
   # executes read-only queries
   # by distributing query over complete read-pool
   # and aggregating the results
-  def FederationManager.query(q, options={:flatten => true})
+  def FederationManager.execute(q, options={:flatten => true})
 		if ConnectionPool.read_adapters.empty?
 			raise ActiveRdfError, "cannot execute query without data sources" 
 		end
@@ -36,7 +36,7 @@ class FederationManager
     # and yield them consequtively
     if block_given?
       ConnectionPool.read_adapters.each do |source|
-        source.query(q) do |*clauses|
+        source.execute(q) do |*clauses|
           yield(*clauses)
         end
       end
@@ -47,7 +47,7 @@ class FederationManager
       # were filtered out when doing results.union)
       results = []
       ConnectionPool.read_adapters.each do |source|
-				source_results = source.query(q)
+				source_results = source.execute(q)
 				source_results.each do |clauses|
 					results << clauses
 				end

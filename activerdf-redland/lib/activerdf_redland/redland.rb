@@ -81,7 +81,7 @@ class RedlandAdapter < ActiveRdfAdapter
   end
 
   # yields query results (as many as requested in select clauses) executed on data source
-  def query(query, &block)
+  def execute(query, &block)
     raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
     qs = Query2SPARQL.translate(query)
     $activerdflog.debug "RedlandAdapter: executing SPARQL query #{qs}"
@@ -286,11 +286,11 @@ class RedlandAdapter < ActiveRdfAdapter
       Redland::Uri.new(obj.uri)
     when RDFS::Literal
       str = obj.kind_of?(Time) ? obj.xmlschema : obj.to_s
-      if not $activerdf_without_xsdtype
+      if not $activerdf_without_datatype
         if obj.kind_of?(LocalizedString)
           Redland::Literal.new(str, obj.lang)
         else
-          Redland::Literal.new(str,nil,Redland::Uri.new(obj.xsd_type.uri))
+          Redland::Literal.new(str,nil,Redland::Uri.new(obj.datatype.uri))
         end
       else
         Redland::Literal.new(str)

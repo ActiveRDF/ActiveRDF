@@ -4,7 +4,7 @@
 
 require 'test/unit'
 require 'tmpdir'
-#require 'fileutils'
+require 'fileutils'
 common_test_dir = File.dirname(File.expand_path(__FILE__)) + '/../../test'
 require "#{common_test_dir}/adapters/test_writable_adapter"
 require "#{common_test_dir}/adapters/test_persistent_adapter"
@@ -34,19 +34,18 @@ class TestRedlandAdapterMemory < Test::Unit::TestCase
   end
 end
 
-class TestRedlandAdapterFile < Test::Unit::TestCase
-  include TestRedlandAdapter 
-  include TestPersistentAdapter
- 
-  def setup
-    @location = File.join(Dir.tmpdir,"redland-temp")
-    @adapter_args = {:type => :redland, :location => @location} 
-    super
-  end
-  def teardown
-    FileUtils.rm Dir.glob(@location + '-*')
-  end
-end
+#class TestRedlandAdapterFile < Test::Unit::TestCase
+#  include TestRedlandAdapter 
+#  include TestPersistentAdapter
+# 
+#  def setup
+#    super(:type => :redland, :location => @location)
+#    @location = File.join(Dir.tmpdir,"redland-temp")
+#  end
+#  def teardown
+#    FileUtils.rm Dir.glob(@location + '-*')
+#  end
+#end
 
 class TestRedlandAdapterSqlite < Test::Unit::TestCase
   include TestRedlandAdapter 
