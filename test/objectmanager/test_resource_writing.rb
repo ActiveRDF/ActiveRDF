@@ -43,6 +43,6 @@ class TestResourceWriting < Test::Unit::TestCase
     assert_equal 0, ConnectionPool.write_adapter.size
     foo.save
     assert_equal 1, ConnectionPool.write_adapter.size
-    assert_equal [foo], RDFS::Resource.find
+    assert_equal [foo], RDFS::Resource.find_all
   end
 end

@@ -46,32 +46,20 @@ module RDFS
       Query.new.distinct(:p).where(:p, RDFS::domain, class_uri).execute |
         Query.new.distinct(:p).where(class_uri, :p, :o).execute(:flatten=>false) || []
     end
-
-    # manages invocations such as Person.find_by_name, 
-    # Person.find_by_foaf::name, Person.find_by_foaf::name_and_foaf::knows, etc.
-    def Resource.method_missing(method, *args)
-      if /find_by_(.+)/.match(method.to_s)
-        $activerdflog.debug "constructing dynamic finder for #{method}"
-
-        # construct proxy to handle delayed lookups 
-        # (find_by_foaf::name_and_foaf::age)
-        proxy = DynamicFinderProxy.new($1, nil, *args)
-
-        # if proxy already found a value (find_by_name) we will not get a more 
-        # complex query, so return the value. Otherwise, return the proxy so that 
-        # subsequent lookups are handled
-        return proxy.value || proxy
-      end
+    
+    def Resource.instance_predicates
+      class_uri.instance_predicates
     end
 
-    # returns array of all instances of this class (e.g. Person.find_all)
-    # (always returns collection)
-    def Resource.find_all(*args)
-      find(:all, *args)
+    # Find all resources of this type
+    def Resource.find_all(&blk)
+      ResourceQuery.new(self).execute(&blk)
     end
-
-    def Resource.find(*args)
-      class_uri.find(*args)
+    
+    # Find resources of this type, restricted by optional property args
+    # see ResourceQuery usage
+    def Resource.find_by(*args)
+      ResourceQuery.new(self)
     end
 
     # uri of the resource (for instances of this class: rdf resources)
@@ -196,52 +184,6 @@ module RDFS
       xml += "</rdf:RDF>"
     end
 
-    def find(*args)
-      # extract sort options from args
-      options = args.extract_options!
-
-      query = Query.new.distinct(:s)
-      query.where(:s, RDF::type, self)
-
-      if options.include? :order
-        sort_predicate = options[:order]
-        query.sort(:sort_value)
-        query.where(:s, sort_predicate, :sort_value)
-      end
-
-      if options.include? :reverse_order
-        sort_predicate = options[:reverse_order]
-        query.reverse_sort(:sort_value)
-        query.where(:s, sort_predicate, :sort_value)
-      end
-
-      if options.include? :where
-        raise ActiveRdfError, "where clause should be hash of predicate => object" unless options[:where].is_a? Hash
-        options[:where].each do |p,o|
-          if options.include? :context
-            query.where(:s, p, o, options[:context])
-          else
-            query.where(:s, p, o)
-          end
-        end
-      else
-        if options[:context]
-          query.where(:s, :p, :o, options[:context])
-        end
-      end
-
-      query.limit(options[:limit]) if options[:limit]
-      query.offset(options[:offset]) if options[:offset]
-
-      if block_given?
-        query.execute do |resource|
-          yield resource
-        end
-      else
-        query.execute(:flatten => false)
-      end
-    end
-
     def localname
       Namespace.localname(self)
     end
@@ -355,7 +297,7 @@ module RDFS
 		# returns all predicates that fall into the domain of the rdf:type of this
 		# resource
 		def class_predicates
-      Query.new.distinct(:p).where(self,RDF::type,:t).where(:p,RDFS::domain,:t).execute(:flatten=>false) | RDFS::Resource.predicates
+      Query.new.distinct(:p).where(self,RDF::type,:t).where(:p,RDFS::domain,:t).execute | RDFS::Resource.predicates
 		end
     alias class_level_predicates class_predicates
 
@@ -375,11 +317,7 @@ module RDFS
     # like class_predicates, but returns predicates for this class instead of parent class for resources of type RDFS::Class or OWL::Class
     def instance_predicates
       if type.any?{|t| t == RDFS::Class or t == OWL::Class}
-        if instance_of?(RDFS::Resource)
-          Query.new.distinct(:s).where(:s,RDFS::domain,self).execute(:flatten=>false) | RDFS::Resource.predicates
-        else
-          self.class.predicates
-        end
+        Query.new.distinct(:s).where(:s,RDFS::domain,self).execute | RDFS::Resource.predicates
       else
         all_predicates
       end
@@ -396,6 +334,7 @@ module RDFS
 	end
 end
 
+# Catches namespaces for properties
 class PropertyNamespaceProxy
   def initialize(ns, subject)
     @ns = ns
@@ -412,106 +351,60 @@ class PropertyNamespaceProxy
   private(:type)
 end
 
-# proxy to manage find_by_ invocations
-class DynamicFinderProxy
+# Search for resources of a given type, with given property restrictions.
+# Usage:
+#   ResourceQuery.new(TEST::Person).execute                         # find all TEST::Person resources
+#   ResourceQuery.new(TEST::Person).age.execute                     # find TEST::Person resources that have the property age
+#   ResourceQuery.new(TEST::Person).age(27).execute                 # find TEST::Person resources with property matching the supplied value
+#   ResourceQuery.new(TEST::Person).eye('blue').all_types.execute   # find TEST::Person resources with property matching the supplied value ignoring lang/datatypes 
+#   ResourceQuery.new(RDFS::Resource).test::age(27).execute         # find RDFS::Resources having the fully qualified property and value
+#   ResourceQuery.new(TEST::Person).age(27).eye(LocalizedString('blue','en')).execute  # chain multiple properties together, ANDing restrictions 
+class ResourceQuery
   @ns = nil
-  @where = nil
-  @value = nil
-  attr_reader :value
+  @type = nil
   private(:type)
 
-  # construct proxy from find_by text
-  # foaf::name
-  def initialize(find_string, where, *args)
-    @where = where || []
-    parse_attributes(find_string, *args)
+  def initialize(type)
+    @type = type
+    @query = Query.new.distinct(:s).where(:s,RDF::type,@type)
   end
 
-  def method_missing(method, *args)
-    # we store the ns:name for later (we need to wait until we have the 
-    # arguments before actually constructing the where clause): now we just 
-    # store that a where clause should appear about foaf:name
-
-    # if this method is called name_and_foaf::age we add ourself to the query
-    # otherwise, the query is built: we execute it and return the results
-    if method.to_s.include?('_and_')
-      parse_attributes(method.to_s, *args)
-    else
-      @where << Namespace.lookup(@ns, method.to_s)
-      query(*args)
-    end
+  def execute(options = {}, &blk)
+    @query.execute(options, &blk)
+  end
+  
+  def all_types
+    @query.all_types
+    self
   end
 
-  private 
-  # split find_string by occurrences of _and_
-  def parse_attributes string, *args
-    attributes = string.split('_and_')
-    attributes.each do |atr|
-      # attribute can be:
-      # - a namespace prefix (foaf): store prefix in @ns to prepare for method_missing
-      # - name (attribute name): store in where to prepare for method_missing
-      if Namespace.abbreviations.include?(atr.to_sym)
-        @ns = atr.to_s.downcase.to_sym
-      else
-        # found simple attribute label, e.g. 'name'
-        # find out candidate (full) predicate for this localname: investigate 
-        # all possible predicates and select first one with matching localname
-        candidates = Query.new.distinct(:p).where(:s,:p,:o).execute
-        @where << candidates.select {|cand| Namespace.localname(cand) == atr}.first
-      end
-    end
-
-    # if the last attribute was a prefix, return this dynamic finder (we'll 
-    # catch the following method_missing and construct the real query then)
-    # if the last attribute was a localname, construct the query now and return 
-    # the results
-    if Namespace.abbreviations.include?(attributes.last.to_sym)
+  def method_missing(ns_or_property, *values)
+    values.flatten!
+    # if the namespace has been seen, lookup the property 
+    if @ns
+      property = Namespace.lookup(@ns, ns_or_property)
+      # fully qualified property found. clear the ns:name for next invocation
+      @ns = nil
+    elsif Namespace.abbreviations.include?(ns_or_property)
+      # we store the ns:name for next method_missing invocation
+      @ns = ns_or_property
       return self
     else
-      return query(*args)
+      # ns_or_property not a namespace, so must be an unqualified property
+      property_str = ns_or_property.to_s
+      property = @type.instance_predicates.find{|prop| Namespace.localname(prop) == property_str}
+      raise ActiveRdfError, "no suitable predicate matching '#{property_str}' found. Maybe you are missing some schema information?" unless property
     end
-  end
 
-  # construct and execute finder query
-  def query(*args)
-    # extract options from args or use an empty hash (no options given)
-    options = args.last.is_a?(Hash) ? args.last : {}
-
-    # build query 
-    query = Query.new.distinct(:s)
-    @where.each_with_index do |predicate, i|
-      # specify where clauses, use context if given
-      if options[:context]
-        query.where(:s, predicate, args[i], options[:context])
-      else
-        query.where(:s, predicate, args[i])
+    # restrict by values if provided
+    if values.size > 0 then values.each do |value|
+        @query.where(:s,property,value)
       end
+    # otherwise restrict by property occurance only
+    else
+      @query.where(:s,property,nil)
     end
 
-    # use sort order if given
-    if options.include? :order
-      sort_predicate = options[:order]
-      query.sort(:sort_value)
-      # add sort predicate where clause unless we have it already
-      query.where(:s, sort_predicate, :sort_value) unless @where.include? sort_predicate
-    end
-
-    if options.include? :reverse_order
-      sort_predicate = options[:reverse_order]
-      query.reverse_sort(:sort_value)
-      query.where(:s, sort_predicate, :sort_value) unless @where.include? sort_predicate
-    end
-
-    query.limit(options[:limit]) if options[:limit]
-    query.offset(options[:offset]) if options[:offset]
-
-    $activerdflog.debug "executing dynamic finder: #{query.to_sp}"
-
-    # store the query results so that caller (Resource.method_missing) can 
-    # retrieve them (we cannot return them here, since we were invoked from 
-    # the initialize method so all return values are ignored, instead the proxy 
-    # itself is returned)
-    @value = query.execute
-    return @value
+    self
   end
 end

@@ -149,12 +149,6 @@ module TestWritableAdapter
     # TODO: check the results of this query 
     assert query.execute.size > 0
   end
-  
-  def test_disconnected_query_graph
-    assert_raise ActiveRdfError do
-      Query.new.select(:s).where(:s,:p,:o).where(:disconnected,nil,nil)
-    end
-  end
 
 #  def test_limit_and_offset
 #    @adapter.load(@@test_person_data)

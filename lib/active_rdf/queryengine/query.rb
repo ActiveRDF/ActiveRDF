@@ -22,6 +22,7 @@ class Query
 		@reasoning = nil
     @all_types = false
     @reverse_sort_clauses = []
+    @nil_clause_idx = -1
 	end
   
   def initialize_copy(orig)
@@ -57,6 +58,7 @@ class Query
 		self
 	end
 
+  # Request reasoning be performed on query
   def reasoning(bool)
     @reasoning = truefalse(bool)
     self
@@ -68,8 +70,9 @@ class Query
     @reasoning
   end
   
-  def all_types(bool)
-    @all_types = truefalse(bool)
+  # Set query to ignore language & datatypes for objects 
+  def all_types
+    @all_types = true
     self
   end
 
@@ -150,7 +153,10 @@ class Query
 			# treat keywords in where-clauses specially
 			keyword_where(s,o)
 		else
-			# remove duplicate variable bindings, e.g.
+      # give nil clauses a unique variable
+      s,p,o = [s,p,o].collect{|clause| clause.nil? ? "nil#{@nil_clause_idx += 1}".to_sym : clause}
+
+      # remove duplicate variable bindings, e.g.
 			# where(:s,type,:o).where(:s,type,:oo) we should remove the second clause, 
 			# since it doesn't add anything to the query and confuses the query 
 			# generator. 
@@ -165,7 +171,6 @@ class Query
 			end
 
       @where_clauses << [s,p,o,c]
-
 		end
     self
   end
@@ -192,7 +197,7 @@ class Query
   def execute(options={:flatten => false}, &block)
     options = {:flatten => true} if options == :flatten
 
-    prepared_query = prepare_query
+    prepared_query = prepare_query(options)
     
     if block_given?
       for result in FederationManager.execute(prepared_query, options)
@@ -219,11 +224,25 @@ class Query
   end
 
   private
-  def prepare_query
+  def prepare_query(options = {})
     # leave the original query intact
     dup = self.dup
     dup.expand_obj_values
     # dup.reasoned_query if dup.reasoning?
+
+    if options.include?(:order)
+      dup.sort(:sort_value)
+      dup.where(:s, options[:order], :sort_value)
+    end
+
+    if options.include?(:reverse_order)
+      dup.reverse_sort(:sort_value)
+      dup.where(:s, options[:reverse_order], :sort_value)
+    end
+
+    dup.limit(options[:limit]) if options[:limit]
+    dup.offset(options[:offset]) if options[:offset]
+    
     dup
   end
   
