@@ -27,7 +27,7 @@ class FederationManager
   # executes read-only queries
   # by distributing query over complete read-pool
   # and aggregating the results
-  def FederationManager.execute(q, options={:flatten => true})
+  def FederationManager.execute(q, options={:flatten => false})
 		if ConnectionPool.read_adapters.empty?
 			raise ActiveRdfError, "cannot execute query without data sources" 
 		end

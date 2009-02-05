@@ -34,12 +34,10 @@ class RDFLite < ActiveRdfAdapter
 	# * :keyword => true/false (defaults to false)
 	# * :pidx, :oidx, etc. => true/false (enable/disable these indices)
 	def initialize(params = {})
-    super()
-		$activerdflog.info "initialised rdflite with params #{params.to_s}"
+    super
 
-		@reads = true
-		@writes = truefalse(params[:write], true)
     @reasoning = truefalse(params[:reasoning], false)
+    @subprops = {} if @reasoning
 
 		# if no file-location given, we use in-memory store
 		file = params[:location] || ':memory:'
@@ -47,23 +45,6 @@ class RDFLite < ActiveRdfAdapter
 
 		# disable keyword search by default, enable only if ferret is found
 		@keyword_search = truefalse(params[:keyword], false) && @@have_ferret 
-
-    @subprops = {} if @reasoning
-
-		if keyword_search?
-			# we initialise the ferret index, either as a file or in memory
-			infos = Ferret::Index::FieldInfos.new
-
-			# we setup the fields not to store object's contents
-			infos.add_field(:subject, :store => :yes, :index => :no, :term_vector => :no)
-			infos.add_field(:object, :store => :no) #, :index => :omit_norms)
-
-			@ferret = if params[:location]
-									Ferret::I.new(:path => params[:location] + '.ferret', :field_infos => infos)
-								else
-									Ferret::I.new(:field_infos => infos)
-								end
-		end
 
 		# turn off filesystem synchronisation for speed
 		@db.synchronous = 'off'
@@ -76,7 +57,22 @@ class RDFLite < ActiveRdfAdapter
 
 		create_indices(params)
 		@db
-	end
+
+    if keyword_search?
+      # we initialise the ferret index, either as a file or in memory
+      infos = Ferret::Index::FieldInfos.new
+
+      # we setup the fields not to store object's contents
+      infos.add_field(:subject, :store => :yes, :index => :no, :term_vector => :no)
+      infos.add_field(:object, :store => :no) #, :index => :omit_norms)
+
+      @ferret = if params[:location]
+                  Ferret::I.new(:path => params[:location] + '.ferret', :field_infos => infos)
+                else
+                  Ferret::I.new(:field_infos => infos)
+                end
+    end
+  end
 
 	# returns the number of triples in the datastore (incl. possible duplicates)
 	def size
@@ -140,6 +136,8 @@ class RDFLite < ActiveRdfAdapter
 		raise(ActiveRdfError, "adding non-resource #{s} while adding (#{s},#{p},#{o},#{c})") unless s.respond_to?(:uri)
 		raise(ActiveRdfError, "adding non-resource #{p} while adding (#{s},#{p},#{o},#{c})") unless p.respond_to?(:uri)
 
+    c = c.to_literal_s unless c.nil?
+
     # insert triple into database
     @db.execute('insert into triple values (?,?,?,?);',s.to_literal_s,p.to_literal_s,o.to_literal_s,c)
 
@@ -156,10 +154,14 @@ class RDFLite < ActiveRdfAdapter
 
 	# loads triples from file in ntriples format
 	def load(location, syntax = nil)
-    context = if URI.parse(location).host
-                location
+    context = if @contexts
+                if URI.parse(location).host
+                  RDFS::Resource.new(location)
+                 else
+                  RDFS::Resource.new("file:#{location}")
+                end
               else
-                RDFS::Resource.new("file:#{location}").uri
+                nil
               end
 
     if MIME::Types.of(location) == MIME::Types['application/rdf+xml'] or syntax == 'rdfxml' 
@@ -181,7 +183,7 @@ class RDFLite < ActiveRdfAdapter
 	end
 
 	# adds ntriples from given context into datastore
-	def add_ntriples(ntriples, context)
+	def add_ntriples(ntriples, context = nil)
 		# add each triple to db
 		@db.transaction
 
@@ -190,7 +192,7 @@ class RDFLite < ActiveRdfAdapter
       add(s,p,o,context)
 
 			# if keyword-search available, insert the object into keyword search
-      @ferret << {:subject => s.to_literal_s, :object => o.to_literal_s} if keyword_search?
+      @ferret << {:subject => s.to_s, :object => o.to_s} if keyword_search?
 		end
 
 		@db.commit

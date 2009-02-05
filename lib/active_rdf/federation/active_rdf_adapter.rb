@@ -7,8 +7,13 @@ class ActiveRdfAdapter
 	# indicate if adapter can read and write
 	bool_accessor :reads, :writes, :contexts, :enabled
 
-  def initialize
-    @enabled = true
+  def initialize(params = {})
+                                           # defaults
+    @enabled =                               true
+    @reads =                                 true
+    @writes =      truefalse(params[:write], true)
+    @new =           truefalse(params[:new], false)
+    @contexts = truefalse(params[:contexts], false)
   end
 
 	# translate a query to its string representation

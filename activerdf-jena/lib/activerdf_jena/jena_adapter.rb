@@ -253,7 +253,7 @@ class JenaAdapter < ActiveRdfAdapter
   end  
 
   # this method gets called by the ActiveRDF query engine
-  def execute(query, params = {})
+  def execute(query)
 
     if self.keyword_search? && query.keyword?
             

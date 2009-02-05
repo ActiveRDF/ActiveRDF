@@ -36,6 +36,7 @@ module RDF
       @lang = nil
       @exact_lang = true
       @datatype = nil
+      @context = nil
       
       if @subject
         class<<self
@@ -61,7 +62,7 @@ module RDF
 
     # Returns a Set of RDF::Property objects that are subproperties of this property. An optional boolean recursive argument is available.
     def subproperties(recursive = false)
-      subprops = Set.new(Query.new.distinct(:p).where(:p, RDFS::subPropertyOf, self.property).execute)
+      subprops = Set.new(Query.new.distinct(:p).where(:p, RDFS::subPropertyOf, self.property, @context).execute)
       if recursive
         all_subprops = Set.new
         subprops.each do |subprop|
@@ -149,9 +150,27 @@ module RDF
     end
     alias :map! :collect!
 
+    # Returns the context for the property if context is nil. 
+    # Returns a new RDF::Property object with the @context value set if context is provided
+    # see also #lang, #datatype
+    def context(context = nil)
+      if context.nil?
+        @context
+      else
+        property_with_context = self.dup
+        property_with_context.context = context
+        property_with_context
+      end
+    end
+
+    # Sets context for this property
+    def context=(context)
+      @context = context
+    end
+
     # Returns the datatype if type is nil. 
     # Returns a new RDF::Property object with the @datatype set if type is provided
-    # see also #lang
+    # see also #context, #lang
     def datatype(type = nil)
       if type.nil?
         @datatype
@@ -187,7 +206,7 @@ module RDF
 
     # Calls block once for each value, passing a copy of the value as a parameter
     def each(&block)  # :yields: value
-      q = Query.new.distinct(:o).where(@subject,self,:o)
+      q = Query.new.distinct(:o).where(@subject,self,:o,@context)
       if @lang and !@datatype
         q.lang(:o,@lang,@exact_lang)
       elsif @datatype and !@lang
@@ -262,7 +281,7 @@ module RDF
 
     # Returns the language tag and the match settings for the property if tag is nil. 
     # Returns a new RDF::Property object with the @lang value set if tag is provided
-    # see also #datatype
+    # see also #context, #datatype
     def lang(tag = nil, exact = true)
       if tag.nil?
         [@lang,@exact_lang]

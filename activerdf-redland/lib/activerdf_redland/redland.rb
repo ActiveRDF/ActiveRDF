@@ -14,12 +14,7 @@ class RedlandAdapter < ActiveRdfAdapter
 
   # instantiate connection to Redland database
   def initialize(params = {})
-    super()
-                                           # defaults
-    @reads =                                 true
-    @writes =      truefalse(params[:write], true)
-    @new =           truefalse(params[:new], false)
-    @contexts = truefalse(params[:contexts], true)
+    super
     location = params[:location]
     name = params[:name] || ''
     options = {}
@@ -69,11 +64,13 @@ class RedlandAdapter < ActiveRdfAdapter
   def load(location, syntax="ntriples")
     raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
     parser = Redland::Parser.new(syntax, "", nil)
-    if location =~ /^http/
-      parser.parse_into_model(@model, location)
-    else
-      parser.parse_into_model(@model, "file:#{location}")
+    unless location =~ /^http/
+      location = "file:#{location}"
     end
+    
+    context = @contexts ? Redland::Uri.new(location) : nil
+    parser.parse_into_model(@model, location, nil, context)
+
     save if ConnectionPool.auto_flush?
     rescue Redland::RedlandError => e
       $activerdflog.warn "RedlandAdapter: loading #{location} failed in Redland library: #{e}"
@@ -204,6 +201,10 @@ class RedlandAdapter < ActiveRdfAdapter
     arr = []
     @model.triples{|s,p,o| arr << [s.to_s,p.to_s,o.to_s]}
     arr
+  end
+  
+  def contexts
+    @model.contexts
   end
 
   # returns size of datasources as number of triples

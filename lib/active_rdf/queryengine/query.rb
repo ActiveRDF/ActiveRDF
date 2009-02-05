@@ -110,7 +110,7 @@ class Query
   # regular expression
   def regexp(variable, regexp)
     raise(ActiveRdfError, "regexp must be a ruby regexp") unless regexp.is_a? Regexp
-    filter(variable,:regexp,regexp.inspect.gsub('/','"'))
+    filter(variable,:regexp,regexp.inspect.gsub('/',''))
   end
   alias :regex :regexp
 
@@ -200,7 +200,7 @@ class Query
     prepared_query = prepare_query(options)
     
     if block_given?
-      for result in FederationManager.execute(prepared_query, options)
+      for result in FederationManager.execute(prepared_query, options.merge(:flatten => false))
         yield result
       end
     else
@@ -230,18 +230,19 @@ class Query
     dup.expand_obj_values
     # dup.reasoned_query if dup.reasoning?
 
+    # extract options
     if options.include?(:order)
       dup.sort(:sort_value)
-      dup.where(:s, options[:order], :sort_value)
+      dup.where(:s, options.delete(:order), :sort_value)
     end
 
     if options.include?(:reverse_order)
       dup.reverse_sort(:sort_value)
-      dup.where(:s, options[:reverse_order], :sort_value)
+      dup.where(:s, options.delete(:reverse_order), :sort_value)
     end
 
-    dup.limit(options[:limit]) if options[:limit]
-    dup.offset(options[:offset]) if options[:offset]
+    dup.limit(options.delete(:limit)) if options.include?(:limit)
+    dup.offset(options.delete(:offset)) if options.include?(:offset)
     
     dup
   end

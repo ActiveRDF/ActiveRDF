@@ -41,9 +41,9 @@ class TestQueryEngine < Test::Unit::TestCase
     assert_equal [],                                  Query.new.select(:s).where(:s,:p,:o).lang(:o,'n',true).execute
 
     # check that localized strings will also be found when searching with a non-localized string
-    q = Query.new.select(:s).where(:s,TEST::eye,"blue").all_types(true)
+    q = Query.new.select(:s).where(:s,TEST::eye,"blue").all_types
     assert_equal Set[TEST::eyal],    Set.new(q.execute)
-    assert_equal Set[TEST::eyal],    Set.new(Query.new.select(:s).where(:s,TEST::eye,"blauw").all_types(true).execute)
+    assert_equal Set[TEST::eyal],    Set.new(Query.new.select(:s).where(:s,TEST::eye,"blauw").all_types.execute)
   end
   
   def test_expanded_objects
