@@ -30,36 +30,16 @@ class TestResourceReading < Test::Unit::TestCase
   end
 
   def test_class_predicates
-    resource_predicates = RDFS::Resource.predicates
-    assert_equal 7, resource_predicates.size
-    assert resource_predicates.include?(RDF::type)
-    assert resource_predicates.include?(RDF::value)
-    assert resource_predicates.include?(RDFS::comment)
-    assert resource_predicates.include?(RDFS::label)
-    assert resource_predicates.include?(RDFS::seeAlso)
-    assert resource_predicates.include?(RDFS::isDefinedBy)
-    assert resource_predicates.include?(RDFS::member)
-    person_predicates = (TEST::Person.predicates - resource_predicates)
-    assert_equal 3, person_predicates.size
-    assert person_predicates.include?(TEST::age)
-    assert person_predicates.include?(TEST::eye)
-    assert person_predicates.include?(TEST::car)
-    assert !person_predicates.include?(TEST::email)
-  end
-  
-  def test_property_accessors
-    properties = @@eyal.property_accessors
-    assert_equal 11, properties.size
-    %w(type value comment label seeAlso isDefinedBy member age eye car email).each{|prop| assert properties.include?(prop), "missing property #{prop}"}
+    assert_equal Set[RDF::type,RDF::value,RDFS::comment,RDFS::label,RDFS::seeAlso,RDFS::isDefinedBy,RDFS::member],
+                 Set.new(RDFS::Resource.predicates)
+    assert_equal Set[TEST::age, TEST::eye, TEST::car],
+                 Set.new(TEST::Person.predicates - RDFS::Resource.predicates)
   end
 
   def test_resource_predicates
     # assert that eyal's three direct predicates are eye, age, and type
-    preds = @@eyal.direct_predicates
-    assert_equal 4, preds.size
-    assert preds.include?(TEST::age)
-    assert preds.include?(TEST::eye)
-    assert preds.include?(TEST::email)
+    assert_equal Set[RDF::type, TEST::age, TEST::eye, TEST::email],
+                 Set.new(@@eyal.direct_predicates)
   end
 
   def test_resource_type
@@ -68,10 +48,13 @@ class TestResourceReading < Test::Unit::TestCase
   end
 
   def test_resource_types
-    type = @@eyal.type
-    assert_equal 2, type.size
-    assert type.include?(TEST::Person.class_uri)
-    assert type.include?(RDFS::Resource.class_uri)
+    assert_equal Set[TEST::Person.class_uri, RDFS::Resource.class_uri],
+                 Set.new(@@eyal.type)
+  end
+
+  def test_resource_classes
+    assert_equal Set[TEST::Person, RDFS::Resource],
+                 Set.new(@@eyal.classes)
   end
 
   def test_resource_values
@@ -212,10 +195,13 @@ class TestResourceReading < Test::Unit::TestCase
     assert_equal [@@eyal], TEST::Person.find_by.test::mixedCamelCase_underscored_property.execute
     assert_equal [@@eyal], TEST::Person.find_by.mixedCamelCase_underscored_property("a mixed CamelCase and underscored property").execute
 
-    # find TEST::Person resources with property matching the specified regex
-    assert_equal [@@eyal], TEST::Person.find_by.age(:regex => /7/).execute
-    assert_equal [@@eyal], TEST::Person.find_by.eye(:regex => /lu/).execute
-    assert_equal [TEST::other], TEST::Person.find_by.eye(:regex => /ot/).execute
+    # Sqlite doesn't support regular expressions by default
+    unless ConnectionPool.write_adapter.class == RDFLite 
+      # find TEST::Person resources with property matching the specified regex
+      assert_equal [@@eyal], TEST::Person.find_by.age(:regex => /7/).execute
+      assert_equal [@@eyal], TEST::Person.find_by.eye(:regex => /lu/).execute
+      assert_equal [TEST::other], TEST::Person.find_by.eye(:regex => /ot/).execute
+    end
   end
 
 

@@ -271,7 +271,17 @@ module RDF
 
     # Return the value(s) of this property as a string. 
     def inspect
-      "[#{to_a.collect{|obj| obj.inspect}.join(", ")}]"
+      label = Query.new.distinct(:label).where(self,RDFS::label,:label).execute
+      label = 
+        if label.size == 1
+          label.first
+        elsif label.size > 1
+          label.inspect
+        else
+          abbr
+        end
+        
+      "#<RDF::Property #{label} [#{to_a.collect{|obj| obj.inspect}.join(", ")}]>"
     end
 
     # Returns a new array populated with the keys to the values

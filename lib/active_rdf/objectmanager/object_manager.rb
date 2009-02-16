@@ -30,8 +30,17 @@ class ObjectManager
 
   # constructs Ruby class for the given resource (and puts it into the module as
   # defined by the registered namespace abbreviations)
-  def ObjectManager.construct_class(resource)
-    raise ActiveRdfError, "must be a resource: #{resource.class}" unless resource.is_a?(RDFS::Resource)
+  def ObjectManager.construct_class(class_or_resource_or_uri)
+    case class_or_resource_or_uri
+      when Class, Module
+        return class_or_resource_or_uri
+      when RDFS::Resource
+        resource = class_or_resource_or_uri
+      when String
+        resource = RDFS::Resource.new(class_or_resource_or_uri)
+      else raise ActiveRdfError, "ObjectManager: can't construct class from #{class_or_resource_or_uri.inspect}"
+    end
+
     # get prefix abbreviation and localname from type
     # e.g. :foaf and Person
     localname = Namespace.localname(resource)

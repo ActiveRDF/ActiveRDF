@@ -3,6 +3,12 @@ require 'rubygems'
 
 # ActiveRDF loader
 
+# Provide (partial) reasoning for RDF and RDFS only
+$activerdf_internal_reasoning = true
+
+# TODO: is this functionality needed?
+$activerdf_without_datatype = false
+
 # determine the directory in which we are running depending on cruby or jruby
 if RUBY_PLATFORM =~ /java/
   # jruby can not follow symlinks, because java does not know the symlink concept
