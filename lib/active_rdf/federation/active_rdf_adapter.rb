@@ -4,8 +4,8 @@ require 'queryengine/query2sparql'
 # Generic superclass of all adapters
 
 class ActiveRdfAdapter
-	# indicate if adapter can read and write
-	bool_accessor :reads, :writes, :contexts, :enabled
+  # indicate if adapter can read and write
+  bool_accessor :reads, :writes, :contexts, :enabled
 
   def initialize(params = {})
                                            # defaults
@@ -16,8 +16,8 @@ class ActiveRdfAdapter
     @contexts = truefalse(params[:contexts], false)
   end
 
-	# translate a query to its string representation
-	def translate(query)
-	 	Query2SPARQL.translate(query)
-	end
+  # translate a query to its string representation
+  def translate(query)
+     Query2SPARQL.translate(query)
+  end
 end

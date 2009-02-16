@@ -20,13 +20,13 @@ class TestQueryEngine < Test::Unit::TestCase
   def test_datatype
     t = Time.parse("Tue Jan 20 12:00:00 -0800 2009")
     @adapter.add(TEST::time,TEST::value,t)
-    
+
     email = Set["eyal@cs.vu.nl","eyal.oren@deri.org"]
     assert_equal email,      Set.new(Query.new.select(:o).where(:s,:p,:o).datatype(:o,XSD::string).execute)
     assert_equal Set[27,21], Set.new(Query.new.select(:o).where(:s,:p,:o).datatype(:o,XSD::integer).execute)
     assert_equal [t],                Query.new.select(:o).where(:s,:p,:o).datatype(:o,XSD::time).execute
   end
-  
+
   def test_lang
 
     en_blue = LocalizedString.new('blue','en')
@@ -45,7 +45,7 @@ class TestQueryEngine < Test::Unit::TestCase
     assert_equal Set[TEST::eyal],    Set.new(q.execute)
     assert_equal Set[TEST::eyal],    Set.new(Query.new.select(:s).where(:s,TEST::eye,"blauw").all_types.execute)
   end
-  
+
   def test_expanded_objects
     @adapter.load "#{File.dirname(__FILE__)}/../test_person2_data.nt"
     eyal = TEST::eyal
@@ -54,10 +54,10 @@ class TestQueryEngine < Test::Unit::TestCase
     eyal.test::member_of = ["A","B","C"]
     michael.test::member_of = ["A","B"]
     benjamin.test::member_of = ["B","C"]
-    
+
     s = Query.new.select(:s).where(:s,TEST::member_of,["A","B","C"]).execute
     assert_equal Set[eyal], Set.new(s)
-    
+
     s = Query.new.select(:s).where(:s,TEST::member_of,["A","B"]).execute
     assert_equal Set[eyal,michael], Set.new(s)
 

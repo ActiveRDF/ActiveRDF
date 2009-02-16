@@ -2,9 +2,9 @@ require 'digest'
 require 'set'
 
 module RDF
-  # Represents an RDF property. 
-  # If an optional subject is provided on instatiation, provides access to values of this property belonging to the 
-  # associated subject. Property objects are +Enumerable+. Values are returned as copies with no order garunteed 
+  # Represents an RDF property.
+  # If an optional subject is provided on instatiation, provides access to values of this property belonging to the
+  # associated subject. Property objects are +Enumerable+. Values are returned as copies with no order garunteed
   # and may be accessed individually by key.
   #
   # == Usage
@@ -37,7 +37,7 @@ module RDF
       @exact_lang = true
       @datatype = nil
       @context = nil
-      
+
       if @subject
         class<<self
           include AssociatedProperty
@@ -75,8 +75,8 @@ module RDF
       end
     end
   end
-  
-  # Provides methods for accessing property values when @subject is set 
+
+  # Provides methods for accessing property values when @subject is set
   module AssociatedProperty
     include Enumerable
     # Value reference. Retrieves a copy of the value by the key or value. Returns nil if not found.
@@ -101,7 +101,7 @@ module RDF
       to_a + [*obj]
     end
 
-    # Returns a new array with the object removed 
+    # Returns a new array with the object removed
     def -(obj)
       to_a - [*obj]
     end
@@ -150,7 +150,7 @@ module RDF
     end
     alias :map! :collect!
 
-    # Returns the context for the property if context is nil. 
+    # Returns the context for the property if context is nil.
     # Returns a new RDF::Property object with the @context value set if context is provided
     # see also #lang, #datatype
     def context(context = nil)
@@ -168,7 +168,7 @@ module RDF
       @context = context
     end
 
-    # Returns the datatype if type is nil. 
+    # Returns the datatype if type is nil.
     # Returns a new RDF::Property object with the @datatype set if type is provided
     # see also #context, #lang
     def datatype(type = nil)
@@ -188,7 +188,7 @@ module RDF
 
     # Deletes value given by key or value. If the item is not found, returns nil.
     # If the optional code block is given, returns the result of block if the item is not found
-    def delete(md5_or_value) 
+    def delete(md5_or_value)
       value = self[md5_or_value]
       if value
         FederationManager.delete(@subject, self.property, value)
@@ -238,8 +238,8 @@ module RDF
     end
     alias :blank? :empty?
 
-    # Returns a value from the property for the given key. If the key can't be found, there are several options: 
-    # With no other arguments, it will raise an IndexError exception; if default is given, then that will be returned; 
+    # Returns a value from the property for the given key. If the key can't be found, there are several options:
+    # With no other arguments, it will raise an IndexError exception; if default is given, then that will be returned;
     # if the optional code block is specified, then that will be run and its result returned.
     def fetch(md5, default = nil, &block)
       val = self[md5]
@@ -269,10 +269,10 @@ module RDF
       get_key(value) if value
     end
 
-    # Return the value(s) of this property as a string. 
+    # Return the value(s) of this property as a string.
     def inspect
       label = Query.new.distinct(:label).where(self,RDFS::label,:label).execute
-      label = 
+      label =
         if label.size == 1
           label.first
         elsif label.size > 1
@@ -280,7 +280,7 @@ module RDF
         else
           abbr
         end
-        
+
       "#<RDF::Property #{label} [#{to_a.collect{|obj| obj.inspect}.join(", ")}]>"
     end
 
@@ -289,7 +289,7 @@ module RDF
       collect{|value| get_key(value)}
     end
 
-    # Returns the language tag and the match settings for the property if tag is nil. 
+    # Returns the language tag and the match settings for the property if tag is nil.
     # Returns a new RDF::Property object with the @lang value set if tag is provided
     # see also #context, #datatype
     def lang(tag = nil, exact = true)
@@ -315,7 +315,7 @@ module RDF
     end
     alias :size :length
 
-    # Ensure the return of only one value assigned to this property for this @subject. 
+    # Ensure the return of only one value assigned to this property for this @subject.
     # If more than 1 value is found, ActiveRdfError is thrown.
     def only
       entries = self.entries

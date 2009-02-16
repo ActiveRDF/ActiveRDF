@@ -4,7 +4,7 @@
 # License:  LGPL
 #
 module Pellet
-  
+
   class << self
     bool_accessor :pellet_available
     attr_accessor :reasoner_factory

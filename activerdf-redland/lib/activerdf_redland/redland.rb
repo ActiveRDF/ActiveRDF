@@ -67,7 +67,7 @@ class RedlandAdapter < ActiveRdfAdapter
     unless location =~ /^http/
       location = "file:#{location}"
     end
-    
+
     context = @contexts ? Redland::Uri.new(location) : nil
     parser.parse_into_model(@model, location, nil, context)
 
@@ -202,7 +202,7 @@ class RedlandAdapter < ActiveRdfAdapter
     @model.triples{|s,p,o| arr << [s.to_s,p.to_s,o.to_s]}
     arr
   end
-  
+
   def contexts
     @model.contexts
   end
@@ -255,7 +255,7 @@ class RedlandAdapter < ActiveRdfAdapter
           if lang_uri_ref
             LocalizedString.new(value,Redland::Uri.new(lang_uri_ref).to_s)
           elsif dt_uri_ref
-            type = RDFS::Resource.new(Redland::Uri.new(dt_uri_ref).to_s) 
+            type = RDFS::Resource.new(Redland::Uri.new(dt_uri_ref).to_s)
             RDFS::Literal.typed(value,type)
           elsif lang_uri_ref and dt_uri_ref
             raise ActiveRdfError, "cannot have both datatype and lang set"

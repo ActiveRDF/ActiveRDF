@@ -32,7 +32,7 @@ class JenaAdapter < ActiveRdfAdapter
     def close
       self.datasource = nil
     end
-    
+
     def valid_connection?(cnxn)
       true
     end
@@ -47,9 +47,9 @@ class JenaAdapter < ActiveRdfAdapter
   attr_accessor :model_maker, :base_model, :model, :lucene_index
   attr_accessor :root_directory
 
-  # :database 
+  # :database
   #   either use :url, :type, :username, AND :password (for a
-  #   regular connection) OR :datasource AND :type (for a container 
+  #   regular connection) OR :datasource AND :type (for a container
   #   connection), default to memory data store
   #   example for a derby connection:
   #     :database => {:url => "jdbc:derby:superfunky;create=true", :type => "Derby", :username => "", :password => ""}
@@ -59,12 +59,12 @@ class JenaAdapter < ActiveRdfAdapter
   # :model
   #   name of model to use, default is jena's default
   # :ontology
-  #   set to language type if this needs to be viewed as an ontology, 
+  #   set to language type if this needs to be viewed as an ontology,
   #   default nil, available :owl, :owl_dl, :owl_lite, :rdfs
-  #   pellet only supports owl reasoning. 
-  # :reasoner 
-  #   set to reasoner to use -- default nil (none).  options:  :pellet, 
-  #   :transitive, :rdfs, :rdfs_simple, :owl_micro, :owl_mini, :owl, 
+  #   pellet only supports owl reasoning.
+  # :reasoner
+  #   set to reasoner to use -- default nil (none).  options:  :pellet,
+  #   :transitive, :rdfs, :rdfs_simple, :owl_micro, :owl_mini, :owl,
   #   :generic_rule
   # :lucene
   #   set to true to enable true lucene indexing of this store, default false
@@ -73,7 +73,7 @@ class JenaAdapter < ActiveRdfAdapter
     self.ontology_type = params[:ontology]
     self.reasoner = params[:reasoner]
     self.keyword_search = params[:lucene]
-    
+
     # if the model name is not provided and file persistence is used, then jena just
     # creates random files in the tmp dir. not good, as we need to know the model name
     # to have persistence
@@ -82,7 +82,7 @@ class JenaAdapter < ActiveRdfAdapter
     else
       self.model_name = "default"
     end
-    
+
     if params[:file]
       if params[:file].respond_to? :path
         self.root_directory = File.expand_path(params[:file].path)
@@ -95,7 +95,7 @@ class JenaAdapter < ActiveRdfAdapter
     if self.keyword_search? && !LuceneARQ.lucene_available?
       raise JenaAdapterConfigurationError, "Lucene requested but is not available"
     end
-    
+
     if self.reasoner == :pellet && !Pellet.pellet_available?
       raise JenaAdapterConfigurationError, "Pellet requested but not available"
     end
@@ -117,28 +117,28 @@ class JenaAdapter < ActiveRdfAdapter
           raise JenaAdapterConfigurationError, "database type #{dbparams[:type]} not recognized"
         end
 
-        self.connection = Jena::DB::DBConnection.new(dbparams[:url], 
+        self.connection = Jena::DB::DBConnection.new(dbparams[:url],
                                                      dbparams[:username],
                                                      dbparams[:password],
                                                      dbparams[:type])
       end
 
       self.model_maker = Jena::Model::ModelFactory.createModelRDBMaker(connection)
-      
+
     elsif self.root_directory
       self.model_maker = Jena::Model::ModelFactory.createFileModelMaker(self.root_directory)
     else
       self.model_maker = Jena::Model::ModelFactory.createMemModelMaker
     end
-    
+
 
     self.base_model = self.model_maker.openModel(model_name)
-    
+
     if self.ontology_type
       rf = map_reasoner_factory(self.reasoner)
       onturi = map_ontology_type(self.ontology_type)
 
-      spec = 
+      spec =
         Jena::Ontology::OntModelSpec.new(self.model_maker,
                                          Jena::Ontology::OntDocumentManager.new,
                                          rf, onturi)
@@ -150,10 +150,10 @@ class JenaAdapter < ActiveRdfAdapter
       self.model = self.base_model
       self.reasoning = false
     end
-    
+
     self.reads = true
     self.writes = true
-    
+
     self
   end
 
@@ -212,17 +212,17 @@ class JenaAdapter < ActiveRdfAdapter
   # :format
   #   format -- :ntriples, :n3, or :rdfxml, default :rdfxml
   # :into
-  #   either the name of a model, :default_model for the main model, or 
+  #   either the name of a model, :default_model for the main model, or
   #   :submodel to load into an anonymous memory model, default is :submodel
   #   if this is an ontology, :default_model if it's not.
-  # :rebind 
+  # :rebind
   #   rebind with the inferencer, default true; no effect if no inferencer
   def load(uri, params = {})
-    into = params[:into] ? params[:into] : 
+    into = params[:into] ? params[:into] :
       (self.ontology_type ? :submodel : :default_model)
     format = params[:format] ? params[:format] : :rdfxml
     rebind = params[:rebind] ? params[:rebind] : true
-    
+
     jena_format =
       case format
       when :rdfxml
@@ -236,30 +236,30 @@ class JenaAdapter < ActiveRdfAdapter
     case into
     when :default_model
       self.model.read(uri, jena_format)
-      
+
     when :submodel
       self.model.addSubModel(Jena::Model::ModelFactory.createDefaultModel.read(uri, jena_format))
-      
+
     else
       self.model.addSubModel(self.model_maker.createModel(into).read(uri, jena_format))
     end
-    
+
     if rebind && self.reasoner && self.model.respond_to?(:rebind)
       self.model.rebind
     end
 
     self.lucene_index_behind = true
-    
-  end  
+
+  end
 
   # this method gets called by the ActiveRDF query engine
   def execute(query)
 
     if self.keyword_search? && query.keyword?
-            
+
       # duplicate the query
       query_with_keywords = query.dup
-      
+
       # now duplicate the where stuff so we can fiddle with it...
       # this is GROSS -- fix this if Query ever sprouts a proper
       # deep copy or a where_clauses setter
@@ -272,7 +272,7 @@ class JenaAdapter < ActiveRdfAdapter
         #query.where("lucene_literal_#{var}".to_sym, LuceneARQ::KEYWORD_PREDICATE, keyword)
         #query.where(var, "lucene_property_#{var}".to_sym, "lucene_literal_#{var}".to_sym)
 
-        # use this if activerdf expects the literal to come back, not the 
+        # use this if activerdf expects the literal to come back, not the
         # subject, or if using indexbuildersubject (which makes the subject
         # come back instead of the literal
         query_with_keywords.where(var, RDFS::Resource.new(LuceneARQ::KEYWORD_PREDICATE), keyword)
@@ -287,7 +287,7 @@ class JenaAdapter < ActiveRdfAdapter
     # search requests expanded.
     jena_results = query_jena(query_with_keywords)
 
-    # use the conjunctive query facility in pellet to get additional 
+    # use the conjunctive query facility in pellet to get additional
     # answers, if we're using pellet and we don't have a pure keyword
     # query
     if self.reasoner == :pellet && query.where_clauses.size > 0
@@ -303,17 +303,17 @@ class JenaAdapter < ActiveRdfAdapter
       return [[true]] if results.size > 0
       return [[false]]
     end
-    
+
     if query.count?
       return results.size
     end
 
     results
-    
+
   end
 
   # ==========================================================================
-  # put private methods here to seperate api methods from the 
+  # put private methods here to seperate api methods from the
   # inner workings of the adapter
   private
 
@@ -337,28 +337,28 @@ class JenaAdapter < ActiveRdfAdapter
     case type
     when :pellet
       Pellet.reasoner_factory
-      
+
     when :transitive
       com.hp.hpl.jena.reasoner.transitiveReasoner.TransitiveReasonerFactory.theInstance
-      
+
     when :rdfs
       com.hp.hpl.jena.reasoner.rulesys.RDFSFBRuleReasonerFactory.theInstance
-      
+
     when :rdfs_simple
       com.hp.hpl.jena.reasoner.rulesys.RDFSRuleReasonerFactory.theInstance
-      
+
     when :owl_micro
       com.hp.hpl.jena.reasoner.rulesys.OWLMicroReasonerFactory.theInstance
-      
+
     when :owl_mini
       com.hp.hpl.jena.reasoner.rulesys.OWLMiniReasonerFactory.theInstance
-      
-    when :owl 
+
+    when :owl
       com.hp.hpl.jena.reasoner.rulesys.OWLFBRuleReasonerFactory.theInstance
-      
+
     when :generic_rule
       com.hp.hpl.jena.reasoner.rulesys.GenericRuleReasonerFactory.theInstance
-      
+
     else
       type
     end
@@ -379,7 +379,7 @@ class JenaAdapter < ActiveRdfAdapter
       else
         objlit = object
       end
-      
+
       if objlit.type
         type = Jena::Datatypes::TypeMapper.getInstance.getTypeByName(objlit.type.uri)
         o = mod.createTypedLiteral(objlit.value, type)
@@ -388,11 +388,11 @@ class JenaAdapter < ActiveRdfAdapter
       else
         o = mod.createTypedLiteral(objlit.value, nil)
       end
-    end    
+    end
     return o
   end
 
-  def build_subject(subject, submodel = nil) 
+  def build_subject(subject, submodel = nil)
     # ensure it exists in the parent model
     self.model.getResource(subject.uri) if submodel
     appropriate_model(submodel).getResource(subject.uri)
@@ -426,8 +426,8 @@ class JenaAdapter < ActiveRdfAdapter
   end
 
   def query_jena(query)
-    query_sparql = translate(query)    
-    
+    query_sparql = translate(query)
+
     qexec = Jena::Query::QueryExecutionFactory.create(query_sparql, self.model)
 
     # PROBABLY A VERY EXPENSIVE OPERATION (rebuilds lucene index if ANYTHING
@@ -437,7 +437,7 @@ class JenaAdapter < ActiveRdfAdapter
       LuceneARQ::LARQ.setDefaultIndex(qexec.getContext, retrieve_lucene_index)
     end
 
-    begin 
+    begin
       results = perform_query(query, qexec)
     ensure
       qexec.close
@@ -449,25 +449,25 @@ class JenaAdapter < ActiveRdfAdapter
   def query_pellet(query)
     query_sparql = translate(query)
     jena_query = Jena::Query::QueryFactory.create(query_sparql)
-    
+
     # bail if not a select
     return [] if !jena_query.isSelectType
 
     qexec = Pellet::Query::PelletQueryExecution.new(jena_query, self.model)
-    
+
     begin
       results = perform_query(query, qexec)
     ensure
       qexec.close
     end
-    
+
     results
   end
 
   def perform_query(query, qexec)
     results = qexec.execSelect
     arr_results = []
-    
+
     while results.hasNext
       row = results.nextSolution
       res_row = []
@@ -487,7 +487,7 @@ class JenaAdapter < ActiveRdfAdapter
             # datatyped literal
             res_row << Literal.new(thing.getValue, RDFS::Resource.new(thing.getDatatypeURI))
           elsif thing.getDatatypeURI.nil?
-            # language tagged literal 
+            # language tagged literal
             res_row << Literal.new(thing.getLexicalForm, "@" + thing.getLanguage)
           else
             raise ActiveRdfError, "Jena Sparql returned a strange literal"

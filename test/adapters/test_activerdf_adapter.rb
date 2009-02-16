@@ -3,7 +3,7 @@ require "#{File.dirname(File.expand_path(__FILE__))}/../common"
 
 module TestActiveRdfAdapter
   include SetupAdapter
-  
+
   @@test = TEST::test
   @@eyal = TEST::eyal
   @@eye = TEST::eye
@@ -39,7 +39,7 @@ module TestActiveRdfAdapter
     @adapter.add(@@eyal, @@age, @@test)
     results = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
     assert results.flatten.size > 0
-    
+
     @adapter.close
     assert_equal 0, ConnectionPool.adapters.size
     assert_raises ActiveRdfError do
@@ -49,16 +49,16 @@ module TestActiveRdfAdapter
 
   def test_dump
     @adapter.add(@@eyal, @@age, @@test)
-  
+
     dump = @adapter.dump
     assert_kind_of Array, dump
   end
-  
+
   def test_size
     @adapter.add(@@eyal, @@age, @@test)
-    assert 1, @adapter.size 
+    assert 1, @adapter.size
   end
-  
+
 
 #  def test_escaped_literals
 #    string = 'test\nbreak\"quoted\"'
@@ -78,7 +78,7 @@ module TestActiveRdfAdapter
 #
 #    @adapter.add(@@eyal, TEST::umlaut_interpreted, interpreted)
 #    assert_equal string, @@eyal.umlaut_interpreted.only
-#  end  
+#  end
 
   def test_retrieve_a_triple_with_only_uris
     @adapter.add(@@eyal, @@age, @@test)
@@ -102,36 +102,36 @@ module TestActiveRdfAdapter
     @adapter.add(@@eyal, @@mbox, @@mboxval)
     result = Query.new.distinct(:o).where(@@eyal, :p, :o).execute
     assert_equal 1, result.flatten.size
-  
+
     result = Query.new.distinct(:p, :o).where(@@eyal, :p, :o).execute
     assert_equal 2, result.flatten.size
-  
+
     result = Query.new.distinct(:o).where(@@eyal, @@mbox, :o).execute
     assert_equal 1, result.flatten.size
-  
+
     result = Query.new.distinct(:s).where(:s, @@mbox, @@mboxval).execute
     assert_equal 1, result.flatten.size
-  
+
     result = Query.new.distinct(:p).where(@@eyal, :p, @@mboxval).execute
     assert_equal 1, result.flatten.size
     #@adapter.close
   end
-#  
+#
   def test_retrieve_a_triple_with_fixnum
     @adapter.add(@@eyal, @@age, @@ageval)
 
     result = Query.new.distinct(:o).where(@@eyal, :p, :o).execute
     assert_equal 1, result.flatten.size
-  
+
     result = Query.new.distinct(:p, :o).where(@@eyal, :p, :o).execute
     assert_equal 2, result.flatten.size
-  
+
     result = Query.new.distinct(:o).where(@@eyal, @@age, :o).execute
     assert_equal 1, result.flatten.size
-  
+
     result = Query.new.distinct(:s).where(:s, @@age, @@ageval).execute
     assert_equal 1, result.flatten.size
-  
+
     result = Query.new.distinct(:p).where(@@eyal, :p, @@ageval).execute
     assert_equal 1, result.flatten.size
   end

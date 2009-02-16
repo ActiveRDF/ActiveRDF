@@ -5,15 +5,15 @@ require 'queryengine/query'
 require 'instance_exec'
 
 module RDFS
-	# Represents an RDF resource and manages manipulations of that resource,
-	# including data lookup (e.g. eyal.age), data updates (e.g. eyal.age=20),
-	# class-level lookup (Person.find_by_name 'eyal'), and class-membership
-	# (eyal.class ...Person).
+  # Represents an RDF resource and manages manipulations of that resource,
+  # including data lookup (e.g. eyal.age), data updates (e.g. eyal.age=20),
+  # class-level lookup (Person.find_by_name 'eyal'), and class-membership
+  # (eyal.class ...Person).
   class RDFS::Resource
     #####                     #####
     ##### class level methods #####
     #####                     #####
-    
+
     class << self
       attr_accessor :class_uri
     end
@@ -42,7 +42,7 @@ module RDFS
     def Resource.find_all(options = {}, &blk)
       ResourceQuery.new(self,options.delete(:context)).execute(options,&blk)
     end
-    
+
     # Find resources of this type, restricted by optional property args
     # see ResourceQuery usage
     def Resource.find_by(context = nil)
@@ -75,7 +75,7 @@ module RDFS
              # allow Resource.new('uri')
              when String
                uri_or_resource
-             else 
+             else
                raise ActiveRdfError, "cannot create resource <#{uri_or_resource}>"
              end
     end
@@ -109,14 +109,14 @@ module RDFS
     end
     def inspect
       if ConnectionPool.adapters.size > 0
-        type = 
+        type =
           if (t = self.type) and t.size > 0
             t = t.collect{|res| res.abbr }
             t.size > 1 ? t.inspect : t.first
           else
             self.class
           end
-        label = 
+        label =
           if abbr?
             abbr
           elsif (l = self.label) and l.size > 0
@@ -184,21 +184,21 @@ module RDFS
       Namespace.localname(self)
     end
 
-    # Searches for property belonging to this resource. Returns RDF::Property. 
+    # Searches for property belonging to this resource. Returns RDF::Property.
     # Replaces any existing values if method is an assignment: resource.prop=(new_value)
     def method_missing(method, *args)
       # possibilities:
-      # 1. eyal.age is registered abbreviation 
+      # 1. eyal.age is registered abbreviation
       # evidence: age in @predicates
       # action: return RDF::Property(age,self) and store value if assignment
       #
       # 2. eyal.age is a custom-written method in class Person
       # evidence: eyal type ?c, ?c.methods includes age
-      # action: return results from calling custom method 
+      # action: return results from calling custom method
       #
       # 3. eyal.foaf::name, where foaf is a registered abbreviation
       # evidence: foaf in Namespace.
-      # action: return namespace proxy that handles 'name' invocation, by 
+      # action: return namespace proxy that handles 'name' invocation, by
       # rewriting into predicate lookup (similar to case (1)
       #
       # 4. eyal.age is a property of eyal (triple exists <eyal> <age> "30")
@@ -211,8 +211,8 @@ module RDFS
 
       $activerdflog.debug "method_missing: #{method}"
 
-      # are we doing an update or not? 
-			# checking if method ends with '='
+      # are we doing an update or not?
+      # checking if method ends with '='
 
       update = method.to_s[-1..-1] == '='
       methodname = update ? method.to_s[0..-2] : method.to_s
@@ -233,7 +233,7 @@ module RDFS
       end
 
       # check for registered namespace
-			if Namespace.abbreviations.include?(methodname.to_sym)
+      if Namespace.abbreviations.include?(methodname.to_sym)
         # catch the invocation on the namespace
         return PropertyNamespaceProxy.new(methodname,self)
       end
@@ -247,26 +247,26 @@ module RDFS
 
       raise ActiveRdfError, "could not set #{methodname} to #{args}: no suitable predicate found. Maybe you are missing some schema information?" if update
 
-			# if none of the three possibilities work out, we don't know this method
-			# invocation, but we don't want to throw NoMethodError, instead we return
-			# nil, so that eyal.age does not raise error, but returns nil. (in RDFS,
-			# we are never sure that eyal cannot have an age, we just dont know the
-			# age right now)
-			nil
-		end
+      # if none of the three possibilities work out, we don't know this method
+      # invocation, but we don't want to throw NoMethodError, instead we return
+      # nil, so that eyal.age does not raise error, but returns nil. (in RDFS,
+      # we are never sure that eyal cannot have an age, we just dont know the
+      # age right now)
+      nil
+    end
 
     # saves instance into datastore
-		def save
+    def save
       ConnectionPool.write_adapter.add(self,RDF::type,self.class)
       self
-		end
+    end
 
-		# returns an RDF::Property for RDF::type's of this resource, e.g. [RDFS::Resource, FOAF::Person]
-		#
-		# Note: this method performs a database lookup for { self rdf:type ?o }.
-		# For simple type-checking (to know if you are handling an ActiveRDF object,
-		# use self.class, which does not do a database query, but simply returns 
-		# RDFS::Resource.
+    # returns an RDF::Property for RDF::type's of this resource, e.g. [RDFS::Resource, FOAF::Person]
+    #
+    # Note: this method performs a database lookup for { self rdf:type ?o }.
+    # For simple type-checking (to know if you are handling an ActiveRDF object,
+    # use self.class, which does not do a database query, but simply returns
+    # RDFS::Resource.
     def type
       RDF::Property.new(RDF::type, self)
     end
@@ -281,7 +281,7 @@ module RDFS
     end
 
     def is_a?(klass)
-      super || ObjectManager.construct_class(klass) == self 
+      super || ObjectManager.construct_class(klass) == self
     end
 
     def instance_of?(klass)
@@ -296,15 +296,15 @@ module RDFS
 
     # define a localname for a predicate URI
     #
-    # localname should be a Symbol or String, fulluri a Resource or String, e.g. 
+    # localname should be a Symbol or String, fulluri a Resource or String, e.g.
     # register_predicate(:name, FOAF::lastName)
     def register_predicate(localname, fulluri)
-			localname = localname.to_s
-			fulluri = RDFS::Resource.new(fulluri) if fulluri.is_a? String
+      localname = localname.to_s
+      fulluri = RDFS::Resource.new(fulluri) if fulluri.is_a? String
 
-			# predicates is a hash from abbreviation string to full uri resource
+      # predicates is a hash from abbreviation string to full uri resource
       (@predicates ||= {})[localname] = fulluri
-		end
+    end
 
     # returns array of RDFS::Resources for properties that belong to this resource
     def class_predicates
@@ -446,16 +446,16 @@ end
 #   ResourceQuery.new(TEST::Person).execute                                         # find all TEST::Person resources
 #   ResourceQuery.new(TEST::Person).age.execute                                     # find TEST::Person resources that have the property age
 #   ResourceQuery.new(TEST::Person).age(27).execute                                 # find TEST::Person resources with property matching the supplied value
-#   ResourceQuery.new(TEST::Person).age(27,:context => context_resource).execute    # find TEST::Person resources with property matching supplied value and context 
+#   ResourceQuery.new(TEST::Person).age(27,:context => context_resource).execute    # find TEST::Person resources with property matching supplied value and context
 #   ResourceQuery.new(TEST::Person).email('personal@email','work@email').execute    # find TEST::Person resources with property matching the supplied values
 #   ResourceQuery.new(TEST::Person).email(['personal@email','work@email']).execute  # find TEST::Person resources with property matching the supplied values
 #   ResourceQuery.new(TEST::Person).eye('blue').execute(:all_types => true)         # find TEST::Person resources with property matching the supplied value ignoring lang/datatypes
-#   ResourceQuery.new(TEST::Person).eye(LocalizedString('blue','en')).execute       # find TEST::Person resources with property matching the supplied value 
+#   ResourceQuery.new(TEST::Person).eye(LocalizedString('blue','en')).execute       # find TEST::Person resources with property matching the supplied value
 #   ResourceQuery.new(TEST::Person).eye(:regex => /lu/).execute                     # find TEST::Person resources with property matching the specified regex
 #   ResourceQuery.new(TEST::Person).eye(:lang => '@en').execute                     # find TEST::Person resources with property having the specified language
 #   ResourceQuery.new(TEST::Person).age(:datatype => XSD::Integer).execute          # find TEST::Person resources with property having the specified datatype
 #   ResourceQuery.new(RDFS::Resource).test::age(27).execute                         # find RDFS::Resources having the fully qualified property and value
-#   ResourceQuery.new(TEST::Person).age(27).eye(LocalizedString('blue','en')).execute  # chain multiple properties together, ANDing restrictions 
+#   ResourceQuery.new(TEST::Person).age(27).eye(LocalizedString('blue','en')).execute  # chain multiple properties together, ANDing restrictions
 class ResourceQuery
   private(:type)
 
@@ -475,12 +475,12 @@ class ResourceQuery
     end
     @query.execute(options, &blk)
   end
-  
+
   def method_missing(ns_or_property, *values)
     options = values.extract_options!
-    values.flatten!    
-    
-    # if the namespace has been seen, lookup the property 
+    values.flatten!
+
+    # if the namespace has been seen, lookup the property
     if @ns
       property = Namespace.lookup(@ns, ns_or_property)
       # fully qualified property found. clear the ns:name for next invocation

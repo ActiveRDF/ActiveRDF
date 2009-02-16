@@ -9,7 +9,7 @@ class Namespace
   # registers a namespace prefix and its associated expansion (full URI)
   # e.g. :rdf and 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
   def Namespace.register(prefix, fullURI)
-		raise ActiveRdfError, 'prefix nor uri can be empty' if (prefix.to_s.empty? or fullURI.to_s.empty?)
+    raise ActiveRdfError, 'prefix nor uri can be empty' if (prefix.to_s.empty? or fullURI.to_s.empty?)
     raise ActiveRdfError, "namespace uri should end with # or /" unless /\/|#/ =~ fullURI.to_s[-1..-1]
     klass_name = prefix.to_s.upcase
     prefix = prefix.to_s.downcase.to_sym
@@ -35,11 +35,11 @@ class Namespace
   def Namespace.abbreviations
     @@namespaces.keys
   end
-  
+
   def Namespace.include?(name)
     @@namespaces.keys.include?(name.to_s.downcase.to_sym)
   end
-  
+
   # like include?, but returns the key for the namespace
   def Namespace.find(name)
     name = name.to_s.downcase.to_sym
@@ -108,7 +108,7 @@ module NamespaceProxy
   attr_accessor :prefix, :klasses, :resources
 
   def NamespaceProxy.extend_object(obj)
-    # make some builtin methods private because lookup doesn't work otherwise 
+    # make some builtin methods private because lookup doesn't work otherwise
     # on e.g. RDF::type and FOAF::name
     class << obj
       [:type, :name, :id].each {|m| private(m) if respond_to?(m)}
@@ -122,7 +122,7 @@ module NamespaceProxy
     @resources[method] ||= Namespace.lookup(@prefix, method)
   end
 
-  # catch FOAF::Person 
+  # catch FOAF::Person
   def const_missing(klass)
     @klasses ||={}  # class cache
     @klasses[klass] ||= ObjectManager.construct_class(Namespace.lookup(@prefix, klass))

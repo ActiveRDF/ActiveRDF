@@ -26,18 +26,18 @@ class TestProperty < Test::Unit::TestCase
     eyal.test::member_of = ["A","B","C"]
     michael.test::member_of = ["A","B"]
     benjamin.test::member_of = ["B","C"]
-    
+
     s = Query.new.select(:s).where(:s,TEST::member_of,eyal.member_of).execute
     assert_equal Set[eyal], Set.new(s)
-    
+
     s = Query.new.select(:s).where(:s,TEST::member_of,michael.member_of).execute
     assert_equal Set[eyal,michael], Set.new(s)
-    
+
     s = Query.new.select(:s).where(:s,TEST::member_of,benjamin.member_of).execute
     assert_equal Set[eyal,benjamin], Set.new(s)
 
     p = RDF::Property.new(TEST::member_of, michael)
-    # Property will act as set of values in the object clause when @subject set 
+    # Property will act as set of values in the object clause when @subject set
     assert_equal Set[eyal,michael], Set.new(Query.new.distinct(:s).where(:s, p, p).execute)
   end
 end
@@ -61,7 +61,7 @@ class TestAssociatedProperty < Test::Unit::TestCase
 
     # when comparing arrays, order matters
     assert ["eyal@cs.vu.nl", "eyal.oren@deri.org"] != @email.to_ary
-    
+
     assert_equal Set["eyal@cs.vu.nl", "eyal.oren@deri.org"], Set.new(@email.to_ary)
   end
 
@@ -106,7 +106,7 @@ class TestAssociatedProperty < Test::Unit::TestCase
     @age[30] += 5
     assert_equal [35], @age
   end
-  
+
   def test_delete
     assert_equal "not found", @email.delete("nothing"){"not found"}
 
@@ -130,7 +130,7 @@ class TestAssociatedProperty < Test::Unit::TestCase
     @email.collect!{|email| email + "_XX"}
     assert @email == ["eyal@cs.vu.nl_XX", "eyal.oren@deri.org_XX"]
   end
-  
+
   def test_delete_if
     @email.delete_if{|key, val| val == "eyal@cs.vu.nl"}
     assert_equal ["eyal.oren@deri.org"], @email
@@ -143,22 +143,22 @@ class TestAssociatedProperty < Test::Unit::TestCase
     assert_equal @email, ["eyal.oren@deri.org","eyal@cs.vu.nl"]
     assert_equal ["eyal@cs.vu.nl","eyal.oren@deri.org"], @email
     assert_equal ["eyal.oren@deri.org","eyal@cs.vu.nl"], @email
-    
+
     assert_equal @email, TEST::email
     assert_equal TEST::email, @email
     assert_equal TEST::eyal.eye, TEST::eye
     assert_equal TEST::eye, TEST::eyal.eye
-    
+
     # test property w/o subject
     assert_equal RDF::Property.new(TEST::email), TEST::email
   end
-  
+
   def test_each_index
     @email.each_key do |idx|
       assert_not_nil @email[idx]
     end
   end
-  
+
   def test_fetch
     idx = @email.index("eyal@cs.vu.nl")
     assert_equal "eyal@cs.vu.nl", @email.fetch(idx)
@@ -246,13 +246,13 @@ class TestAssociatedProperty < Test::Unit::TestCase
     @email = false
     assert @email == false
   end
-  
+
   def test_subproperties
     RDF::Property.new(TEST::relative).save
     RDF::Property.new(TEST::ancestor).save.rdfs::subPropertyOf = TEST::relative
     RDF::Property.new(TEST::parent).save.rdfs::subPropertyOf = TEST::ancestor
     RDF::Property.new(TEST::sibling).save.rdfs::subPropertyOf = TEST::relative
-    
+
     assert_equal Set[TEST::ancestor, TEST::sibling], TEST::relative.subproperties
     assert_equal Set[TEST::ancestor, TEST::parent, TEST::sibling], TEST::relative.subproperties(true)
   end

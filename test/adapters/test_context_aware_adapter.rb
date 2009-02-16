@@ -13,8 +13,8 @@ module TestContextAwareAdapter
     adapter = ConnectionPool.add_data_source :type => :rdflite
     file = File.dirname(File.expand_path(__FILE__)) + '/../test_data.nt'
     adapter.load(file)
-    file_context = RDFS::Resource.new("file:#{file}") 
-    
+    file_context = RDFS::Resource.new("file:#{file}")
+
     eyal = RDFS::Resource.new 'eyaloren.org'
     age = RDFS::Resource.new 'foaf:age'
     test = RDFS::Resource.new 'test'

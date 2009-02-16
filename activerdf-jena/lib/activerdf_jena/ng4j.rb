@@ -10,21 +10,21 @@ module NG4J
     include_package('de.fuberlin.wiwiss.ng4j')
     # This contains: NamedGraphSet, Quad
   end
-  
+
   module DB
-    
+
     include_package('de.fuberlin.wiwiss.ng4j.db')
-    
+
     include_class('java.sql.DriverManager')
-        
+
     # this maps downcased Jena database types into drivers
     DRIVER_MAP = {
       'mysql' => 'com.mysql.jdbc.Driver',
       'postgresql' => 'org.postgresql.Driver',
       'hsql' => 'org.hsqldb.jdbcDriver',
     }
-    
-    DRIVER_MAP.each do |name, driver| 
+
+    DRIVER_MAP.each do |name, driver|
       av = "#{name}_available"
       (class << self ; self ; end).send(:bool_accessor, av.to_sym)
       begin
@@ -34,7 +34,7 @@ module NG4J
         Jena::DB.send("#{av}=", false)
       end
     end
-    
+
   end
 
   module Sparql

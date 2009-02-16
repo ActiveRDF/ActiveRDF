@@ -6,31 +6,31 @@
 class FetchingAdapter < RDFLite
   ConnectionPool.register_adapter(:fetching, self)
 
-	# TODO: check that rapper is installed
+  # TODO: check that rapper is installed
 
-	# fetches RDF/XML data from given url and adds it to the datastore, using the 
-	# source url as context identifier.
+  # fetches RDF/XML data from given url and adds it to the datastore, using the
+  # source url as context identifier.
   def fetch(url, syntax = nil)
     # check if url starts with http://
-		return unless url.match(/http:\/\/(.*)/)
+    return unless url.match(/http:\/\/(.*)/)
 
-		$activerdflog.debug "fetching from #{url}"
+    $activerdflog.debug "fetching from #{url}"
 
-		#model = Redland::Model.new
-		#parser = Redland::Parser.new('rdfxml')
-		#scan = Redland::Uri.new('http://feature.librdf.org/raptor-scanForRDF')
-		#enable = Redland::Literal.new('1')
-		#Redland::librdf_parser_set_feature(parser, scan.uri, enable.node)
-		#parser.parse_into_model(model, url)
-		#triples = Redland::Serializer.ntriples.model_to_string(nil, model)
+    #model = Redland::Model.new
+    #parser = Redland::Parser.new('rdfxml')
+    #scan = Redland::Uri.new('http://feature.librdf.org/raptor-scanForRDF')
+    #enable = Redland::Literal.new('1')
+    #Redland::librdf_parser_set_feature(parser, scan.uri, enable.node)
+    #parser.parse_into_model(model, url)
+    #triples = Redland::Serializer.ntriples.model_to_string(nil, model)
 
-    opts = syntax ? "-i #{syntax}" : "--scan" 
-		triples = `rapper #{opts} --quiet "#{url}"`
-		lines = triples.split($/)
-		$activerdflog.debug "found #{lines.size} triples"
+    opts = syntax ? "-i #{syntax}" : "--scan"
+    triples = `rapper #{opts} --quiet "#{url}"`
+    lines = triples.split($/)
+    $activerdflog.debug "found #{lines.size} triples"
 
-		context = RDFS::Resource.new(url)
-		add_ntriples(triples, context)
+    context = RDFS::Resource.new(url)
+    add_ntriples(triples, context)
   end
   alias :load :fetch
 end

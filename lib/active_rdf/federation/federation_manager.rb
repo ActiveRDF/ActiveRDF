@@ -1,6 +1,6 @@
 require 'federation/connection_pool'
 
-# Manages the federation of datasources: distributes queries to right 
+# Manages the federation of datasources: distributes queries to right
 # datasources and merges their results
 
 class FederationManager
@@ -11,7 +11,7 @@ class FederationManager
     ConnectionPool.write_adapter.add(s,p,o)
   end
 
-  # delete triple s,p,o from the currently selected write adapter (s and p are 
+  # delete triple s,p,o from the currently selected write adapter (s and p are
   # mandatory, o is optional, nil arguments and all symbols are interpreted as wildcards)
   def FederationManager.delete(s,p,o=:all)
     raise ActiveRdfError, "cannot write without a write-adapter" unless ConnectionPool.write_adapter
@@ -28,9 +28,9 @@ class FederationManager
   # by distributing query over complete read-pool
   # and aggregating the results
   def FederationManager.execute(q, options={:flatten => false})
-		if ConnectionPool.read_adapters.empty?
-			raise ActiveRdfError, "cannot execute query without data sources" 
-		end
+    if ConnectionPool.read_adapters.empty?
+      raise ActiveRdfError, "cannot execute query without data sources"
+    end
 
     # ask each adapter for query results
     # and yield them consequtively
@@ -47,11 +47,11 @@ class FederationManager
       # were filtered out when doing results.union)
       results = []
       ConnectionPool.read_adapters.each do |source|
-				source_results = source.execute(q)
-				source_results.each do |clauses|
-					results << clauses
-				end
-			end
+        source_results = source.execute(q)
+        source_results.each do |clauses|
+          results << clauses
+        end
+      end
 
       # count
       return results.flatten.inject{|mem,c| mem + c} if q.count?
@@ -76,10 +76,10 @@ class FederationManager
           results = nil
         when 1
           results = results.first
-				end
-			end
+        end
+      end
     end
-    
+
     results
   end
 end

@@ -11,7 +11,7 @@ class TestResourceReading < Test::Unit::TestCase
   include SetupAdapter
 
   @@eyal = TEST::eyal
-  
+
   def setup
     super
     test_dir = "#{File.dirname(__FILE__)}/.."
@@ -62,7 +62,7 @@ class TestResourceReading < Test::Unit::TestCase
     assert_kind_of RDF::Property, @@eyal.age
     assert_equal 1, @@eyal.age.size
     assert_equal 27, @@eyal.age.to_a.first
-    assert_equal @@eyal.age.to_a.first, 27 
+    assert_equal @@eyal.age.to_a.first, 27
     assert_equal [27], @@eyal.age
     assert_equal @@eyal.age, [27]
     assert_kind_of RDF::Property, @@eyal.test::age
@@ -196,7 +196,7 @@ class TestResourceReading < Test::Unit::TestCase
     assert_equal [@@eyal], TEST::Person.find_by.mixedCamelCase_underscored_property("a mixed CamelCase and underscored property").execute
 
     # Sqlite doesn't support regular expressions by default
-    unless ConnectionPool.write_adapter.class == RDFLite 
+    unless ConnectionPool.write_adapter.class == RDFLite
       # find TEST::Person resources with property matching the specified regex
       assert_equal [@@eyal], TEST::Person.find_by.age(:regex => /7/).execute
       assert_equal [@@eyal], TEST::Person.find_by.eye(:regex => /lu/).execute
@@ -224,7 +224,7 @@ class TestResourceReading < Test::Unit::TestCase
       assert_equal 1, RDFS::Resource.find_all(:context => context_two).size
       assert_equal 1, RDFS::Resource.find_all(:context => context_one, :limit => 1).size
 
-      # Redland doesn't support querying more than one context at a time as of Feb 2009 
+      # Redland doesn't support querying more than one context at a time as of Feb 2009
       assert_equal [@@eyal], TEST::Person.find_by.age(27,:context => context_one).execute
       assert_equal       [], TEST::Person.find_by.eye('blue', :context => context_one).execute
       assert_equal [@@eyal], TEST::Person.find_by.eye('blue', :context => context_one).execute(:all_types => true)

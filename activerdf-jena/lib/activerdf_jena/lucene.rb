@@ -11,7 +11,7 @@ module LuceneARQ
 
   KEYWORD_PREDICATE = "http://jena.hpl.hp.com/ARQ/property#textMatch"
 
-  begin 
+  begin
     include_class('com.hp.hpl.jena.query.larq.LARQ')
     include_package('com.hp.hpl.jena.query.larq')
     self.lucene_available = true

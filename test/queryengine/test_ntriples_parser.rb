@@ -18,9 +18,9 @@ class TestNTriplesParser < Test::Unit::TestCase
     str = <<EOF
 <http://www.johnbreslin.com/blog/author/cloud/#foaf> <http://xmlns.com/foaf/0.1/surname> "Breslin" .
 <http://www.johnbreslin.com/blog/author/cloud/#foaf> <http://xmlns.com/foaf/0.1/firstName> "John" .
-<http://www.johnbreslin.com/blog/author/cloud/> <http://purl.org/dc/terms/created> "1999-11-30T00:00:00" .  				
+<http://www.johnbreslin.com/blog/author/cloud/> <http://purl.org/dc/terms/created> "1999-11-30T00:00:00" .
 EOF
-    
+
     triples = NTriplesParser.parse(str)
     assert_equal 9, triples.flatten.size
     assert_equal 3, triples[0].size
