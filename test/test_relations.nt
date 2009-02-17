@@ -25,7 +25,7 @@
 <http://activerdf.org/test/daughter> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://activerdf.org/test/Person> .
 <http://activerdf.org/test/son> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://activerdf.org/test/Person> .
 
-<http://activerdf.org/test/grandmother> <http://activerdf.org/test/parent> <http://activerdf.org/test/mother>
-<http://activerdf.org/test/mother> <http://activerdf.org/test/parent> <http://activerdf.org/test/daughter>
-<http://activerdf.org/test/mother> <http://activerdf.org/test/parent> <http://activerdf.org/test/son>
-<http://activerdf.org/test/son> <http://activerdf.org/test/sibling> <http://activerdf.org/test/daughter>
+<http://activerdf.org/test/grandmother> <http://activerdf.org/test/parent> <http://activerdf.org/test/mother> .
+<http://activerdf.org/test/mother> <http://activerdf.org/test/parent> <http://activerdf.org/test/daughter> .
+<http://activerdf.org/test/mother> <http://activerdf.org/test/parent> <http://activerdf.org/test/son> .
+<http://activerdf.org/test/son> <http://activerdf.org/test/sibling> <http://activerdf.org/test/daughter> .

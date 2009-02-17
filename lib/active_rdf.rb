@@ -35,7 +35,9 @@ $activerdflog.info "ActiveRDF started, logging level: #{$activerdflog.level}"
 # load standard classes that need to be loaded at startup
 require 'objectmanager/namespace'
 require 'objectmanager/resource'
+require 'objectmanager/resource_query'
 require 'objectmanager/property'
+require 'objectmanager/property_query'
 require 'objectmanager/bnode'
 require 'objectmanager/literal'
 require 'federation/connection_pool'

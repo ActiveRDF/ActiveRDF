@@ -1,10 +1,10 @@
-require 'meta_project'
+#require 'meta_project'
 require 'rake'
 require 'rake/testtask'
 require 'rake/clean'
 require 'rake/gempackagetask'
 require 'rake/rdoctask'
-require 'rake/contrib/xforge'
+#require 'rake/contrib/xforge'
 require 'tools/rakehelp'
 require 'rubygems'
 require 'fileutils'
@@ -12,7 +12,7 @@ include FileUtils
 
 $version  = IO.read('VERSION').strip
 $name     = 'activerdf'
-$project  = MetaProject::Project::XForge::RubyForge.new('activerdf')
+#$project  = MetaProject::Project::XForge::RubyForge.new('activerdf')
 $distdir  = "#$name-#$version"
 
 # setup tests and rdoc files
@@ -52,7 +52,9 @@ end
 begin
   require 'rcov/rcovtask'
   Rcov::RcovTask.new do |t|
-    t.test_files = FileList["activerdf-*/test/**/*.rb"]
+    t.test_files = FileList.new("test/**/*.rb", "activerdf-*/test/**/*.rb") do |fl|
+      fl.exclude(/jena|sesame|sparql/i)
+    end
     t.verbose = true
   end
 rescue LoadError
@@ -61,7 +63,9 @@ end
 # define test_all task
 Rake::TestTask.new do |t|
   t.name = :test_all
-  t.test_files = FileList["test/**/*.rb", "activerdf-*/test/**/*.rb"]
+  t.test_files = FileList.new("test/**/*.rb", "activerdf-*/test/**/*.rb") do |fl|
+    fl.exclude(/jena|sesame|sparql/i)
+  end
 end
 
 task :verify_rubyforge do
