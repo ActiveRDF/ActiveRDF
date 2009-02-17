@@ -10,6 +10,8 @@ require 'queryengine/query'
 
 
 class TestSparqlAdapter < Test::Unit::TestCase
+  include ActiveRdf
+
   def setup
     ConnectionPool.clear
     @adapter = ConnectionPool.add(:type => :sparql, :url => 'http://dbpedia.org/sparql', :engine => :virtuoso)

@@ -1,5 +1,6 @@
 # Default ActiveRDF error
-class ActiveRdfError < StandardError
+module ActiveRdf
+  class ActiveRdfError < StandardError; end
 end
 
 class Module

@@ -1,4 +1,6 @@
 module TestReasoningAdapter
+  include ActiveRdf
+
   def test_subproperties
     @adapter.load(File.dirname(File.expand_path(__FILE__)) + '/../test_relations.nt')
 

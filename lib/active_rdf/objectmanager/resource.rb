@@ -31,7 +31,7 @@ module RDFS
     end
 
     def Resource.localname
-      Namespace.localname(self)
+      ActiveRdf::Namespace.localname(self)
     end
 
     # returns the predicates that have this resource as their domain (applicable
@@ -46,13 +46,13 @@ module RDFS
 
     # Find all resources of this type
     def Resource.find_all(options = {}, &blk)
-      ResourceQuery.new(self,options.delete(:context)).execute(options,&blk)
+      ActiveRdf::ResourceQuery.new(self,options.delete(:context)).execute(options,&blk)
     end
 
     # Find resources of this type, restricted by optional property args
-    # see ResourceQuery usage
+    # see ActiveRdf::ResourceQuery usage
     def Resource.find_by(context = nil)
-      ResourceQuery.new(self,context)
+      ActiveRdf::ResourceQuery.new(self,context)
     end
 
     # Find an existing resource with the given uri, otherwise returns nil
@@ -88,8 +88,8 @@ module RDFS
 
     # setting our own class uri to rdfs:resource
     # (has to be done after defining our RDFS::Resource.new
-    # because it cannot be found in Namespace.lookup otherwise)
-    self.class_uri = Namespace.lookup(:rdfs, :Resource)
+    # because it cannot be found in ActiveRdf::Namespace.lookup otherwise)
+    self.class_uri = ActiveRdf::Namespace.lookup(:rdfs, :Resource)
 
     #####                         #####
     ##### instance level methods  #####
@@ -113,46 +113,46 @@ module RDFS
     end
 
     def is_a?(klass)
-      super || ObjectManager.construct_class(klass) == self
+      super || ActiveRdf::ObjectManager.construct_class(klass) == self
     end
 
     def instance_of?(klass)
       if super
         true
       else
-        klass = ObjectManager.construct_class(klass)
+        klass = ActiveRdf::ObjectManager.construct_class(klass)
         is_a?(klass) || classes.include?(klass)
       end
     end
     alias :kind_of? :instance_of?
 
     def new_record?
-      Query.new.count(:p).where(self,:p,:o).execute == 0
+      ActiveRdf::Query.new.count(:p).where(self,:p,:o).execute == 0
     end
 
     # saves instance into datastore
     def save
-      ConnectionPool.write_adapter.add(self,RDF::type,self.class)
+      ActiveRdf::ConnectionPool.write_adapter.add(self,RDF::type,self.class)
       self
     end
 
     def abbreviation
-      [Namespace.prefix(uri).to_s, localname]
+      [ActiveRdf::Namespace.prefix(uri).to_s, localname]
     end
 
     # get an abbreviation from to_s
     # returns a copy of uri if no abbreviation found
     def abbr
-      (abbr = Namespace.abbreviate(uri)) ? abbr : uri
+      (abbr = ActiveRdf::Namespace.abbreviate(uri)) ? abbr : uri
     end
 
     # checks if an abbrivation exists for this resource
     def abbr?
-      Namespace.prefix(self) ? true : false
+      ActiveRdf::Namespace.prefix(self) ? true : false
     end
 
     def localname
-      Namespace.localname(self)
+      ActiveRdf::Namespace.localname(self)
     end
 
     # returns an RDF::Property for RDF::type's of this resource, e.g. [RDFS::Resource, FOAF::Person]
@@ -171,7 +171,7 @@ module RDFS
 
     # returns array of Classes for all types
     def classes
-      type.collect{|type_res| ObjectManager.construct_class(type_res)}
+      type.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
     end
 
     # define a localname for a predicate URI
@@ -188,7 +188,7 @@ module RDFS
 
     # returns array of RDFS::Resources for properties that belong to this resource
     def class_predicates
-      Query.new.distinct(:p).where(:p,RDFS::domain,:t).where(self,RDF::type,:t).execute
+      ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,:t).where(self,RDF::type,:t).execute
     end
     alias class_level_predicates class_predicates
 
@@ -199,7 +199,7 @@ module RDFS
 
     # returns array of RDFS::Resources for properties that are directly defined for this resource
     def direct_predicates
-      Query.new.distinct(:p).where(self,:p,:o).execute
+      ActiveRdf::Query.new.distinct(:p).where(self,:p,:o).execute
     end
 
     # returns array of RDF::Propertys that are directly defined for this resource
@@ -219,9 +219,9 @@ module RDFS
 
     # for resources of type RDFS::Class, returns array of RDFS::Resources for the known properties of their objects
     def instance_predicates
-      ip = Query.new.distinct(:p).where(:p,RDFS::domain,self).execute
+      ip = ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,self).execute
       if ip.size > 0
-        ip |= Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
+        ip |= ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
       else []
       end
     end
@@ -251,17 +251,17 @@ module RDFS
 
       # for resources of type RDFS::Class, returns array of RDFS::Resources for the known properties of their objects, including those of its supertypes
       def instance_predicates
-        ip = Query.new.distinct(:s).where(:s,RDFS::domain,self).execute
+        ip = ActiveRdf::Query.new.distinct(:s).where(:s,RDFS::domain,self).execute
         ip |= ip.collect{|p| p.super_predicates}.flatten
         ip |= super_types.collect{|type| type.instance_predicates}.flatten
-        ip |= Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
+        ip |= ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
         ip
       end
 
       # for resources of type RDFS::Property, returns array of RDFS::Resources for all properties that are super properties defined by RDFS::subPropertyOf
       def super_predicates
         sp = []
-        Query.new.distinct(:superproperty).where(self,RDFS::subPropertyOf,:superproperty).execute.each do |superproperty|
+        ActiveRdf::Query.new.distinct(:superproperty).where(self,RDFS::subPropertyOf,:superproperty).execute.each do |superproperty|
           sp |= [superproperty]
           sp |= superproperty.super_predicates
         end
@@ -271,7 +271,7 @@ module RDFS
       # for resources of type RDFS::Class, returns array of RDFS::Resources for all super types defined by RDF::subClassOf
       def super_types
         st = []
-          Query.new.distinct(:superklass).where(self,RDFS::subClassOf,:superklass).execute.each do |supertype|
+          ActiveRdf::Query.new.distinct(:superklass).where(self,RDFS::subClassOf,:superklass).execute.each do |supertype|
             st |= [supertype]
             st |= supertype.super_types
           end
@@ -281,7 +281,7 @@ module RDFS
       # for resources of type RDFS::Class, returns array of classes for all super types defined by RDF::subClassOf
       # otherwise returns empty array
       def super_classes
-        super_types.collect{|type_res| ObjectManager.construct_class(type_res)}
+        super_types.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
       end
 
       # returns array of RDFS::Resources for all types, including supertypes
@@ -294,18 +294,18 @@ module RDFS
 
       # returns array of Classes for all types, including supertypes
       def classes
-        types.collect{|type_res| ObjectManager.construct_class(type_res)}
+        types.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
       end
     end
 
     alias :to_s :uri
     def to_literal_s
-      raise ActiveRdfError, "emtpy RDFS::Resources not allowed" if self.uri.size == 0
+      raise ActiveRdf::ActiveRdfError, "emtpy RDFS::Resources not allowed" if self.uri.size == 0
       "<#{uri}>"
     end
 
     def inspect
-      if ConnectionPool.adapters.size > 0
+      if ActiveRdf::ConnectionPool.adapters.size > 0
         type =
           if (t = self.type) and t.size > 0
             t = t.collect{|res| res.abbr }
@@ -331,18 +331,18 @@ module RDFS
     end
 
     def to_xml
-      base = Namespace.expand(Namespace.prefix(self),'').chop
+      base = ActiveRdf::Namespace.expand(ActiveRdf::Namespace.prefix(self),'').chop
 
       xml = "<?xml version=\"1.0\"?>\n"
       xml += "<rdf:RDF xmlns=\"#{base}\#\"\n"
-      Namespace.abbreviations.each { |p| uri = Namespace.expand(p,''); xml += "  xmlns:#{p.to_s}=\"#{uri}\"\n" if uri != base + '#' }
+      ActiveRdf::Namespace.abbreviations.each { |p| uri = ActiveRdf::Namespace.expand(p,''); xml += "  xmlns:#{p.to_s}=\"#{uri}\"\n" if uri != base + '#' }
       xml += "  xml:base=\"#{base}\">\n"
 
       xml += "<rdf:Description rdf:about=\"\##{localname}\">\n"
       direct_predicates.each do |p|
-        objects = Query.new.distinct(:o).where(self, p, :o).execute
+        objects = ActiveRdf::Query.new.distinct(:o).where(self, p, :o).execute
         objects.each do |obj|
-          prefix, localname = Namespace.prefix(p), Namespace.localname(p)
+          prefix, localname = ActiveRdf::Namespace.prefix(p), ActiveRdf::Namespace.localname(p)
           pred_xml = if prefix
                        "%s:%s" % [prefix, localname]
                      else
@@ -436,104 +436,106 @@ module RDFS
   end
 end
 
-# Catches namespaces for properties
-class PropertyNamespaceProxy
-  def initialize(ns, subject)
-    @ns = ns
-    @subject = subject
-  end
-  def method_missing(localname, *values)
-    update = localname.to_s[-1..-1] == '='
-    localname = update ? localname.to_s[0..-2] : localname.to_s
-
-    property = RDF::Property.new(Namespace.lookup(@ns, localname),@subject)
-    property.replace(*values) if update
-    property
-  end
-  private(:type)
-end
-
-# Search for resources of a given type, with given property restrictions.
-# Usage:
-#   ResourceQuery.new(TEST::Person).execute                                         # find all TEST::Person resources
-#   ResourceQuery.new(TEST::Person).age.execute                                     # find TEST::Person resources that have the property age
-#   ResourceQuery.new(TEST::Person).age(27).execute                                 # find TEST::Person resources with property matching the supplied value
-#   ResourceQuery.new(TEST::Person).age(27,:context => context_resource).execute    # find TEST::Person resources with property matching supplied value and context
-#   ResourceQuery.new(TEST::Person).email('personal@email','work@email').execute    # find TEST::Person resources with property matching the supplied values
-#   ResourceQuery.new(TEST::Person).email(['personal@email','work@email']).execute  # find TEST::Person resources with property matching the supplied values
-#   ResourceQuery.new(TEST::Person).eye('blue').execute(:all_types => true)         # find TEST::Person resources with property matching the supplied value ignoring lang/datatypes
-#   ResourceQuery.new(TEST::Person).eye(LocalizedString('blue','en')).execute       # find TEST::Person resources with property matching the supplied value
-#   ResourceQuery.new(TEST::Person).eye(:regex => /lu/).execute                     # find TEST::Person resources with property matching the specified regex
-#   ResourceQuery.new(TEST::Person).eye(:lang => '@en').execute                     # find TEST::Person resources with property having the specified language
-#   ResourceQuery.new(TEST::Person).age(:datatype => XSD::Integer).execute          # find TEST::Person resources with property having the specified datatype
-#   ResourceQuery.new(RDFS::Resource).test::age(27).execute                         # find RDFS::Resources having the fully qualified property and value
-#   ResourceQuery.new(TEST::Person).age(27).eye(LocalizedString('blue','en')).execute  # chain multiple properties together, ANDing restrictions
-class ResourceQuery
-  private(:type)
-
-  def initialize(type,context = nil)
-    @ns = nil
-    @type = type
-    @query = Query.new.distinct(:s).where(:s,RDF::type,@type,context)
-    @var_idx = -1
-  end
-
-  def execute(options = {}, &blk)
-    if truefalse(options[:all_types])
-      if @query.filter_clauses.values.any?{|operator,operand| operator == :lang or operator == :datatype}
-        raise ActiveRdfError, "all_types may not be specified in conjunction with any lang or datatype restrictions"
-      end
-      @query = @query.dup.all_types
+module ActiveRdf
+  # Catches namespaces for properties
+  class PropertyNamespaceProxy
+    def initialize(ns, subject)
+      @ns = ns
+      @subject = subject
     end
-    @query.execute(options, &blk)
+    def method_missing(localname, *values)
+      update = localname.to_s[-1..-1] == '='
+      localname = update ? localname.to_s[0..-2] : localname.to_s
+
+      property = RDF::Property.new(Namespace.lookup(@ns, localname),@subject)
+      property.replace(*values) if update
+      property
+    end
+    private(:type)
   end
 
-  def method_missing(ns_or_property, *values)
-    options = values.extract_options!
-    values.flatten!
+  # Search for resources of a given type, with given property restrictions.
+  # Usage:
+  #   ResourceQuery.new(TEST::Person).execute                                         # find all TEST::Person resources
+  #   ResourceQuery.new(TEST::Person).age.execute                                     # find TEST::Person resources that have the property age
+  #   ResourceQuery.new(TEST::Person).age(27).execute                                 # find TEST::Person resources with property matching the supplied value
+  #   ResourceQuery.new(TEST::Person).age(27,:context => context_resource).execute    # find TEST::Person resources with property matching supplied value and context
+  #   ResourceQuery.new(TEST::Person).email('personal@email','work@email').execute    # find TEST::Person resources with property matching the supplied values
+  #   ResourceQuery.new(TEST::Person).email(['personal@email','work@email']).execute  # find TEST::Person resources with property matching the supplied values
+  #   ResourceQuery.new(TEST::Person).eye('blue').execute(:all_types => true)         # find TEST::Person resources with property matching the supplied value ignoring lang/datatypes
+  #   ResourceQuery.new(TEST::Person).eye(LocalizedString('blue','en')).execute       # find TEST::Person resources with property matching the supplied value
+  #   ResourceQuery.new(TEST::Person).eye(:regex => /lu/).execute                     # find TEST::Person resources with property matching the specified regex
+  #   ResourceQuery.new(TEST::Person).eye(:lang => '@en').execute                     # find TEST::Person resources with property having the specified language
+  #   ResourceQuery.new(TEST::Person).age(:datatype => XSD::Integer).execute          # find TEST::Person resources with property having the specified datatype
+  #   ResourceQuery.new(RDFS::Resource).test::age(27).execute                         # find RDFS::Resources having the fully qualified property and value
+  #   ResourceQuery.new(TEST::Person).age(27).eye(LocalizedString('blue','en')).execute  # chain multiple properties together, ANDing restrictions
+  class ResourceQuery
+    private(:type)
 
-    # if the namespace has been seen, lookup the property
-    if @ns
-      property = Namespace.lookup(@ns, ns_or_property)
-      # fully qualified property found. clear the ns:name for next invocation
+    def initialize(type,context = nil)
       @ns = nil
-    elsif Namespace.abbreviations.include?(ns_or_property)
-      # we store the ns:name for next method_missing invocation
-      @ns = ns_or_property
-      return self
-    else
-      # ns_or_property not a namespace, so must be an unqualified property
-      property_str = ns_or_property.to_s
-      property = @type.instance_predicates.find{|prop| Namespace.localname(prop) == property_str}
-      raise ActiveRdfError, "no suitable predicate matching '#{property_str}' found. Maybe you are missing some schema information?" unless property
+      @type = type
+      @query = Query.new.distinct(:s).where(:s,RDF::type,@type,context)
+      @var_idx = -1
     end
 
-    # restrict by values if provided
-    if values.size > 0 then values.each do |value|
-        @query.where(:s,property,value,options[:context])
+    def execute(options = {}, &blk)
+      if truefalse(options[:all_types])
+        if @query.filter_clauses.values.any?{|operator,operand| operator == :lang or operator == :datatype}
+          raise ActiveRdfError, "all_types may not be specified in conjunction with any lang or datatype restrictions"
+        end
+        @query = @query.dup.all_types
       end
-    # otherwise restrict by property occurance only
-    else
-      var = "rq#{@var_idx += 1}".to_sym
-      @query.where(:s,property,var,options[:context])
-
-      # add filters
-      if options[:lang] && options[:datatype]
-        raise ActiveRdfError, "only lang or datatype may be specified, not both"
-      elsif options[:lang]
-        @query.lang(var,options[:lang])
-      elsif options[:datatype]
-        @query.datatype(var,options[:datatype])
-      end
-      if options[:regex]
-        @query.regex(var,options[:regex])
-      end
+      @query.execute(options, &blk)
     end
 
-    self
-  end
+    def method_missing(ns_or_property, *values)
+      options = values.extract_options!
+      values.flatten!
 
-  def to_s
-    @query.to_s
+      # if the namespace has been seen, lookup the property
+      if @ns
+        property = Namespace.lookup(@ns, ns_or_property)
+        # fully qualified property found. clear the ns:name for next invocation
+        @ns = nil
+      elsif Namespace.abbreviations.include?(ns_or_property)
+        # we store the ns:name for next method_missing invocation
+        @ns = ns_or_property
+        return self
+      else
+        # ns_or_property not a namespace, so must be an unqualified property
+        property_str = ns_or_property.to_s
+        property = @type.instance_predicates.find{|prop| Namespace.localname(prop) == property_str}
+        raise ActiveRdfError, "no suitable predicate matching '#{property_str}' found. Maybe you are missing some schema information?" unless property
+      end
+
+      # restrict by values if provided
+      if values.size > 0 then values.each do |value|
+          @query.where(:s,property,value,options[:context])
+        end
+      # otherwise restrict by property occurance only
+      else
+        var = "rq#{@var_idx += 1}".to_sym
+        @query.where(:s,property,var,options[:context])
+
+        # add filters
+        if options[:lang] && options[:datatype]
+          raise ActiveRdfError, "only lang or datatype may be specified, not both"
+        elsif options[:lang]
+          @query.lang(var,options[:lang])
+        elsif options[:datatype]
+          @query.datatype(var,options[:datatype])
+        end
+        if options[:regex]
+          @query.regex(var,options[:regex])
+        end
+      end
+
+      self
+    end
+
+    def to_s
+      @query.to_s
+    end
   end
 end

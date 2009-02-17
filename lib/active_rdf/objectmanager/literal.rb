@@ -1,10 +1,10 @@
 require 'active_rdf'
 require 'time'
 
-Namespace.register :xsd, 'http://www.w3.org/2001/XMLSchema#'
-
 module RDFS
   module Literal
+    ActiveRdf::Namespace.register :xsd, 'http://www.w3.org/2001/XMLSchema#'
+
     class << self
       attr_accessor :class_uri
     end
@@ -63,6 +63,15 @@ module RDFS
   Literal.class_uri = RDFS::Literal
 end
 
+class String; include RDFS::Literal; end
+class Integer; include RDFS::Literal; end
+class Float; include RDFS::Literal; end
+class DateTime; include RDFS::Literal; end
+class Date; include RDFS::Literal; end
+class Time; include RDFS::Literal; end
+class TrueClass; include RDFS::Literal; end
+class FalseClass; include RDFS::Literal; end
+
 class LocalizedString < String
   include RDFS::Literal
 
@@ -91,12 +100,3 @@ class LocalizedString < String
     $activerdf_without_datatype ? "\"#{self}\"" : "\"#{self}\"@#@lang"
   end
 end
-
-class String; include RDFS::Literal; end
-class Integer; include RDFS::Literal; end
-class Float; include RDFS::Literal; end
-class DateTime; include RDFS::Literal; end
-class Date; include RDFS::Literal; end
-class Time; include RDFS::Literal; end
-class TrueClass; include RDFS::Literal; end
-class FalseClass; include RDFS::Literal; end

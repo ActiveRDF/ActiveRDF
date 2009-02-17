@@ -45,7 +45,7 @@ module RDF
       end
     end
 
-    self.class_uri = Namespace.lookup(:rdf, :Property)
+    self.class_uri = ActiveRdf::Namespace.lookup(:rdf, :Property)
 
     def initialize_copy(property)
       if @subject
@@ -62,7 +62,7 @@ module RDF
 
     # Returns a Set of RDF::Property objects that are subproperties of this property. An optional boolean recursive argument is available.
     def subproperties(recursive = false)
-      subprops = Set.new(Query.new.distinct(:p).where(:p, RDFS::subPropertyOf, self.property, @context).execute)
+      subprops = Set.new(ActiveRdf::Query.new.distinct(:p).where(:p, RDFS::subPropertyOf, self.property, @context).execute)
       if recursive
         all_subprops = Set.new
         subprops.each do |subprop|
@@ -92,7 +92,7 @@ module RDF
     def []=(md5_or_value,new_value)
       value = self[md5_or_value]
       raise IndexError, "Couldn't find existing value to replace: #{md5_or_value}" unless value
-      FederationManager.delete(@subject, self.property, value)
+      ActiveRdf::FederationManager.delete(@subject, self.property, value)
       add(new_value)
     end
 
@@ -125,9 +125,9 @@ module RDF
     def add(*args)
       args.each do |arg|
         if arg.respond_to?(:to_ary)
-          arg.to_ary.each {|item| FederationManager.add(@subject, self.property, item)}
+          arg.to_ary.each {|item| ActiveRdf::FederationManager.add(@subject, self.property, item)}
         else
-          FederationManager.add(@subject, self.property, arg)
+          ActiveRdf::FederationManager.add(@subject, self.property, arg)
         end
       end
       self
@@ -135,7 +135,7 @@ module RDF
 
     # Removes all values
     def clear
-      FederationManager.delete(@subject, self.property)
+      ActiveRdf::FederationManager.delete(@subject, self.property)
       self
     end
 
@@ -191,7 +191,7 @@ module RDF
     def delete(md5_or_value)
       value = self[md5_or_value]
       if value
-        FederationManager.delete(@subject, self.property, value)
+        ActiveRdf::FederationManager.delete(@subject, self.property, value)
         value
       elsif block_given?
         yield
@@ -206,7 +206,7 @@ module RDF
 
     # Calls block once for each value, passing a copy of the value as a parameter
     def each(&block)  # :yields: value
-      q = Query.new.distinct(:o).where(@subject,self,:o,@context)
+      q = ActiveRdf::Query.new.distinct(:o).where(@subject,self,:o,@context)
       if @lang and !@datatype
         q.lang(:o,@lang,@exact_lang)
       elsif @datatype and !@lang
@@ -271,7 +271,7 @@ module RDF
 
     # Return the value(s) of this property as a string.
     def inspect
-      label = Query.new.distinct(:label).where(self,RDFS::label,:label).execute
+      label = ActiveRdf::Query.new.distinct(:label).where(self,RDFS::label,:label).execute
       label =
         if label.size == 1
           label.first
@@ -319,7 +319,7 @@ module RDF
     # If more than 1 value is found, ActiveRdfError is thrown.
     def only
       entries = self.entries
-      raise ActiveRdfError if entries.size > 1
+      raise ActiveRdf::ActiveRdfError if entries.size > 1
       entries[0]
     end
 

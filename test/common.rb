@@ -1,8 +1,9 @@
 require 'active_rdf'
-
-Namespace.register(:test, 'http://activerdf.org/test/')
+include ActiveRdf
 
 module SetupAdapter
+  Namespace.register(:test, 'http://activerdf.org/test/')
+
   def setup(adapter_args = nil)
     @adapter_args = adapter_args || {}
     ConnectionPool.clear
@@ -31,12 +32,12 @@ def get_primary_adapter
 #  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'sqlite', :new => 'yes')
 #### Redland MySql
 #  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'mysql',
-#                     :host => 'localhost', :database => 'redland_test',
-#                     :user => '', :password => '', :new => 'yes', :contexts => 'no')
+#                                :host => 'localhost', :database => 'redland_test',
+#                                :user => '', :password => '', :new => 'yes', :contexts => 'no')
 #### Redland Postgresql
 #  ConnectionPool.add(:type => :redland, :name => 'db1', :location => 'postgresql',
-#                     :host => 'localhost', :database => 'redland_test',
-#                     :user => '', :password => '', :new => 'yes')
+#                                :host => 'localhost', :database => 'redland_test',
+#                                :user => '', :password => '', :new => 'yes')
 #### Redland Yars
 #  ConnectionPool.add(:type => :yars)
 #### Redland Jars2
@@ -60,12 +61,12 @@ def get_secondary_adapter
   ConnectionPool.add(:type => :redland, :name => 'db2', :location => 'sqlite', :new => 'yes')
 #### Redland MySql
 #  ConnectionPool.add(:type => :redland, :name => 'db2', :location => 'mysql',
-#                     :host => 'localhost', :database => 'redland_test',
-#                     :user => '', :password => '', :new => 'yes')
+#                                :host => 'localhost', :database => 'redland_test',
+#                                :user => '', :password => '', :new => 'yes')
 #### Redland Postgresql
 #  ConnectionPool.add(:type => :redland, :name => 'db2', :location => 'postgresql',
-#                     :host => 'localhost', :database => 'redland_test',
-#                     :user => '', :password => '', :new => 'yes')
+#                                :host => 'localhost', :database => 'redland_test',
+#                                :user => '', :password => '', :new => 'yes')
 #### Redland Yars
 #  ConnectionPool.add(:type => :yars)
 #### Redland Jars2
@@ -95,6 +96,6 @@ end
 private
 def get_sparql
   ConnectionPool.add(:type => :sparql, :url => "http://sparql.org/books",
-                     :engine => :joseki, :results => :sparql_xml)
+                                :engine => :joseki, :results => :sparql_xml)
 end
 
