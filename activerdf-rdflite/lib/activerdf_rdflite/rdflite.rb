@@ -350,14 +350,14 @@ module ActiveRdf
         clause.zip(SPOC).each do |clause_elem,field|
           if !(clause_elem.is_a?(Symbol) or clause_elem.nil?)
             # include querying on subproperty fields
-            if field == 'p' and query.reasoning?
-              property = clause_elem
-              properties = [property] + property.subproperties(true).to_a
-              if properties.size > 1
-                where << "t#{table_index}.#{field} in ('#{properties.collect{|val| val.to_literal_s}.join("','")}')"
+            if field == 'p' and query.reasoning? and $activerdf_internal_reasoning
+              predicate = clause_elem
+              predicates = [predicate] + predicate.sub_predicates
+              if predicates.size > 1
+                where << "t#{table_index}.#{field} in ('#{predicates.collect{|res| res.to_literal_s}.join("','")}')"
               else
                 where << "t#{table_index}.#{field} = ?"
-                right_hand_sides << properties[0].to_literal_s
+                right_hand_sides << predicates[0].to_literal_s
               end
             else
               # match plain strings to all strings

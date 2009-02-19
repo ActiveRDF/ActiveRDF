@@ -59,21 +59,6 @@ module RDF
     def property
       RDF::Property.new(self)
     end
-
-    # Returns a Set of RDF::Property objects that are subproperties of this property. An optional boolean recursive argument is available.
-    def subproperties(recursive = false)
-      subprops = Set.new(ActiveRdf::Query.new.distinct(:p).where(:p, RDFS::subPropertyOf, self.property, @context).execute)
-      if recursive
-        all_subprops = Set.new
-        subprops.each do |subprop|
-          all_subprops.add(subprop)
-          all_subprops.merge(subprop.subproperties(true))
-        end
-        all_subprops
-      else
-        subprops
-      end
-    end
   end
 
   # Provides methods for accessing property values when @subject is set
@@ -271,17 +256,7 @@ module RDF
 
     # Return the value(s) of this property as a string.
     def inspect
-      label = ActiveRdf::Query.new.distinct(:label).where(self,RDFS::label,:label).execute
-      label =
-        if label.size == 1
-          label.first
-        elsif label.size > 1
-          label.inspect
-        else
-          abbr
-        end
-
-      "#<RDF::Property #{label} [#{to_a.collect{|obj| obj.inspect}.join(", ")}]>"
+      "#<RDF::Property #{abbr} [#{to_a.collect{|obj| obj.inspect}.join(", ")}]>"
     end
 
     # Returns a new array populated with the keys to the values

@@ -247,13 +247,15 @@ class TestAssociatedProperty < Test::Unit::TestCase
     assert @email == false
   end
 
-  def test_subproperties
-    RDF::Property.new(TEST::relative).save
-    RDF::Property.new(TEST::ancestor).save.rdfs::subPropertyOf = TEST::relative
-    RDF::Property.new(TEST::parent).save.rdfs::subPropertyOf = TEST::ancestor
-    RDF::Property.new(TEST::sibling).save.rdfs::subPropertyOf = TEST::relative
-
-    assert_equal Set[TEST::ancestor, TEST::sibling], TEST::relative.subproperties
-    assert_equal Set[TEST::ancestor, TEST::parent, TEST::sibling], TEST::relative.subproperties(true)
+  if $activerdf_internal_reasoning
+    def test_sub_super_properties
+      RDF::Property.new(TEST::relative).save
+      RDF::Property.new(TEST::ancestor).save.rdfs::subPropertyOf = TEST::relative
+      RDF::Property.new(TEST::parent).save.rdfs::subPropertyOf = TEST::ancestor
+      RDF::Property.new(TEST::sibling).save.rdfs::subPropertyOf = TEST::relative
+  
+      assert_equal Set[TEST::ancestor, TEST::parent, TEST::sibling], Set.new(TEST::relative.sub_properties)
+      assert_equal Set[TEST::relative, TEST::ancestor], Set.new(TEST::parent.super_properties) 
+    end
   end
 end
