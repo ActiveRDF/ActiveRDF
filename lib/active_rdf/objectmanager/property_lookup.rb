@@ -1,5 +1,5 @@
 module ActiveRdf
-  class PropertyQuery
+  class PropertyLookup
 
     # not directly chainable like ResourceQuery
     def initialize(subject)

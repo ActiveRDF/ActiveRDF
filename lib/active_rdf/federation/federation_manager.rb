@@ -5,6 +5,10 @@ require 'federation/connection_pool'
 
 module ActiveRdf
   class FederationManager
+    def FederationManager.contexts
+      ConnectionPool.adapters.collect{|adapter| adapter.contexts if adapter.respond_to?(:contexts)}.flatten.compact
+    end
+
     # add triple s,p,o to the currently selected write-adapter
     def FederationManager.add(s,p,o)
       # TODO: allow addition of full graphs

@@ -113,18 +113,14 @@ module RDFS
     end
 
     def is_a?(klass)
-      super || ActiveRdf::ObjectManager.construct_class(klass) == self
+      klass = ActiveRdf::ObjectManager.construct_class(klass)
+      super || types.any?{|t| klass == t}
     end
 
     def instance_of?(klass)
-      if super
-        true
-      else
-        klass = ActiveRdf::ObjectManager.construct_class(klass)
-        is_a?(klass) || classes.include?(klass)
-      end
+      klass = ActiveRdf::ObjectManager.construct_class(klass)
+      super || direct_types.any?{|t| klass == t}
     end
-    alias :kind_of? :instance_of?
 
     def new_record?
       ActiveRdf::Query.new.count(:p).where(self,:p,:o).execute == 0
@@ -169,9 +165,14 @@ module RDFS
       RDF::Property.new(RDF::type, self).replace(type)
     end
 
+    def types
+      type.to_a | [RDFS::Resource.class_uri]  # all resources are subtype of RDFS::Resource
+    end
+    alias :direct_types :types
+
     # returns array of Classes for all types
     def classes
-      type.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
+      types.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
     end
 
     # TODO: remove
@@ -220,6 +221,16 @@ module RDFS
       predicates.collect{|prop| RDF::Property.new(prop,self)}
     end
 
+    # returns array RDFS::Resources for known properties that do not have a value
+    def empty_predicates
+      empty_properties.collect{|prop| RDFS::Resource.new(prop)}
+    end
+
+    # returns array RDF::Propertys for known properties that do not have a value
+    def empty_properties
+      properties.reject{|prop| prop.size > 0}
+    end
+
     # for resources of type RDFS::Class, returns array of RDFS::Resources for the known properties of their objects
     def instance_predicates
       ip = ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,self).execute
@@ -234,18 +245,22 @@ module RDFS
       instance_predicates.collect{|prop| RDF::Property.new(prop,self)}
     end
 
-    # returns array RDFS::Resources for known properties that do not have a value
-    def empty_predicates
-      empty_properties.collect{|prop| RDFS::Resource.new(prop)}
-    end
-
-    # returns array RDF::Propertys for known properties that do not have a value
-    def empty_properties
-      properties.reject{|prop| prop.size > 0}
+    def contexts
+      ActiveRdf::Query.new.distinct(:c).where(self,nil,nil,:c).execute
     end
 
     if $activerdf_internal_reasoning
-      # Redefine and add methods that perform some limited RDFS reasoning
+      # Add support for some limited RDFS reasoning
+
+      ### Overidden methods
+
+      # returns array of RDFS::Resources for all types, including supertypes
+      def types
+        types = self.type.to_a
+        types |= types.collect{|type| type.super_types}.flatten
+        types |= [RDFS::Resource.class_uri]   # all resources are subtype of RDFS::Resource
+        types
+      end
 
       # returns array of RDFS::Resources for the class properties of this resource, including those of its supertypes
       def class_predicates
@@ -259,6 +274,20 @@ module RDFS
         preds |= super_types.collect{|type| type.instance_predicates}.flatten
         preds |= ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
         preds
+      end
+
+      ### New methods
+
+      # for resources of type RDFS::Class, returns array of RDFS::Resources for all super types defined by RDF::subClassOf
+      def super_types
+        sups = ActiveRdf::Query.new.distinct(:super_class).where(self,RDFS::subClassOf,:super_class).execute
+        sups |= sups.inject([]){|supsups, sup| supsups |= sup.super_types} 
+      end
+
+      # for resources of type RDFS::Class, returns array of classes for all super types defined by RDF::subClassOf
+      # otherwise returns empty array
+      def super_classes
+        super_types.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
       end
 
       # for resources of type RDF::Property, returns array of RDFS::Resources for all super properties defined by RDFS::subPropertyOf
@@ -283,30 +312,6 @@ module RDFS
         sub_predicates.collect{|prop| RDF::Property.new(prop,self)}
       end
 
-      # for resources of type RDFS::Class, returns array of RDFS::Resources for all super types defined by RDF::subClassOf
-      def super_types
-        sups = ActiveRdf::Query.new.distinct(:super_class).where(self,RDFS::subClassOf,:super_class).execute
-        sups |= sups.inject([]){|supsups, sup| supsups |= sup.super_types} 
-      end
-
-      # for resources of type RDFS::Class, returns array of classes for all super types defined by RDF::subClassOf
-      # otherwise returns empty array
-      def super_classes
-        super_types.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
-      end
-
-      # returns array of RDFS::Resources for all types, including supertypes
-      def types
-        types = self.type.to_a
-        types |= types.collect{|type| type.super_types}.flatten
-        types |= [RDFS::Resource.class_uri]   # all resources are subtype of RDFS::Resource
-        types
-      end
-
-      # returns array of Classes for all types, including supertypes
-      def classes
-        types.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
-      end
     # end $activerdf_internal_reasoning
     end
 
@@ -390,7 +395,7 @@ module RDFS
       end
 
       # otherwise pass search on to PropertyQuery
-      ActiveRdf::PropertyQuery.new(self).method_missing(method, *args)
+      ActiveRdf::PropertyLookup.new(self).method_missing(method, *args)
     end
   end
 end

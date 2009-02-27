@@ -7,7 +7,7 @@ require 'active_rdf'
 module ActiveRdf
   class Query2SPARQL
     Engines_With_Keyword = [:yars2, :virtuoso]
-    def self.translate(query, engine=nil)
+    def Query2SPARQL.translate(query, engine=nil)
       str = ""
       if query.select?
         distinct = query.distinct? ? "DISTINCT " : ""
@@ -15,6 +15,7 @@ module ActiveRdf
 
         str << "SELECT #{distinct}#{select_clauses.join(' ')} "
         str << "WHERE { #{where_clauses(query)} #{filter_clauses(query)}} "
+        str << "ORDER BY #{order_clauses(query)} " if query.sort_clauses.size > 0
         str << "LIMIT #{query.limits} " if query.limits
         str << "OFFSET #{query.offsets} " if query.offsets
       elsif query.ask?
@@ -24,30 +25,9 @@ module ActiveRdf
       return str
     end
 
-    # build filters in query
-    def self.filter_clauses(query)
-      filters = query.filter_clauses.collect do |filter|
-        variable, operator, operand = filter[0], filter[1][0], filter[1][1]
-        case operator
-          when :lang
-            tag, exact = operand
-            if exact
-              "lang(?#{variable}) = '#{tag}'"
-            else
-              "regex(lang(?#{variable}), '#{tag.gsub(/_.*/,'')}')"
-            end
-          when :datatype
-            "datatype(?#{variable}) = #{operand.to_literal_s}"
-          when :regex,:regexp
-            "regex(str(?#{variable}), '#{operand.to_s}')"
-        end
-      end
-      "FILTER (#{filters.join(" && ")})" if filters.size > 0
-    end
-
     # concatenate each where clause using space (e.g. 's p o')
     # and concatenate the clauses using dot, e.g. 's p o . s2 p2 o2 .'
-    def self.where_clauses(query)
+    def Query2SPARQL.where_clauses(query)
       if query.keyword?
         case sparql_engine
         when :yars2
@@ -83,7 +63,32 @@ module ActiveRdf
       "#{where_clauses.join(' . ')} ."
     end
 
-    def self.construct_clause(term)
+    # build filters in query
+    def Query2SPARQL.filter_clauses(query)
+      filters = query.filter_clauses.collect do |filter|
+        variable, operator, operand = filter[0], filter[1][0], filter[1][1]
+        case operator
+          when :lang
+            tag, exact = operand
+            if exact
+              "lang(?#{variable}) = '#{tag}'"
+            else
+              "regex(lang(?#{variable}), '#{tag.gsub(/_.*/,'')}')"
+            end
+          when :datatype
+            "datatype(?#{variable}) = #{operand.to_literal_s}"
+          when :regex,:regexp
+            "regex(str(?#{variable}), '#{operand.to_s}')"
+        end
+      end
+      "FILTER (#{filters.join(" && ")})" if filters.size > 0
+    end
+
+    def Query2SPARQL.order_clauses(query)
+      query.sort_clauses.collect{|c,order| order == :desc ? "DESC(?#{c})" : "?#{c}"}.join(" ")
+    end
+
+    def Query2SPARQL.construct_clause(term)
       case term
         when Symbol
           "?#{term}"
@@ -99,7 +104,7 @@ module ActiveRdf
       end
     end
 
-    def self.sparql_engine
+    def Query2SPARQL.sparql_engine
       sparql_adapters = ConnectionPool.read_adapters.select{|adp| adp.is_a? SparqlAdapter}
       engines = sparql_adapters.collect {|adp| adp.engine}.uniq
 
@@ -114,7 +119,7 @@ module ActiveRdf
       return engines.first
     end
 
-    def self.keyword_predicate
+    def Query2SPARQL.keyword_predicate
       case sparql_engine
       when :yars, :yars2
         RDFS::Resource.new("http://sw.deri.org/2004/06/yars#keyword")
@@ -125,7 +130,7 @@ module ActiveRdf
       end
     end
 
-    private_class_method :where_clauses, :construct_clause, :keyword_predicate, :sparql_engine
+    private_class_method :where_clauses, :filter_clauses, :order_clauses, :construct_clause, :keyword_predicate, :sparql_engine
   end
 end
 

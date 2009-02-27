@@ -61,7 +61,7 @@ module ActiveRdf
     # returns prefix (if known) for the non-local part of the URI,
     # or nil if prefix not registered
     def Namespace.prefix(obj)
-      uri = obj.is_a?(RDFS::Resource) ? obj.uri : obj.to_s
+      uri = obj.respond_to?(:uri) ? obj.uri : obj.to_s
       # uri.to_s gives us the uri of the resource (if resource given)
       # then we find the last occurrence of # or / (heuristical namespace
       # delimitor)
