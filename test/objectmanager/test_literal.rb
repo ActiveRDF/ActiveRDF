@@ -23,11 +23,11 @@ class TestLiteral < Test::Unit::TestCase
     assert_equal '"true"^^<http://www.w3.org/2001/XMLSchema#boolean>', test.to_literal_s
 
     # infer Time
-    test = Time.parse("Sat Nov 22 00:33:23 -0800 2008")
-    assert_equal '"2008-11-22T00:33:23-08:00"^^<http://www.w3.org/2001/XMLSchema#time>', test.to_literal_s
+    test = Time.parse("Sat Nov 22 00:33:23 Z 2008").utc
+    assert_equal '"2008-11-22T00:33:23Z"^^<http://www.w3.org/2001/XMLSchema#time>', test.to_literal_s
 
     $activerdf_without_datatype = true
-    assert_equal '"2008-11-22T00:33:23-08:00"', test.to_literal_s
+    assert_equal '"2008-11-22T00:33:23Z"', test.to_literal_s
     $activerdf_without_datatype = false
   end
 

@@ -19,7 +19,7 @@ else
 end
 
 # set the load path, which uses the running directory, but has to be different if running on jruby directly from source.
-if RUBY_PLATFORM =~ /java/ and Gem::cache.search(/^activerdf$/).empty?
+if RUBY_PLATFORM =~ /java/ and Gem::cache.find_name('activerdf').empty?
   $: << this_dir + '/activerdf/lib/'
   $: << this_dir + '/activerdf/lib/active_rdf/'
 else
@@ -54,7 +54,7 @@ end
 
 
 # determine whether activerdf is installed as a gem:
-if Gem::cache.search(/^activerdf$/).empty?
+if Gem::cache.find_name('activerdf').empty?
   # we are not running as a gem
   $activerdflog.info 'ActiveRDF is NOT installed as a Gem'
   if RUBY_PLATFORM =~ /java/
