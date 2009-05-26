@@ -4,7 +4,7 @@
 
 require 'active_rdf'
 
-$activerdflog.info "loading Sesame adapter"
+ActiveRdfLogger::log_info "Loading Sesame adapter", self
 
 
 # ----- java imports and extentsions
@@ -41,7 +41,7 @@ class SesameAdapter < ActiveRdfAdapter
   # * :location => path to a file for persistent storing or :memory for in-memory (defaults to in-memory)
   # * :inferencing => true or false, if sesame2 rdfs inferencing is uses (defaults to false)
   def initialize(params = {})
-    $activerdflog.info "initializing Sesame Adapter with params #{params.to_s}"
+    ActiveRdfLogger::log_info "Initializing Sesame Adapter with params #{params.to_s}", self
 
     @reads = true
     @writes = true
@@ -160,7 +160,7 @@ class SesameAdapter < ActiveRdfAdapter
     unless (((s.class == String) && (p.class == String) && (o.class == String)) && 
           ((s[0..0] == '<') && (s[-1..-1] == '>')) && 
           ((p[0..0] == '<') && (p[-1..-1] == '>'))) || (s.respond_to?(:uri) && p.respond_to?(:uri))
-      $activerdflog.debug "cannot add triple where s/p are not resources, exiting"
+      ActiveRdfLogger::log_debug "Cannot add triple where s/p are not resources, exiting", self
       return false
     end
     

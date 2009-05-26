@@ -47,7 +47,7 @@ class Query
   
   # Clears the select clauses
   def clear_select
-    $activerdflog.debug "cleared select clause"
+    ActiveRdfLogger::log_debug "Cleared select clause"
     @select_clauses = []
     @distinct = false
   end
@@ -196,7 +196,7 @@ class Query
   def execute(options={:flatten => false}, &block)
     options = {:flatten => true} if options == :flatten
 
-    $activerdflog.debug("query: #{self.to_sp}")
+    ActiveRdfLogger::log_debug(self) { "Query: #{self.to_sp}" }
     if block_given?
       FederationManager.query(self) do |*clauses|
         block.call(*clauses)

@@ -7,7 +7,7 @@ require "#{File.dirname(__FILE__)}/sparql_result_parser"
   
 # SPARQL adapter
 class SparqlAdapter < ActiveRdfAdapter
-  $activerdflog.info "loading SPARQL adapter"
+  ActiveRdfLogger::log_info "Loading SPARQL adapter", self
   ConnectionPool.register_adapter(:sparql, self)
 	
   # Instantiate the connection with the SPARQL Endpoint.
@@ -25,7 +25,7 @@ class SparqlAdapter < ActiveRdfAdapter
     raise ActiveRdfError, "Result format unsupported" unless 
     known_formats.include?(@result_format)
 		
-    $activerdflog.info "Sparql adapter initialised #{inspect}"
+    ActiveRdfLogger::log_info(self) { "Sparql adapter initialised #{inspect}" }
   end
 
   def size
@@ -37,7 +37,7 @@ class SparqlAdapter < ActiveRdfAdapter
   def query(query, &block)
     time = Time.now
     qs = Query2SPARQL.translate(query)
-    $activerdflog.debug "executing sparql query #{query}"
+    ActiveRdfLogger::log_debug(self) { "Executing sparql query #{query}" }
 
     execute_sparql_query(qs, query.resource_class, header(query), &block)
   end
@@ -45,7 +45,7 @@ class SparqlAdapter < ActiveRdfAdapter
   # do the real work of executing the sparql query. resource_type is the class
   # to be used for "resource" elements
   def execute_sparql_query(qs, resource_type, header=nil, &block)
-    $activerdflog.debug "executing query #{qs} on url #@url"
+    ActiveRdfLogger::log_debug(self) { "Executing query #{qs} on url #@url" }
 
     header = header(nil) if header.nil?
 

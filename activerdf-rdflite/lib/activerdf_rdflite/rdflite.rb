@@ -8,7 +8,7 @@ require 'federation/connection_pool'
 require 'uuidtools'
 require 'queryengine/ntriples_parser'
 
-$activerdflog.info "loading RDFLite adapter"
+ActiveRdfLogger::log_info "Loading RDFLite adapter", self
 
 
 
@@ -22,8 +22,8 @@ class RDFLite < ActiveRdfAdapter
       require 'ferret'
       @have_ferret = true
     rescue LoadError
-      $activerdflog.info "Keyword search is disabled since we could not load Ferret. To 
-          enable, please do \"gem install ferret\""
+      ActiveRdfLogger::log_info "Keyword search is disabled since we could not load Ferret. To 
+          enable, please do \"gem install ferret\"", self
       @have_ferret = false
     end
     
@@ -41,7 +41,7 @@ class RDFLite < ActiveRdfAdapter
   # * :keyword => true/false (defaults to false)
   # * :pidx, :oidx, etc. => true/false (enable/disable these indices)
   def initialize(params = {})
-    $activerdflog.info "initialised rdflite with params #{params.to_s}"
+    ActiveRdfLogger::log_info(self) { "Initialised rdflite with params #{params.to_s}" }
 
     @reads = true
     @writes = true
@@ -123,7 +123,7 @@ class RDFLite < ActiveRdfAdapter
 
     # execute delete string with possible deletion conditions (for each 
     # non-empty where clause)
-    $activerdflog.debug("deleting #{[s,p,o,c].join(' ')}")
+    ActiveRdfLogger::log_debug(self) { "Deleting #{[s,p,o,c].join(' ')}" }
     @db.execute(ds, *conditions)
 
     # delete literal from ferret index
@@ -164,7 +164,7 @@ class RDFLite < ActiveRdfAdapter
   # loads triples from file in ntriples format
   def load(file)
     ntriples = File.readlines(file)
-    $activerdflog.debug "read #{ntriples.size} triples from file #{file}"
+    ActiveRdfLogger::log_debug(self) { "Read #{ntriples.size} triples from file #{file}" }
 
     # use filename as context
     context = internalise(RDFS::Resource.new("file:#{file}"))

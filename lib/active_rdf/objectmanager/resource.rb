@@ -95,7 +95,7 @@ module RDFS
     # Person.find_by_foaf::name, Person.find_by_foaf::name_and_foaf::knows, etc.
     def Resource.method_missing(method, *args)
       if /find_by_(.+)/.match(method.to_s)
-        $activerdflog.debug "constructing dynamic finder for #{method}"
+        ActiveRdfLogger::log_debug "Constructing dynamic finder for #{method}", self
 
         # construct proxy to handle delayed lookups 
         # (find_by_foaf::name_and_foaf::age)
@@ -224,8 +224,6 @@ module RDFS
 			# action: return namespace proxy that handles 'name' invocation, by 
 			# rewriting into predicate lookup (similar to case (5)
 
-      $activerdflog.debug "method_missing: #{method}"
-
       # are we doing an update or not? 
 			# checking if method ends with '='
 
@@ -319,7 +317,7 @@ module RDFS
 			# checking possibility (4)
 			# TODO: implement search strategy to select in which class to invoke
 			# e.g. if to_s defined in Resource and in Person we should use Person
-			$activerdflog.debug "RDFS::Resource: method_missing option 4: custom class method"
+			ActiveRdfLogger::log_debug "RDFS::Resource: method_missing option 4: custom class method", self
 			self.type.each do |klass|
 				if klass.instance_methods.include?(method.to_s)
 					_dup = klass.new(uri)
@@ -536,7 +534,7 @@ class DynamicFinderProxy
     query.limit(options[:limit]) if options[:limit]
     query.offset(options[:offset]) if options[:offset]
 
-    $activerdflog.debug "executing dynamic finder: #{query.to_sp}"
+    ActiveRdfLogger::log_debug(self) { "Executing dynamic finder: #{query.to_sp}" }
 
     # store the query results so that caller (Resource.method_missing) can 
     # retrieve them (we cannot return them here, since we were invoked from 

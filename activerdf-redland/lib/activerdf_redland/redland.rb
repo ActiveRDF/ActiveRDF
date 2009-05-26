@@ -10,7 +10,7 @@ require 'rdf/redland'
 # Adapter to Redland database
 # uses SPARQL for querying
 class RedlandAdapter < ActiveRdfAdapter
-  $activerdflog.info "loading Redland adapter"
+  ActiveRdfLogger::log_info "Loading Redland adapter", self
   ConnectionPool.register_adapter(:redland,self)
 
   # instantiate connection to Redland database
@@ -37,7 +37,7 @@ class RedlandAdapter < ActiveRdfAdapter
       type = 'memory'; path = '';	file = '.'
     end
 		
-    $activerdflog.info "RedlandAdapter: initializing with type: #{type} file: #{file} path: #{path}"
+    ActiveRdfLogger::log_info "Initializing with type: #{type} file: #{file} path: #{path}", self
 		
     begin
       @store = Redland::HashStore.new(type, file, path, false)
@@ -45,7 +45,7 @@ class RedlandAdapter < ActiveRdfAdapter
       @reads = true
       @writes = true
     rescue Redland::RedlandError => e
-      raise ActiveRdfError, "could not initialise Redland database: #{e.message}"
+      raise ActiveRdfError, "Could not initialise Redland database: #{e.message}", self
     end
   end	
 	
@@ -73,7 +73,7 @@ class RedlandAdapter < ActiveRdfAdapter
       options << "reconnect='#{params[:reconnect]}'" if params[:reconnect]
     end
 
-    $activerdflog.info "RedlandAdapter: initializing with type: #{type} name: #{name} options: #{options.join(',')}"
+    ActiveRdfLogger::log_info "Initializing with type: #{type} name: #{name} options: #{options.join(',')}", self
 
     begin
       @store = Redland::TripleStore.new(type, name, options.join(','))
@@ -81,7 +81,7 @@ class RedlandAdapter < ActiveRdfAdapter
       @reads = true
       @writes = true
     rescue Redland::RedlandError => e
-      raise ActiveRdfError, "could not initialise Redland database: #{e.message}"
+      raise ActiveRdfError, "Could not initialise Redland database: #{e.message}", self
     end
   end	
 	
@@ -101,7 +101,7 @@ class RedlandAdapter < ActiveRdfAdapter
   # yields query results (as many as requested in select clauses) executed on data source
   def query(query)
     qs = Query2SPARQL.translate(query)
-    $activerdflog.debug "RedlandAdapter: executing SPARQL query #{qs}"
+    ActiveRdfLogger::log_debug(self) { "Executing SPARQL query #{qs}" }
 		
     clauses = query.select_clauses.size
     redland_query = Redland::Query.new(qs, 'sparql')
@@ -110,16 +110,16 @@ class RedlandAdapter < ActiveRdfAdapter
     # return Redland's answer without parsing if ASK query
     return [[query_results.get_boolean?]] if query.ask?
 		
-    $activerdflog.debug "RedlandAdapter: found #{query_results.size} query results"
+    ActiveRdfLogger::log_debug(self) { "Found #{query_results.size} query results" }
 
     # verify if the query has failed
     if query_results.nil?
-      $activerdflog.debug "RedlandAdapter: query has failed with nil result"
+      ActiveRdfLogger::log_debug "Query has failed with nil result", self
       return false
     end
     
     if not query_results.is_bindings?
-      $activerdflog.debug "RedlandAdapter: query has failed without bindings"
+      ActiveRdfLogger::log_debug "Query has failed without bindings", self
       return false
     end
 
@@ -179,18 +179,18 @@ class RedlandAdapter < ActiveRdfAdapter
   # * o: object
   def add(s, p, o, c=nil)
     result = false
-    $activerdflog.debug "adding triple #{s} #{p} #{o}"
+    ActiveRdfLogger::log_debug(self) { "Adding triple #{s} #{p} #{o}" }
 
     # verify input
     if s.nil? || p.nil? || o.nil?
-      $activerdflog.debug "cannot add triple with empty subject, exiting"
+      ActiveRdfLogger::log_debug "Cannot add triple with empty subject, exiting", self
       return false
     end 
 		
     unless (((s.class == String) && (p.class == String) && (o.class == String)) && 
           ((s[0..0] == '<') && (s[-1..-1] == '>')) && 
           ((p[0..0] == '<') && (p[-1..-1] == '>'))) || (s.respond_to?(:uri) && p.respond_to?(:uri))
-      $activerdflog.debug "cannot add triple where s/p are not resources, exiting"
+      ActiveRdfLogger::log_debug "Cannot add triple where s/p are not resources, exiting", self
       return false
     end
 
@@ -205,7 +205,7 @@ class RedlandAdapter < ActiveRdfAdapter
       end
       return result
     rescue Redland::RedlandError => e
-      $activerdflog.warn "RedlandAdapter: adding triple failed in Redland library: #{e}"
+      ActiveRdfLogger::log_warn "Adding triple failed in Redland library: #{e}", self
       return false
     end		
   end

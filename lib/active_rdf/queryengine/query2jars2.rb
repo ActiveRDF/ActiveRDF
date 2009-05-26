@@ -16,7 +16,7 @@ class Query2Jars2
 			# figure it out.
 		end
 		
-		$activerdflog.debug "Query2Jars2: translated #{query} to #{str}"
+		ActiveRdfLogger::log_debug(self) { "Query2Jars2: translated #{query} to #{str}" }
 		return str
 	end
 end

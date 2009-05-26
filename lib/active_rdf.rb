@@ -9,7 +9,7 @@ $: << this_dir + '/active_rdf/'
 require 'active_rdf_helpers'
 require 'active_rdf_log'
 
-$activerdflog.info "ActiveRDF started, logging level: #{$activerdflog.level}"
+ActiveRdfLogger::log_info "ActiveRDF started, logging level: #{ActiveRdfLogger::logger.level}"
 
 # load standard classes that need to be loaded at startup
 require 'objectmanager/resource'
@@ -23,9 +23,9 @@ def load_adapter s
   begin
     require s
   rescue Exception => e
-    $activerdflog.info "could not load adapter #{s}: #{e}"
+    ActiveRdfLogger::log_info "Could not load adapter #{s}: #{e}"
     #raise exception if the environment variable is specified
-    raise ActiveRdfError, "could not load adapter #{s}: #{e}" unless ENV['ACTIVE_RDF_ADAPTERS'].nil?
+    raise ActiveRdfError, "Could not load adapter #{s}: #{e}" unless ENV['ACTIVE_RDF_ADAPTERS'].nil?
   end
 end
 
@@ -33,7 +33,7 @@ require 'rubygems'
 # determine whether activerdf is installed as a gem:
 if Gem::cache.search(/^activerdf$/).empty?
   # we are not running as a gem
-  $activerdflog.info 'ActiveRDF is NOT installed as a Gem'
+  ActiveRdfLogger::log_info 'ActiveRDF is NOT installed as a Gem'
   if ENV['ACTIVE_RDF_ADAPTERS'].nil?
     load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
     load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/fetching'
@@ -60,15 +60,15 @@ if Gem::cache.search(/^activerdf$/).empty?
       when "sesame"
         load_adapter this_dir + '/../activerdf-sesame/lib/activerdf_sesame/sesame'
       else
-        $activerdflog.error "unknow adapter #{name}"
-        raise ActiveRdfError, "unknow adapter #{name}"
+        ActiveRdfLogger::log_error "Unknown adapter #{name}"
+        raise ActiveRdfError, "Unknown adapter #{name}"
       end
      }   
   end
 else
 	# we are running as a gem
 	require 'gem_plugin'
-	$activerdflog.info 'ActiveRDF is installed as a Gem'
+	ActiveRdfLogger::log_info 'ActiveRDF is installed as a Gem'
 	GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
 end
 

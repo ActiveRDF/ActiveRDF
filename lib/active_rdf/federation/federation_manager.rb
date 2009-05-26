@@ -30,9 +30,9 @@ class FederationManager
   # and aggregating the results
   def FederationManager.query(q, options={:flatten => true, :result_format => nil})
     if (q.class != String)
-      $activerdflog.debug "querying #{q.to_sp}"
+      ActiveRdfLogger::log_debug(self) { "querying #{q.to_sp}" }
     else
-      $activerdflog.debug "querying #{q}"
+      ActiveRdfLogger::log_debug(self) { "querying #{q}" }
     end
     if ConnectionPool.read_adapters.empty?
       raise ActiveRdfError, "cannot execute query without data sources" 

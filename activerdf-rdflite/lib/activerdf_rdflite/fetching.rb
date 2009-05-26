@@ -14,7 +14,7 @@ class FetchingAdapter < RDFLite
     # check if url starts with http://
     return unless url.match(/http:\/\/(.*)/)
 
-    $activerdflog.debug "fetching from #{url}"
+    ActiveRdfLogger::log_debug(self) { "Fetching from #{url}" }
 
     #model = Redland::Model.new
     #parser = Redland::Parser.new('rdfxml')
@@ -26,7 +26,7 @@ class FetchingAdapter < RDFLite
 
     triples = `rapper --scan --quiet "#{url}"`
     lines = triples.split($/)
-    $activerdflog.debug "found #{lines.size} triples"
+    ActiveRdfLogger::log_debug(self) { "Found #{lines.size} triples" }
 
     context = Query.resource_class.new(url)
     add_ntriples(triples, context)

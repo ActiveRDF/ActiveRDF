@@ -33,7 +33,7 @@ class ConnectionPool
 
   # clears the pool: removes all registered data sources
   def ConnectionPool.clear
-    $activerdflog.info "ConnectionPool: clear called"
+    ActiveRdfLogger::log_info "Clear called", self
     @@adapter_pool.clear
     @@adapter_parameters.clear
     self.write_adapter = nil
@@ -59,7 +59,7 @@ class ConnectionPool
 
   # returns adapter-instance for given parameters (either existing or new)
   def ConnectionPool.add_data_source(connection_params)
-    $activerdflog.info "ConnectionPool: add_data_source with params: #{connection_params.inspect}"
+    ActiveRdfLogger::log_info(self) { "add_data_source with params: #{connection_params.inspect}" }
 
     # either get the adapter-instance from the pool
     # or create new one (and add it to the pool)
@@ -68,14 +68,14 @@ class ConnectionPool
       # adapter not in the pool yet: create it,
       # register its connection parameters in parameters-array
       # and add it to the pool (at same index-position as parameters)
-      $activerdflog.debug("Create a new adapter for parameters #{connection_params.inspect}")
+      ActiveRdfLogger::log_debug(self) { "Create a new adapter for parameters #{connection_params.inspect}" }
       adapter = create_adapter(connection_params)
       @@adapter_parameters << connection_params
       @@adapter_pool << adapter
     else
       # if adapter parametrs registered already,
       # then adapter must be in the pool, at the same index-position as its parameters
-      $activerdflog.debug("Reusing existing adapter")
+      ActiveRdfLogger::log_debug("Reusing existing adapter")
       adapter = @@adapter_pool[index]
     end
 
@@ -107,13 +107,13 @@ class ConnectionPool
   # adapter-types can register themselves with connection pool by
   # indicating which adapter-type they are
   def ConnectionPool.register_adapter(type, klass)
-    $activerdflog.info "ConnectionPool: registering adapter of type #{type} for class #{klass}"
+    ActiveRdfLogger::log_info(self) { "Registering adapter of type #{type} for class #{klass}" }
     @@registered_adapter_types[type] = klass
   end
   
   # unregister adapter-type
   def ConnectionPool.unregister_adapter(type)
-    $activerdflog.info "ConnectionPool: registering adapter of type #{type}"
+    ActiveRdfLogger::log_info(self) { "ConnectionPool: registering adapter of type #{type}" }
     @@registered_adapter_types.delete type
   end
   
