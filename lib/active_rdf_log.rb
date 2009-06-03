@@ -25,6 +25,14 @@ class ActiveRdfLogger
       @logger ||= get_active_rdf_logger
     end
 
+    # Assign a new logger
+    def logger=(logger)
+      @logger = logger
+      @native_logger = false
+    end
+
+    # Logs a message of the given severity. The context may identify the class/
+    # object that logged the message
     def log_add(message = nil, severity = Logger::DEBUG, context = nil)
       logger.add(severity, nil, "ActiveRDF") do
         message = yield if(!message && block_given?)
@@ -47,25 +55,27 @@ class ActiveRdfLogger
     end
 
     def get_active_rdf_logger
-      return RAILS_DEFAULT_LOGGER if(defined?(RAILS_DEFAULT_LOGGER) && RAILS_DEFAULT_LOGGER)
-
-      @native_logger = true
-      
-      # use either $ACTIVE_RDF_LOG for logging or current directory
-      location = ENV['ACTIVE_RDF_LOG'] || $stdout # "#{Dir.pwd}/activerdf.log"
-      location = $stdout if location == "STDOUT"
-      logger = Logger.new(location, 1, 100*1024)
-    
-      # if user has specified loglevel we use that, otherwise we use default level
-      # in the environment variable ACTIVE_RDF_LOG_LEVEL we expect numbers, which we
-      # have to convert
-      if ENV['ACTIVE_RDF_LOG_LEVEL'].nil?
-        logger.level = Logger::WARN
+      if(defined?(RAILS_DEFAULT_LOGGER) && RAILS_DEFAULT_LOGGER)
+        RAILS_DEFAULT_LOGGER
       else
-        logger.level = ENV['ACTIVE_RDF_LOG_LEVEL'].to_i
-      end
+        @native_logger = true
 
-      logger
+        # use either $ACTIVE_RDF_LOG for logging or current directory
+        location = ENV['ACTIVE_RDF_LOG'] || $stdout # "#{Dir.pwd}/activerdf.log"
+        location = $stdout if(location == "STDOUT")
+        logger = Logger.new(location, 1, 100*1024)
+
+        # if user has specified loglevel we use that, otherwise we use default level
+        # in the environment variable ACTIVE_RDF_LOG_LEVEL we expect numbers, which we
+        # have to convert
+        if ENV['ACTIVE_RDF_LOG_LEVEL'].nil?
+          logger.level = Logger::WARN
+        else
+          logger.level = ENV['ACTIVE_RDF_LOG_LEVEL'].to_i
+        end
+
+        logger
+      end
     end
     
   end

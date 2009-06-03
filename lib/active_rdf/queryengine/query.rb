@@ -196,7 +196,6 @@ class Query
   def execute(options={:flatten => false}, &block)
     options = {:flatten => true} if options == :flatten
 
-    ActiveRdfLogger::log_debug(self) { "Query: #{self.to_sp}" }
     if block_given?
       FederationManager.query(self) do |*clauses|
         block.call(*clauses)
