@@ -299,16 +299,22 @@ class SesameAdapter < ActiveRdfAdapter
   # TODO: do we need to think about handling blank nodes ? e.g. if the are part of a graph read from a file ? 
   def convertSesame2ActiveRDF(input, result_type)
     jclassURI = Java::JavaClass.for_name("org.openrdf.model.URI")
-    jclassLiteral = Java::JavaClass.for_name("org.openrdf.model.Literal")	
+    jclassLiteral = Java::JavaClass.for_name("org.openrdf.model.Literal")
+    jclassBNode = Java::JavaClass.for_name('org.openrdf.model.BNode')
     
     if jInstanceOf(input.java_class, jclassURI)
-      return result_type.new(input.toString)
+      result_type.new(input.toString)
     elsif jInstanceOf(input.java_class, jclassLiteral)
       # The string is wrapped in quotationn marks. However, there may be a language
       # indetifier outside the quotation marks, e.g. "The label"@en
       # We try to unwrap this correctly. For now we assume that there may be
       # no quotation marks inside the string
-      return input.toString.gsub('"', '')
+      input.toString.gsub('"', '')
+    elsif jInstanceOf(input.java_class, jclassBNode)
+      # It's a blank node. This should never happen, but lets handle it nonetheless
+      # so the app can continue...
+      ActiveRdfLogger::log_warn "Encountered a blank node in the graph. This is a problem. Returning nil, something may break.", self
+      nil
     else
       raise ActiveRdfError, "the Sesame Adapter tried to return something which is neither a URI nor a Literal, but is instead a #{input.java_class.name}"
     end
