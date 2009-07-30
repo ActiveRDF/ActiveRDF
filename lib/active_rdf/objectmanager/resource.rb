@@ -65,7 +65,7 @@ module RDFS
     def <=>(other)
       uri <=> other.uri
     end
-
+    
     #####                   	#####
     ##### class level methods	#####
     #####                    	#####
@@ -76,7 +76,21 @@ module RDFS
       domain = Namespace.lookup(:rdfs, :domain)
       Query.new.distinct(:p).where(:p, domain, class_uri).execute || []
     end
+    
+    # quick fix for "direct" getting of a property
+    def [](property)
+      if !property.instance_of?(RDFS::Resource)
+        property = RDFS::Resource.new(property)
+      end
+   
+      Query.new.distinct(:o).where(self, property, :o).execute(:flatten => true)
+    end
 
+    # quick fix for "direct" setting of a property
+    def []=(property, value)
+      FederationManager.add(self, RDFS::Resource.new(property), value)
+    end
+    
     # manages invocations such as Person.find_by_name, 
     # Person.find_by_foaf::name, Person.find_by_foaf::name_and_foaf::knows, etc.
     def Resource.method_missing(method, *args)
@@ -156,7 +170,7 @@ module RDFS
     def localname
       Namespace.localname(self)
     end
-
+    
     # manages invocations such as eyal.age
     def method_missing(method, *args)
       # possibilities:
@@ -333,7 +347,7 @@ module RDFS
 
 		# overrides built-in instance_of? to use rdf:type definitions
 		def instance_of?(klass)
-			self.type.include?(klass)
+      self.type.include?(klass)
 		end
 
 		# returns all predicates that fall into the domain of the rdf:type of this

@@ -14,6 +14,11 @@ class RedlandAdapter < ActiveRdfAdapter
 	
 	# instantiate connection to Redland database
 	def initialize(params = {})
+		if params[:location] and ( params[:location] == :postgresql or params[:location] == :mysql )
+			initialize_dbs(params)
+			return
+		end
+
 		if params[:location] and params[:location] != :memory
 			# setup file locations for redland database
 			path, file = File.split(params[:location])
@@ -35,7 +40,32 @@ class RedlandAdapter < ActiveRdfAdapter
 		end
 	end	
 	
-	# load a file from the given location with the given syntax into the model.
+	# instantiate connection to Redland database in Postgres or MySQL
+	def initialize_dbs(params = {})
+    type = params[:location].to_s
+		name = params[:name]
+
+		options = []
+		options << "new='#{params[:new]}'" if params[:new]
+		options << "host='#{params[:host]}'" if params[:host]
+		options << "port='#{params[:port]}'" if params[:port]
+    options << "database='#{params[:database]}'" if params[:database]
+		options << "user='#{params[:user]}'" if params[:user]
+		options << "password='#{params[:password]}'" if params[:password]
+				
+		$activerdflog.info "RedlandAdapter: initializing with type: #{type} name: #{name} options: #{options.join(',')}"
+		
+		begin
+			@store = Redland::TripleStore.new(type, name, options.join(','))
+			@model = Redland::Model.new @store
+			@reads = true
+			@writes = true
+		rescue Redland::RedlandError => e
+			raise ActiveRdfError, "could not initialise Redland database: #{e.message}"
+		end
+	end	
+	
+  # load a file from the given location with the given syntax into the model.
 	# use Redland syntax strings, e.g. "ntriples" or "rdfxml", defaults to "ntriples"
 	def load(location, syntax="ntriples")
     parser = Redland::Parser.new(syntax, "", nil)
@@ -155,8 +185,8 @@ class RedlandAdapter < ActiveRdfAdapter
 	alias flush save
 
 	# returns all triples in the datastore
-	def dump
-		Redland.librdf_model_to_string(@model.model, nil, 'ntriples')
+	def dump(type = 'ntriples')
+		Redland.librdf_model_to_string(@model.model, nil, type)
 	end
 	
 	# returns size of datasources as number of triples

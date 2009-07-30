@@ -1,0 +1,834 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head><meta content="text/html; charset=utf-8" http-equiv="Content-Type"/><title>Class: SesameAdapter</title><link rel="stylesheet" type="text/css" media="screen" href=".././rdoc-style.css"/><script type="text/javascript">
+// Javascript for Allison RDoc template
+// Copyright 2006 Cloudburst LLC
+// Some sections originally from public domain material
+
+var href_base = '.././rdoc-style.css'.replace(/(.*\/).*/, '$1'); // haha! inline js is good for something  
+
+function $(id) {
+    if (document.getElementById)
+      elem = document.getElementById(id);
+    else if ( document.all )
+      elem = eval("document.all." + id);
+    else
+      return false;
+    return elem;
+}
+
+  function toggle(id) {
+    elem = $(id);
+    elemStyle = elem.style;   
+    if (elemStyle.display == "block") {
+      elemStyle.display = "none"
+    } else {
+      elemStyle.display = "block"
+    }
+    return true;
+  }
+
+  function toggleText(id) {
+    elem = $(id)
+    if (m = elem.innerHTML.match(/(Hide)(.*)/)) {
+      elem.innerHTML = "Show" + m[2];
+    } else if (m = elem.innerHTML.match(/(Show)(.*)/)) {
+      elem.innerHTML = "Hide" + m[2];
+    }
+    return true;
+  }
+
+function span(s, klass) {
+  return '<span class="' + klass + '">' + s + '</span>';
+}
+  
+function highlightSymbols() {
+  pres = document.getElementsByTagName('pre');
+  for(var i = 0; i < pres.length; i++) {
+    pre = pres[i];
+    spans = pre.getElementsByTagName('span');
+    for(var k = 0; k < spans.length; k++) {
+      span = spans[k];
+      if (span.className.match(/ruby-identifier/)) {
+        if (span.innerHTML.match(/^:/)) {
+          span.className += " ruby-symbol";
+        }
+      }
+    }
+  }
+}
+
+ function hasClass(obj) {
+     var result = false;
+     if (obj.getAttributeNode("class") != null) {
+         result = obj.getAttributeNode("class").value;
+     }
+     return result;
+  }   
+
+ function stripe() {
+    var even = true;
+    var color = "#f4eefd";
+    var tables = document.getElementsByTagName('table');
+    if (tables.length == 0) { return; }
+    for (var h = 0; h < tables.length; h++) {
+        var trs = tables[h].getElementsByTagName("tr");
+        for (var i = 0; i < trs.length; i++) {
+          var tds = trs[i].getElementsByTagName("td");
+            for (var j = 0; j < tds.length; j++) {       
+              if (hasClass(tds[j]) != "first") {                
+              var mytd = tds[j];
+              if (even) {
+                mytd.style.backgroundColor = color;
+              }         
+            }
+          }
+          even =  ! even;
+      }
+    }
+  }
+  
+function ajaxGet(url) {
+  url = (href_base + url).replace('/./', '/')
+  var req = false;
+
+  if (window.ActiveXObject) {
+    try {
+      // stupid hack because IE7 disables local Ajax with the native xmlhttprequest object
+      // for security purposes. Yet ActiveX still works. Thanks, Microsoft. I hate you. Die.
+      req = new ActiveXObject("MSXML2.XMLHTTP.3.0");
+    } catch (e) {
+      try {
+        /* IE 6 and maybe 5, don't know, don't care */
+        req = new ActiveXObject("Msxml2.XMLHTTP");
+      } catch (e) {
+        try {
+          req = new ActiveXObject("Microsoft.XMLHTTP");
+        } catch (e) {
+          req = false;
+        }
+      }
+    }
+  }
+    
+  /* real browsers */
+  if (!req && window.XMLHttpRequest) {
+    try {
+      req = new XMLHttpRequest();
+    } catch (e) {
+      req = false;
+    }
+  } 
+  
+  if (req) {
+    req.open('GET', url, false);
+    req.send(null);
+    return req.responseText;
+  } else {
+    return "Ajax error";  
+  }
+}
+
+
+function addEvent(elm, evType, fn, useCapture) {
+	if (elm.addEventListener) {
+	  elm.addEventListener(evType, fn, useCapture);  
+  	return true;
+	} else if (elm.attachEvent) {
+  	var r = elm.attachEvent('on' + evType, fn);  
+	  return r;  
+	} else {
+  	elm['on' + evType] = fn;
+	}
+}
+
+function insertIndices() {
+  pages = ["class", "file", "method"]
+  for (x in pages) { 
+    $(pages[x]).innerHTML += ajaxGet('fr_' + pages[x] + '_index.html').replace(/(href=")/g, '$1' + href_base);
+  }
+  /* mouseoverify method links */
+  links = $('method').getElementsByTagName('a');
+  for (var x = 0; x < links.length; x++) {
+    if (m = links[x].innerHTML.match(/(.*)\s\((.*)\)/)) {
+      links[x].innerHTML = m[1] + '<br>';
+      links[x].title = m[2];
+    }
+  }
+  /* this is stupid */
+  $('class').style.display = "block";
+  $('file').style.display = "block";
+  
+  /* has to be here because IE7 does not guarantee the onLoad callback order */
+  abbreviateIndicesInner(["class", "file"], 25, "a");
+  /* same, linkTitle() depends on the class link list */
+  linkTitle();
+}
+
+function abbreviateIndices() {
+  abbreviateIndicesInner(["defined_in", "child_of", "includes"], 20, 'a');
+  abbreviateIndicesInner(["defined_in", "requires", "child_of", "includes"], 20, 'span');
+}
+
+function abbreviateIndicesInner(indices, amount, tag) {
+  for (var x = 0; x < indices.length; x++) { 
+    var the_index = $(indices[x]);
+    if (the_index) {
+      links = the_index.getElementsByTagName(tag);
+      for (var y = 0; y < links.length; y++) {
+        var link = links[y];
+        if (link.getElementsByTagName('span').length == 0 && link.getElementsByTagName('a').length == 0) {
+          // avoid nesting
+          link.innerHTML = abbreviate(link.innerHTML, amount);
+        }
+      }
+    }
+  }
+}
+
+function linkTitle() {
+  /* grab the correct title element from the index */
+  var index_page = ajaxGet('index.html');
+  title_text = index_page.match(/<title>(.*)<\/title>/m)[1];
+  document.title = title_text + " - " + document.title;
+  var p = $('header').getElementsByTagName('p')[0]
+  if (p.innerHTML.match(/^\s*$/)) {
+    p.innerHTML = title_text;
+  } else {
+    p.innerHTML = title_text + ": " + p.innerHTML;
+  }
+  /* set the link properly */
+  title_link = index_page.match(/<a\s+href="(.*?)"/)[1];
+  var element = $('title');
+  var item_type = "";
+  var item_name = "";
+  if (m = element.innerHTML.match(/(Class:|Module:|File:)\s*(.*)/)) {
+    item_type = m[1];
+    item_name = m[2];
+  } else {
+    item_name = element.innerHTML;
+  }
+  element.innerHTML = '<a href="' + href_base + title_link + '">' + item_type + " " + abbreviate(item_name, 25) + '</a>';
+  /* breadcrumb navigation for the win */
+  items = item_name.split("::");
+  items_new = item_name.split("::");
+  var s = ""
+  file_links = $('class').getElementsByTagName('a');
+  for (var x = 0; x < items.length - 1; x++ ){
+    var item = items[x];
+    link = ("/classes/" + items.slice(0,x).join("/") + "/" + item + ".html").replace('//', '/');
+    regex = new RegExp(RegExp.escape(link) + '$');
+    for (var y = 0; y < file_links.length; y++) {
+      if (file_links[y].href.match(regex)) {
+         items_new[x] = '<a href="' + href_base + link + '">' + item + '</a>';
+         break;
+      }
+    }  
+  }
+  $('item_name').innerHTML = item_type + ' ' + items_new.join(" :: ");
+}
+
+function abbreviate(s, size) {
+  while (s.length > size) {
+    var old_s = s;
+    s = s.replace(/\s|\n/mg, '');
+    s = s.replace(/([A-Z])[a-z]+/m, '$1');
+    if (!s || old_s == s) {
+      return "..." + s.substring(s.length - size, s.length);
+    }
+  }
+  return s;
+}
+
+function disableSubmit(event) {
+  var keyCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
+  if (keyCode == 13) {
+    return false;
+  } else {
+    return true;
+  }
+}
+  
+function filterList(id, s, event) {
+  
+  /* some half-assed escaping */
+  s = s.replace(/[^\w\d\.\_\-\/\:\=\[\]\?\!]/g, '');
+  s = RegExp.escape(s);
+  
+  var show_all = false;
+  if (s.match(/^\s*$/)) {
+    show_all = true;
+  }
+  
+  links = $(id).getElementsByTagName('a')
+  regex = new RegExp(s, 'i');
+  
+  for (var x = 0; x < links.length; x++) {
+    var link = links[x];
+    if (show_all) {
+      link.style.display = 'inline';
+    } else {
+       if (link.innerHTML.match(regex)) {        
+         link.style.display = 'inline';
+       } else {
+         link.style.display = 'none';
+       }
+    }
+  }
+  return true;
+}
+
+RegExp.escape = function(text) {
+  if (!arguments.callee.sRE) {
+    var specials = [
+      '/', '.', '*', '+', '?', '|',
+      '(', ')', '[', ']', '{', '}', '\\'
+    ];
+    arguments.callee.sRE = new RegExp(
+      '(\\' + specials.join('|\\') + ')', 'g'
+    );
+  }
+  return text.replace(arguments.callee.sRE, '\\$1');
+}
+
+
+function hacks() {
+  // show the spacer if necessary, 
+  divs = document.getElementsByTagName('div');
+  for (x in divs) {
+    if (divs[x].className && divs[x].className.match(/top/)) {
+      document.getElementById('spacer').style.display = 'block';
+    }
+  }
+}
+
+addEvent(window, 'load', insertIndices, false);
+addEvent(window, 'load', abbreviateIndices, false);
+addEvent(window, 'load', stripe, false);
+addEvent(window, 'load', highlightSymbols, false);
+addEvent(window, 'load', hacks, false);
+</script></head><body><div id="container"><div class="curve" id="preheader_curve_0"></div><div class="curve" id="preheader_curve_1"></div><div class="curve" id="preheader_curve_2"></div><div class="curve" id="preheader_curve_3"></div><div class="curve" id="preheader_curve_4"></div><div class="curve" id="preheader_curve_5"></div><div class="curve" id="preheader_curve_6"></div><div class="curve" id="preheader_curve_7"></div><div class="curve" id="preheader_curve_8"></div><div class="curve" id="preheader_curve_9"></div><div id="header"><p>
+</p><span><h1 id="title">
+Class: SesameAdapter
+</h1></span>
+</div><div class="clear"></div><div id="left">
+<div class="navigation dark top" id="child_of"><h3>Child of</h3><span>
+
+<a href='ActiveRdfAdapter.html'>
+ActiveRdfAdapter
+</a>
+</span></div>
+
+<div class="navigation dark top" id="defined_in"><h3>Defined in</h3>
+
+<a href="../files/activerdf-sesame/lib/activerdf_sesame/sesame_rb.html">activerdf-sesame/lib/activerdf_sesame/sesame.rb</a>
+
+</div>
+
+
+
+<div class="navigation top" id="methods"><h3>Methods</h3>
+
+<span class='bpink'>
+
+<a href='#M000017'>
+add<br/>
+</a>
+</span>
+
+
+<span class='bpink'>
+
+<a href='#M000015'>
+clear<br/>
+</a>
+</span>
+
+
+<span class='bpink'>
+
+<a href='#M000020'>
+close<br/>
+</a>
+</span>
+
+
+<span class='bpink'>
+
+<a href='#M000016'>
+delete<br/>
+</a>
+</span>
+
+
+<span class='bpink'>
+
+<a href='#M000021'>
+dump<br/>
+</a>
+</span>
+
+
+<span class='bpink'>
+
+<a href='#M000018'>
+flush<br/>
+</a>
+</span>
+
+
+<span class='bpink'>
+
+<a href='#M000022'>
+load<br/>
+</a>
+</span>
+
+
+<span class='bpink'>
+
+<a href='#M000013'>
+new<br/>
+</a>
+</span>
+
+
+<span class='bpink'>
+
+<a href='#M000023'>
+query<br/>
+</a>
+</span>
+
+
+<span class='bpink'>
+
+<a href='#M000019'>
+save<br/>
+</a>
+</span>
+
+
+<span class='bpink'>
+
+<a href='#M000014'>
+size<br/>
+</a>
+</span>
+
+</div>
+<div id="spacer"></div><div class="navigation dark index" id="class_wrapper"><div class="list_header"><h3>All classes</h3></div><div class="list_header_link"><a onclick="toggle('class'); toggleText('class_link'); return false;" href="#" id="class_link">Hide...</a></div><div class="clear"></div><div id="class"><form><label for="filter_class">Filter:&nbsp;&nbsp;</label><input onKeyUp="return filterList('class', this.value, event);" type="text" onKeyPress="return disableSubmit(event);" id="filter_class"></input></form></div></div><div class="navigation dark index" id="file_wrapper"><div class="list_header"><h3>All files</h3></div><div class="list_header_link"><a onclick="toggle('file'); toggleText('file_link'); return false;" href="#" id="file_link">Hide...</a></div><div class="clear"></div><div id="file"><form><label for="filter_file">Filter:&nbsp;&nbsp;</label><input onKeyUp="return filterList('file', this.value, event);" type="text" onKeyPress="return disableSubmit(event);" id="filter_file"></input></form></div></div><div class="navigation dark index" id="method_wrapper"><div class="list_header"><h3>All methods</h3></div><div class="list_header_link"><a onclick="toggle('method'); toggleText('method_link'); return false;" href="#" id="method_link">Show...</a></div><div class="clear"></div><div id="method"><form><label for="filter_method">Filter:&nbsp;&nbsp;</label><input onKeyUp="return filterList('method', this.value, event);" type="text" onKeyPress="return disableSubmit(event);" id="filter_method"></input></form></div></div><div class="curve" id="left_curve_0"></div><div class="curve" id="left_curve_1"></div><div class="curve" id="left_curve_2"></div><div class="curve" id="left_curve_3"></div><div class="curve" id="left_curve_4"></div><div class="curve" id="left_curve_5"></div><div class="curve" id="left_curve_6"></div><div class="curve" id="left_curve_7"></div><div class="curve" id="left_curve_8"></div><div class="curve" id="left_curve_9"></div></div><div id="content">
+<h1 id="item_name">Class: SesameAdapter</h1>
+
+<h1>Description</h1><p>
+TODO: about this adapter
+</p>
+
+
+
+
+
+<p></p>
+
+
+
+
+
+
+<div class="section_spacer"></div><h1>Public Class methods</h1>
+
+
+<a class="small" name="M000013"><br/></a>
+<div class="a_method"><div><h3>
+<a href='#M000013'>
+
+
+new
+
+(params = {})
+
+</a>
+</h3>
+<p>
+instantiates Sesame database available parameters:
+</p>
+<ul>
+<li>:location =&gt; path to a file for persistent storing or :memory for
+in-memory (defaults to in-memory)
+
+</li>
+<li>:inferencing =&gt; true or false, if sesame2 rdfs inferencing is uses
+(defaults to true)
+
+</li>
+</ul>
+
+<p class="source_link" id="M000013-show-link"><a onclick="toggle('M000013-source'); toggleText('M000013-link'); return false;" href="#" id="M000013-link">Show source...</a></p><div class="source" id="M000013-source"><pre>    <span class="ruby-comment cmt"># File activerdf-sesame/lib/activerdf_sesame/sesame.rb, line 38</span>
+38:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">initialize</span>(<span class="ruby-identifier">params</span> = {})
+39:                 <span class="ruby-identifier">$activerdflog</span>.<span class="ruby-identifier">info</span> <span class="ruby-node">&quot;initializing Sesame Adapter with params #{params.to_s}&quot;</span>
+40: 
+41:                 <span class="ruby-ivar">@reads</span> = <span class="ruby-keyword kw">true</span>
+42:                 <span class="ruby-ivar">@writes</span> = <span class="ruby-keyword kw">true</span>
+43:         
+44:                 <span class="ruby-comment cmt"># if no directory path given, we use in-memory store</span>
+45:     <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:location</span>]
+46:       <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:location</span>] <span class="ruby-operator">==</span> <span class="ruby-identifier">:memory</span>
+47:         <span class="ruby-identifier">sesameLocation</span> = <span class="ruby-keyword kw">nil</span>      
+48:       <span class="ruby-keyword kw">else</span>
+49:         <span class="ruby-identifier">sesameLocation</span> = <span class="ruby-constant">JFile</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">params</span>[<span class="ruby-identifier">:location</span>])
+50:       <span class="ruby-keyword kw">end</span>
+51:     <span class="ruby-keyword kw">else</span>
+52:       <span class="ruby-identifier">sesameLocation</span> = <span class="ruby-keyword kw">nil</span>
+53:     <span class="ruby-keyword kw">end</span>
+54:     
+55:     <span class="ruby-comment cmt"># if no inferencing is specified, we use the sesame2 rdfs inferencing</span>
+56:     <span class="ruby-identifier">sesameInferencing</span> = <span class="ruby-identifier">params</span>[<span class="ruby-identifier">:inferencing</span>] <span class="ruby-operator">||</span> <span class="ruby-keyword kw">nil</span>
+57:         
+58:         <span class="ruby-comment cmt"># this will not work at the current state of jruby     </span>
+59: <span class="ruby-comment cmt">#    # fancy JRuby code so that the user does not have to set the java CLASSPATH</span>
+60: <span class="ruby-comment cmt">#    </span>
+61: <span class="ruby-comment cmt">#    this_dir = File.dirname(File.expand_path(__FILE__))</span>
+62: <span class="ruby-comment cmt">#    </span>
+63: <span class="ruby-comment cmt">#    jar1 = JFile.new(this_dir + &quot;/../../ext/wrapper-sesame2.jar&quot;)</span>
+64: <span class="ruby-comment cmt">#    jar2 = JFile.new(this_dir + &quot;/../../ext/openrdf-sesame-2.0-alpha4-onejar.jar&quot;)</span>
+65: <span class="ruby-comment cmt">#</span>
+66: <span class="ruby-comment cmt">#    # make an array of URL, which contains the URLs corresponding to the files</span>
+67: <span class="ruby-comment cmt">#    uris = JURL[].new(2)</span>
+68: <span class="ruby-comment cmt">#    uris[0] = jar1.toURL</span>
+69: <span class="ruby-comment cmt">#    uris[1] = jar2.toURL</span>
+70: <span class="ruby-comment cmt">#</span>
+71: <span class="ruby-comment cmt">#    # this is our custom class loader, yay!</span>
+72: <span class="ruby-comment cmt">#    @activerdfClassLoader = URLClassLoader.new(uris)</span>
+73: <span class="ruby-comment cmt">#    classWrapper = JClass.forName(&quot;org.activerdf.wrapper.sesame2.WrapperForSesame2&quot;, true, @activerdfClassLoader)    </span>
+74: <span class="ruby-comment cmt">#    @myWrapperInstance = classWrapper.new_instance </span>
+75: 
+76:     <span class="ruby-ivar">@myWrapperInstance</span> = <span class="ruby-constant">WrapperForSesame2</span>.<span class="ruby-identifier">new</span>
+77: 
+78:                 <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">sesameLocation</span> <span class="ruby-operator">==</span> <span class="ruby-keyword kw">nil</span>
+79:                   <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">sesameInferencing</span> <span class="ruby-operator">==</span> <span class="ruby-keyword kw">nil</span>
+80:         <span class="ruby-ivar">@db</span> = <span class="ruby-ivar">@myWrapperInstance</span>.<span class="ruby-identifier">callConstructor</span>
+81:                   <span class="ruby-keyword kw">else</span>
+82:         <span class="ruby-ivar">@db</span> = <span class="ruby-ivar">@myWrapperInstance</span>.<span class="ruby-identifier">callConstructor</span>(<span class="ruby-identifier">sesameInferencing</span>)               
+83:                   <span class="ruby-keyword kw">end</span>
+84:                 <span class="ruby-keyword kw">else</span>
+85:                   <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">sesameInferencing</span> <span class="ruby-operator">==</span> <span class="ruby-keyword kw">nil</span>
+86:                     <span class="ruby-ivar">@db</span> = <span class="ruby-ivar">@myWrapperInstance</span>.<span class="ruby-identifier">callConstructor</span>(<span class="ruby-identifier">sesameLocation</span>)            
+87:                   <span class="ruby-keyword kw">else</span>
+88:                     <span class="ruby-ivar">@db</span> = <span class="ruby-ivar">@myWrapperInstance</span>.<span class="ruby-identifier">callConstructor</span>(<span class="ruby-identifier">sesameLocation</span>,<span class="ruby-identifier">sesameInferencing</span>)                  
+89:                   <span class="ruby-keyword kw">end</span>
+90:                 <span class="ruby-keyword kw">end</span>
+91:                 
+92:     <span class="ruby-ivar">@valueFactory</span> = <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">getRepository</span>.<span class="ruby-identifier">getSail</span>.<span class="ruby-identifier">getValueFactory</span>
+93: 
+94:     <span class="ruby-comment cmt"># define the finalizer, which will call close on the sesame triple store</span>
+95:     <span class="ruby-comment cmt"># recipie for this, is from: http://wiki.rubygarden.org/Ruby/page/show/GCAndMemoryManagement</span>
+96: <span class="ruby-comment cmt">#    ObjectSpace.define_finalizer(self, SesameAdapter.create_finalizer(@db))       </span>
+97:         <span class="ruby-keyword kw">end</span></pre></div>
+</div></div>
+
+
+<div class="section_spacer"></div><h1>Public Instance methods</h1>
+
+
+<a class="small" name="M000017"><br/></a>
+<div class="a_method"><div><h3>
+<a href='#M000017'>
+
+
+add
+
+(s,p,o,c=nil)
+
+</a>
+</h3>
+<p>
+adds triple(s,p,o) to datastore s,p must be resources, o can be primitive
+data or resource
+</p>
+
+<p class="source_link" id="M000017-show-link"><a onclick="toggle('M000017-source'); toggleText('M000017-link'); return false;" href="#" id="M000017-link">Show source...</a></p><div class="source" id="M000017-source"><pre>     <span class="ruby-comment cmt"># File activerdf-sesame/lib/activerdf_sesame/sesame.rb, line 134</span>
+134:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">add</span>(<span class="ruby-identifier">s</span>,<span class="ruby-identifier">p</span>,<span class="ruby-identifier">o</span>,<span class="ruby-identifier">c</span>=<span class="ruby-keyword kw">nil</span>)
+135:     <span class="ruby-comment cmt"># TODO: handle context, especially if it is null</span>
+136:     <span class="ruby-comment cmt"># TODO: do we need to handle errors from the java side ? </span>
+137:                 
+138:                 <span class="ruby-identifier">check_input</span> = [<span class="ruby-identifier">s</span>,<span class="ruby-identifier">p</span>,<span class="ruby-identifier">o</span>]
+139:                 <span class="ruby-identifier">raise</span> <span class="ruby-constant">ActiveRdfError</span>, <span class="ruby-value str">&quot;cannot add triple with nil subject, predicate, or object&quot;</span> <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">check_input</span>.<span class="ruby-identifier">any?</span> {<span class="ruby-operator">|</span><span class="ruby-identifier">r</span><span class="ruby-operator">|</span> <span class="ruby-identifier">r</span>.<span class="ruby-identifier">nil?</span> <span class="ruby-operator">||</span> <span class="ruby-identifier">r</span>.<span class="ruby-identifier">is_a?</span>(<span class="ruby-constant">Symbol</span>) }
+140: 
+141:                 <span class="ruby-identifier">params</span> = <span class="ruby-identifier">activerdf_to_sesame</span>(<span class="ruby-identifier">s</span>, <span class="ruby-identifier">p</span>, <span class="ruby-identifier">o</span>, <span class="ruby-identifier">c</span>)
+142:     <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">add</span>(<span class="ruby-identifier">params</span>[<span class="ruby-value">0</span>], <span class="ruby-identifier">params</span>[<span class="ruby-value">1</span>], <span class="ruby-identifier">params</span>[<span class="ruby-value">2</span>])
+143:     <span class="ruby-ivar">@db</span>
+144:         <span class="ruby-keyword kw">end</span></pre></div>
+</div></div>
+
+<a class="small" name="M000015"><br/></a>
+<div class="a_method"><div><h3>
+<a href='#M000015'>
+
+
+clear
+
+()
+
+</a>
+</h3>
+<p>
+deletes all triples from datastore
+</p>
+
+<p class="source_link" id="M000015-show-link"><a onclick="toggle('M000015-source'); toggleText('M000015-link'); return false;" href="#" id="M000015-link">Show source...</a></p><div class="source" id="M000015-source"><pre>     <span class="ruby-comment cmt"># File activerdf-sesame/lib/activerdf_sesame/sesame.rb, line 113</span>
+113:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">clear</span>
+114:                 <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">clear</span>
+115:         <span class="ruby-keyword kw">end</span></pre></div>
+</div></div>
+
+<a class="small" name="M000020"><br/></a>
+<div class="a_method"><div><h3>
+<a href='#M000020'>
+
+
+close
+
+()
+
+</a>
+</h3>
+<p>
+<a href="SesameAdapter.html#M000020">close</a> the underlying sesame triple
+store. if not called there may be open iterators.
+</p>
+
+<p class="source_link" id="M000020-show-link"><a onclick="toggle('M000020-source'); toggleText('M000020-link'); return false;" href="#" id="M000020-link">Show source...</a></p><div class="source" id="M000020-source"><pre>     <span class="ruby-comment cmt"># File activerdf-sesame/lib/activerdf_sesame/sesame.rb, line 157</span>
+157:   <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">close</span>
+158:     <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">close</span>
+159:   <span class="ruby-keyword kw">end</span></pre></div>
+</div></div>
+
+<a class="small" name="M000016"><br/></a>
+<div class="a_method"><div><h3>
+<a href='#M000016'>
+
+
+delete
+
+(s, p, o, c=nil)
+
+</a>
+</h3>
+<p>
+deletes triple(s,p,o,c) from datastore symbol parameters match anything: <a
+href="SesameAdapter.html#M000016">delete</a>(:s,:p,:o) will <a
+href="SesameAdapter.html#M000016">delete</a> all triples you can specify a
+context to limit deletion to that context: <a
+href="SesameAdapter.html#M000016">delete</a>(:s,:p,:o, &#8216;<a
+href="http://context">context</a>&#8217;) will <a
+href="SesameAdapter.html#M000016">delete</a> all triples with that context
+</p>
+
+<p class="source_link" id="M000016-show-link"><a onclick="toggle('M000016-source'); toggleText('M000016-link'); return false;" href="#" id="M000016-link">Show source...</a></p><div class="source" id="M000016-source"><pre>     <span class="ruby-comment cmt"># File activerdf-sesame/lib/activerdf_sesame/sesame.rb, line 121</span>
+121:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">delete</span>(<span class="ruby-identifier">s</span>, <span class="ruby-identifier">p</span>, <span class="ruby-identifier">o</span>, <span class="ruby-identifier">c</span>=<span class="ruby-keyword kw">nil</span>)
+122:                 <span class="ruby-identifier">params</span> = <span class="ruby-identifier">activerdf_to_sesame</span>(<span class="ruby-identifier">s</span>, <span class="ruby-identifier">p</span>, <span class="ruby-identifier">o</span>, <span class="ruby-identifier">c</span>)
+123: 
+124:                 <span class="ruby-comment cmt"># TODO: handle context</span>
+125:     <span class="ruby-identifier">candidateStatements</span> = <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">getStatements</span>(<span class="ruby-identifier">params</span>[<span class="ruby-value">0</span>], <span class="ruby-identifier">params</span>[<span class="ruby-value">1</span>], <span class="ruby-identifier">params</span>[<span class="ruby-value">2</span>], <span class="ruby-keyword kw">false</span>)
+126:     <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">remove</span>(<span class="ruby-identifier">candidateStatements</span>)
+127:     <span class="ruby-identifier">candidateStatements</span>.<span class="ruby-identifier">close</span>
+128: 
+129:     <span class="ruby-ivar">@db</span>
+130:         <span class="ruby-keyword kw">end</span></pre></div>
+</div></div>
+
+<a class="small" name="M000021"><br/></a>
+<div class="a_method"><div><h3>
+<a href='#M000021'>
+
+
+dump
+
+()
+
+</a>
+</h3>
+<p>
+returns all triples in the datastore
+</p>
+
+<p class="source_link" id="M000021-show-link"><a onclick="toggle('M000021-source'); toggleText('M000021-link'); return false;" href="#" id="M000021-link">Show source...</a></p><div class="source" id="M000021-source"><pre>     <span class="ruby-comment cmt"># File activerdf-sesame/lib/activerdf_sesame/sesame.rb, line 162</span>
+162:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">dump</span>
+163:     <span class="ruby-comment cmt"># the sesame connection has an export method, which writes all explicit statements to </span>
+164:     <span class="ruby-comment cmt"># a to a RDFHandler, which we supply, by constructing a NTriplesWriter, which writes to StringWriter, </span>
+165:     <span class="ruby-comment cmt"># and we kindly ask that StringWriter to make a string for us. Note, you have to use stringy.to_s, </span>
+166:     <span class="ruby-comment cmt"># somehow stringy.toString does not work. yes yes, those wacky jruby guys ;) </span>
+167:     <span class="ruby-identifier">_string</span> = <span class="ruby-constant">StringWriter</span>.<span class="ruby-identifier">new</span>
+168:     <span class="ruby-identifier">sesameWriter</span> = <span class="ruby-constant">NTriplesWriter</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">_string</span>)
+169:     <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">export</span>(<span class="ruby-identifier">sesameWriter</span>)
+170:     <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">_string</span>.<span class="ruby-identifier">to_s</span>
+171:         <span class="ruby-keyword kw">end</span></pre></div>
+</div></div>
+
+<a class="small" name="M000018"><br/></a>
+<div class="a_method"><div><h3>
+<a href='#M000018'>
+
+
+flush
+
+()
+
+</a>
+</h3>
+<p>
+flushing is done automatically, because we run sesame2 in autocommit mode
+</p>
+
+<p class="source_link" id="M000018-show-link"><a onclick="toggle('M000018-source'); toggleText('M000018-link'); return false;" href="#" id="M000018-link">Show source...</a></p><div class="source" id="M000018-source"><pre>     <span class="ruby-comment cmt"># File activerdf-sesame/lib/activerdf_sesame/sesame.rb, line 147</span>
+147:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">flush</span>
+148:                 <span class="ruby-keyword kw">true</span>
+149:         <span class="ruby-keyword kw">end</span></pre></div>
+</div></div>
+
+<a class="small" name="M000022"><br/></a>
+<div class="a_method"><div><h3>
+<a href='#M000022'>
+
+
+load
+
+(file)
+
+</a>
+</h3>
+<p>
+loads triples from file in ntriples format
+</p>
+
+<p class="source_link" id="M000022-show-link"><a onclick="toggle('M000022-source'); toggleText('M000022-link'); return false;" href="#" id="M000022-link">Show source...</a></p><div class="source" id="M000022-source"><pre>     <span class="ruby-comment cmt"># File activerdf-sesame/lib/activerdf_sesame/sesame.rb, line 174</span>
+174:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">load</span>(<span class="ruby-identifier">file</span>)
+175:     <span class="ruby-identifier">reader</span> = <span class="ruby-constant">FileReader</span>.<span class="ruby-identifier">new</span>(<span class="ruby-identifier">file</span>)
+176:     <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">add</span>(<span class="ruby-identifier">reader</span>, <span class="ruby-value str">&quot;&quot;</span>, <span class="ruby-constant">RDFFormat</span><span class="ruby-operator">::</span><span class="ruby-constant">NTRIPLES</span>)
+177:     <span class="ruby-ivar">@db</span>
+178:         <span class="ruby-keyword kw">end</span></pre></div>
+</div></div>
+
+<a class="small" name="M000023"><br/></a>
+<div class="a_method"><div><h3>
+<a href='#M000023'>
+
+
+query
+
+(query)
+
+</a>
+</h3>
+<p>
+executes ActiveRDF <a href="SesameAdapter.html#M000023">query</a> on the
+sesame triple store associated with this adapter
+</p>
+
+<p class="source_link" id="M000023-show-link"><a onclick="toggle('M000023-source'); toggleText('M000023-link'); return false;" href="#" id="M000023-link">Show source...</a></p><div class="source" id="M000023-source"><pre>     <span class="ruby-comment cmt"># File activerdf-sesame/lib/activerdf_sesame/sesame.rb, line 181</span>
+181:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">query</span>(<span class="ruby-identifier">query</span>)
+182:         
+183:     <span class="ruby-comment cmt"># we want to put the results in here</span>
+184:     <span class="ruby-identifier">results</span> = []
+185:     
+186:     <span class="ruby-comment cmt"># translate the query object into a SPARQL query string</span>
+187:     <span class="ruby-identifier">qs</span> = <span class="ruby-constant">Query2SPARQL</span>.<span class="ruby-identifier">translate</span>(<span class="ruby-identifier">query</span>)
+188:     
+189:     <span class="ruby-comment cmt"># evaluate the query on the sesame triple store</span>
+190:     <span class="ruby-comment cmt"># TODO: if we want to get inferred statements back we have to say so, as third boolean parameter</span>
+191:     <span class="ruby-identifier">tuplequeryresult</span> = <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">evaluateTupleQuery</span>(<span class="ruby-constant">QueryLanguage</span><span class="ruby-operator">::</span><span class="ruby-constant">SPARQL</span>, <span class="ruby-identifier">qs</span>)
+192: 
+193:     <span class="ruby-comment cmt"># what are the variables of the query ?</span>
+194:     <span class="ruby-identifier">variables</span> = <span class="ruby-identifier">tuplequeryresult</span>.<span class="ruby-identifier">getBindingNames</span>
+195:     <span class="ruby-identifier">sizeOfVariables</span> = <span class="ruby-identifier">variables</span>.<span class="ruby-identifier">size</span>
+196: 
+197:     <span class="ruby-comment cmt"># a solution is a binding of a variable to all entities that matched this variable in the sparql query</span>
+198:     <span class="ruby-identifier">solutionIterator</span> = <span class="ruby-identifier">tuplequeryresult</span>.<span class="ruby-identifier">iterator</span>
+199:     
+200:     <span class="ruby-comment cmt"># the following is plainly ugly. the reason is that JRuby currently does not support</span>
+201:     <span class="ruby-comment cmt"># using iterators in the ruby way: with &quot;each&quot;. it is possible to define &quot;each&quot; for java.util.Iterator</span>
+202:     <span class="ruby-comment cmt"># using JavaUtilities.extend_proxy but that fails in strange ways. this is ugly but works. </span>
+203:     
+204:     <span class="ruby-comment cmt"># TODO: null handling, if a value is null...</span>
+205:     
+206:     <span class="ruby-comment cmt"># if there only was one variable, then the results array should look like this: </span>
+207:     <span class="ruby-comment cmt"># results = [ [first Value For The Variable], [second Value], ...]</span>
+208:     <span class="ruby-keyword kw">if</span> <span class="ruby-identifier">sizeOfVariables</span> <span class="ruby-operator">==</span> <span class="ruby-value">1</span> <span class="ruby-keyword kw">then</span>
+209:       <span class="ruby-comment cmt"># the counter keeps track of the number of values, so we can insert them into the results at the right position</span>
+210:       <span class="ruby-identifier">counter</span> = <span class="ruby-value">0</span> 
+211:       <span class="ruby-keyword kw">while</span> <span class="ruby-identifier">solutionIterator</span>.<span class="ruby-identifier">hasNext</span>
+212:         <span class="ruby-identifier">solution</span> = <span class="ruby-identifier">solutionIterator</span>.<span class="ruby-identifier">next</span>
+213:         
+214:         <span class="ruby-identifier">temparray</span> = []
+215:         <span class="ruby-comment cmt"># get the value associated with a variable in this specific solution</span>
+216:         <span class="ruby-identifier">temparray</span>[<span class="ruby-value">0</span>] = <span class="ruby-identifier">convertSesame2ActiveRDF</span>(<span class="ruby-identifier">solution</span>.<span class="ruby-identifier">getValue</span>(<span class="ruby-identifier">variables</span>[<span class="ruby-value">0</span>]))
+217:         <span class="ruby-identifier">results</span>[<span class="ruby-identifier">counter</span>] = <span class="ruby-identifier">temparray</span>
+218:         <span class="ruby-identifier">counter</span> = <span class="ruby-identifier">counter</span> <span class="ruby-operator">+</span> <span class="ruby-value">1</span>
+219:       <span class="ruby-keyword kw">end</span>    
+220:     <span class="ruby-keyword kw">else</span>
+221:     <span class="ruby-comment cmt"># if there is more then one variable the results array looks like this: </span>
+222:     <span class="ruby-comment cmt"># results = [ [Value From First Solution For First Variable, Value From First Solution For Second Variable, ...],</span>
+223:     <span class="ruby-comment cmt">#             [Value From Second Solution For First Variable, Value From Second Solution for Second Variable, ...], ...]</span>
+224:       <span class="ruby-identifier">counter</span> = <span class="ruby-value">0</span>
+225:       <span class="ruby-keyword kw">while</span> <span class="ruby-identifier">solutionIterator</span>.<span class="ruby-identifier">hasNext</span>
+226:         <span class="ruby-identifier">solution</span> = <span class="ruby-identifier">solutionIterator</span>.<span class="ruby-identifier">next</span>
+227:         
+228:         <span class="ruby-identifier">temparray</span> = []
+229:         <span class="ruby-keyword kw">for</span> <span class="ruby-identifier">n</span> <span class="ruby-keyword kw">in</span> <span class="ruby-value">1</span><span class="ruby-operator">..</span><span class="ruby-identifier">sizeOfVariables</span>
+230:           <span class="ruby-identifier">value</span> = <span class="ruby-identifier">convertSesame2ActiveRDF</span>(<span class="ruby-identifier">solution</span>.<span class="ruby-identifier">getValue</span>(<span class="ruby-identifier">variables</span>[<span class="ruby-identifier">n</span><span class="ruby-operator">-</span><span class="ruby-value">1</span>]))
+231:           <span class="ruby-identifier">temparray</span>[<span class="ruby-identifier">n</span><span class="ruby-operator">-</span><span class="ruby-value">1</span>] = <span class="ruby-identifier">value</span>
+232:         <span class="ruby-keyword kw">end</span>   
+233:         <span class="ruby-identifier">results</span>[<span class="ruby-identifier">counter</span>] = <span class="ruby-identifier">temparray</span>
+234:         <span class="ruby-identifier">counter</span> = <span class="ruby-identifier">counter</span> <span class="ruby-operator">+</span> <span class="ruby-value">1</span>       
+235:       <span class="ruby-keyword kw">end</span>    
+236:     <span class="ruby-keyword kw">end</span>
+237:     
+238:     <span class="ruby-keyword kw">return</span> <span class="ruby-identifier">results</span>
+239:         <span class="ruby-keyword kw">end</span></pre></div>
+</div></div>
+
+<a class="small" name="M000019"><br/></a>
+<div class="a_method"><div><h3>
+<a href='#M000019'>
+
+
+save
+
+()
+
+</a>
+</h3>
+<p>
+saving is done automatically, because we run sesame2 in autocommit mode
+</p>
+
+<p class="source_link" id="M000019-show-link"><a onclick="toggle('M000019-source'); toggleText('M000019-link'); return false;" href="#" id="M000019-link">Show source...</a></p><div class="source" id="M000019-source"><pre>     <span class="ruby-comment cmt"># File activerdf-sesame/lib/activerdf_sesame/sesame.rb, line 151</span>
+151:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">save</span>
+152:     <span class="ruby-keyword kw">true</span>
+153:   <span class="ruby-keyword kw">end</span></pre></div>
+</div></div>
+
+<a class="small" name="M000014"><br/></a>
+<div class="a_method"><div><h3>
+<a href='#M000014'>
+
+
+size
+
+()
+
+</a>
+</h3>
+<p>
+returns the number of triples in the datastore (incl. possible duplicates)
+</p>
+
+<p class="source_link" id="M000014-show-link"><a onclick="toggle('M000014-source'); toggleText('M000014-link'); return false;" href="#" id="M000014-link">Show source...</a></p><div class="source" id="M000014-source"><pre>     <span class="ruby-comment cmt"># File activerdf-sesame/lib/activerdf_sesame/sesame.rb, line 108</span>
+108:         <span class="ruby-keyword kw">def</span> <span class="ruby-identifier">size</span>
+109:                 <span class="ruby-ivar">@db</span>.<span class="ruby-identifier">size</span>
+110:         <span class="ruby-keyword kw">end</span></pre></div>
+</div></div>
+
+
+
+
+
+</div></div><div class="clear" id="footer"><a href="http://blog.evanweaver.com/articles/2006/06/02/allison">Allison</a></div></body></html>
