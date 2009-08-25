@@ -50,15 +50,8 @@ class SesameAdapter < ActiveRdfAdapter
     @writes = true
 
     # if no directory path given, we use in-memory store
-    if params[:location]
-      if params[:location] == :memory
-        sesame_location = nil      
-      else
-        sesame_location = JFile.new(params[:location])
-      end
-    else
-      sesame_location = nil
-    end
+    sesame_location = nil if(params[:location] == :memory)
+    sesame_location = JFile.new(params[:location]) if(params[:location])
 
     # if no inferencing is specified, we don't activate sesame2 rdfs inferencing
     sesame_inferencing = params[:inferencing] || false
@@ -86,27 +79,10 @@ class SesameAdapter < ActiveRdfAdapter
     @myWrapperInstance = WrapperForSesame2.new
 
     # we have to call the java constructor with the right number of arguments
-    if sesame_location == nil
-      if sesame_inferencing == nil
-        @db = @myWrapperInstance.callConstructor
-      else
-        @db = @myWrapperInstance.callConstructor(sesame_inferencing)		  
-      end
-    else
-      if sesame_inferencing == nil
-        if sesame_indices == nil
-          @db = @myWrapperInstance.callConstructor(sesame_location)
-        else
-          @db = @myWrapperInstance.callConstructor(sesame_location, sesame_indices)
-        end
-      else
-        if sesameIndexes == nil
-          @db = @myWrapperInstance.callConstructor(sesame_location, sesame_indices)
-        else
-          @db = @myWrapperInstance.callConstructor(sesame_location, sesame_indices, sesame_inferencing)
-        end
-      end
-    end
+    
+    ActiveRdfLogger.log_debug(self) { "Creating Sesame adapter (location: #{sesame_location}, indices: #{sesame_indices}, inferencing: #{sesame_inferencing}" }
+    
+    @db = @myWrapperInstance.callConstructor(sesame_location, sesame_indices, sesame_inferencing)
 
     @valueFactory = @db.getRepository.getSail.getValueFactory
 
@@ -126,20 +102,13 @@ class SesameAdapter < ActiveRdfAdapter
   # returns the number of triples in the datastore (incl. possible duplicates)
   # * context => context (optional)
   def size(context = nil)
-    # convert context in sesame object
-    sesame_context = wrap(context) if !context.nil?
-
-    # get size
-    @myWrapperInstance.size(sesame_context)
+    @db.size(wrap_contexts(context))
   end
 
   # deletes all triples from datastore
   # * context => context (optional)
   def clear(context = nil)
-    # convert context in sesame object
-    sesame_context = wrap(context) if !context.nil?
-    # clear
-    @myWrapperInstance.clear(sesame_context)
+    @db.clear(wrap_contexts(context))
   end
 
   # deletes triple(s,p,o,c) from datastore
@@ -156,12 +125,10 @@ class SesameAdapter < ActiveRdfAdapter
     params = activerdf_to_sesame(s, p, o, c, true)
 
     begin
-      # TODO: handle context
-      candidateStatements = @db.getStatements(params[0], params[1], params[2], false)
-      @db.remove(candidateStatements)
-      candidateStatements.close
+      @db.remove(params[0], params[1], params[2], wrap_contexts(c))
+      true
     rescue Exception => e
-      raise ActiveRdfError, "Sesame add triple failed: #{e.message}"
+      raise ActiveRdfError, "Sesame delete triple failed: #{e.message}"
     end
     @db
   end
@@ -177,11 +144,11 @@ class SesameAdapter < ActiveRdfAdapter
     # TODO: do we need to handle errors from the java side ? 
 
     check_input = [s,p,o]
-    raise ActiveRdfError, "cannot add triple with nil subject, predicate, or object" if check_input.any? {|r| r.nil? || r.is_a?(Symbol) }
+    raise ActiveRdfError, "cannot add triple with nil or blank node subject, predicate, or object" if check_input.any? {|r| r.nil? || r.is_a?(Symbol) }
 
     params = activerdf_to_sesame(s, p, o, c)
-    @db.add(params[0], params[1], params[2])
-    @db
+    @db.add(params[0], params[1], params[2], wrap_contexts(c))
+    true
   rescue Exception => e
     raise ActiveRdfError, "Sesame add triple failed: #{e.message}"
   end
@@ -220,10 +187,6 @@ class SesameAdapter < ActiveRdfAdapter
   # * syntax => syntax of file to load. The syntax can be: n3, ntriples, rdfxml, trig, trix, turtle
   # * context => context (optional)
   def load(file, syntax="ntriples", context=nil)
-    # wrap Context
-    sesame_context = nil
-    sesame_context = wrapContext(context) unless (context.nil?)
-
     # rdf syntax type
     case syntax
     when 'n3'
@@ -243,7 +206,7 @@ class SesameAdapter < ActiveRdfAdapter
     end
 
     begin
-      @myWrapperInstance.load(file,"",syntax_type,sesame_context)
+      @myWrapperInstance.load(file, "", syntax_type, wrap_contexts(context))
     rescue Exception => e
       raise ActiveRdfError, "Sesame load file failed: #{e.message}"
     end
@@ -259,16 +222,18 @@ class SesameAdapter < ActiveRdfAdapter
     # translate the query object into a SPARQL query string
     qs = Query2SPARQL.translate(query)
 
-    # evaluate the query on the sesame triple store
-    # TODO: if we want to get inferred statements back we have to say so, as third boolean parameter
-    tuplequeryresult = @db.evaluateTupleQuery(QueryLanguage::SPARQL, qs)
+    begin
+      # evaluate the query on the sesame triple store
+      # TODO: if we want to get inferred statements back we have to say so, as third boolean parameter
+      tuplequeryresult = @db.prepareTupleQuery(QueryLanguage::SPARQL, qs).evaluate
+    rescue Exception => e
+      ActiveRdfLogger.log_error(self) { "Error evaluating query (#{e.message}): #{qs}" }
+      raise
+    end
 
     # what are the variables of the query ?
     variables = tuplequeryresult.getBindingNames
     size_of_variables = variables.size
-
-    # a solution is a binding of a variable to all entities that matched this variable in the sparql query
-    solution_iterator = tuplequeryresult.iterator
 
     # the following is plainly ugly. the reason is that JRuby currently does not support
     # using iterators in the ruby way: with "each". it is possible to define "each" for java.util.Iterator
@@ -278,15 +243,15 @@ class SesameAdapter < ActiveRdfAdapter
 
     # if there only was one variable, then the results array should look like this: 
     # results = [ [first Value For The Variable], [second Value], ...]
-    if sizeOfVariables == 1 then
+    if size_of_variables == 1 then
       # the counter keeps track of the number of values, so we can insert them into the results at the right position
       counter = 0 
-      while solution_iterator.hasNext
-        solution = solution_iterator.next
+      while tuplequeryresult.hasNext
+        solution = tuplequeryresult.next
 
         temparray = []
         # get the value associated with a variable in this specific solution
-        temparray[0] = convertSesame2ActiveRDF(solution.getValue(variables[0]))
+        temparray[0] = convertSesame2ActiveRDF(solution.getValue(variables[0]), query.resource_class)
         results[counter] = temparray
         counter = counter + 1
       end    
@@ -295,12 +260,12 @@ class SesameAdapter < ActiveRdfAdapter
       # results = [ [Value From First Solution For First Variable, Value From First Solution For Second Variable, ...],
       #             [Value From Second Solution For First Variable, Value From Second Solution for Second Variable, ...], ...]
       counter = 0
-      while solution_iterator.hasNext
-        solution = solution_iterator.next
+      while tuplequeryresult.hasNext
+        solution = tuplequeryresult.next
 
         temparray = []
         for n in 1..size_of_variables
-          value = convertSesame2ActiveRDF(solution.getValue(variables[n-1]))
+          value = convertSesame2ActiveRDF(solution.getValue(variables[n-1]), query.resource_class)
           temparray[n-1] = value
         end   
         results[counter] = temparray
@@ -330,8 +295,6 @@ class SesameAdapter < ActiveRdfAdapter
   # which we put in there ourselves, and currently we only put URIs or Literals there. 
   # 
   # result_type is the class that will be used for "resource" objects.
-  # 
-  # TODO: do we need to think about handling blank nodes ? e.g. if the are part of a graph read from a file ? 
   def convertSesame2ActiveRDF(input, result_type)
     jclassURI = Java::JavaClass.for_name("org.openrdf.model.URI")
     jclassLiteral = Java::JavaClass.for_name("org.openrdf.model.Literal")	
@@ -346,10 +309,7 @@ class SesameAdapter < ActiveRdfAdapter
       # no quotation marks inside the string
       input.toString.gsub('"', '')
     elsif jInstanceOf(input.java_class, jclassBNode)
-      # It's a blank node. This should never happen, but lets handle it nonetheless
-      # so the app can continue...
-      ActiveRdfLogger::log_warn "Encountered a blank node in the graph. This is a problem. Returning nil, something may break.", self
-      nil
+      RDFS::BNode.new(input.toString)
     else
       raise ActiveRdfError, "the Sesame Adapter tried to return something which is neither a URI nor a Literal, but is instead a #{input.java_class.name}"
     end	
@@ -366,7 +326,7 @@ class SesameAdapter < ActiveRdfAdapter
     }
 
     # wrap Context
-    params << wrapContext(c) unless (c.nil?)
+    params << wrap_contexts(c) unless (c.nil?)
 
     params
   end
@@ -395,11 +355,12 @@ class SesameAdapter < ActiveRdfAdapter
     return result      
   end
 
-  def wrapContext(context)
-    # context must be Resource
-    raise ActiveRdfError, "context must be a Resource" unless(context.respond_to?(:uri))
-
-    # return context
-    @valueFactory.createURI(context.uri)
+  def wrap_contexts(*contexts)
+    contexts.compact!
+    contexts.collect! do |context|
+      raise ActiveRdfError, "context must be a Resource" unless(context.respond_to?(:uri))
+      @valueFactory.createURI(context.uri)
+    end
+    contexts.to_java(org.openrdf.model.Resource)
   end
 end

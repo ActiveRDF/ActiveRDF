@@ -31,10 +31,14 @@ class FederationManager
 
   # delete every triples about a specified resource
   def FederationManager.delete_all(resource)
-    to_delete = Query.new.select(:p, :o).where(resource, :p, :o).execute
-    to_delete.each{|p, o|
-      delete(resource, p, o)
-    }
+    delete(resource, nil, nil)
+  end
+  
+  # Clear the store (or the given context)
+  def FederationManager.clear(context=nil)
+    # FIXME: Make sure that all adapters support clearing
+    raise(RuntimeError, "Adapter #{ConnectionPool.write_adapter.class} doesn't support clear") unless(ConnectionPool.write_adapter.respond_to?(:clear))
+    ConnectionPool.write_adapter.clear(context)
   end
 
   # executes read-only queries

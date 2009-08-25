@@ -149,7 +149,7 @@ class ConnectionPool
     raise(ActiveRdfError, "unknown adapter type #{connection_params[:type]}") if klass.nil?
 
     # create new adapter-instance
-    klass.send(:new,connection_params)
+    klass.send(:new, connection_params)
   end
 
   private_class_method :create_adapter

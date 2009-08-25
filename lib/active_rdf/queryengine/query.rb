@@ -170,12 +170,13 @@ class Query
       # if you construct this query manually, you shouldn't! if your select 
       # variable happens to be in one of the removed clauses: tough luck.
 
-      unless s.respond_to?(:uri) or s.is_a?(Symbol)
-        raise(ActiveRdfError, "cannot add a where clause with s #{s}: s must be a resource or a variable")
+      unless (s.respond_to?(:uri) or s.is_a?(Symbol)) and (!s.is_a?(RDFS::BNode))
+        raise(ActiveRdfError, "Cannot add a where clause with s #{s}: s must be a resource or a variable")
       end
-      unless p.respond_to?(:uri) or p.is_a?(Symbol)
-        raise(ActiveRdfError, "cannot add a where clause with p #{p}: p must be a resource or a variable")
+      unless (p.respond_to?(:uri) or p.is_a?(Symbol)) and (!s.is_a?(RDFS::BNode))
+        raise(ActiveRdfError, "Cannot add a where clause with p #{p}: p must be a resource or a variable")
       end
+      raise(ActiveRdfErrror, "Cannot add a where clause where o is a blank node") if(o.is_a?(RDFS::BNode))
 
       @where_clauses << [s,p,o,c].collect{|arg| parametrise(arg)}
     end

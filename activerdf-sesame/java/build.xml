@@ -26,7 +26,7 @@
 		<buildnumber file="build.number"/>
 	</target>
 	
-	<target name="temp" description="crete and clean temp, create and clean dest">
+	<target name="temp" description="create and clean temp, create and clean dest">
 		<mkdir description="prepare temp dir" dir="temp"/>
 		<mkdir description="prepare temp dir" dir="dest"/>
 		<delete includeemptydirs="true">
