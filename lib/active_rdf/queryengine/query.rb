@@ -174,7 +174,7 @@ class Query
         raise(ActiveRdfError, "Cannot add a where clause with s #{s}: s must be a resource or a variable")
       end
       unless (p.respond_to?(:uri) or p.is_a?(Symbol)) and (!s.is_a?(RDFS::BNode))
-        raise(ActiveRdfError, "Cannot add a where clause with p #{p}: p must be a resource or a variable")
+        raise(ActiveRdfError, "Cannot add a where clause with p #{p}: p must be a resource or a variable, is a #{p.class.name}")
       end
       raise(ActiveRdfErrror, "Cannot add a where clause where o is a blank node") if(o.is_a?(RDFS::BNode))
 

@@ -36,7 +36,29 @@ class SesameAdapter < ActiveRdfAdapter
 
   ConnectionPool.register_adapter(:sesame,self)
 
-  # instantiates Sesame database
+  # Create a sesame adapter. The parameter array must contain a :backend that will identify
+  # the backend that Sesame will use for the storage. All backends take the parameter
+  # :inferencing, which will turn on the internal inferencing engine in Sesame.
+  #
+  # For compatibility, this will use the native driver if no type is given. 
+  #
+  # = :memory
+  # The in-memory store. No parameters. 
+  #
+  # = :native
+  # The "Native" store that saves data to a file. Parameters:
+  # [*location*] - Path to the data file for Sesame
+  # [*indexes*] - Optional index for Sesame 
+  # 
+  # = :rdbms
+  # The RDBMS backend store
+  # [*driver*] - JDBC driver to use
+  # [*url*] - URL for JDBC connection
+  # [*user*] - Username for database connection (optional)
+  # [*pass*] - Password for database connection (optional)
+  #
+  # The "NativeStore" that writes the data to a file on the file system. Parameters:
+  
   # available parameters:
   # * :location => path to a file for persistent storing or :memory for in-memory (defaults to in-memory)
   # * :inferencing => true or false, if sesame2 rdfs inferencing is uses (defaults to true)
@@ -49,55 +71,24 @@ class SesameAdapter < ActiveRdfAdapter
     @reads = true
     @writes = true
 
-    # if no directory path given, we use in-memory store
-    sesame_location = nil if(params[:location] == :memory)
-    sesame_location = JFile.new(params[:location]) if(params[:location])
-
-    # if no inferencing is specified, we don't activate sesame2 rdfs inferencing
-    sesame_inferencing = params[:inferencing] || false
-
-    sesame_indices = params[:indexes] || nil
-
-    # this will not work at the current state of jruby	
-    #    # fancy JRuby code so that the user does not have to set the java CLASSPATH
-    #    
-    #    this_dir = File.dirname(File.expand_path(__FILE__))
-    #    
-    #    jar1 = JFile.new(this_dir + "/../../ext/wrapper-sesame2.jar")
-    #    jar2 = JFile.new(this_dir + "/../../ext/openrdf-sesame-2.0-alpha4-onejar.jar")
-    #
-    #    # make an array of URL, which contains the URLs corresponding to the files
-    #    uris = JURL[].new(2)
-    #    uris[0] = jar1.toURL
-    #    uris[1] = jar2.toURL
-    #
-    #    # this is our custom class loader, yay!
-    #    @activerdfClassLoader = URLClassLoader.new(uris)
-    #    classWrapper = JClass.forName("org.activerdf.wrapper.sesame2.WrapperForSesame2", true, @activerdfClassLoader)    
-    #    @myWrapperInstance = classWrapper.new_instance 
-
+    # Use native type by default
+    backend = params[:backend] || :native
+    
     @myWrapperInstance = WrapperForSesame2.new
-
-    # we have to call the java constructor with the right number of arguments
-    
-    ActiveRdfLogger.log_debug(self) { "Creating Sesame adapter (location: #{sesame_location}, indices: #{sesame_indices}, inferencing: #{sesame_inferencing}" }
-    
-    @db = @myWrapperInstance.callConstructor(sesame_location, sesame_indices, sesame_inferencing)
+    @db = case(backend)
+    when :native
+      init_native_store(params)
+    when :memory
+      init_memory_store(params)
+    when :rdbms
+      init_rdbms_store(params)
+    else
+      raise(ArgumentError, "Unknown backend type for Sesame: #{type}")
+    end
 
     @valueFactory = @db.getRepository.getSail.getValueFactory
-
-    # define the finalizer, which will call close on the sesame triple store
-    # recipie for this, is from: http://wiki.rubygarden.org/Ruby/page/show/GCAndMemoryManagement
-    #    ObjectSpace.define_finalizer(self, SesameAdapter.create_finalizer(@db))       
+     
   end
-
-  # TODO: this does not work, but it is also not caused by jruby. 
-  #  def SesameAdapter.create_finalizer(db)
-  #    # we have to call close on the sesame triple store, because otherwise some of the iterators are not closed properly
-  #    proc { puts "die";  db.close }
-  #  end
-
-
 
   # returns the number of triples in the datastore (incl. possible duplicates)
   # * context => context (optional)
@@ -278,6 +269,33 @@ class SesameAdapter < ActiveRdfAdapter
 
   private
 
+  # Init a native Sesame backend
+  def init_native_store(params)
+    # if no inferencing is specified, we don't activate sesame2 rdfs inferencing
+    sesame_inferencing = params[:inferencing] || false
+    ActiveRdfLogger.log_debug(self) { "Creating Sesame Native Adapter (location: #{params[:location]}, indexes: #{params[:indexes]}, inferencing: #{sesame_inferencing}" }
+    sesame_location = JFile.new(params[:location]) if(params[:location])
+        
+    @myWrapperInstance.initWithNative(sesame_location, params[:indexes], sesame_inferencing)
+  end
+  
+  # Init a in-memory Sesame backend
+  def init_memory_store(params)
+    # if no inferencing is specified, we don't activate sesame2 rdfs inferencing
+    sesame_inferencing = params[:inferencing] || false
+    ActiveRdfLogger.log_debug(self) { "Creating Sesame Memory Adapter (inferencing: #{sesame_inferencing}" }
+    
+    @myWrapperInstance.initWithMemory(sesame_inferencing)
+  end
+
+  # Init with an RDBMS backend
+  def init_rdbms_store(params)
+    sesame_inferencing = params[:inferencing] || false
+    ActiveRdfLogger.log_debug(self) { "Creating Sesame RDBMS Adapter (driver: #{params[:driver]}, url: #{params[:url]}, user: #{params[:user]}, pass: #{params[:pass]}, inferencing: #{sesame_inferencing}" }
+    
+    @myWrapperInstance.initWithRDBMS(params[:driver], params[:url], params[:user], params[:pass], sesame_inferencing)
+  end
+  
   # check if testee is a java subclass of reference
   def jInstanceOf(testee, reference)
     # for Java::JavaClass for a <=> b the comparison operator returns: -1 if a is subclass of b, 
