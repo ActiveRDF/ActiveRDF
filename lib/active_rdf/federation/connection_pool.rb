@@ -136,7 +136,7 @@ class ConnectionPool
 
   # unregister adapter-type
   def ConnectionPool.unregister_adapter(type)
-    ActiveRdfLogger::log_info(self) { "ConnectionPool: registering adapter of type #{type}" }
+    ActiveRdfLogger::log_info(self) { "ConnectionPool: deregistering adapter of type #{type}" }
     @@registered_adapter_types.delete type
   end
 

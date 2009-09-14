@@ -11,8 +11,10 @@ import org.openrdf.repository.sail.SailRepository;
 import org.openrdf.sail.memory.MemoryStore;
 import org.openrdf.sail.nativerdf.NativeStore;
 import org.openrdf.sail.rdbms.RdbmsStore;
+import org.openrdf.repository.http.HTTPRepository;
 import org.openrdf.sail.inferencer.fc.ForwardChainingRDFSInferencer;
 import org.openrdf.repository.RepositoryConnection;
+import org.openrdf.repository.RepositoryException;
 import org.openrdf.model.Resource;
 import org.openrdf.rio.RDFFormat;
 
@@ -68,7 +70,7 @@ public class WrapperForSesame2 {
 	}
 	
 	/*
-	 * Initialize the Wrappe with a RDBMS as a backend
+	 * Initialize the Wrapper with a RDBMS as a backend
 	 * @param driver JDBC driver to use
 	 * @param url JDBC connect URL
 	 * @param user Username for the database, or null
@@ -79,13 +81,25 @@ public class WrapperForSesame2 {
 		
 		if(user == null) {
 			sailStack = new RdbmsStore(driver, url);
-		} else if(password == null) {
-			sailStack = new RdbmsStore(driver, url, user);
 		} else {
 			sailStack = new RdbmsStore(driver, url, user, password);
 		}
 		
 		return initFromSail(sailStack, inferencing);
+	}
+	
+	/*
+	 * Initialize th Wrapper with a connection to a remote HTTP repository
+	 */
+	public RepositoryConnection initWithHttp(String url, String user, String password) throws RepositoryException {
+		HTTPRepository httpRepository = new HTTPRepository(url);
+		if(user != null) {
+			httpRepository.setUsernameAndPassword(user, password);
+		}
+		httpRepository.initialize();
+		sesameRepository = httpRepository;
+		sesameConnection = sesameRepository.getConnection();
+		return sesameConnection;
 	}
 
 	/**

@@ -10,23 +10,27 @@ ActiveRdfLogger::log_info "Loading Sesame adapter", self
 # ----- java imports and extentsions
 require 'java'
 
-# Import the jars
-Dir[File.join(File.dirname(__FILE__), '..', '..', 'ext', '*.jar')].each { |jar| require jar}
+begin
+  # Import the jars
+  Dir[File.join(File.dirname(__FILE__), '..', '..', 'ext', '*.jar')].each { |jar| require jar}
 
+  StringWriter = java.io.StringWriter
+  JFile = java.io.File
+  URLClassLoader = java.net.URLClassLoader 
+  JURL = java.net.URL
+  JClass = java.lang.Class
+  JObject = java.lang.Object
+  JIOException = java.io.IOException
 
-StringWriter = java.io.StringWriter
-JFile = java.io.File
-URLClassLoader = java.net.URLClassLoader 
-JURL = java.net.URL
-JClass = java.lang.Class
-JObject = java.lang.Object
-JIOException = java.io.IOException
-
-# sesame specific classes: 
-WrapperForSesame2 = org.activerdf.wrapper.sesame2.WrapperForSesame2
-QueryLanguage = org.openrdf.query.QueryLanguage
-NTriplesWriter = org.openrdf.rio.ntriples.NTriplesWriter
-RDFFormat = org.openrdf.rio.RDFFormat
+  # sesame specific classes: 
+  WrapperForSesame2 = org.activerdf.wrapper.sesame2.WrapperForSesame2
+  QueryLanguage = org.openrdf.query.QueryLanguage
+  NTriplesWriter = org.openrdf.rio.ntriples.NTriplesWriter
+  RDFFormat = org.openrdf.rio.RDFFormat
+rescue Exception => e
+  puts "ERROR loading Java for Sesame: #{e.message}"
+  raise
+end
 
 # TODO: about this adapter
 class SesameAdapter < ActiveRdfAdapter
@@ -37,8 +41,9 @@ class SesameAdapter < ActiveRdfAdapter
   ConnectionPool.register_adapter(:sesame,self)
 
   # Create a sesame adapter. The parameter array must contain a :backend that will identify
-  # the backend that Sesame will use for the storage. All backends take the parameter
-  # :inferencing, which will turn on the internal inferencing engine in Sesame.
+  # the backend that Sesame will use for the storage. All backends (except the HTTP repositories)
+  # take the parameter :inferencing, which will turn on the internal inferencing engine in Sesame 
+  # (default is off).
   #
   # For compatibility, this will use the native driver if no type is given. 
   #
@@ -46,23 +51,19 @@ class SesameAdapter < ActiveRdfAdapter
   # The in-memory store. No parameters. 
   #
   # = :native
-  # The "Native" store that saves data to a file. Parameters:
+  # The "Native" store that saves data to a file. This backend finally employs locking on the database,
+  # which means that the database can only be used from one script or program at a time.
   # [*location*] - Path to the data file for Sesame
-  # [*indexes*] - Optional index for Sesame 
+  # [*indexes*] - Optional index for Sesame, example "spoc,posc,cosp"
   # 
   # = :rdbms
-  # The RDBMS backend store
+  # The RDBMS backend store. You need to give the JDBC driver class, and obviously the JDBC driver
+  # for your database needs to be installed.
   # [*driver*] - JDBC driver to use
   # [*url*] - URL for JDBC connection
   # [*user*] - Username for database connection (optional)
   # [*pass*] - Password for database connection (optional)
   #
-  # The "NativeStore" that writes the data to a file on the file system. Parameters:
-  
-  # available parameters:
-  # * :location => path to a file for persistent storing or :memory for in-memory (defaults to in-memory)
-  # * :inferencing => true or false, if sesame2 rdfs inferencing is uses (defaults to true)
-  # * :indexes => string of indexes which can be used by the persistent store, example "spoc,posc,cosp"
   #
   def initialize(params = {})
     super()
@@ -72,21 +73,27 @@ class SesameAdapter < ActiveRdfAdapter
     @writes = true
 
     # Use native type by default
-    backend = params[:backend] || :native
+    backend = params[:backend] || 'native'
     
     @myWrapperInstance = WrapperForSesame2.new
     @db = case(backend)
-    when :native
+    when 'native'
       init_native_store(params)
-    when :memory
+    when 'memory'
       init_memory_store(params)
-    when :rdbms
+    when 'rdbms'
       init_rdbms_store(params)
+    when 'http'
+      init_http_store(params)
     else
-      raise(ArgumentError, "Unknown backend type for Sesame: #{type}")
+      raise(ArgumentError, "Unknown backend type for Sesame: #{backend}")
     end
-
-    @valueFactory = @db.getRepository.getSail.getValueFactory
+    
+    @valueFactory = if(backend == 'http')
+        @db.getRepository.getValueFactory
+      else
+        @db.getRepository.getSail.getValueFactory
+      end
      
   end
 
@@ -199,7 +206,7 @@ class SesameAdapter < ActiveRdfAdapter
     begin
       @myWrapperInstance.load(file, "", syntax_type, wrap_contexts(context))
     rescue Exception => e
-      raise ActiveRdfError, "Sesame load file failed: #{e.message}"
+      raise ActiveRdfError, "Sesame load file failed: #{e.message}\n#{e.backtrace}"
     end
   end
 
@@ -294,6 +301,15 @@ class SesameAdapter < ActiveRdfAdapter
     ActiveRdfLogger.log_debug(self) { "Creating Sesame RDBMS Adapter (driver: #{params[:driver]}, url: #{params[:url]}, user: #{params[:user]}, pass: #{params[:pass]}, inferencing: #{sesame_inferencing}" }
     
     @myWrapperInstance.initWithRDBMS(params[:driver], params[:url], params[:user], params[:pass], sesame_inferencing)
+  end
+  
+  # Init the HTTP store
+  def init_http_store(params)
+    ActiveRdfLogger.log_debug(self) { "Creating Sesame HTTP Adapter (url: #{params[:url]}, user: #{params[:user]}, pass: #{params[:pass]} (inferencing settings are always ignored)" }
+    
+    wrap = @myWrapperInstance.initWithHttp(params[:url], params[:user], params[:pass])
+    @writes = wrap.getRepository.isWritable
+    wrap
   end
   
   # check if testee is a java subclass of reference

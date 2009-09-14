@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <project name="generic-build" default="build" basedir=".">
 	
+	<property name="destination" value="../ext" />
+	
 	<!--
 		This is the generic ant build file 
 		
@@ -10,7 +12,7 @@
 		It currently supports the following targets:
 		- compile: compile all sources
 		- jar: create a jar file from the compiled sources
-		- build: put the jar and all librarys from ./lib into ./dest/jars (needed by the buildmanager)
+		- build: put the jar and all librarys from ./lib into ${destination} (needed by the buildmanager)
 		- compile-tests: compile the test sources
 		- run-tests: run the compiled tests
 		- dist-zip: distribution zip file for end users (jar, libs and javadoc)
@@ -35,7 +37,7 @@
 		</delete>
 		<mkdir description="prepare temp dir" dir="temp/dest"/>
 		<mkdir description="prepare temp dir" dir="temp/distribution"/>
-		<mkdir dir="dest/jars"/>
+		<mkdir dir="${destination}"/>
 	</target>
 
 	
@@ -72,15 +74,8 @@
     	    </section>
     	  </manifest>
     	<echo>Creating JAR ...</echo>
-    	<jar compress="true" manifest="temp/manifest/MANIFEST.MF" manifestencoding="UTF-8"
-    	   destfile="../ext/${product-name}.jar">      
-	   		<fileset dir="temp/build/">
-	    			<include name="**"/>
-	    	</fileset>
-    		<fileset refid="jarfile-includes"/>
-		</jar>
 		<jar compress="true" manifest="temp/manifest/MANIFEST.MF" manifestencoding="UTF-8"
- 	   destfile="dest/jars/${product-name}.jar">
+ 	   destfile="${destination}/${product-name}.jar">
  	   		<fileset dir="temp/build/">
  	    			<include name="**"/>
  	    	</fileset>
@@ -88,17 +83,16 @@
  		</jar>  	
     </target>
 	
+	<target name="clean-dest" description="Clean ${destination}">
+		<delete dir="${destination}" /> 
+	</target>
+	
 	<!-- build manager targets -->
 	
-	<target name="build" depends="jar" description="copy the jar and all libs of this project to dest/jars (used by the buildmanager)">
-		<echo>Copying all libs and the jar to dest/jars</echo>
-		<mkdir dir="../ext" />
-		<copy description="copy all libs on which this project depends" todir="../ext">
-			<fileset refid="export-libs" /> 
-		</copy>
-		
-    <mkdir dir="dest/jars" />
-		<copy description="copy all libs on which this project depends" todir="dest/jars">
+	<target name="build" depends="clean-dest, jar" description="copy the jar and all libs of this project to ${destination} (used by the buildmanager)">
+		<echo>Copying all libs and the jar to ${destination}</echo>
+    	<mkdir dir="${destination}" />
+		<copy description="copy all libs on which this project depends" todir="${destination}">
 			<fileset refid="all-libs" /> 
 			<fileset refid="export-libs" /> 
 		</copy>
@@ -178,7 +172,7 @@
 	<target name="dist-zip" depends="javadoc, build" description="create distribution zip file for end users">
 		<mkdir dir="temp/dist-zip/${dist-zip-folder}" />
 		<copy description="copy all libs on which this project depends" todir="temp/dist-zip/${dist-zip-folder}/lib">
-	   		<fileset dir="dest/jars/">
+	   		<fileset dir="${destination}">
 	    			<include name="**"/>
 	    	</fileset>
 		</copy>
@@ -232,7 +226,7 @@
 
 		<mkdir dir="temp/all-zip/${all-zip-folder}" />
 		<copy description="copy all libs on which this project depends" todir="temp/all-zip/${all-zip-folder}/lib">
-	   		<fileset dir="dest/jars/">
+	   		<fileset dir="${destination}">
 	    			<include name="**"/>
 	    	</fileset>
 		</copy>

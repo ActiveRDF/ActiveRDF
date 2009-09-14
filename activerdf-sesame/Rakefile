@@ -29,6 +29,11 @@ setup_gem($name, $version) do |spec|
   spec.files = FileList[ 'ext/*.jar', '[A-Z]*', 'lib/**/*.rb', 'test/**/*' ].to_a
 end
 
+task :build_java do
+  Dir::chdir(File.expand_path(File.join(File.dirname(__FILE__), 'java')))
+  `ant`
+end
+
 task :verify_rubyforge do
   raise "RUBYFORGE_USER environment variable not set!" unless ENV['RUBYFORGE_USER']
   raise "RUBYFORGE_PASSWORD environment variable not set!" unless ENV['RUBYFORGE_PASSWORD']
