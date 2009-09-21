@@ -1,14 +1,14 @@
 Manifest-Version: 1.0
-Ant-Version: Apache Ant 1.7.0
-Created-By: 10.0-b22 (Sun Microsystems Inc.)
-Built-By: root
-Built-Number: 51
+Ant-Version: Apache Ant 1.7.1
+Created-By: 1.5.0_20-141 (Apple Inc.)
+Built-By: daniel
+Built-Number: 128
 
 Name: common
 Specification-Title: Example
 Specification-Version: 0.1
-Specification-Vendor: DERI Galway, Benjamin Heitmann
+Specification-Vendor: ActiveRDF Project
 Implementation-Title: Wrapper-Sesame2
 Implementation-Version: 0.1 ${TODAY}
-Implementation-Vendor: DERI Galway, Benjamin Heitmann
+Implementation-Vendor: ActiveRDF Project
 
