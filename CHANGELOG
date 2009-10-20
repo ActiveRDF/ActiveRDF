@@ -1,3 +1,66 @@
+== activerdf (HEAD)
+  * ActiveRDF classes have been moved into their own module, ActiveRDF::.
+  * Registered predicates are being deprecated in favor of registered 
+    namespaces instead.
+
+  * Added RDF::Property to manage properties and their values.
+    If it is associated with a resource on instantiation, that property then 
+    provides access to the values belonging to the associated resource.
+    This changes the way properties are queried from RDFS::Resource. This 
+    replaces all_ property methods. resource.property now returns a 
+    RDF::Property. Values may be accessed via Enumerable methods. 
+
+  * Resource refactored, DRY'd out. 
+  * Resource.find(uri) for finding resources by uri. Returns nil if resource 
+    not found. Use instead of Resource.new(uri) if you don't wish to create
+    a new resource if one is not found.
+  * Resource#to_s now returns URI's without enclosing braces(<>).
+    Use #to_literal_s for NTriple formatted URI's
+  * Resource#all_predicates, #instance_predicates, #empty_predicates added
+  * Resource#filter now takes a single filter at a time. returns self so 
+    additional filters may be chained.  #filter_regexp now simply #regexp
+  * Resource property lookups now have the following search priority: 
+    custom methods first, namespaced properties second, 
+    registered_predicates(deprecated) then finally a search on all
+    known properties for this class.
+  * Provide some limited RDF & RDFS reasoning. Enabled with a new global
+    variable $activerdf_internal_reasoning = false (default)
+    
+  * Datatype support. ActiveRDF will by default use datatype for all 
+    literals to provide typing support. A new global boolean variable 
+    $activerdf_without_datatype will disable the use of datatypes if 
+    set to true. This may be necessary when working with literals that 
+    do not have a datatype specified in which case they will all be treated
+    as strings.
+  * Query#all_types uses regex matching to match all values, ignoring
+    datatype when $activerdf_without_datatype = false, ie enforcing type.
+    Use in datastores with mixed typed and non-typed literals
+    See discussion here: http://markmail.org/message/4rhqmb5jnaqbwfbs
+  * Query flatten argument now defaults to false
+  * Added FederationManager#contexts for querying contexts for all adapters
+  * NTriples parser now ignores comments and recognizes lang/datatype
+    
+  * renamed adapter API method #query to #execute to match semantics of Query
+  * RDFLite has been refactored. Additional rapper syntax option(-i) to #fetch,#load: 
+    fetch(url, syntax = nil), load(location, syntax = nil)
+  * Redland adapter initialization refactored. Redland store types 
+    via :location parameter now supported: 'postgres','mysql','sqlite','memory',<filename>
+    :want_new parameter changed to :new.
+  * Redland adapter no longer calls eva(i)l('"%s"' % self) on all data.
+
+  * Code reformatting
+
+  * Bugfixes for 
+    88428: queries with blocks don't work
+    48849: datatype support
+    64007: class names capitalisation leads sometimes to unintuitive results
+    106878: Dynamic finder behavior => now supported by RDF::Property when property known, nil when not found
+    62481: find_by_<Property> is now supported through chained ResourceFilter calls
+    185826: weird behavior with class compares
+
+  * reverted 461. This was a request to add additional filters to the property, specifically lang. This is now supported through RDF::Property#lang and #datatype. Support for arbitrary filters is on the todo list.
+    Namespace restriction should remain. 
+
 == activerdf (1.6.12)
   * FederationManager passes delete correctly to adaptors
 
