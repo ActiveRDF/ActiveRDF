@@ -2,7 +2,7 @@ require 'active_rdf'
 
 # Translates abstract query into jars2 query.
 # (ignores ASK queries)
-module ActiveRdf
+module ActiveRDF
   class Query2Jars2
     def self.translate(query)
       str = ""

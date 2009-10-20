@@ -1,6 +1,6 @@
 require 'active_rdf'
 
-module ActiveRdf
+module ActiveRDF
   Namespace.register(:bnode, "http://www.activerdf.org/bnode#")
 
   class BNode < RDFS::Resource

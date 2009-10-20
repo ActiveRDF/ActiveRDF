@@ -1,7 +1,7 @@
 require 'active_rdf'
 
 # Manages namespace abbreviations and expansions
-module ActiveRdf
+module ActiveRDF
   class Namespace
     @@namespaces = Hash.new
     @@inverted_namespaces = Hash.new

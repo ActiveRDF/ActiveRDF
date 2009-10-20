@@ -7,7 +7,7 @@ require 'active_rdf'
 require "#{File.dirname(File.expand_path(__FILE__))}/../common"
 
 class TestFederationManager < Test::Unit::TestCase
-  include ActiveRdf
+  include ActiveRDF
 
   def setup
     ConnectionPool.clear

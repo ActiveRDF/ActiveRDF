@@ -1,4 +1,4 @@
-module ActiveRdf
+module ActiveRDF
   # Search for resources of a given type, with given property restrictions.
   # Usage:
   #   ResourceQuery.new(TEST::Person).execute                                         # find all TEST::Person resources

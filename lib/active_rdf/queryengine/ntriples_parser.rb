@@ -5,7 +5,7 @@ require 'active_rdf'
 require 'uuidtools'
 require 'strscan'
 
-module ActiveRdf
+module ActiveRDF
   # ntriples parser
   class NTriplesParser
     def self.parse_node input

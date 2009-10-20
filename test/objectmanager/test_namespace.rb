@@ -8,7 +8,7 @@ require 'objectmanager/namespace'
 require "#{File.dirname(__FILE__)}/../common"
 
 class TestNamespace < Test::Unit::TestCase
-  include ActiveRdf
+  include ActiveRDF
 
   Rdf = 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
   Rdfs = 'http://www.w3.org/2000/01/rdf-schema#'

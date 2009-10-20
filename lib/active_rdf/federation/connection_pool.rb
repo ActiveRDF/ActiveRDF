@@ -4,7 +4,7 @@ require 'active_rdf'
 # right adapter for a given datasource, by either reusing an
 # existing adapter-instance or creating new a adapter-instance.
 
-module ActiveRdf
+module ActiveRDF
   class ConnectionPool
     class << self
       attr_accessor :write_adapter

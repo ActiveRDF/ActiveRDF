@@ -1,5 +1,5 @@
 module TestReasoningAdapter
-  include ActiveRdf
+  include ActiveRDF
 
   def test_subproperties
     if $activerdf_internal_reasoning

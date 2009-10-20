@@ -19,7 +19,7 @@ require 'active_rdf'
 
 
 class TestSesameAdapter < Test::Unit::TestCase
-  include ActiveRdf
+  include ActiveRDF
 
   # TODO maybe put more stuff into setup and teardown...
   def setup

@@ -8,7 +8,7 @@ require 'federation/connection_pool'
 require "#{File.dirname(__FILE__)}/../common"
 
 class TestConnectionPool < Test::Unit::TestCase
-  include ActiveRdf
+  include ActiveRDF
 
   def setup
     ConnectionPool.clear

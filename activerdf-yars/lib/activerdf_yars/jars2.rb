@@ -9,7 +9,7 @@ require 'cgi'
 
 # Read-only adapter to jars2
 # (experimental YARS branch for SWSE engine)
-module ActiveRdf
+module ActiveRDF
   class Jars2Adapter < ActiveRdfAdapter
     $activerdflog.info "loading Jars2 adapter"
     ConnectionPool.register_adapter(:jars2, self)

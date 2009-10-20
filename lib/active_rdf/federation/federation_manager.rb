@@ -3,7 +3,7 @@ require 'federation/connection_pool'
 # Manages the federation of datasources: distributes queries to right
 # datasources and merges their results
 
-module ActiveRdf
+module ActiveRDF
   class FederationManager
     def FederationManager.contexts
       ConnectionPool.adapters.collect{|adapter| adapter.contexts if adapter.respond_to?(:contexts)}.flatten.compact

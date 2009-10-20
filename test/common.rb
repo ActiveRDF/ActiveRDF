@@ -1,5 +1,5 @@
 require 'active_rdf'
-include ActiveRdf
+include ActiveRDF
 
 module SetupAdapter
   Namespace.register(:test, 'http://activerdf.org/test/')

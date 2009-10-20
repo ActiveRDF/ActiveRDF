@@ -14,7 +14,7 @@ require "pp"
 require "fileutils"
 
 class TestJenaAdapter < Test::Unit::TestCase
-  include ActiveRdf
+  include ActiveRDF
 
   def setup
     @adapter = ConnectionPool.add_data_source(:type => :jena, :ontology => :rdfs)

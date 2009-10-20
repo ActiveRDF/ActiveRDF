@@ -190,8 +190,8 @@ class TestAssociatedProperty < Test::Unit::TestCase
 
   def test_lang
     @adapter.load "#{File.dirname(__FILE__)}/../rdfs.nt"
-    ls_en = LocalizedString.new('ActiveRdf developer', '@en')
-    ls_de = LocalizedString.new('ActiveRdf entwickler', '@de')
+    ls_en = LocalizedString.new('ActiveRDF developer', '@en')
+    ls_de = LocalizedString.new('ActiveRDF entwickler', '@de')
     TEST::eyal.comment = ls_en
     TEST::eyal.comment.add ls_de
 
@@ -204,7 +204,7 @@ class TestAssociatedProperty < Test::Unit::TestCase
     assert_equal [ls_de], TEST::eyal.comment.lang('@de')
     assert_equal [ls_en, ls_de], TEST::eyal.comment
 
-    TEST::eyal.comment.add LocalizedString.new('ActiveRdf developer', 'en')
+    TEST::eyal.comment.add LocalizedString.new('ActiveRDF developer', 'en')
     assert_equal 1, TEST::eyal.comment.lang('en').size      # no duplicates
   end
 

@@ -5,7 +5,7 @@ require 'cgi'
 require 'rexml/document'
 require "#{File.dirname(__FILE__)}/sparql_result_parser"
 
-module ActiveRdf
+module ActiveRDF
   # SPARQL adapter
   class SparqlAdapter < ActiveRdfAdapter
     $activerdflog.info "loading SPARQL adapter"

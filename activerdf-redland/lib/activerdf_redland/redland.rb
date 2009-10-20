@@ -8,7 +8,7 @@ require 'rdf/redland'
 
 # Adapter to Redland database
 # uses SPARQL for querying
-module ActiveRdf
+module ActiveRDF
   class RedlandAdapter < ActiveRdfAdapter
     $activerdflog.info "RedlandAdapter: loading Redland adapter"
     ConnectionPool.register_adapter(:redland,self)

@@ -10,7 +10,7 @@ require 'queryengine/query'
 
 
 class TestSparqlAdapter < Test::Unit::TestCase
-  include ActiveRdf
+  include ActiveRDF
 
   def setup
     ConnectionPool.clear
