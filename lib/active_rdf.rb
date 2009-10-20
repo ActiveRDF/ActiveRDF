@@ -3,10 +3,10 @@ require 'rubygems'
 
 # ActiveRDF loader
 
-# Provide (partial) reasoning for RDF and RDFS only
-$activerdf_internal_reasoning = true
+# Provide (partial) reasoning for RDF and RDFS only  (Default: false)
+$activerdf_internal_reasoning = false  
 
-# TODO: is this functionality needed?
+# If true, disable datatype support (Default: false)
 $activerdf_without_datatype = false
 
 # determine the directory in which we are running depending on cruby or jruby
