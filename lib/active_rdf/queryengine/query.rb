@@ -109,7 +109,7 @@ class Query
     raise(ActiveRdfError, "variable must be a symbol") unless variable.is_a? Symbol
     regexp = regexp.source if(regexp.is_a?(Regexp))
 
-    filter "regex(str(?#{variable}), #{regexp})"
+    filter "regex(str(?#{variable}), \"#{regexp}\")"
   end
   alias :filter_regex :filter_regexp
 
