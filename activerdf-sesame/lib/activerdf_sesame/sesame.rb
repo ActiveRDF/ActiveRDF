@@ -89,12 +89,21 @@ class SesameAdapter < ActiveRdfAdapter
       raise(ArgumentError, "Unknown backend type for Sesame: #{backend}")
     end
     
+    @backend = backend
+    @inferencing = (params[:inferencing] && (backend != 'http'))
+    
     @valueFactory = if(backend == 'http')
         @db.getRepository.getValueFactory
       else
         @db.getRepository.getSail.getValueFactory
       end
      
+  end
+
+  attr_reader :backend
+  
+  def inferencing?
+    @inferencing
   end
 
   # returns the number of triples in the datastore (incl. possible duplicates)
