@@ -13,6 +13,7 @@ import org.openrdf.sail.nativerdf.NativeStore;
 import org.openrdf.sail.rdbms.RdbmsStore;
 import org.openrdf.repository.http.HTTPRepository;
 import org.openrdf.sail.inferencer.fc.ForwardChainingRDFSInferencer;
+import org.openrdf.sail.inferencer.fc.DirectTypeHierarchyInferencer;
 import org.openrdf.repository.RepositoryConnection;
 import org.openrdf.repository.RepositoryException;
 import org.openrdf.model.Resource;
@@ -125,6 +126,7 @@ public class WrapperForSesame2 {
 		if (inferencing) {
 			if(sailStack instanceof NotifyingSail) {
 				sailStack = new ForwardChainingRDFSInferencer((NotifyingSail) sailStack);
+				sailStack = new DirectTypeHierarchyInferencer((NotifyingSail) sailStack);
 			} else {
 				throw new RuntimeException("Cannot create inferencing: Incompatible Sail type.");
 			}
