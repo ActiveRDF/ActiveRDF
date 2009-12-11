@@ -1,1 +1,4 @@
 nbproject
+/*.gemspec
+/pkg
+activerdf-sesame/ext/

@@ -28,7 +28,7 @@ begin
   NTriplesWriter = org.openrdf.rio.ntriples.NTriplesWriter
   RDFFormat = org.openrdf.rio.RDFFormat
 rescue Exception => e
-  puts "ERROR loading Java for Sesame: #{e.message}"
+  puts e.backtrace
   raise
 end
 
@@ -64,7 +64,12 @@ class SesameAdapter < ActiveRdfAdapter
   # [*user*] - Username for database connection (optional)
   # [*pass*] - Password for database connection (optional)
   #
-  #
+  # = :http
+  # 
+  # Connect to a repository on a sesame server through http.
+  # [*url*] - The repository url
+  # [*user*] - User name for HTTP authentication
+  # [*pass*] - Password for HTTP auth
   def initialize(params = {})
     super()
     ActiveRdfLogger::log_info "Initializing Sesame Adapter with params #{params.to_s}", self
