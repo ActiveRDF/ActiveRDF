@@ -53,6 +53,7 @@ begin
   require 'gokdok'
   Gokdok::Dokker.new do |gd|
     gd.remote_path = '' # Put into the root directory
+    gd.doc_home = 'doc'
   end
 rescue LoadError
   puts "Gokdok is not available. Install with: gem install gokdok"
