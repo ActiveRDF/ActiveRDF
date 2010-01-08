@@ -1,19 +1,19 @@
-require 'active_rdf'
+# require 'active_rdf'
 require 'objectmanager/object_manager'
 require 'objectmanager/namespace'
 require 'objectmanager/property_list'
-require 'queryengine/query'
-
-# TODO: finish removal of ObjectManager.construct_classes: make dynamic finders 
-# accessible on instance level, and probably more stuff.
+require 'instance_exec'
 
 module RDFS
-	# Represents an RDF resource and manages manipulations of that resource,
-	# including data lookup (e.g. eyal.age), data updates (e.g. eyal.age=20),
-	# class-level lookup (Person.find_by_name 'eyal'), and class-membership
-	# (eyal.class ...Person).
+  # Represents an RDF resource and manages manipulations of that resource,
+  # including data lookup (e.g. eyal.age), data updates (e.g. eyal.age=20),
+  # class-level lookup (Person.find_by_name 'eyal'), and class-membership
+  # (eyal.class ...Person).
 
-  class RDFS::Resource
+  class Resource
+    
+    include ResourceLike
+    
     # adding accessor to the class uri:
     # the uri of the rdf resource being represented by this class
     class << self
@@ -26,14 +26,19 @@ module RDFS
     # creates new resource representing an RDF resource
     def initialize uri
       @uri = case uri
-            when RDFS::Resource
-             uri.uri
-            when String
-              uri
-            else
-              raise ActiveRdfError, "cannot create resource <#{uri}>"
-            end
-			@predicates = Hash.new
+        # allow Resource.new(other_resource)
+      when RDFS::Resource
+        uri.uri
+        # allow Resource.new('<uri>') by stripping out <>
+      when /^<([^>]*)>$/
+        $1
+        # allow Resource.new('uri')
+      when String
+        uri
+      else 
+        raise ActiveRdfError, "cannot create resource <#{uri}>"
+      end
+      @predicates = Hash.new
     end
 
     # setting our own class uri to rdfs:resource
@@ -45,28 +50,58 @@ module RDFS
     def self.==(other)
       other.respond_to?(:uri) ? other.uri == self.uri : false
     end
+    def self.localname; Namespace.localname(self); end
 
     #####                        ######
     ##### start of instance-level code
     #####                        ######
 
+    def abbreviation; [Namespace.prefix(uri).to_s, localname]; end
     # a resource is same as another if they both represent the same uri
-    def ==(other)
+    def ==(other);
       other.respond_to?(:uri) ? other.uri == self.uri : false
     end
     alias_method 'eql?','=='
 
     # overriding hash to use uri.hash
     # needed for array.uniq
-    def hash
-      uri.hash
+    def hash; uri.hash; end
+
+    def self.to_ntriple; "<#{class_uri.uri}>"; end
+
+    def to_xml
+      base = Namespace.expand(Namespace.prefix(self),'').chop
+
+      xml = "<?xml version=\"1.0\"?>\n"
+      xml += "<rdf:RDF xmlns=\"#{base}\#\"\n"
+      Namespace.abbreviations.each { |p| uri = Namespace.expand(p,''); xml += "  xmlns:#{p.to_s}=\"#{uri}\"\n" if uri != base + '#' }
+      xml += "  xml:base=\"#{base}\">\n"
+
+      xml += "<rdf:Description rdf:about=\"\##{localname}\">\n"
+      direct_predicates.each do |p|
+        objects = Query.new.distinct(:o).where(self, p, :o).execute
+        objects.each do |obj|
+          prefix, localname = Namespace.prefix(p), Namespace.localname(p)
+          pred_xml = if prefix
+            "%s:%s" % [prefix, localname]
+          else
+            p.uri
+          end
+
+          case obj
+          when RDFS::Resource
+            xml += "  <#{pred_xml} rdf:resource=\"#{obj.uri}\"/>\n"
+          when LocalizedString
+            xml += "  <#{pred_xml} xml:lang=\"#{obj.lang}\">#{obj}</#{pred_xml}>\n"
+          else
+            xml += "  <#{pred_xml} rdf:datatype=\"#{obj.xsd_type.uri}\">#{obj}</#{pred_xml}>\n"
+          end
+        end
+      end
+      xml += "</rdf:Description>\n"
+      xml += "</rdf:RDF>"
     end
 
-    # overriding sort based on uri
-    def <=>(other)
-      uri <=> other.uri
-    end
-    
     #####                   	#####
     ##### class level methods	#####
     #####                    	#####
@@ -76,17 +111,17 @@ module RDFS
     def Resource.predicates
       domain = Namespace.lookup(:rdfs, :domain)
       Query.new.distinct(:p).where(:p, domain, class_uri).execute || []
-    end   
-       
+    end
+
     # quick fix for "direct" getting of a property
     # return a PropertyCollection (see PropertyCollection class)
     def [](property)
       if !property.instance_of?(RDFS::Resource)
         property = RDFS::Resource.new(property)
       end
-   
+
       plv = Query.new.distinct(:o).where(self, property, :o).execute
-      
+
       # make and return new propertis collection
       PropertyList.new(property, plv, self)
     end
@@ -170,7 +205,7 @@ module RDFS
     def localname
       Namespace.localname(self)
     end
-    
+
     # Simple query shortcut which return a special object created on-the-fly by which is
     # possible to directly obtain every distinct resources where:
     # property ==> specified by the user by [] operator
@@ -178,21 +213,21 @@ module RDFS
     def inverse
       inverseobj = Object.new
       inverseobj.instance_variable_set(:@obj_uri, self)
-      
+
       class <<inverseobj     
-        
+
         def [](property_uri)
           property = RDFS::Resource.new(property_uri)
           Query.new.distinct(:s).where(:s, property, @obj_uri).execute
         end
         private(:type)
       end
-      
+
       return inverseobj
     end
-    
+
     # manages invocations such as eyal.age
-    def method_missing(method, *args)
+    def method_missing(method, *args,&block)
       # possibilities:
       # 1. eyal.age is a property of eyal (triple exists <eyal> <age> "30")
       # evidence: eyal age ?a, ?a is not nil (only if value exists)
@@ -214,25 +249,27 @@ module RDFS
       # 4. eyal.age is a custom-written method in class Person
       # evidence: eyal type ?c, ?c.methods includes age
       # action: inject age into eyal and invoke
-			#
-			# 5. eyal.age is registered abbreviation 
-			# evidence: age in @predicates
-			# action: return object from triple (eyal, @predicates[age], ?o)
-			#
-			# 6. eyal.foaf::name, where foaf is a registered abbreviation
-			# evidence: foaf in Namespace.
-			# action: return namespace proxy that handles 'name' invocation, by 
-			# rewriting into predicate lookup (similar to case (5)
+      #
+      # 5. eyal.age is registered abbreviation 
+      # evidence: age in @predicates
+      # action: return object from triple (eyal, @predicates[age], ?o)
+      #
+      # 6. eyal.foaf::name, where foaf is a registered abbreviation
+      # evidence: foaf in Namespace.
+      # action: return namespace proxy that handles 'name' invocation, by 
+      # rewriting into predicate lookup (similar to case (5)
+
+      ActiveRdfLogger.log_debug(self) { "Method_missing: #{method}" }
 
       # are we doing an update or not? 
-			# checking if method ends with '='
+      # checking if method ends with '='
 
       update = method.to_s[-1..-1] == '='
       methodname = if update 
-                     method.to_s[0..-2]
-                   else
-                     method.to_s
-                   end
+        method.to_s[0..-2]
+      else
+        method.to_s
+      end
 
       # extract single values from array unless user asked for eyal.all_age
       flatten = true
@@ -241,30 +278,36 @@ module RDFS
         methodname = methodname[4..-1]
       end
 
-			# check possibility (5)
-			if @predicates.include?(methodname)
-				return predicate_invocation(@predicates[methodname], args, update, flatten)
-			end
+      # check possibility (5)
+      if @predicates.include?(methodname)
+        if update
+          return set_predicate(@predicates[methodname], args)
+        else
+          return get_predicate(@predicates[methodname], false, &block)
+        end
+      end
 
-			# check possibility (6)
-			if Namespace.abbreviations.include?(methodname.to_sym)
-        namespace = Object.new
+      # check possibility (6)
+      if Namespace.abbreviations.include?(methodname.to_sym)
+        namespace = Object.new	
         namespace.instance_variable_set(:@uri, methodname)
         namespace.instance_variable_set(:@subject, self)
         namespace.instance_variable_set(:@flatten, flatten)
 
         # catch the invocation on the namespace
         class <<namespace
-          def method_missing(localname, *args)
-            # check if updating or reading predicate value
-            if localname.to_s[-1..-1] == '='
-              # set value
-              predicate = Namespace.lookup(@uri, localname.to_s[0..-2])
-              args.each { |value| FederationManager.add(@subject, predicate, value) }
+          def method_missing(localname, *values, &block)
+            update = localname.to_s[-1..-1] == '='
+            predicate = if update 
+              Namespace.lookup(@uri, localname.to_s[0..-2])
             else
-              # read value
-              predicate = Namespace.lookup(@uri, localname)
-              Query.new.distinct(:o).where(@subject, predicate, :o).execute(:flatten => @flatten)
+              Namespace.lookup(@uri, localname)
+            end
+
+            if update
+              @subject.set_predicate(predicate, values)
+            else
+              @subject.get_predicate(predicate, @flatten, &block)
             end
           end
           private(:type)
@@ -273,172 +316,192 @@ module RDFS
       end
 
       candidates = if update
-                      (class_level_predicates + direct_predicates).compact.uniq
-                    else
-                      direct_predicates
-                    end
+        (class_level_predicates + direct_predicates).compact.uniq
+      else
+        direct_predicates
+      end
 
-			# checking possibility (1) and (3)
-			candidates.each do |pred|
-				if Namespace.localname(pred) == methodname
-					result = predicate_invocation(pred, args, update, flatten)
-                                        if result.class == Array
-                                          return PropertyList.new(pred, result, self)
-                                        else
-                                          return result
-                                        end
-				end
-			end
-			
-			raise ActiveRdfError, "could not set #{methodname} to #{args}: no suitable 
-			predicate found. Maybe you are missing some schema information?" if update
+      # checking possibility (1) and (3)
+      candidates.each do |pred|
+        if Namespace.localname(pred) == methodname
+          if update
+            return set_predicate(pred, args)
+          else
+            return get_predicate(pred, flatten,  &block)
+          end
+        end
+      end
 
-			# get/set attribute value did not succeed, so checking option (2) and (4)
-			
-			# checking possibility (2), it is not handled correctly above since we use
-			# direct_predicates instead of class_level_predicates. If we didn't find
-			# anything with direct_predicates, we need to try the
-			# class_level_predicates. Only if we don't find either, we
-			# throw "method_missing"
-			candidates = class_level_predicates
+      raise ActiveRdfError, "Could not set #{methodname} to #{args}: no suitable predicate found. Maybe you are missing some schema information?" if update
 
-			# if any of the class_level candidates fits the sought method, then we
-			# found situation (2), so we return nil or [] depending on the {:array =>
-			# true} value
-			if candidates.any?{|c| Namespace.localname(c) == methodname}
-				return_ary = args[0][:array] if args[0].is_a? Hash
-				if return_ary
-					return []
-				else
-					return nil
-				end
-			end
+      # get/set attribute value did not succeed, so checking option (2) and (4)
 
-			# checking possibility (4)
-			# TODO: implement search strategy to select in which class to invoke
-			# e.g. if to_s defined in Resource and in Person we should use Person
-			ActiveRdfLogger::log_debug "RDFS::Resource: method_missing option 4: custom class method", self
-			self.type.each do |klass|
-				if klass.instance_methods.include?(method.to_s)
-					_dup = klass.new(uri)
-					return _dup.send(method,*args)
-				end
-			end
+      # checking possibility (2), it is not handled correctly above since we use
+      # direct_predicates instead of class_level_predicates. If we didn't find
+      # anything with direct_predicates, we need to try the
+      # class_level_predicates. Only if we don't find either, we
+      # throw "method_missing"
+      candidates = class_level_predicates
 
-			# if none of the three possibilities work out, we don't know this method
-			# invocation, but we don't want to throw NoMethodError, instead we return
-			# nil, so that eyal.age does not raise error, but returns nil. (in RDFS,
-			# we are never sure that eyal cannot have an age, we just dont know the
-			# age right now)
-			nil
-		end
+      # if any of the class_level candidates fits the sought method, then we
+      # found situation (2), so we return nil or [] depending on the {:array =>
+      # true} value
+      if candidates.any?{ |c| Namespace.localname(c) == methodname }
+        return_ary = args[0][:array] if args[0].is_a? Hash
+        if return_ary
+          return []
+        else
+          return nil
+        end
+      end
 
-		# saves instance into datastore
-		def save
-			db = ConnectionPool.write_adapter
-			rdftype = Namespace.lookup(:rdf, :type)
-			types.each do |t|
-				db.add(self, rdftype, t)
-			end
+      # checking possibility (4)
+      # TODO: implement search strategy to select in which class to invoke
+      # e.g. if to_s defined in Resource and in Person we should use Person
+      ActiveRdfLogger::log_debug(self){ "RDFS::Resource: method_missing option 4: custom class method" }
+      self.type.each do |klass|
+        if klass.instance_methods.include?(method.to_s)
+          _dup = klass.new(uri)
+          return _dup.send(method,*args)
+        end
+      end
 
-			Query.new.distinct(:p,:o).where(self, :p, :o).execute do |p, o|
-				db.add(self, p, o)
-			end
-		end
+      # if none of the three possibilities work out, we don't know this method
+      # invocation, but we don't want to throw NoMethodError, instead we return
+      # nil, so that eyal.age does not raise error, but returns nil. (in RDFS,
+      # we are never sure that eyal cannot have an age, we just dont know the
+      # age right now)
+      nil
+    end
 
-		# returns all rdf:type of this instance, e.g. [RDFS::Resource, 
-		# FOAF::Person]
-		#
-		# Note: this method performs a database lookup for { self rdf:type ?o }. For 
-		# simple type-checking (to know if you are handling an ActiveRDF object, use 
-		# self.class, which does not do a database query, but simply returns 
-		# RDFS::Resource.
-		def type
-			types.collect do |type|
-				ObjectManager.construct_class(type)
-			end
-		end
+    # saves instance into datastore
+    def save
+      db = ConnectionPool.write_adapter
+      rdftype = Namespace.lookup(:rdf, :type)
+      types.each do |t|
+        db.add(self, rdftype, t)
+      end
 
-		def add_predicate localname, fulluri
-			localname = localname.to_s
-			fulluri = RDFS::Resource.new(fulluri) if fulluri.is_a? String
+      Query.new.distinct(:p,:o).where(self, :p, :o).execute do |p, o|
+        db.add(self, p, o)
+      end
+    end
 
-			# predicates is a hash from abbreviation string to full uri resource
-			@predicates[localname] = fulluri
-		end
+    # returns all rdf:type of this instance, e.g. [RDFS::Resource, 
+    # FOAF::Person]
+    #
+    # Note: this method performs a database lookup for { self rdf:type ?o }. For 
+    # simple type-checking (to know if you are handling an ActiveRDF object, use 
+    # self.class, which does not do a database query, but simply returns 
+    # RDFS::Resource.
+    def type
+      types.collect do |type|
+        ObjectManager.construct_class(type)
+      end
+    end
+
+    # define a localname for a predicate URI
+    #
+    # localname should be a Symbol or String, fulluri a Resource or String, e.g. 
+    # add_predicate(:name, FOAF::lastName)
+    def add_predicate localname, fulluri
+      localname = localname.to_s
+      fulluri = RDFS::Resource.new(fulluri) if fulluri.is_a? String
+
+      # predicates is a hash from abbreviation string to full uri resource
+      @predicates[localname] = fulluri
+    end
 
 
-		# overrides built-in instance_of? to use rdf:type definitions
-		def instance_of?(klass)
+    # overrides built-in instance_of? to use rdf:type definitions
+    def instance_of?(klass)
       self.type.include?(klass)
-		end
+    end
 
-		# returns all predicates that fall into the domain of the rdf:type of this
-		# resource
-		def class_level_predicates
-			type = Namespace.lookup(:rdf, 'type')
-			domain = Namespace.lookup(:rdfs, 'domain')
-			Query.new.distinct(:p).where(self,type,:t).where(:p, domain, :t).execute || []
-		end
+    # returns all predicates that fall into the domain of the rdf:type of this
+    # resource
+    def class_level_predicates
+      type = Namespace.lookup(:rdf, 'type')
+      domain = Namespace.lookup(:rdfs, 'domain')
+      Query.new.distinct(:p).where(self,type,:t).where(:p, domain, :t).execute || []
+    end
 
-		# returns all predicates that are directly defined for this resource
-		def direct_predicates(distinct = true)
-			if distinct
-				q = Query.new.distinct(:p)
-			else
-				q = Query.new.select(:p)
-			end
-			q.where(self,:p, :o).execute
-			#return (direct + direct.collect {|d| ancestors(d)}).flatten.uniq
-		end
+    # returns all predicates that are directly defined for this resource
+    def direct_predicates(distinct = true)
+      if distinct
+        Query.new.distinct(:p).where(self, :p, :o).execute
+      else
+        Query.new.select(:p).where(self, :p, :o).execute
+      end
+    end
 
-		def property_accessors
-			direct_predicates.collect {|pred| Namespace.localname(pred) }
-		end
+    def property_accessors
+      direct_predicates.collect {|pred| Namespace.localname(pred) }
+    end
 
-		# alias include? to ==, so that you can do paper.creator.include?(eyal)
-		# without worrying whether paper.creator is single- or multi-valued
-		alias include? ==
+    # alias include? to ==, so that you can do paper.creator.include?(eyal)
+    # without worrying whether paper.creator is single- or multi-valued
+    alias include? ==
 
-		# returns uri of resource, can be overridden in subclasses
-		def to_s
-			"<#{uri}>"
-		end
+    def set_predicate(predicate, values)
+      FederationManager.delete(self, predicate, nil)
+      values.flatten.each {|v| FederationManager.add(self, predicate, v) }
+      values
+    end
 
-		private
+    def get_predicate(predicate, flatten=false,&block)
+      query = Query.new.distinct(:o).where(self, predicate, :o)
+      if block_given?
+        yield query, :o
+      end
+      values = query.execute(:flatten => flatten)
 
-#		def ancestors(predicate)
-#			subproperty = Namespace.lookup(:rdfs,:subPropertyOf)
-#			Query.new.distinct(:p).where(predicate, subproperty, :p).execute
-#		end
+      # TODO: fix '<<' for Fixnum values etc (we cannot use values.instance_eval 
+      # because Fixnum cannot do instace_eval, they're not normal classes)
+      if values.is_a?(RDFS::Resource) and !values.nil?
+        # prepare returned values for accepting << later, eg. in
+        # eyal.foaf::knows << knud
+        #
+        # store @subject, @predicate in returned values
+        values.instance_exec(self, predicate) do |s,p|
+          @subj = s
+          @pred = p
+        end
 
-		def predicate_invocation(predicate, args, update, flatten)
-			if update
-				args.each do |value|
-					FederationManager.add(self, predicate, value)
-				end
-				args
-			else
-        Query.new.distinct(:o).where(self, predicate, :o).execute(:flatten => flatten)
-			end
-		end
+        # overwrite << to add triple to db
+        values.instance_eval do
+          def <<(value)
+            FederationManager.add(@subj, @pred, value)
+          end
+        end
+      end
 
-		# returns all rdf:types of this resource but without a conversion to 
-		# Ruby classes (it returns an array of RDFS::Resources)
-		def types
-			type = Namespace.lookup(:rdf, :type)
+      values
+    end
 
-			# we lookup the type in the database
-			types = Query.new.distinct(:t).where(self,type,:t).execute
+    private
+    #		def ancestors(predicate)
+    #			subproperty = Namespace.lookup(:rdfs,:subPropertyOf)
+    #			Query.new.distinct(:p).where(predicate, subproperty, :p).execute
+    #		end
 
-			# we are also always of type rdfs:resource and of our own class (e.g. foaf:Person)
-			defaults = []
-			defaults << Namespace.lookup(:rdfs,:Resource)
-			defaults << self.class.class_uri
 
-			(types + defaults).uniq
-		end
-	end
+    # returns all rdf:types of this resource but without a conversion to 
+    # Ruby classes (it returns an array of RDFS::Resources)
+    def types
+      type = Namespace.lookup(:rdf, :type)
+
+      # we lookup the type in the database
+      types = Query.new.distinct(:t).where(self,type,:t).execute
+
+      # we are also always of type rdfs:resource and of our own class (e.g. foaf:Person)
+      defaults = []
+      defaults << Namespace.lookup(:rdfs,:Resource)
+      defaults << self.class.class_uri
+
+      (types + defaults).uniq
+    end
+  end
 end
 
 # proxy to manage find_by_ invocations
@@ -541,6 +604,6 @@ class DynamicFinderProxy
     # the initialize method so all return values are ignored, instead the proxy 
     # itself is returned)
     @value = query.execute
-    return value
+    return @value
   end
 end

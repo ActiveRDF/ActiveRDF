@@ -15,16 +15,20 @@ class FederationManager
       ConnectionPool.write_adapter.add(s,p,o,c)
     end
   end
-  
+
   # delete triple s,p,o (context is optional) to the currently selected write-adapter
   def FederationManager.delete(s,p,o,c=nil)
     benchmark("SPARQL/RDF", Logger::DEBUG) do |bench_message|
       bench_message << "DELETE #{s} - #{p} - #{o} : #{c}" if(bench_message)
       raise ActiveRdfError, "cannot write without a write-adapter" unless ConnectionPool.write_adapter
+      # transform wildcard symbols to nil (for the adaptors)
+      s = nil if s.is_a? Symbol
+      p = nil if p.is_a? Symbol
+      o = nil if o.is_a? Symbol
       ConnectionPool.write_adapter.delete(s,p,o,c)
     end
   end
-  
+
   # delete every triples about a specified resource
   def FederationManager.delete_all(resource)
     to_delete = Query.new.select(:p, :o).where(resource, :p, :o).execute
@@ -32,7 +36,7 @@ class FederationManager
       delete(resource, p, o)
     }
   end
-  
+
   # executes read-only queries
   # by distributing query over complete read-pool
   # and aggregating the results
@@ -63,22 +67,22 @@ class FederationManager
           if (q.class != String)
             source_results = source.query(q)
           else
-            source_results = source.get_sparql_query_results(q, RDFS::Resource,options[:result_format])
+            source_results = source.get_sparql_query_results(q, RDFS::Resource, options[:result_format])
           end
           source_results.each do |clauses|
             results << clauses
           end
         end
-      
+
         # filter the empty results
         results.reject {|ary| ary.empty? }
-      
+
         # remove duplicate results from multiple
         # adapters if asked for distinct query
         # (adapters return only distinct results,
         # but they cannot check duplicates against each other)
         results.uniq! if ((q.class != String) && (q.distinct?))
-      
+
         # flatten results array if only one select clause
         # to prevent unnecessarily nested array [[eyal],[renaud],...]
         if (q.class != String)
@@ -86,7 +90,7 @@ class FederationManager
         else
           results.flatten! if q.scan(/[?]/).length == 2
         end
-      
+
         # remove array (return single value or nil) if asked to
         if options[:flatten] or ((q.class != String)  && (q.count?))
           case results.size
@@ -97,7 +101,7 @@ class FederationManager
           end
         end
       end
-    
+
       results
     end # End benchmark
   end # End query

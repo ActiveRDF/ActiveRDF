@@ -1,4 +1,4 @@
-require 'active_rdf'
+# require 'active_rdf'
 
 # Constructs Ruby classes for RDFS classes (in the right namespace)
 
@@ -10,7 +10,7 @@ class ObjectManager
   def self.construct_classes
     # find all rdf:types and construct class for each of them
     #q = Query.new.select(:t).where(:s,Namespace.lookup(:rdf,:type),:t)
-		
+
     # find everything defined as rdfs:class or owl:class
     type = Namespace.lookup(:rdf,:type)
     rdfsklass = Namespace.lookup(:rdfs,:Class)
@@ -28,7 +28,7 @@ class ObjectManager
     # compacting array to get rid of nil (if one of these queries returned nil)
     klasses = klasses.flatten.compact
     ActiveRdfLogger::log_debug(self) { "Construct_classes: classes found: #{klasses}" }
-		
+
     # then we construct a Ruby class for each found rdfs:class
     # and return the set of all constructed classes
     klasses.collect { |t| construct_class(t) }
@@ -75,7 +75,7 @@ class ObjectManager
       # otherwise: create it, inside that module, as subclass of RDFS::Resource
       # (using toplevel Class.new to prevent RDFS::Class.new from being called)
       klass = _module.module_eval("#{klassname} = Object::Class.new(RDFS::Resource)")
-      klass.class_uri = RDFS::Resource.new(resource.uri)
+      klass.class_uri = resource
       klass
     end
   end
@@ -93,7 +93,7 @@ class ObjectManager
 
   def self.create_module_name(resource)
     # TODO: write unit test to verify replacement of all illegal characters
-		
+
     # extract non-local part (including delimiter)
     uri = resource.uri
     delimiter = uri.rindex(/#|\//)

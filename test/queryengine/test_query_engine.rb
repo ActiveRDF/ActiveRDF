@@ -21,10 +21,10 @@ class TestQueryEngine < Test::Unit::TestCase
 
     query = Query.new
     query.select(:s)
-    query.where(:s, RDFS::Resource.new('predicate'), '30')
+    query.where(:s, RDFS::Resource.new('predicate'), 30)
 
     generated = Query2SPARQL.translate(query)
-    expected = "SELECT ?s WHERE { ?s <predicate> \"30\" . }"
+    expected = "SELECT ?s WHERE { ?s <predicate> \"30\"^^<http://www.w3.org/2001/XMLSchema#integer> . } "
     assert_equal expected, generated
 
     query = Query.new
@@ -32,7 +32,7 @@ class TestQueryEngine < Test::Unit::TestCase
     query.where(:s, RDFS::Resource.new('foaf:age'), :a)
     query.where(:a, RDFS::Resource.new('rdf:type'), RDFS::Resource.new('xsd:int'))
     generated = Query2SPARQL.translate(query)
-    expected = "SELECT ?s WHERE { ?s <foaf:age> ?a. ?a <rdf:type> <xsd:int> . }"
+    expected = "SELECT ?s WHERE { ?s <foaf:age> ?a . ?a <rdf:type> <xsd:int> . } "
     assert_equal expected, generated
 
     #		query = Query.new

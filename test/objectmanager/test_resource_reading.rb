@@ -53,9 +53,9 @@ class TestResourceReading < Test::Unit::TestCase
 
   def test_eyal_age
     # triple exists '<eyal> age 27'
-    assert_equal '27', @eyal.age
-    assert_equal '27', @eyal.test::age
-    assert_equal ['27'], @eyal.all_age
+    assert_equal 27, @eyal.age
+    assert_equal 27, @eyal.test::age
+    assert_equal [27], @eyal.all_age
 
     # Person has property car, but eyal has no value for it
     assert_equal nil, @eyal.car
@@ -138,5 +138,13 @@ class TestResourceReading < Test::Unit::TestCase
     assert_equal 2, RDFS::Resource.find_by_rdf::type(RDFS::Resource).size
     assert_equal 1, RDFS::Resource.find_by_rdf::type(RDFS::Resource, :context => one).size
     assert_equal 1, RDFS::Resource.find_by_eye_and_rdf::type('blue', RDFS::Resource, :context => one).size
+  end
+
+  def test_reading_with_block
+    qs=<<EOF
+SELECT DISTINCT ?o WHERE { <http://activerdf.org/test/eyal> 
+<http://activerdf.org/test/age> ?o . FILTER (regex(lang(?o), '^nl$'))}
+EOF
+    @eyal.age {|query, obj| query.lang(obj, "nl"); assert_equal qs.gsub("\n",'').strip, query.to_sp.strip}
   end
 end

@@ -43,9 +43,7 @@ class TestFederationManager < Test::Unit::TestCase
   def test_class_add_no_write_adapter
     # zero write, one read -> must raise error
     adapter = get_read_only_adapter
-    if (!adapter.nil?)
-      assert (not adapter.writes?)
-    end
+    assert (not adapter.writes?)
     assert_raises(ActiveRdfError) { FederationManager.add(@@eyal, @@age, @@age_number) }
   end
 
@@ -102,18 +100,15 @@ class TestFederationManager < Test::Unit::TestCase
     FederationManager.add(@@eyal, @@age, @@age_number)
     age_result = Query.new.select(:o).where(@@eyal, @@age, :o).execute
     assert "27", age_result
-    
-    # if there are another adapter
-    if !write2.nil?
-      ConnectionPool.write_adapter = write2
 
-      FederationManager.add(@@eyal, @@eye, @@eye_value)
-      age_result = Query.new.select(:o).where(@@eyal, @@eye, :o).execute
-      assert "blue", age_result
+    ConnectionPool.write_adapter = write2
 
-      second_result = write2.query(Query.new.select(:o).where(@@eyal, @@eye, :o))
-      assert "blue", second_result
-    end
+    FederationManager.add(@@eyal, @@eye, @@eye_value)
+    age_result = Query.new.select(:o).where(@@eyal, @@eye, :o).execute
+    assert "blue", age_result
+
+    second_result = write2.query(Query.new.select(:o).where(@@eyal, @@eye, :o))
+    assert "blue", second_result
   end
 
   # this test makes no sense without two different data sources
@@ -128,42 +123,23 @@ class TestFederationManager < Test::Unit::TestCase
 
     ConnectionPool.clear
     second_adapter = get_different_write_adapter(first_adapter)
-    if !second_adapter.nil?
-      second_adapter.load("#{File.dirname(__FILE__)}/../test_person_data.nt")
-      second = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
-    end
+    second_adapter.load("#{File.dirname(__FILE__)}/../test_person_data.nt")
+    second = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
 
     # now we query both adapters in parallel
     ConnectionPool.clear
     first_adapter = get_write_adapter
     first_adapter.load("#{File.dirname(__FILE__)}/../test_person_data.nt")
     second_adapter = get_different_write_adapter(first_adapter)
-    if !second_adapter.nil?
-      second_adapter.load("#{File.dirname(__FILE__)}/../test_person_data.nt")
-      both = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
-      # assert both together contain twice the sum of the separate sources
-      assert_equal first + second, both
-    end
+    second_adapter.load("#{File.dirname(__FILE__)}/../test_person_data.nt")
+    both = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
+    # assert both together contain twice the sum of the separate sources
+    assert_equal first + second, both
 
     # since both sources contain the same data, we check that querying (both!)
     # in parallel for distinct data, actually gives same results as querying
     # only the one set
     uniq = Query.new.distinct(:s,:p,:o).where(:s,:p,:o).execute
-    assert_equal first.size, uniq.size
-    # Sort the arrays - the results need to be the same, but not in the same
-    # order
-    first = first.sort { |a,b| triple_sort(a,b) }
-    uniq = uniq.sort { |a,b| triple_sort(a,b) }
-    assert_equal first, uniq
-  end
-
-  private
-
-  # Helper for sorting triples
-  def triple_sort(t1, t2)
-    result = t1[0] <=> t2[0]
-    result = t1[1] <=> t2[1] if(result == 0)
-    result = t1[2] <=> t2[2] if(result == 0)
-    result
+    assert_equal first.sort, uniq.sort
   end
 end

@@ -2,7 +2,7 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
-require 'active_rdf'
+# require 'active_rdf'
 require 'queryengine/query2jars2'
 require 'net/http'
 require 'cgi'
@@ -18,13 +18,14 @@ class Jars2Adapter < ActiveRdfAdapter
   # * :host (default 'm3pe.org')
   # * :port (default 2020)
   def initialize(params = {})
+    super()
+    @reads = true
+    @writes = false
+
     @host = params[:host] || 'm3pe.org'
     @port = params[:port] || 2020
     ActiveRdfLogger::log_info(self) { "Initializing new instance with host: #{@host} port: #{@port}" }
     @yars = Net::HTTP.new(@host, @port)
-
-    @reads = true
-    @writes = false
   end
 
   def translate query
@@ -39,7 +40,7 @@ class Jars2Adapter < ActiveRdfAdapter
     # querying Jars2, adding 'eyal' parameter to get all variable bindings in 
     # the result
     response = @yars.get("/?q=#{CGI.escape(qs)}&eyal", header)
-		
+
     ActiveRdfLogger::log_debug(self) { "Jars2Adapter: query executed: #{qs}" }
 
     # return empty array if no content
@@ -57,7 +58,7 @@ class Jars2Adapter < ActiveRdfAdapter
     else
       final_results = results
     end
-		
+
     ActiveRdfLogger::log_debug_pp "Query returned %s", final_results if ActiveRdfLogger::log_level == Logger::DEBUG
     final_results
   end

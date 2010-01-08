@@ -1,0 +1,57 @@
+This is the ActiveRDF adapter to the Jena RDF library.
+
+Features: 
+* supports memory, file and database stores; database
+  stores can be configured both with datasources and raw connection
+  parameters.  Jena currently supports Oracle, MySQL, HSQLDB,
+  PostgreSQL, MS SQL, and Derby.
+* supports reasoners, including Pellet and the built-in Jena reasoners
+* supports Lucene query support in ARQ
+  (since LARQ doesn't allow you to add statements
+  and reindex only those statements, whenever we've add a statement to a
+  triple store, we must rebuild the index at query time)
+
+Requirements: 
+* JRuby is required to natively execute Jena
+* the application can only use pure ruby gems
+
+License:
+included LGPL license (version 2 or later).
+
+
+------------
+
+Installing and running Activerdf with Jena: 
+=============================
+
+Download the newest JRuby binary distribution from http://jruby.codehaus.org/
+
+Unpack it somewhere, e.g. /usr/local/jruby
+
+Then set your environement: 
+
+export JRUBY_HOME=/usr/local/jruby
+export JAVA_HOM=/path/to/java/home
+export PATH=$JRUBY_HOME/bin:$PATH
+
+check if you now have the correct jruby commands in your path: 
+which jruby -> /usr/local/jruby/bin/jruby
+which gem -> /usr/local/jruby/bin/gem
+
+Now you can install rails and activerdf:
+gem install rails --include-dependencies --no-rdoc --no-ri
+gem install activerdf --include-dependencies
+gem install activerdf_jena --include-dependencies
+
+Create an instance of the jena adapter with simple file based persistence, and load some data into it:
+
+this_dir = File.dirname(File.expand_path(__FILE__))
+adapter = ConnectionPool.add_data_source(:type => :jena, 
+:model => "superfunky",
+:file => this_dir + "/jena_persistence")
+adapter.load("file://" + this_dir + "/test_data.rdf", :format => :rdfxml, :into => :default_model )
+
+For more information please see the RDoc, the adapter source code and the unit tests. Go to /path/to/jruby/lib/ruby/gems/1.8/gems/activerdf_jena-0.1/test/ for that.
+
+For more information see 
+http://wiki.activerdf.org/GettingStartedGuide

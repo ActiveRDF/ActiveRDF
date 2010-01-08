@@ -1,6 +1,9 @@
 module RDFS
   # External resource class
-  class RDFS::MyExternalResource
+  class MyExternalResource
+    
+    include ResourceLike
+    
     # uri of the resource
     attr_reader :uri
     # adding accessor to the class uri:

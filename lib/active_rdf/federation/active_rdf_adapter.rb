@@ -1,12 +1,16 @@
-require 'active_rdf'
+# require 'active_rdf'
 require 'queryengine/query2sparql'
 
 # Generic superclass of all adapters
 
 class ActiveRdfAdapter
   # indicate if adapter can read and write
-  bool_accessor :reads, :writes
-  
+  bool_accessor :reads, :writes, :enabled
+
+  def initialize
+    @enabled = true
+  end
+
   # Indicate if the adapter supports contexts
   def supports_context?
     self.class.supports_context?
@@ -16,7 +20,7 @@ class ActiveRdfAdapter
   def translate(query)
     Query2SPARQL.translate(query)
   end
-  
+
   # Clear the adapter. Crude default implementation, which can be overwritten
   # in subclasses. TODO: This queries all adapters, this may lead to problems...
   def clear
@@ -32,12 +36,12 @@ class ActiveRdfAdapter
     @context_supported = false if(@context_supported == nil)
     @context_supported
   end
-  
+
   private
-  
+
   # Method to set the "context_supported" flag
   def self.supports_context
     @context_supported = true
   end
-  
+
 end

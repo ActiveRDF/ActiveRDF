@@ -1,11 +1,10 @@
 # Author:: Eyal Oren
 # Copyright:: (c) 2005-2006 Eyal Oren
 # License:: LGPL
-require 'active_rdf'
+# require 'active_rdf'
 require 'federation/connection_pool'
 require 'queryengine/query2sparql'
 require 'rdf/redland'
-
 
 # Adapter to Redland database
 # uses SPARQL for querying
@@ -23,32 +22,55 @@ class RedlandAdapter < ActiveRdfAdapter
   # * reconnect: Set automatic reconnect to database server
   # * user: Username
   def initialize(params = {})
-    if params[:location] and ( params[:location].to_sym == :postgresql or params[:location].to_sym == :mysql )
-      initialize_dbs(params)
+    super()
+
+    if params[:location] and params[:location] == :postgresql
+      initialize_postgresql(params)
       return
     end
 
-    if params[:location] and params[:location].to_sym != :memory
-      # setup file locations for redland database
-      path, file = File.split(params[:location])
+    if params[:location] and params[:location] != :memory
+      # setup file defaults for redland database
       type = 'bdb'
+      want_new = false    # create new or use existing store
+      write = true
+      contexts = true
+
+      if params[:want_new] == true
+        want_new = true
+      end
+      if params[:write] == false
+        write = false
+      end
+      if params[:contexts] == false
+        contexts = false
+      end
+
+      if params[:location].include?('/')
+        path, file = File.split(params[:location])
+      else
+        path = '.'
+        file = params[:location]
+      end
     else
       # fall back to in-memory redland 	
-      type = 'memory'; path = '';	file = '.'
+      type = 'memory'; path = '';	file = '.'; want_new = false; write = true; contexts = true
     end
-		
-    ActiveRdfLogger::log_info "Initializing with type: #{type} file: #{file} path: #{path}", self
-		
+
+    ActiveRdfLogger::log_info(self) { "Initializing with type: #{type} file: #{file} path: #{path}" }
+
     begin
-      @store = Redland::HashStore.new(type, file, path, false)
+      @store = Redland::HashStore.new(type, file, path, want_new, write, contexts)
       @model = Redland::Model.new @store
       @reads = true
       @writes = true
+      ActiveRdfLogger.log_info(self) { "Initialised Redland adapter to #{@model.inspect}" }
+
     rescue Redland::RedlandError => e
-      raise ActiveRdfError, "Could not initialise Redland database: #{e.message}", self
+      raise ActiveRdfError, "Could not initialise Redland database: #{e.message}"
     end
   end	
-	
+
   # instantiate connection to Redland database in Postgres or MySQL
   # * database: Database name
   # * new: Create new database
@@ -57,21 +79,21 @@ class RedlandAdapter < ActiveRdfAdapter
   # * port: Database server port
   # * reconnect: Set automatic reconnect to database server
   # * user: Username
-  def initialize_dbs(params = {})
-    type = params[:location].to_s
+  def initialize_postgresql(params = {})
+    # author: Richard Dale
+    type = 'postgresql'
     name = params[:name]
 
     options = []
     options << "new='#{params[:new]}'" if params[:new]
+    options << "bulk='#{params[:bulk]}'" if params[:bulk]
+    options << "merge='#{params[:merge]}'" if params[:merge]
     options << "host='#{params[:host]}'" if params[:host]
-    options << "port='#{params[:port]}'" if params[:port]
     options << "database='#{params[:database]}'" if params[:database]
     options << "user='#{params[:user]}'" if params[:user]
     options << "password='#{params[:password]}'" if params[:password]
+    options << "port='#{params[:port]}'" if params[:port]
 
-    if type.downcase == "mysql"
-      options << "reconnect='#{params[:reconnect]}'" if params[:reconnect]
-    end
 
     ActiveRdfLogger::log_info "Initializing with type: #{type} name: #{name} options: #{options.join(',')}", self
 
@@ -81,10 +103,10 @@ class RedlandAdapter < ActiveRdfAdapter
       @reads = true
       @writes = true
     rescue Redland::RedlandError => e
-      raise ActiveRdfError, "Could not initialise Redland database: #{e.message}", self
+      raise ActiveRdfError, "Could not initialise Redland database: #{e.message}"
     end
   end	
-	
+
   # load a file from the given location with the given syntax into the model.
   # use Redland syntax strings, e.g. "ntriples" or "rdfxml", defaults to "ntriples"
   # * location: location of file to load.
@@ -102,14 +124,14 @@ class RedlandAdapter < ActiveRdfAdapter
   def query(query)
     qs = Query2SPARQL.translate(query)
     ActiveRdfLogger::log_debug(self) { "Executing SPARQL query #{qs}" }
-		
+
     clauses = query.select_clauses.size
     redland_query = Redland::Query.new(qs, 'sparql')
     query_results = @model.query_execute(redland_query)
-    
+
     # return Redland's answer without parsing if ASK query
     return [[query_results.get_boolean?]] if query.ask?
-		
+
     ActiveRdfLogger::log_debug(self) { "Found #{query_results.size} query results" }
 
     # verify if the query has failed
@@ -117,7 +139,7 @@ class RedlandAdapter < ActiveRdfAdapter
       ActiveRdfLogger::log_debug "Query has failed with nil result", self
       return false
     end
-    
+
     if not query_results.is_bindings?
       ActiveRdfLogger::log_debug "Query has failed without bindings", self
       return false
@@ -126,7 +148,7 @@ class RedlandAdapter < ActiveRdfAdapter
     # convert the result to array
     #TODO: if block is given we should not parse all results into array first
     results = query_result_to_array(query_results, false, query.resource_class) 
-	
+
     if block_given?
       results.each do |clauses|
         yield(*clauses)
@@ -153,17 +175,17 @@ class RedlandAdapter < ActiveRdfAdapter
 
     # set uri for result formatting
     result_uri = 
-      case result_format
+    case result_format
     when :json
       Redland::Uri.new('http://www.w3.org/2001/sw/DataAccess/json-sparql/')
     when :xml
       Redland::Uri.new('http://www.w3.org/TR/2004/WD-rdf-sparql-XMLres-20041221/')
     end
-    
+
     # query redland
     redland_query = Redland::Query.new(qs, 'sparql')
     query_results = @model.query_execute(redland_query)
-    
+
     if (result_format != :array)
       # get string representation in requested result_format (json or xml)
       query_results.to_string()
@@ -172,7 +194,7 @@ class RedlandAdapter < ActiveRdfAdapter
       query_result_to_array(query_results, true, result_type) 
     end
   end
-	
+
   # add triple to datamodel
   # * s: subject
   # * p: predicate
@@ -186,10 +208,10 @@ class RedlandAdapter < ActiveRdfAdapter
       ActiveRdfLogger::log_debug "Cannot add triple with empty subject, exiting", self
       return false
     end 
-		
+
     unless (((s.class == String) && (p.class == String) && (o.class == String)) && 
-          ((s[0..0] == '<') && (s[-1..-1] == '>')) && 
-          ((p[0..0] == '<') && (p[-1..-1] == '>'))) || (s.respond_to?(:uri) && p.respond_to?(:uri))
+      ((s[0..0] == '<') && (s[-1..-1] == '>')) && 
+      ((p[0..0] == '<') && (p[-1..-1] == '>'))) || (s.respond_to?(:uri) && p.respond_to?(:uri))
       ActiveRdfLogger::log_debug "Cannot add triple where s/p are not resources, exiting", self
       return false
     end
@@ -220,12 +242,15 @@ class RedlandAdapter < ActiveRdfAdapter
       s = wrap(s) unless s.nil?
       p = wrap(p) unless p.nil?
       o = wrap(o) unless o.nil?
-    else
-      s = wrapString(s) unless s.nil?
-      p = wrapString(p) unless p.nil?
-      o = wrapString(o) unless o.nil?
+
+      # if any parameter is nil we need to iterate over all matching triples
+      if (s.nil? or p.nil? or o.nil?)
+        @model.find(s,p,o) { |s,p,o| @model.delete(s,p,o) }
+      else
+        @model.delete(s,p,o)
+      end
     end
-    
+
     @model.delete(s,p,o) == 0
   end
 
@@ -240,7 +265,7 @@ class RedlandAdapter < ActiveRdfAdapter
   def dump(type = 'ntriples')
     Redland.librdf_model_to_string(@model.model, nil, type)
   end
-	
+
   # returns size of datasources as number of triples
   # warning: expensive method as it iterates through all statements
   def size
@@ -249,7 +274,17 @@ class RedlandAdapter < ActiveRdfAdapter
     # instead, we just dump all triples, and count them
     @model.triples.size
   end
-	
+
+  # clear all real triples of adapter
+  def clear
+    @model.find(nil, nil, nil) {|s,p,o| @model.delete(s,p,o)}
+  end
+
+  # close adapter and remove it from the ConnectionPool
+  def close
+    ConnectionPool.remove_data_source(self)
+  end
+
   private
   ################ helper methods ####################
   #TODO: if block is given we should not parse all results into array first
@@ -257,11 +292,11 @@ class RedlandAdapter < ActiveRdfAdapter
   def query_result_to_array(query_results, to_string, result_type)
     results = []
     number_bindings = query_results.binding_names.size
- 	
+
     # walk through query results, and construct results array
     # by looking up each result (if it is a resource) and adding it to the result-array
     # for literals we only add the values
- 	
+
     # redland results are set that needs to be iterated
     while not query_results.finished?
       # we collect the bindings in each row and add them to results
@@ -272,7 +307,7 @@ class RedlandAdapter < ActiveRdfAdapter
         # we determine the node type
         if node.literal?
           # for literal nodes we just return the value
-          node.to_s
+          Redland.librdf_node_get_literal_value(node.node)
         elsif node.blank?
           # blank nodes we ignore
           if to_string == false
@@ -297,10 +332,10 @@ class RedlandAdapter < ActiveRdfAdapter
       # iterate through result set
       query_results.next
     end
-    
+
     results
   end	 	
-	
+
   def wrap node
     if(node.respond_to?(:uri))
       Redland::Uri.new(node.uri.to_s)
@@ -315,13 +350,13 @@ class RedlandAdapter < ActiveRdfAdapter
       return Redland::Uri.new(node[1..-2]) 
     elsif (node[0..1] == '_:') 
       if (node.length > 2) 
- 	return Redland::BNode.new(node[2..-1]) 
+        return Redland::BNode.new(node[2..-1]) 
       else 
- 	return Redland::BNode.new 
-      end 
+        return Redland::BNode.new 
+      end
     else
       return Redland::Literal.new(node) 
     end 
   end
- 
+
 end

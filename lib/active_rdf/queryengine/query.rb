@@ -1,4 +1,4 @@
-require 'active_rdf'
+# require 'active_rdf'
 require 'federation/federation_manager'
 require 'queryengine/query2sparql'
 
@@ -9,9 +9,10 @@ require 'rubygems'
 # data source.  In all clauses symbols represent variables: 
 # Query.new.select(:s).where(:s,:p,:o).
 class Query
-  attr_reader :select_clauses, :where_clauses, :filter_clauses, :sort_clauses, :keywords, :limits, :offsets, :reverse_sort_clauses
+  attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets, :reverse_sort_clauses, :filter_clauses
+
   bool_accessor :distinct, :ask, :select, :count, :keyword, :reasoning
-  
+
   # Creates a new query. You may pass a different class that is used for "resource"
   # type objects instead of RDFS::Resource
   def initialize(resource_type = RDFS::Resource)
@@ -27,31 +28,31 @@ class Query
     @reverse_sort_clauses = []
     set_resource_class(resource_type)
   end
-  
+
   # This returns the class that is be used for resources, by default this
   # is RDFS::Resource
   def resource_class
     @resource_class ||= RDFS::Resource
   end
-  
+
   # Sets the resource_class. Any class may be used, however it is required
   # that it can be created using the uri of the resource as it's only 
   # parameter and that it has an 'uri' property
   def set_resource_class(resource_class)
     raise(ArgumentError, "resource_class must be a class") unless(resource_class.is_a?(Class))
-    
+
     test = resource_class.new("http://uri")
-    raise(ArgumentError, "Must have a uri property") unless(test.respond_to?(:uri))
+    raise(ArgumentError, "Must have an uri property") unless(test.respond_to?(:uri))
     @resource_class = resource_class
   end
-  
+
   # Clears the select clauses
   def clear_select
     ActiveRdfLogger::log_debug "Cleared select clause"
     @select_clauses = []
     @distinct = false
   end
-  
+
   # Adds variables to select clause
   def select *s
     @select = true
@@ -91,48 +92,56 @@ class Query
     self
   end
 
+  # adds one or more generic filters
+  # NOTE: you have to use SPARQL syntax for variables, eg. regex(?s, 'abc')
+  def filter *s
+    # add filter clauses
+    @filter_clauses << s
+    @filter_clauses.uniq!
+
+    self
+  end
+
+  # adds regular expression filter on one variable
+  # variable is Ruby symbol that appears in select/where clause, regex is Ruby 
+  # regular expression
+  def filter_regexp(variable, regexp)
+    raise(ActiveRdfError, "variable must be a symbol") unless variable.is_a? Symbol
+    raise(ActiveRdfError, "regexp must be a ruby regexp") unless regexp.is_a? Regexp
+
+    filter "regex(str(?#{variable}), #{regexp.inspect.gsub('/','"')})"
+  end
+  alias :filter_regex :filter_regexp
+
+  # adds operator filter one one variable
+  # variable is a Ruby symbol that appears in select/where clause, operator is a 
+  # SPARQL operator (e.g. '>'), operand is a SPARQL value (e.g. 15)
+  def filter_operator(variable, operator, operand)
+    raise(ActiveRdfError, "variable must be a Symbol") unless variable.is_a? Symbol
+
+    filter "?#{variable} #{operator} #{operand}"
+  end
+
+  # filter variable on specified language tag, e.g. lang(:o, 'en')
+  # optionally matches exactly on language dialect, otherwise only 
+  # language-specifier is considered
+  def lang variable, tag, exact=false
+    if exact
+      filter "lang(?#{variable} = '#{tag}'"
+    else
+      filter "regex(lang(?#{variable}), '^#{tag.gsub(/_.*/,'')}$')"
+    end
+  end
+
   # adds reverse sorting predicates
   def reverse_sort *s
     # add sort clauses without duplicates
     s.each { |clause| @reverse_sort_clauses << parametrise(clause) }
     @reverse_sort_clauses.uniq!
-
-    self
-  end
-  
-  # adds one or more generic filters NOTE: you have to use SPARQL syntax for variables, eg. regex(?s, ‘abc’)
-  def filter *s
-    # add filter clauses
-    @filter_clauses << s
-    @filter_clauses.uniq! 
-    self
-  end
-  
-  def filter_operator(variable, operator, operand)
-    raise(ActiveRdfError, "variable must be a Symbol") unless variable.is_a? Symbol
     
-    filter "(?#{variable} #{operator} #{operand})"
+    self
   end
-  
-  # adds regular expression filter on one variable variable is Ruby symbol that appears in select/where clause, 
-  # regex is a regular expression string
-  def filter_regexp(variable, regexp)
-    raise(ActiveRdfError, "variable must be a symbol") unless variable.is_a? Symbol
- 
-    filter "regex(?#{variable}, \"#{regexp}\")"
-  end
-  
-  # adds regular expression filter on one variable variable is Ruby symbol that 
-  # appears in select/where clause, regex is a regular expression string.
-  # 
-  # This version of the regexp filter will match in case the variable represents
-  # an URI
-  def filter_uri_regexp(variable, regexp)
-    raise(ActiveRdfError, "variable must be a symbol") unless variable.is_a? Symbol
- 
-    filter "regex(str(?#{variable}), \"#{regexp}\")"
-  end
-  
+
   # Adds limit clause (maximum number of results to return)
   def limit(i)
     @limits = i.to_i
@@ -197,8 +206,8 @@ class Query
     options = {:flatten => true} if options == :flatten
 
     if block_given?
-      FederationManager.query(self) do |*clauses|
-        block.call(*clauses)
+      for result in FederationManager.query(self, options)
+        yield result
       end
     else
       FederationManager.query(self, options)

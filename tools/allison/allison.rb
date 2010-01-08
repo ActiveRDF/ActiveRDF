@@ -26,7 +26,7 @@ module RDoc
 
     begin
       require 'rubygems'
-      gem 'markaby', '>= 0.5' # how come this isn't activate_gem(), since that's what it does? 
+      gem 'markaby', '>= 0.5'  
       require 'markaby'
       require 'base64'
 

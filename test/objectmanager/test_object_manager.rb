@@ -20,6 +20,8 @@ class TestObjectManager < Test::Unit::TestCase
     r1 = RDFS::Resource.new('abc')
     r2 = RDFS::Resource.new('cde')
     r3 = RDFS::Resource.new('cde')
+    assert_equal r3, RDFS::Resource.new(r3)
+    assert_equal r3, RDFS::Resource.new(r3.to_s)
 
     assert_equal 'abc', r1.uri
     assert_equal 'cde', r2.uri
@@ -31,23 +33,26 @@ class TestObjectManager < Test::Unit::TestCase
     adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
 
     Namespace.register(:test, 'http://activerdf.org/test/')
-    ObjectManager.construct_classes
 
-    assert(defined? TEST)
-    assert(defined? RDFS)
-    #assert(defined? TEST::Person)
-    #assert(defined? RDFS::Class)
+    assert_equal RDFS::Resource.new('http://activerdf.org/test/Person'), TEST::Person
+    assert_kind_of Class, TEST::Person
+    assert TEST::Person.ancestors.include?(RDFS::Resource)
+    assert_instance_of TEST::Person, TEST::Person.new('')
+    assert TEST::Person.new('').respond_to?(:uri)
+
+    assert_equal RDFS::Resource.new('http://www.w3.org/2000/01/rdf-schema#Class'), RDFS::Class
+    assert RDFS::Class.ancestors.include?(RDFS::Resource)
+    assert_kind_of Class, RDFS::Class
+    assert_instance_of RDFS::Resource, RDFS::Class.new('')
+    assert RDFS::Class.new('').respond_to?(:uri)
   end
 
-  def test_class_construct_class
-    adapter = get_write_adapter
-    adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
-
+  def test_custom_code
     Namespace.register(:test, 'http://activerdf.org/test/')
-    person_resource = Namespace.lookup(:test, :Person)
-    person_class = ObjectManager.construct_class(person_resource)
-    assert_instance_of Class, person_class
-    assert_equal person_resource.uri, person_class.class_uri.uri
+
+    TEST::Person.module_eval{ def hello; 'world'; end }
+    assert_respond_to TEST::Person.new(''), :hello
+    assert_equal 'world', TEST::Person.new('').hello
   end
 
   def test_class_uri
@@ -59,5 +64,33 @@ class TestObjectManager < Test::Unit::TestCase
     assert_equal RDF::type, RDFS::Resource.new('http://www.w3.org/1999/02/22-rdf-syntax-ns#type')
     assert_equal TEST::Person, RDFS::Resource.new('http://activerdf.org/test/Person')
     assert_equal RDFS::Resource.new('http://activerdf.org/test/Person'), TEST::Person
+  end
+
+  def test_to_xml
+    get_adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
+    Namespace.register(:test, 'http://activerdf.org/test/')
+
+    eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
+    eyal.age = 29
+    assert_equal 29, eyal.age
+    snippet =
+    '<rdf:Description rdf:about="#eyal">
+    <test:age rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">29</test:age>
+    <test:eye rdf:datatype="http://www.w3.org/2001/XMLSchema#string">blue</test:eye>
+    <rdf:type rdf:resource="http://activerdf.org/test/Person"/>
+    <rdf:type rdf:resource="http://www.w3.org/2000/01/rdf-schema#Resource"/>
+    </rdf:Description>
+    </rdf:RDF>'
+    # Ignore whitespaces in comparison
+    assert eyal.to_xml.gsub!(/\s+/, '').include?(snippet.gsub!(/\s+/, ''))
+
+    require 'net/http'
+    url = 'http://librdf.org/parse'
+    uri = URI.parse(url)
+    req = Net::HTTP::Post.new(url)
+    req.set_form_data('content'=>eyal.to_xml, 'language'=>'rdfxml')
+    res = Net::HTTP.new(uri.host,uri.port).start {|http| http.request(req) }
+    result = res.body.match(/Found.*triples/)[0]
+    assert_equal "Found 4 triples", result, 'invalid XML generated (according to online parser at librdf.org'
   end
 end

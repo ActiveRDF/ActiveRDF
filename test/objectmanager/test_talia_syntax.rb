@@ -39,7 +39,7 @@ class TestTaliaSyntax < Test::Unit::TestCase
   
   # Adding new property (new triple) with the new syntax
   x << 'car3'
-  assert_equal ['car1', 'car2', 'car3'], x
+  assert_equal ['car2', 'car3'], x
   
   # test inverse ===========================================================
   y = michele.inverse
@@ -50,7 +50,7 @@ class TestTaliaSyntax < Test::Unit::TestCase
   
   # remove a triple whose value is specified relater to TEST::car
   x.remove('car3')
-  assert_equal ['car1', 'car2'], x
+  assert_equal ['car2'], x
   
   # remove every triples related to TEST::car
   x.remove

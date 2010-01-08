@@ -1,39 +1,33 @@
-require 'active_rdf'
+# require 'active_rdf'
+
+# TODO: support limit and offset
 
 # Translates abstract query into SPARQL that can be executed on SPARQL-compliant
 # data source.
 class Query2SPARQL
-  def self.translate(query)
+  Engines_With_Keyword = [:yars2, :virtuoso]
+  def self.translate(query, engine=nil)
     str = ""
     if query.select?
       distinct = query.distinct? ? "DISTINCT " : ""
       select_clauses = query.select_clauses.collect{|s| construct_clause(s)}
-      
+
       str << "SELECT #{distinct}#{select_clauses.join(' ')} "
-      str << "#{from_clauses(query)}"
-      str << "WHERE { #{where_clauses(query)} #{filter_clauses(query)}}"
-      
+      str << "WHERE { #{where_clauses(query)} #{filter_clauses(query)}} "
+      str << "LIMIT #{query.limits} " if query.limits
+      str << "OFFSET #{query.offsets} " if query.offsets
       if (!query.sort_clauses.empty? || !query.reverse_sort_clauses.empty?)
-        str << " ORDER BY"
-        str << " #{sort_clauses(query)}" if !query.sort_clauses.empty?
-        str << " #{reverse_sort_clauses(query)}" if !query.reverse_sort_clauses.empty?
+        str << "ORDER BY "
+        str << "#{sort_clauses(query)} " if !query.sort_clauses.empty?
+        str << "#{reverse_sort_clauses(query)} " if !query.reverse_sort_clauses.empty?
       end
-      
-      if query.limits
-        str << " LIMIT #{query.limits.to_s}"
-      end
-      
-      if query.offsets
-        str << " OFFSET #{query.offsets.to_s}"
-      end
-      
     elsif query.ask?
-      str << "ASK { #{where_clauses(query)} }"
+      str << "ASK { #{where_clauses(query)} } "
     end
-    
+
     return str
   end
-  
+
   # concatenate each from clause using space
   def self.from_clauses(query)
     params = []
@@ -41,7 +35,7 @@ class Query2SPARQL
     query.where_clauses.each {|s,p,o,c|
       params << "FROM #{construct_clause(c)}" unless c.nil?
     }
-    
+
     # return FROM sintax or "" if no context is speficied
     if (params.empty?)
       ""
@@ -49,29 +43,20 @@ class Query2SPARQL
       "#{params.join(' ')} "
     end
   end
-  
-  # concatenate each where clause using space (e.g. 's p o')
-  # and concatenate the clauses using dot, e.g. 's p o . s2 p2 o2 .'
-  def self.where_clauses(query)
-    where_clauses = query.where_clauses.collect do |s,p,o,c|
-      # ignore context parameter
-      [s,p,o].collect {|term| construct_clause(term) }.join(' ')
-    end
-    "#{where_clauses.join('. ')} ."
-  end
-  
+
+  # concatenate filters in query
   def self.filter_clauses(query)
-    "FILTER #{query.filter_clauses.join(" ")}" unless query.filter_clauses.empty?
+    "FILTER (#{query.filter_clauses.join(" && ")})" unless query.filter_clauses.empty?
   end
-  
+
   def self.sort_clauses(query)
-    sort_clauses = query.sort_clauses.collect do |term|     
+    sort_clauses = query.sort_clauses.collect do |term|
       "ASC(#{construct_clause(term)})"
     end
 
-    "#{sort_clauses.join(' ')}"
+    sort_clauses.join(' ')
   end
-  
+
   def self.reverse_sort_clauses(query)
     reverse_sort_clauses = query.reverse_sort_clauses.collect do |term|
       "DESC(#{construct_clause(term)})"
@@ -79,19 +64,76 @@ class Query2SPARQL
 
     "#{reverse_sort_clauses.join(' ')}"
   end
-  
-  def self.construct_clause(term)
-    if term.respond_to? :uri
-      '<' + term.uri.to_s + '>'
-    else
-      case term
-      when Symbol
-        '?' + term.to_s
-      else
-        term.to_s
+
+  # concatenate each where clause using space (e.g. 's p o')
+  # and concatenate the clauses using dot, e.g. 's p o . s2 p2 o2 .'
+  def self.where_clauses(query)
+    if query.keyword?
+      case sparql_engine
+      when :yars2
+        query.keywords.each do |term, keyword|
+          query.where(term, keyword_predicate, keyword)
+        end
+      when :virtuoso
+        query.keywords.each do |term, keyword|
+          query.filter("#{keyword_predicate}(#{construct_clause(term)}, '#{keyword}')")
+        end
       end
     end
+
+    where_clauses = query.where_clauses.collect do |s,p,o,c|
+      # does there where clause use a context ? 
+      if c.nil?
+        [s,p,o].collect {|term| construct_clause(term) }.join(' ')
+      else
+        "GRAPH #{construct_clause(c)} { #{construct_clause(s)} #{construct_clause(p)} #{construct_clause(o)} }"
+      end
+    end
+
+    "#{where_clauses.join(' . ')} ."
   end
-  
-  private_class_method :where_clauses, :construct_clause
+
+  def self.construct_clause(term)
+    if term.is_a?(Symbol)
+      "?#{term}"
+    else
+      term.to_ntriple
+    end
+  end
+
+  def self.sparql_engine
+    sparql_adapters = ConnectionPool.read_adapters.select{|adp| adp.is_a? SparqlAdapter}
+    engines = sparql_adapters.collect {|adp| adp.engine}.uniq
+
+    unless engines.all?{|eng| Engines_With_Keyword.include?(eng)}
+      raise ActiveRdfError, "one or more of the specified SPARQL engines do not support keyword queries" 
+    end
+
+    if engines.size > 1
+      raise ActiveRdfError, "we currently only support keyword queries for one type of SPARQL engine (e.g. Yars2 or Virtuoso) at a time"
+    end
+
+    return engines.first
+  end
+
+  def self.keyword_predicate
+    case sparql_engine
+    when :yars, :yars2
+      RDFS::Resource.new("http://sw.deri.org/2004/06/yars#keyword")
+    when :virtuoso
+      VirtuosoBIF.new("bif:contains")
+    else
+      raise ActiveRdfError, "default SPARQL does not support keyword queries, remove the keyword clause or specify the type of SPARQL engine used"
+    end
+  end
+
+  private_class_method :where_clauses, :construct_clause, :keyword_predicate, :sparql_engine
+end
+
+# treat virtuoso built-ins slightly different: they are URIs but without <> 
+# surrounding them
+class VirtuosoBIF < RDFS::Resource
+  def to_s
+    uri
+  end
 end

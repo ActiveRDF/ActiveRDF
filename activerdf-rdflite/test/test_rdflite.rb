@@ -19,17 +19,11 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
   def test_registration
     adapter = ConnectionPool.add_data_source(:type => :rdflite)
 		assert_instance_of RDFLite, adapter
-		# we cant garantuee that the rdflite adapter can do keyword search
-		# assert adapter.keyword_search?
 	end
 
 	def test_initialise
 		adapter = ConnectionPool.add_data_source(:type => :rdflite, :keyword => false)
 		assert !adapter.keyword_search? 
-	end
-
-	def test_initialise_with_user_params
-		#TODO: FIXME
 	end
 
 	def test_duplicate_registration
@@ -122,6 +116,14 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
     adapter = ConnectionPool.add_data_source :type => :rdflite
 		adapter.load(File.dirname(File.expand_path(__FILE__)) + '/test_data.nt')
 		assert_equal 32, adapter.size
+
+    adapter.clear
+    adapter.load('http://www.w3.org/2000/10/rdf-tests/rdfcore/ntriples/test.nt')
+    assert_equal 30, adapter.size
+
+    adapter.clear
+    adapter.load('http://www.w3.org/2000/10/rdf-tests/rdfcore/testSchema.rdf')
+    assert_equal 76, adapter.size
 	end
 
 	def test_load_bnodes

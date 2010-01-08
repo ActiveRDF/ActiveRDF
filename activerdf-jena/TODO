@@ -1,0 +1,18 @@
+administrative tasks:
+=========================
+* add API documentation to code
+* update CHANGELOG before release
+* describe which features work right now, and which should not be used
+* check what problems eyals rake file is causing for karsten
+
+
+before initial release: 
+=======================
+* test persistance to derby and maybe mysql and postgres
+
+after release:
+==============
+* get pellet to working (generally and specially with queries)
+* test reasoning
+* quads
+

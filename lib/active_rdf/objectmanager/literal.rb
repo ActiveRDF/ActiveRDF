@@ -1,48 +1,71 @@
-require 'active_rdf'
+# require 'active_rdf'
+require 'time'
 
-# Represents an RDF literal, optionally datatyped.
-# TODO: language tags
-class Literal
+module Literal
   Namespace.register :xsd, 'http://www.w3.org/2001/XMLSchema#'
-
-  attr_reader :value, :type, :language
-  @value, @type, @language = nil, nil, nil
-
-  # Constructs literal with given datatype. If no datatype is given, automatic 
-  # conversion from Ruby to XSD datatype is tried.
-  def initialize(value, type_or_language=nil)
-    @value = value
-    
-    if type_or_language.nil?
-      # deduce type from the given value
-      @type = case value
-               when String
-                 XSD::string
-               when Date, Time, DateTime
-                 XSD::date
-               when TrueClass, FalseClass
-                 XSD::boolean
-               when Fixnum
-                 XSD::integer
-        end
-    elsif type_or_language.to_s[0..0] == "@"
-      # a language tag has been given
-      @language = type_or_language[1..type_or_language.length]
-    else
-      # the type_or_language was not empty and did not start with a @ so it must be a data type
-      @type = type_or_language
-    end  
-
+  def xsd_type
+    case self
+    when String
+      XSD::string
+    when Integer
+      XSD::integer
+    when Float
+      XSD::double
+    when TrueClass, FalseClass
+      XSD::boolean
+    when DateTime, Date, Time
+      XSD::date
+    end
   end
 
-  # returns string serialisation of literal, e.g. "test"^^xsd:string
-  def to_s
-    if type
-      "\"#{value}\"^^#{type.to_s}"
-    elsif language
-      "\"#{value}\"@#{language}"
+  def self.typed(value, type)
+    case type
+    when XSD::string
+      String.new(value)
+    when XSD::date
+      DateTime.parse(value)
+    when XSD::boolean
+      value == 'true' or value == 1
+    when XSD::integer
+      value.to_i
+    when XSD::double
+      value.to_f
+    end
+  end
+
+  def to_ntriple
+    if $activerdf_without_xsdtype
+      "\"#{to_s}\""
     else
-      "\"value\""
+      "\"#{to_s}\"^^#{xsd_type}"
+    end
+  end
+end
+
+class String; include Literal; end
+class Integer; include Literal; end
+class Float; include Literal; end
+class DateTime; include Literal; end
+class Date; include Literal; end
+class Time; include Literal; end
+class TrueClass; include Literal; end
+class FalseClass; include Literal; end
+
+class LocalizedString < String
+  include Literal
+  attr_reader :lang
+  def initialize value, lang=nil
+    super(value)
+
+    @lang = lang
+    @lang = lang[1..-1] if @lang[0..0] == '@'
+  end
+
+  def to_ntriple
+    if @lang
+      "\"#{to_s}\"@#@lang"
+    else
+      super
     end
   end
 end

@@ -1,3 +1,47 @@
+== activerdf (1.6.12)
+  * FederationManager passes delete correctly to adaptors
+
+== activerdf (1.6.11) Thu, 27 Nov 2008 11:27:24 +0100
+  * added support for enabling/disabling adapters (Samur Saraujo)
+  * RDFS::Resource accepts block (Aleksander Pohl)
+
+== activerdf (1.6.10) Wed, 23 Apr 2008 10:43:44 +0200
+  * convert float <-> xsd:double (Richard Dale)
+  * fix #202979: superclass mismatch in literal.rb (Slava Kravchenko)
+
+== activerdf (1.6.9) Fri, 08 Feb 2008 13:36:31 +0100
+  * automatic conversion from typed literals to Ruby internal datatypes
+  * added Resource#to_xml (José Ignacio)
+
+== activerdf (1.6.8) Thu, 01 Nov 2007 15:55:38 +0100
+  * no need for ObjectManager.construct_classes (done during namespace registration)
+  * small fix to running form source on jruby
+  * added spaces to query2sparql query creation
+  * sparql queries with a context now have a graph keyword
+
+== activerdf (1.6.7) Fri, 21 Sep 2007 12:56:09 +0100
+  * updated bnode handling to SPARQL spec
+
+== activerdf (1.6.6) Fri, 21 Sep 2007 10:06:17 +0100
+  * parse bnodes in SPARQL queries
+  * bugfix when using RDFS classes in queries
+
+== activerdf (1.6.5) Thu, 20 Sep 2007 13:39:04 +0100
+  * bugfix in SPARQL regex query (Mikael Lammentausta)
+
+== activerdf (1.6.4) 2007-09-03 15:34
+  * new method: ConnectionPool.remove_data_source(adapter) which should be called
+    by all adapter.close methods
+
+== activerdf (1.6.3) Thu, 09 Aug 2007 15:11:15 +0100
+  * added support for LANG filters and engine-specific keyword search in SPARQL
+
+== activerdf (1.6.2) Fri, 03 Aug 2007 14:07:54 +0100
+  * initial support for FILTERs in SPARQL
+
+== activerdf (1.6.1) Thu, 19 Apr 2007 22:57:01 +0100
+  * fix bug 107280: add support for full query options (including context) in dynamic finders
+
 == activerdf (1.6) Thu, 12 Apr 2007 23:12:40 +0100
   * no need for ObjectManager.construct_classes anymore (classes exist automagically after Namespace.register)
   * added resource.localname (alias for Namespace.localname(resource))

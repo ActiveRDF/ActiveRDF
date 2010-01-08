@@ -1,4 +1,4 @@
-require 'active_rdf'
+# require 'active_rdf'
 
 # Manages namespace abbreviations and expansions
 
@@ -10,7 +10,7 @@ class Namespace
   # e.g. :rdf and 'http://www.w3.org/1999/02/22-rdf-syntax-ns#'
   def self.register(prefix, fullURI)
 		raise ActiveRdfError, 'prefix nor uri can be empty' if (prefix.to_s.empty? or fullURI.to_s.empty?)
-    raise ActiveRdfError, "namespace uri should end with # or /" unless /\/|#/ =~ fullURI.to_s[-1..-1]
+    # raise ActiveRdfError, "namespace uri should end with # or /" unless /\/|#/ =~ fullURI.to_s[-1..-1]
 		ActiveRdfLogger::log_info(self) { "Namespace: registering #{fullURI} to #{prefix}" }
     @@namespaces[prefix.to_sym] = fullURI.to_s
     @@inverted_namespaces[fullURI.to_s] = prefix.to_sym
@@ -32,7 +32,7 @@ class Namespace
       end
 
       def const_missing(klass)
-        Namespace.lookup(self.to_s.downcase.to_sym, klass)
+        ObjectManager.construct_class(Namespace.lookup(self.to_s.downcase.to_sym, klass))
       end
 
       # make some builtin methods private because lookup doesn't work otherwise 
@@ -46,7 +46,6 @@ class Namespace
 
   # returns a resource whose URI is formed by concatenation of prefix and localname
   def self.lookup(prefix, localname, resource_type = RDFS::Resource)
-    #full_resource = expand(prefix, localname)
     resource_type.new(expand(prefix, localname))
   end
 

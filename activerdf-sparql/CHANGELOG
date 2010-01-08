@@ -1,3 +1,27 @@
+== activerdf_sparql (1.3.7)
+  * updated dbpedia test to reflect page content (Jason P. Morrison)
+
+== activerdf_sparql (1.3.6) Wed, 23 Apr 2008 10:43:02 +0200
+  * support for HTTP authentication
+
+== activerdf_sparql (1.3.5) Mon, 01 Oct 2007 12:03:40 +0200
+  * support for POSTing SPARQL queres (Edward Benson)
+  * added experimental sparql query cache: it never expires (Benjamin Heitmann)
+  * reverted gem dependency to json (Benjamin Heitmann)
+
+== activerdf_sparql (1.3.4) Fri, 21 Sep 2007 10:06:57 +0100
+  * parse bnodes in SPARQL queries
+
+== activerdf_sparql (1.3.3) 2007-09-03 15:37
+  * change Rakefile: require json_pure when running on JRuby
+  * added very simple close method to sparql adapter
+  
+== activerdf_sparql (1.3.2) Thu, 09 Aug 2007 15:10:16 +0100
+  * support for LANG filters and engine-specific keyword search
+
+== activerdf_sparql (1.3.1) Fri, 03 Aug 2007 14:10:19 +0100
+  * initial support for FILTERs
+
 == activerdf_sparql (1.3) Sun, 18 Feb 2007 15:11:05 +0000
   * added support for datatyped literals in SPARQL queries
 
