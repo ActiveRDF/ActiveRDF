@@ -35,6 +35,7 @@ class TestTaliaSyntax < Test::Unit::TestCase
   
   # new syntax (shortcut) to get all properties values about TEST::car
   x = michele[TEST::car]
+  assert_not_nil x
   assert_not_equal [], x
   
   # Adding new property (new triple) with the new syntax
