@@ -14,7 +14,7 @@ class TestTaliaSyntax < Test::Unit::TestCase
  end
   
  def test_syntax
-   adapter = get_write_adapter
+   adapter = get_primary_write_adapter
    adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
    
    Namespace.register(:test, 'http://activerdf.org/test/')

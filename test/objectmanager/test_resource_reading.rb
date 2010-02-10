@@ -9,82 +9,126 @@ require "#{File.dirname(__FILE__)}/../common"
 
 class TestResourceReading < Test::Unit::TestCase
   def setup
-    ConnectionPool.clear
-    @adapter = get_adapter
-    @adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
+		ConnectionPool.clear
+    @adapter = get_primary_adapter
+    test_dir = "#{File.dirname(__FILE__)}/.."
+    @adapter.load "#{test_dir}/rdf.nt"
+    @adapter.load "#{test_dir}/rdfs.nt"
+    @adapter.load "#{test_dir}/test_person_data.nt"
     Namespace.register(:test, 'http://activerdf.org/test/')
 
-    @eyal = RDFS::Resource.new 'http://activerdf.org/test/eyal'
+    @eyal = TEST::eyal
   end
 
-  def teardown
-  end
-
-  def test_find_all_instances
-    assert_equal 7, RDFS::Resource.find_all.size
-    assert_equal [TEST::eyal, TEST::other], TEST::Person.find_all
+  def test_class_resource_equality
+    p = TEST::Person
+    r  = RDFS::Resource.new(p.uri)
+    assert_equal p, r
+    assert_equal r, p
+    assert p.eql?(r)
+    assert r.eql?(p)
   end
 
   def test_class_predicates
-    assert_equal 5, RDFS::Resource.predicates.size
+    resource_predicates = RDFS::Resource.predicates
+    assert_equal 7, resource_predicates.size
+    assert resource_predicates.include?(RDF::type)
+    assert resource_predicates.include?(RDF::value)
+    assert resource_predicates.include?(RDFS::comment)
+    assert resource_predicates.include?(RDFS::label)
+    assert resource_predicates.include?(RDFS::seeAlso)
+    assert resource_predicates.include?(RDFS::isDefinedBy)
+    assert resource_predicates.include?(RDFS::member)
+    person_predicates = (TEST::Person.predicates - resource_predicates)
+    assert_equal 3, person_predicates.size
+    assert person_predicates.include?(TEST::age)
+    assert person_predicates.include?(TEST::eye)
+    assert person_predicates.include?(TEST::car)
+    assert !person_predicates.include?(TEST::email)
+  end
+  
+  def test_property_accessors
+    properties = @eyal.property_accessors
+    assert_equal 11, properties.size
+    %w(type value comment label seeAlso isDefinedBy member age eye car email).each{|prop| assert properties.include?(prop), "missing property #{prop}"}
   end
 
-  def test_eyal_predicates
+  def test_resource_predicates
     # assert that eyal's three direct predicates are eye, age, and type
-    preds = @eyal.direct_predicates.collect {|p| p.uri }
-    assert_equal 3, preds.size
-    ['age', 'eye', 'type'].each do |pr|
-      assert preds.any? {|uri| uri =~ /.*#{pr}$/ }, "Eyal should have predicate #{pr}"
-    end
-
-    # test class level predicates
-    class_preds = @eyal.class_level_predicates.collect {|p| p.uri }
-    # eyal.type: person and resource, has predicates age, eye
-    # not default rdfs:label, rdfs:comment, etc. because not using rdfs reasoning
-    assert_equal 5, class_preds.size
+    preds = @eyal.direct_predicates
+    assert_equal 4, preds.size
+    assert preds.include?(TEST::age)
+    assert preds.include?(TEST::eye)
+    assert preds.include?(TEST::email)
   end
 
-  def test_eyal_types
-    types = @eyal.type
-    assert_equal 2, types.size
-    assert types.include?(TEST::Person)
-    assert types.include?(RDFS::Resource)
-  end
-
-  def test_eyal_age
-    # triple exists '<eyal> age 27'
-    assert_equal 27, @eyal.age
-    assert_equal 27, @eyal.test::age
-    assert_equal [27], @eyal.all_age
-
-    # Person has property car, but eyal has no value for it
-    assert_equal nil, @eyal.car
-    assert_equal nil, @eyal.test::car
-    assert_equal [], @eyal.all_test::car
-
-    # non-existent method should throw error
-    assert_equal nil, @eyal.non_existing_method
-  end
-
-  def test_eyal_type
+  def test_resource_type
     assert_instance_of RDFS::Resource, @eyal
     assert_instance_of TEST::Person, @eyal
   end
 
-  def test_find_options
-    all = [Namespace.lookup(:test,:Person), Namespace.lookup(:rdfs, :Class), Namespace.lookup(:rdf, :Property), @eyal, TEST::car, TEST::age, TEST::eye]
+  def test_resource_types
+    type = @eyal.type
+    assert_equal 2, type.size
+    assert type.include?(TEST::Person.class_uri)
+    assert type.include?(RDFS::Resource.class_uri)
+  end
+
+  def test_resource_values
+    # triple exists '<eyal> age 27'
+    assert_kind_of RDF::Property, @eyal.age
+    assert_equal 1, @eyal.age.size
+    assert_equal 27, @eyal.age.to_a.first
+    assert_equal @eyal.age.to_a.first, 27 
+    assert_equal [27], @eyal.age
+    assert_equal @eyal.age, [27]
+    assert_kind_of RDF::Property, @eyal.test::age
+    assert_equal 1, @eyal.test::age.size
+    assert_equal 27, @eyal.test::age.to_a.first
+    assert_equal @eyal.test::age.to_a.first, 27
+
+    # Person has property car, but eyal has no value for it
+    assert @eyal.car.empty?
+    assert_equal [], @eyal.car
+    assert @eyal.test::car.empty?
+    assert_equal [], @eyal.test::car
+
+    # non-existent property returns nil
+    assert_nil @eyal.non_existing_property
+
+    # non-existent properties thrown errors on assignment
+    assert_raise ActiveRdfError do
+      @eyal.non_existing_property = "value"
+    end
+  end
+
+  def test_predicate_management
+    @adapter.add(TEST::hair,RDF::type,RDF::Property)
+    @adapter.add(TEST::hair,RDFS::domain,TEST::Person)
+    assert TEST::Person.predicates.include?(TEST::hair)
+  end
+
+  def test_custom_method
+    TEST::Person.class_eval{def foo; "foo"; end}
+    assert_equal "foo", @eyal.foo
+    TEST::Graduate.class_eval{def bar; "bar"; end}
+    assert_nil @eyal.bar
+    @eyal.type += TEST::Graduate
+    assert_equal "bar", @eyal.bar
+  end
+
+  def test_find_all
+    found = RDFS::Resource.find_all
+    assert_equal 2, found.size
+    assert found.include?(@eyal)
+    assert found.include?(TEST::Person)
+  end
+
+  def test_finders
     found = RDFS::Resource.find
-    assert_equal all.sort, found.sort
-    
-    properties = [TEST::car, TEST::age, TEST::eye]
-    found = RDFS::Resource.find(:where => {RDFS::domain => RDFS::Resource})
-    assert_equal properties.sort, found.sort
-    
-    found = RDFS::Resource.find(:where => {RDFS::domain => RDFS::Resource, :prop => :any})
-    assert_equal properties.sort, found.sort
-    
-    found = TEST::Person.find(:order => TEST::age)
-    assert_equal [TEST::other, TEST::eyal].sort, found.sort
+    assert_equal 2, found.size
+    assert found.include?(@eyal)
+    assert found.include?(TEST::Person)
   end
 
   def test_find_methods
@@ -98,6 +142,45 @@ class TestResourceReading < Test::Unit::TestCase
     assert_equal [@eyal], RDFS::Resource.find_by_test::age_and_test::eye(27, 'blue')
     assert_equal [@eyal], RDFS::Resource.find_by_test::age_and_eye(27, 'blue')
     assert_equal [@eyal], RDFS::Resource.find_by_age_and_test::eye(27, 'blue')
+
+    found = RDFS::Resource.find_by_rdf::type(RDFS::Resource)
+    assert_equal 2, found.size
+    assert found.include?(TEST::Person)
+    assert found.include?(TEST::eyal)
+  end
+
+
+  def test_finders_with_options
+    found = RDF::Property.find(:where => {RDFS::domain => TEST::Person})
+    assert_equal 3, found.size
+    assert found.include?(TEST::car)
+    assert found.include?(TEST::age)
+    assert found.include?(TEST::eye)
+
+#    found = RDFS::Resource.find(:where => {RDFS::domain => RDFS::Resource, :prop => :any})
+#    assert_equal properties.sort, found.sort
+#
+#    found = TEST::Person.find(:order => TEST::age)
+#    assert_equal [TEST::other, TEST::eyal], found
+
+    assert_equal 2, RDFS::Resource.find.size
+    assert_equal 2, RDFS::Resource.find(:all).size
+    assert_equal 2, RDFS::Resource.find(:all, :limit => 10).size
+    assert_equal 1, RDFS::Resource.find(:all, :limit => 1).size
+
+    if @adapter.contexts?
+      file = "#{File.dirname(__FILE__)}/../test_person2_data.nt"
+      @adapter.load file
+      context = RDFS::Resource.new("file:#{file}")
+
+      assert_equal 1, RDFS::Resource.find(:all, :context => context).size
+      assert_equal 1, RDFS::Resource.find(:all, :context => context, :limit => 1).size
+      assert_equal 0, RDFS::Resource.find(:all, :context => context, :limit => 0).size
+      assert_equal 1, RDFS::Resource.find_by_eye('blue', :context => one).size
+      assert_equal 0, RDFS::Resource.find_by_eye('blue', :context => two).size
+      assert_equal 1, RDFS::Resource.find_by_rdf::type(RDFS::Resource, :context => one).size
+      assert_equal 1, RDFS::Resource.find_by_eye_and_rdf::type('blue', RDFS::Resource, :context => one).size
+    end
   end
 
   # test for writing if no write adapter is defined (like only sparqls)
@@ -105,46 +188,5 @@ class TestResourceReading < Test::Unit::TestCase
     ConnectionPool.clear
     get_read_only_adapter
     assert_raises(ActiveRdfError) { @eyal.test::age = 18 }
-  end
-
-  def test_finders_with_options
-    ConnectionPool.clear
-    adapter = get_adapter
-    file_one = "#{File.dirname(__FILE__)}/../small-one.nt"
-    file_two = "#{File.dirname(__FILE__)}/../small-two.nt"
-    one = RDFS::Resource.new("file:#{file_one}")
-    two = RDFS::Resource.new("file:#{file_two}")
-
-    if (adapter.class.to_s != "SesameAdapter")
-      adapter.load file_one
-      adapter.load file_two
-    else
-      adapter.load(file_one, 'ntriples', one)
-      adapter.load(file_two, 'ntriples', two)
-    end
-
-    assert_equal 2, RDFS::Resource.find.size
-    assert_equal 2, RDFS::Resource.find(:all).size
-    assert_equal 2, RDFS::Resource.find(:all, :limit => 10).size
-    assert_equal 1, RDFS::Resource.find(:all, :limit => 1).size
-    assert_equal 1, RDFS::Resource.find(:all, :context => one).size
-    assert_equal 1, RDFS::Resource.find(:all, :context => one, :limit => 1).size
-    assert_equal 0, RDFS::Resource.find(:all, :context => one, :limit => 0).size
-
-    assert_equal 1, RDFS::Resource.find_by_eye('blue').size
-    assert_equal 1, RDFS::Resource.find_by_eye('blue', :context => one).size
-    assert_equal 0, RDFS::Resource.find_by_eye('blue', :context => two).size
-
-    assert_equal 2, RDFS::Resource.find_by_rdf::type(RDFS::Resource).size
-    assert_equal 1, RDFS::Resource.find_by_rdf::type(RDFS::Resource, :context => one).size
-    assert_equal 1, RDFS::Resource.find_by_eye_and_rdf::type('blue', RDFS::Resource, :context => one).size
-  end
-
-  def test_reading_with_block
-    qs=<<EOF
-SELECT DISTINCT ?o WHERE { <http://activerdf.org/test/eyal> 
-<http://activerdf.org/test/age> ?o . FILTER (regex(lang(?o), '^nl$'))}
-EOF
-    @eyal.age {|query, obj| query.lang(obj, "nl"); assert_equal qs.gsub("\n",'').strip, query.to_sp.strip}
   end
 end

@@ -10,7 +10,7 @@ class NTriplesParser
   def self.parse_node(input, resource_class = RDFS::Resource)
     case input
     when MatchBNode
-      resource_class.new("http://www.activerdf.org/bnode/#{UUID.random_create}/#$1")
+      resource_class.new("http://www.activerdf.org/bnode/#{UUIDTools::UUID.random_create}/#$1")
     when MatchLiteral
       value = fix_unicode($1)
       if $2
@@ -30,7 +30,7 @@ class NTriplesParser
   def self.parse(input)
 		# need unique identifier for this batch of triples (to detect occurence of 
 		# same bnodes _:#1
-		uuid = UUID.random_create.to_s
+		uuid = UUIDTools::UUID.random_create.to_s
 
     input.collect do |triple|
       nodes = []

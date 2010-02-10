@@ -18,7 +18,7 @@ class TestExternalResourceClass < Test::Unit::TestCase
   @@age = RDFS::MyExternalResource.new("http://activerdf.org/test/age")
   
   def test_query_external_resource
-    adapters = get_talia_adapters
+    adapters = [get_primary_adapter, get_secondary_adapter]
     adapters.each do |adapter|
       
       # load test data
@@ -39,11 +39,4 @@ class TestExternalResourceClass < Test::Unit::TestCase
     end
   end
   
-  def test_namespace_external_resource
-    # namespace
-    Namespace.register(:test, 'http://activerdf.org/test/')
-    assert_kind_of(RDFS::MyExternalResource, Namespace.lookup(:test, "eyal", RDFS::MyExternalResource))
-    assert_equal(:test, Namespace.prefix(@@eyal))
-    assert_equal("eyal",Namespace.localname(@@eyal))
-  end
 end
