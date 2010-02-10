@@ -15,10 +15,10 @@ class Query
 
   # Creates a new query. You may pass a different class that is used for "resource"
   # type objects instead of RDFS::Resource
-  def initialize(resource_type = RDFS::Resource)
-    @distinct = false
-    @limits = nil
-    @offsets = nil
+	def initialize(resource_type = RDFS::Resource)
+		@distinct = false
+		@limit = nil
+		@offset = nil
 		@select_clauses = []
 		@where_clauses = []
 		@sort_clauses = []
@@ -56,11 +56,8 @@ class Query
 	# Adds variables to select clause
 	def select *s
 		@select = true
-		s.each do |e|
-			@select_clauses << parametrise(e) 
-		end
 		# removing duplicate select clauses
-		@select_clauses.uniq!
+		@select_clauses.concat(s).uniq!
 		self
 	end
 
@@ -86,9 +83,7 @@ class Query
 	# Adds sort predicates
 	def sort *s
     # add sort clauses without duplicates
-		s.each { |clause| @sort_clauses << parametrise(clause) }
-		@sort_clauses.uniq!
-
+		@sort_clauses.concat(s).uniq!
 		self
 	end
 
@@ -96,9 +91,7 @@ class Query
   # NOTE: you have to use SPARQL syntax for variables, eg. regex(?s, 'abc')
   def filter *s
     # add filter clauses
-    @filter_clauses << s
-    @filter_clauses.uniq!
-
+    @filter_clauses.concat(s).uniq!
     self
   end
 
@@ -136,9 +129,7 @@ class Query
   # adds reverse sorting predicates
   def reverse_sort *s
     # add sort clauses without duplicates
-		s.each { |clause| @reverse_sort_clauses << parametrise(clause) }
-		@reverse_sort_clauses.uniq!
-
+    @reverse_sort_clauses.concat(s).uniq!
 		self
 	end
 
@@ -178,7 +169,7 @@ class Query
 			end
       raise(ActiveRdfErrror, "Cannot add a where clause where o is a blank node") if(o.is_a?(RDFS::BNode))
 
-			@where_clauses << [s,p,o,c].collect{|arg| parametrise(arg)}
+      @where_clauses << [s,p,o,c]
 		end
     self
   end
@@ -187,7 +178,6 @@ class Query
 	# the constraint (e.g. keyword_where(:s,'eyal|benjamin')
 	def keyword_where s,o
 		@keyword = true
-		s = parametrise(s)
 		if @keywords.include?(s)
 			@keywords[s] = @keywords[s] + ' ' + o
 		else
@@ -229,17 +219,5 @@ class Query
 		Query2SPARQL.translate(self)
   end
 
-  private
-  def parametrise s
-    case s
-    when Symbol, RDFS::Resource, RDFS::Literal, Class, nil
-			s
-    else
-      if(s.respond_to?(:uri))
-        s
-      else
-      '"' + s.to_s + '"'
-    end
-  end
-end
+  # Parameterization removed. This should be handled by the adapter.
 end

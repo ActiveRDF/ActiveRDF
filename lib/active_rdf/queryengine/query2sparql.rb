@@ -10,7 +10,7 @@ class Query2SPARQL
     str = ""
     if query.select?
       distinct = query.distinct? ? "DISTINCT " : ""
-      select_clauses = query.select_clauses.collect{|s| construct_clause(s)}
+			select_clauses = query.select_clauses.collect{|s| construct_clause(s)}
 
       str << "SELECT #{distinct}#{select_clauses.join(' ')} "
       str << "WHERE { #{where_clauses(query)} #{filter_clauses(query)}} "
@@ -24,7 +24,7 @@ class Query2SPARQL
     elsif query.ask?
       str << "ASK { #{where_clauses(query)} } "
     end
-
+    
     return str
   end
 
@@ -81,25 +81,35 @@ class Query2SPARQL
       end
     end
 
-    where_clauses = query.where_clauses.collect do |s,p,o,c|
+		where_clauses = query.where_clauses.collect do |s,p,o,c|
       # does there where clause use a context ? 
-      if c.nil?
-        [s,p,o].collect {|term| construct_clause(term) }.join(' ')
-      else
-        "GRAPH #{construct_clause(c)} { #{construct_clause(s)} #{construct_clause(p)} #{construct_clause(o)} }"
-      end
-    end
+		  if c.nil?
+  			[s,p,o].collect {|term| construct_clause(term) }.join(' ')
+  		else
+  		  "GRAPH #{construct_clause(c)} { #{construct_clause(s)} #{construct_clause(p)} #{construct_clause(o)} }"
+		  end
+		end
 
     "#{where_clauses.join(' . ')} ."
   end
 
-  def self.construct_clause(term)
-    if term.is_a?(Symbol)
-      "?#{term}"
-    else
-      term.to_literal_s
+	def self.construct_clause(term)
+    case term
+      when Symbol
+        "?#{term}"
+      when RDFS::Resource
+        term.to_s    # Resource.to_s adds necessary brackets to uri: <uri>         
+      when RDFS::Literal
+        term.to_literal_s
+      when Class
+        raise ActiveRdfError, "class must inherit from RDFS::Resource" unless term.ancestors.include?(RDFS::Resource)
+        term.class_uri.to_s
+      when nil
+        nil
+      else
+        "\"#{term.to_s}\""
     end
-  end
+	end
 
   def self.sparql_engine
     sparql_adapters = ConnectionPool.read_adapters.select{|adp| adp.is_a? SparqlAdapter}
@@ -126,7 +136,7 @@ class Query2SPARQL
       raise ActiveRdfError, "default SPARQL does not support keyword queries, remove the keyword clause or specify the type of SPARQL engine used"
     end
   end
-
+	
   private_class_method :where_clauses, :construct_clause, :keyword_predicate, :sparql_engine
 end
 
