@@ -125,12 +125,23 @@ module RDFS
     def to_literal_s; "<#{uri}>"; end
     def inspect
       type = self.type
-      type = (type and type.size > 0) ? type.collect{|t| t.abbr } : self.class 
+      if type and type.size > 0
+        type = type.collect{|t| t.abbr }
+        type = type.size > 1 ? type.inspect : type.first
+      else
+        self.class
+      end
       if abbr?
         label = abbr
       else
         label = self.label
-        label = (label and label.size > 0) ? label.inspect : uri
+        label = 
+          if label and label.size > 0
+            if label.size == 1 then label.only
+            elsif label.size > 1 then label.inspect
+            end
+          else uri
+          end
       end
       "#<#{type} #{label}>"
     end

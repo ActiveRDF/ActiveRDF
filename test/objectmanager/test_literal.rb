@@ -58,7 +58,7 @@ class TestLocalizedString < Test::Unit::TestCase
     assert_equal @ls_en, LocalizedString.new('localized string','en')
   end
 
-  def test_equals
+  def test_equality
     assert @ls_en == "localized string"
     assert @ls_en == LocalizedString.new('localized string','en')
     assert @ls_en != LocalizedString.new('localized string','@gb')
@@ -68,5 +68,6 @@ class TestLocalizedString < Test::Unit::TestCase
     assert_equal '"localized string"@en', @ls_en.to_literal_s
     $activerdf_without_xsdtype = true
     assert_equal '"localized string"', @ls_en.to_literal_s
+    $activerdf_without_xsdtype = false
   end
 end
