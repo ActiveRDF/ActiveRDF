@@ -33,19 +33,19 @@ class TestRedlandAdapterMemory < Test::Unit::TestCase
   end
 end
 
-lass TestRedlandAdapterFile < Test::Unit::TestCase
- include TestRedlandAdapter 
- include TestPersistentAdapter
-
- def setup
-   @location = File.join(Dir.tmpdir,"redland-temp")
-   @adapter_args = {:type => :redland, :location => @location} 
-   super
- end
- def teardown
-   FileUtils.rm Dir.glob(@location + '-*')
- end
-nd
+class TestRedlandAdapterFile < Test::Unit::TestCase
+  include TestRedlandAdapter 
+  include TestPersistentAdapter
+ 
+  def setup
+    @location = File.join(Dir.tmpdir,"redland-temp")
+    @adapter_args = {:type => :redland, :location => @location} 
+    super
+  end
+  def teardown
+    FileUtils.rm Dir.glob(@location + '-*')
+  end
+end
 
 class TestRedlandAdapterSqlite < Test::Unit::TestCase
   include TestRedlandAdapter 

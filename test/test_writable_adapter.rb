@@ -19,7 +19,8 @@ module TestWritableAdapter
 
     assert_equal 1, @@eyal.all_age.size
     assert_equal 27, @@eyal.age
-
+    assert_equal ['27'], @@eyal.get_predicate(TEST::age)
+    
     # << doesn't work on Fixnums
     @@eyal.age << 30
     assert_equal 1, @@eyal.all_age.size
