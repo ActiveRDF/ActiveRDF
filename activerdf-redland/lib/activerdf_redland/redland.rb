@@ -23,109 +23,79 @@ class RedlandAdapter < ActiveRdfAdapter
   # * user: Username
   def initialize(params = {})
     super()
+                                           # defaults
+    @reads =                                 true
+    @writes =      truefalse(params[:write], true)
+    @new =           truefalse(params[:new], false)
+    @contexts = truefalse(params[:contexts], true)
+    location = params[:location]
+    name = params[:name] || ''
+    options = {}
+    options[:write],options[:new],options[:contexts] = [@writes,@new,@contexts].collect{|bool| bool ? 'yes' : 'no'}
 
-    if params[:location] and params[:location] == :postgresql
-      initialize_postgresql(params)
-      return
-    end
-
-    if params[:location] and params[:location] != :memory
-      # setup file defaults for redland database
-      type = 'bdb'
-      want_new = false    # create new or use existing store
-      write = true
-      contexts = true
-
-      if params[:want_new] == true
-        want_new = true
-      end
-      if params[:write] == false
-        write = false
-      end
-      if params[:contexts] == false
-        contexts = false
-      end
-
-      if params[:location].include?('/')
-        path, file = File.split(params[:location])
+    # supported storage modules: mysql, postgresql, sqlite, hashes(as 'memory' or 'bdb')
+    # unsupported storage modules: uri, file, memory, tstore, trees
+    # see http://librdf.org/docs/api/redland-storage-modules.html
+    case location
+      when 'postgresql','mysql','sqlite'
+        store_type = location
+        if location == 'postgresql' or location == 'mysql'
+          [:host, :port, :database, :user, :password].each{|k| options[k] = params[k] if params[k]}
+          options[:host] ||= 'localhost'
+        end
+      when 'memory',nil
+        # use storage module hashes with hash-type 'memory' instead of non-indexing storage module memory
+        store_type = 'hashes'
+        options[:hash_type] = 'memory';
+        options.delete(:new)  # not used with this hash-type
       else
-        path = '.'
-        file = params[:location]
-      end
-    else
-      # fall back to in-memory redland 	
-      type = 'memory'; path = '';	file = '.'; want_new = false; write = true; contexts = true
+        # use storage module hashes with hash-type 'bdb' instead of non-indexing storage module file
+        store_type = 'hashes'
+        options[:hash_type] = 'bdb'
+
+        if location.include?('/')
+          options[:dir], name = File.split(location)
+        else
+          options[:dir] = '.'
+          name = location
+        end
     end
 
-    ActiveRdfLogger::log_info(self) { "Initializing with type: #{type} file: #{file} path: #{path}" }
-
-    begin
-      @store = Redland::HashStore.new(type, file, path, want_new, write, contexts)
-      @model = Redland::Model.new @store
-      @reads = true
-      @writes = true
-      ActiveRdfLogger.log_info(self) { "Initialised Redland adapter to #{@model.inspect}" }
+    hash_type = options.delete(:hash_type)
+    options = options.collect{|k,v| "#{k}='#{v}'"}.join(',')
+    options << "hash-type='#{hash_type}'" if hash_type   # convert option key from hash_type to hash-type. :hash-type is an invalid symbol
+    @model = Redland::Model.new Redland::TripleStore.new(store_type, name, options)
+    @options = options
+    ActiveRDFLogger::log_inf(self) { "RedlandAdapter: initialized adapter with type=\'#{store_type}\', name=\'#{name}\' options: #{options} => #{@model.inspect}" }
 
     rescue Redland::RedlandError => e
-      raise ActiveRdfError, "Could not initialise Redland database: #{e.message}"
-    end
-  end	
-
-  # instantiate connection to Redland database in Postgres or MySQL
-  # * database: Database name
-  # * new: Create new database
-  # * host: Database server address
-  # * password: Password
-  # * port: Database server port
-  # * reconnect: Set automatic reconnect to database server
-  # * user: Username
-  def initialize_postgresql(params = {})
-    # author: Richard Dale
-    type = 'postgresql'
-    name = params[:name]
-
-    options = []
-    options << "new='#{params[:new]}'" if params[:new]
-    options << "bulk='#{params[:bulk]}'" if params[:bulk]
-    options << "merge='#{params[:merge]}'" if params[:merge]
-    options << "host='#{params[:host]}'" if params[:host]
-    options << "database='#{params[:database]}'" if params[:database]
-    options << "user='#{params[:user]}'" if params[:user]
-    options << "password='#{params[:password]}'" if params[:password]
-    options << "port='#{params[:port]}'" if params[:port]
-
-
-    ActiveRdfLogger::log_info "Initializing with type: #{type} name: #{name} options: #{options.join(',')}", self
-
-    begin
-      @store = Redland::TripleStore.new(type, name, options.join(','))
-      @model = Redland::Model.new @store
-      @reads = true
-      @writes = true
-    rescue Redland::RedlandError => e
-      raise ActiveRdfError, "Could not initialise Redland database: #{e.message}"
-    end
-  end	
+      raise ActiveRdfError, "RedlandAdapter: could not initialise Redland database: #{e.message}\nstore_type=\'#{store_type}\', name=\'#{name}\' options: #{options}"
+  end
 
   # load a file from the given location with the given syntax into the model.
   # use Redland syntax strings, e.g. "ntriples" or "rdfxml", defaults to "ntriples"
   # * location: location of file to load.
   # * syntax: syntax of file
   def load(location, syntax="ntriples")
+    raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
     parser = Redland::Parser.new(syntax, "", nil)
     if location =~ /^http/
       raise ActiveRdfError, "Redland load error for #{location}" unless (parser.parse_into_model(@model, location) == 0)
     else
       raise ActiveRdfError, "Redland load error for #{location}" unless (parser.parse_into_model(@model, "file:#{location}") == 0)
     end
+    save if ConnectionPool.auto_flush?
+    rescue Redland::RedlandError => e
+      $activerdflog.warn "RedlandAdapter: loading #{location} failed in Redland library: #{e}"
+      return false
   end
 
   # yields query results (as many as requested in select clauses) executed on data source
-  def query(query)
+  def query(query, &block)
+    raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
     qs = Query2SPARQL.translate(query)
     ActiveRdfLogger::log_debug(self) { "Executing SPARQL query #{qs}" }
 
-    clauses = query.select_clauses.size
     redland_query = Redland::Query.new(qs, 'sparql')
     query_results = @model.query_execute(redland_query)
 
@@ -145,16 +115,14 @@ class RedlandAdapter < ActiveRdfAdapter
       return false
     end
 
-    # convert the result to array
-    #TODO: if block is given we should not parse all results into array first
-    results = query_result_to_array(query_results, false, query.resource_class) 
-
-    if block_given?
-      results.each do |clauses|
-        yield(*clauses)
+    if query.count?
+      while not query_results.finished?
+        query_results.next
       end
+      [[query_results.count]]
     else
-      results
+      # convert the results to array
+      query_result_to_array(query_results, &block)
     end
   end
 
@@ -163,6 +131,7 @@ class RedlandAdapter < ActiveRdfAdapter
   # * query: ActiveRDF Query object
   # * result_format: :json or :xml
   def get_query_results(query, result_format=nil)
+    raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
     get_sparql_query_results(Query2SPARQL.translate(query), result_format, query.resource_class)
   end
 
@@ -172,104 +141,88 @@ class RedlandAdapter < ActiveRdfAdapter
   # * result_type: Is the type that is used for "resource" results
   def get_sparql_query_results(qs, result_type, result_format=nil)
     # author: Eric Hanson
+    raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
 
     # set uri for result formatting
-    result_uri = 
-    case result_format
-    when :json
-      Redland::Uri.new('http://www.w3.org/2001/sw/DataAccess/json-sparql/')
-    when :xml
-      Redland::Uri.new('http://www.w3.org/TR/2004/WD-rdf-sparql-XMLres-20041221/')
-    end
+    result_uri =
+      case result_format
+      when :json
+        Redland::Uri.new('http://www.w3.org/2001/sw/DataAccess/json-sparql/')
+      when :xml
+        Redland::Uri.new('http://www.w3.org/TR/2004/WD-rdf-sparql-XMLres-20041221/')
+      end
 
     # query redland
     redland_query = Redland::Query.new(qs, 'sparql')
     query_results = @model.query_execute(redland_query)
 
     if (result_format != :array)
-      # get string representation in requested result_format (json or xml)
-      query_results.to_string()
-    else
-      # get array result
-      query_result_to_array(query_results, true, result_type) 
-    end
+    # get string representation in requested result_format (json or xml)
+    query_results.to_string(result_uri)
+  end
   end
 
   # add triple to datamodel
-  # * s: subject
-  # * p: predicate
-  # * o: object
-  def add(s, p, o, c=nil)
-    result = false
-    ActiveRdfLogger::log_debug(self) { "Adding triple #{s} #{p} #{o}" }
+  def add(s,p,o,c=nil)
+    raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
+    ActiveRdfLogger::log_warn(self) {  "Adapter does not support contexts" } if (!@contexts and !c.nil?)
+    ActiveRdfLogger::log_debug(self) {  "Adding triple #{s} #{p} #{o} #{c}" }
 
     # verify input
     if s.nil? || p.nil? || o.nil?
       ActiveRdfLogger::log_debug "Cannot add triple with empty subject, exiting", self
       return false
-    end 
-
-    unless (((s.class == String) && (p.class == String) && (o.class == String)) && 
-      ((s[0..0] == '<') && (s[-1..-1] == '>')) && 
-      ((p[0..0] == '<') && (p[-1..-1] == '>'))) || (s.respond_to?(:uri) && p.respond_to?(:uri))
-      ActiveRdfLogger::log_debug "Cannot add triple where s/p are not resources, exiting", self
-      return false
     end
 
-    begin
-      if ((s.class != String) || (p.class != String) || (o.class != String))
-        result = (@model.add(wrap(s), wrap(p), wrap(o)) == 0)
-      else
-        result = (@model.add(wrapString(s), wrapString(p), wrapString(o)) == 0)
-      end
-      if (result == true)
-        result = save if ConnectionPool.auto_flush?
-      end
-      return result
-    rescue Redland::RedlandError => e
-      ActiveRdfLogger::log_warn "Adding triple failed in Redland library: #{e}", self
+    unless s.respond_to?(:uri) && p.respond_to?(:uri)
+      ActiveRdfLogger::log_info(self) { "RedlandAdapter: cannot add triple where s/p are not resources, exiting" }
       return false
-    end		
+    end
+    quad = [s,p,o,c].collect{|e| to_redland(e)}
+
+    @model.add(*quad)
+    save if ConnectionPool.auto_flush?
+    rescue Redland::RedlandError => e
+      ActiveRdfLogger::log_warn "Adding triple (#{quad}) failed in Redland library: #{e}", self
+      return false
   end
 
   # deletes triple(s,p,o) from datastore
   # nil parameters match anything: delete(nil,nil,nil) will delete all triples
-  # * s: subject
-  # * p: predicate
-  # * o: object
   def delete(s,p,o,c=nil)
-    if ((s.class != String) && (p.class != String) && (o.class != String))
-      s = wrap(s) unless s.nil?
-      p = wrap(p) unless p.nil?
-      o = wrap(o) unless o.nil?
-
-      # if any parameter is nil we need to iterate over all matching triples
-      if (s.nil? or p.nil? or o.nil?)
-        @model.find(s,p,o) { |s,p,o| @model.delete(s,p,o) }
-      else
-        @model.delete(s,p,o)
-      end
+    raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
+    quad = [s,p,o,c].collect{|e| to_redland(e)}
+    if quad.all?{|t| t.nil?}
+      clear
+    elsif quad[0..2].any?{|t| t.nil?}
+      @model.find(*quad).each{|stmt| @model.delete_statement(stmt,c)}
+    else
+      @model.delete(*quad)
     end
-
-    @model.delete(s,p,o) == 0
+    save if ConnectionPool.auto_flush?
+    rescue Redland::RedlandError => e
+      $activerdflog.warn "RedlandAdapter: deleting triple failed in Redland library: #{e}"
+      return false
   end
 
   # saves updates to the model into the redland file location
   def save
-    Redland::librdf_model_sync(@model.model) == 0
+    raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
+    Redland::librdf_model_sync(@model.model).nil?
   end
   alias flush save
 
   # returns all triples in the datastore
-  # * type: dump syntax
-  def dump(type = 'ntriples')
-    Redland.librdf_model_to_string(@model.model, nil, type)
+  def dump
+    raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
+    @model.to_string('ntriples')
   end
 
   # returns size of datasources as number of triples
   # warning: expensive method as it iterates through all statements
   def size
-    # we cannot use @model.size, because redland does not allow counting of 
+    raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
+    # we cannot use @model.size, because redland does not allow counting of
     # file-based models (@model.size raises an error if used on a file)
     # instead, we just dump all triples, and count them
     @model.triples.size
@@ -277,86 +230,87 @@ class RedlandAdapter < ActiveRdfAdapter
 
   # clear all real triples of adapter
   def clear
-    @model.find(nil, nil, nil) {|s,p,o| @model.delete(s,p,o)}
+    raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
+    @model.triples.each{|stmt| @model.delete_statement(stmt)}
   end
 
   # close adapter and remove it from the ConnectionPool
   def close
     ConnectionPool.remove_data_source(self)
+    flush   # sync model with datastore
+    @model = nil   # remove reference to model for removal by GC
+    @enabled = false
   end
 
   private
   ################ helper methods ####################
-  #TODO: if block is given we should not parse all results into array first
-  # result_type is the type that should be used for "resource" properties.
-  def query_result_to_array(query_results, to_string, result_type)
+  def truefalse(val, default)
+    raise ArgumentError, "truefalse: default must be true or false" unless default == true || default == false
+    case val
+    when true,/^yes|y$/i then true
+    when false,/^no|n$/i then false
+    else default
+    end
+  end
+
+  def query_result_to_array(query_results, &block)
     results = []
     number_bindings = query_results.binding_names.size
-
-    # walk through query results, and construct results array
-    # by looking up each result (if it is a resource) and adding it to the result-array
-    # for literals we only add the values
 
     # redland results are set that needs to be iterated
     while not query_results.finished?
       # we collect the bindings in each row and add them to results
-      results << (0..number_bindings-1).collect do |i|	 		
+      row = (0..number_bindings-1).collect do |i|
         # node is the query result for one binding
         node = query_results.binding_value(i)
 
         # we determine the node type
         if node.literal?
-          # for literal nodes we just return the value
-          Redland.librdf_node_get_literal_value(node.node)
+          dt_uri_ref = Redland.librdf_node_get_literal_value_datatype_uri(node.node)
+          type = RDFS::Resource.new(Redland::Uri.new(dt_uri_ref).to_s) if dt_uri_ref
+          value = Redland.librdf_node_get_literal_value(node.node)
+          RDFS::Literal.typed(value,type)
         elsif node.blank?
-          # blank nodes we ignore
-          if to_string == false
-            nil
-          else
-            # check blank node id
-            if node.blank_identifier
-              "_:#{node.blank_identifier}"
-            else
-              "_:"
-            end
-          end
+          # blank nodes are not currently supported
+          nil
         else
           # other nodes are rdfs:resources
-          if to_string == false
-            result_type.new(node.uri.to_s)
-          else
-            "<#{node.uri.to_s}>"
-          end
+          RDFS::Resource.new(node.uri.to_s)
         end
+      end
+      if block_given?
+        yield row
+      else
+        results << row
       end
       # iterate through result set
       query_results.next
     end
+    results unless block_given?
+  end
 
-    results
-  end	 	
-
-  def wrap node
-    if(node.respond_to?(:uri))
-      Redland::Uri.new(node.uri.to_s)
+  def to_redland(obj)
+    case obj
+    when RDFS::Resource
+      Redland::Uri.new(obj.uri)
+    when RDFS::Literal
+      str = obj.kind_of?(Time) ? obj.xmlschema : obj.to_s
+      if not $activerdf_without_xsdtype
+        if obj.kind_of?(RDFS::LocalizedString)
+          Redland::Literal.new(str, obj.lang)
+        else
+          Redland::Literal.new(str,nil,Redland::Uri.new(obj.xsd_type.uri))
+        end
+      else
+        Redland::Literal.new(str)
+      end
+    when Class
+      raise ActiveRdfError, "RedlandAdapter: class must inherit from RDFS::Resource" unless obj.ancestors.include?(RDFS::Resource)
+      Redland::Uri.new(obj.class_uri.to_s)
+    when Symbol, nil
+      nil
     else
-      Redland::Literal.new(node.to_s)
+      Redland::Literal.new(obj.to_s)
     end
   end
-
-  def wrapString node
-    node = node.to_s
-    if ((node[0..0] == '<') && (node[-1..-1] == '>')) 
-      return Redland::Uri.new(node[1..-2]) 
-    elsif (node[0..1] == '_:') 
-      if (node.length > 2) 
-        return Redland::BNode.new(node[2..-1]) 
-      else 
-        return Redland::BNode.new 
-      end
-    else
-      return Redland::Literal.new(node) 
-    end 
-  end
-
 end

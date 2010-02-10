@@ -27,6 +27,3 @@
 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2000/01/rdf-schema#Class> .
 <http://www.w3.org/2000/01/rdf-schema#Class> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Class> .
 <http://www.w3.org/2000/01/rdf-schema#Class> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2000/01/rdf-schema#Resource> .
-_:#1 <http://activerdf.org/test/age> "29" .
-_:#1 <http://activerdf.org/test/name> "Another Person" .
-_:#1 <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://activerdf.org/test/Person> .

@@ -17,6 +17,10 @@ module RDFS
       @uri = uri
     end
     
+    def to_literal_s
+      @uri
+    end
+    
     def to_s
       "<#{uri}>"
     end

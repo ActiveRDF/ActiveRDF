@@ -1,3 +1,4 @@
+require 'benchmark'
 # Default ActiveRDF error
 class ActiveRdfError < StandardError
 end
