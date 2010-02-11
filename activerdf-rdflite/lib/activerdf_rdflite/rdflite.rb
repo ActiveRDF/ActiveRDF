@@ -357,9 +357,9 @@ class RDFLite < ActiveRdfAdapter
             end
           else
             # match plain strings to all strings
-            if query.all_types? and clause_elem.is_a?(String) and !clause_elem.is_a?(LocalizedString)
+            if query.all_types? and !clause_elem.respond_to?(:uri)  # dont wildcard resources 
               where << "t#{table_index}.#{field} like ?"
-              right_hand_sides << "\"#{clause_elem}\"%"
+              right_hand_sides << "\"#{clause_elem.to_s}\"%"
             else
               where << "t#{table_index}.#{field} = ?"
               right_hand_sides << clause_elem.to_literal_s

@@ -4,7 +4,7 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'federation/connection_pool'
+require 'set'
 require "#{File.dirname(__FILE__)}/../common"
 
 class TestResourceReading < Test::Unit::TestCase
@@ -87,6 +87,8 @@ class TestResourceReading < Test::Unit::TestCase
     assert_equal 27, @@eyal.test::age.to_a.first
     assert_equal @@eyal.test::age.to_a.first, 27
 
+    assert_equal 27, @@eyal.age[27]
+
     # Person has property car, but eyal has no value for it
     assert @@eyal.car.empty?
     assert_equal [], @@eyal.car
@@ -118,33 +120,57 @@ class TestResourceReading < Test::Unit::TestCase
   end
 
   def test_find_all
-    found = RDFS::Resource.find_all
-    assert_equal 2, found.size
-    assert found.include?(@@eyal)
-    assert found.include?(TEST::Person)
-  end
-
-  def test_finders
-    found = RDFS::Resource.find
-    assert_equal 2, found.size
-    assert found.include?(@@eyal)
-    assert found.include?(TEST::Person)
+    assert_equal Set[@@eyal, TEST::other], Set.new(TEST::Person.find_all)
   end
 
   def test_find_methods
     blue = LocalizedString.new('blue','en')
-    assert_equal [@@eyal], RDFS::Resource.find_by_eye(blue)
-    assert_equal [@@eyal], RDFS::Resource.find_by_test::eye(blue)
+    assert_raise ActiveRdfError do
+      # this should raise an error because eye is not in the domain of RDFS::Resource
+      assert_equal [@@eyal], RDFS::Resource.find_by.eye(blue).execute
+    end
 
-    assert_equal [@@eyal], RDFS::Resource.find_by_age(27)
-    assert_equal [@@eyal], RDFS::Resource.find_by_test::age(27)
+    assert_equal [@@eyal], TEST::Person.find_by.test::email.execute    
 
-    assert_equal [@@eyal], RDFS::Resource.find_by_age_and_eye(27, blue)
-    assert_equal [@@eyal], RDFS::Resource.find_by_test::age_and_test::eye(27, blue)
-    assert_equal [@@eyal], RDFS::Resource.find_by_test::age_and_eye(27, blue)
-    assert_equal [@@eyal], RDFS::Resource.find_by_age_and_test::eye(27, blue)
+    assert_equal [], RDFS::Resource.find_by.test::eye('blue').execute
+    assert_equal [@@eyal], RDFS::Resource.find_by.test::eye('blue').all_types.execute
 
-    found = RDFS::Resource.find_by_rdf::type(RDFS::Resource)
+    assert_equal [@@eyal], RDFS::Resource.find_by.test::eye(blue).execute
+
+    # using Person class, fully qualified properties not required
+    assert_equal [@@eyal], TEST::Person.find_by.age(27).execute
+    assert_equal [@@eyal], TEST::Person.find_by.test::age(27).execute
+
+    assert_equal [@@eyal], TEST::Person.find_by.age(27).eye(blue).execute
+    assert_equal [@@eyal], TEST::Person.find_by.test::age(27).test::eye(blue).execute
+    assert_equal [@@eyal], TEST::Person.find_by.test::age(27).eye(blue).execute
+    assert_equal [@@eyal], TEST::Person.find_by.age(27).test::eye(blue).execute
+
+    # bug 62481
+    camelCaseProperty = RDF::Property.new(TEST::camelCaseProperty).save
+    camelCaseProperty.domain = TEST::Person
+    @@eyal.camelCaseProperty = "a CamelCase property name"
+    q = TEST::Person.find_by.camelCaseProperty.instance_eval{@query}
+    qs = q.to_s
+    assert_equal [@@eyal], TEST::Person.find_by.camelCaseProperty.execute
+    assert_equal [@@eyal], TEST::Person.find_by.test::camelCaseProperty.execute
+    assert_equal [@@eyal], TEST::Person.find_by.camelCaseProperty("a CamelCase property name").execute
+
+    underscored_property = RDF::Property.new(TEST::underscored_property).save
+    underscored_property.domain = TEST::Person
+    @@eyal.underscored_property = "an underscored property name"
+    assert_equal [@@eyal], TEST::Person.find_by.underscored_property.execute
+    assert_equal [@@eyal], TEST::Person.find_by.test::underscored_property.execute
+    assert_equal [@@eyal], TEST::Person.find_by.underscored_property("an underscored property name").execute
+
+    mixedCamelCase_underscored_property = RDF::Property.new(TEST::mixedCamelCase_underscored_property).save
+    mixedCamelCase_underscored_property.domain = TEST::Person
+    @@eyal.mixedCamelCase_underscored_property = "a mixed CamelCase and underscored property"
+    assert_equal [@@eyal], TEST::Person.find_by.mixedCamelCase_underscored_property.execute
+    assert_equal [@@eyal], TEST::Person.find_by.test::mixedCamelCase_underscored_property.execute
+    assert_equal [@@eyal], TEST::Person.find_by.mixedCamelCase_underscored_property("a mixed CamelCase and underscored property").execute
+    
+    found = RDFS::Resource.find_by.rdf::type(RDFS::Resource).execute
     assert_equal 2, found.size
     assert found.include?(TEST::Person)
     assert found.include?(TEST::eyal)
@@ -152,22 +178,11 @@ class TestResourceReading < Test::Unit::TestCase
 
 
   def test_finders_with_options
-    found = RDF::Property.find(:where => {RDFS::domain => TEST::Person})
-    assert_equal 3, found.size
-    assert found.include?(TEST::car)
-    assert found.include?(TEST::age)
-    assert found.include?(TEST::eye)
+    assert_equal Set[TEST::car, TEST::age, TEST::eye], Set.new(RDF::Property.find_by.rdfs::domain(TEST::Person).execute)
 
-#    found = RDFS::Resource.find(:where => {RDFS::domain => RDFS::Resource, :prop => :any})
-#    assert_equal properties.sort, found.sort
-#
-#    found = TEST::Person.find(:order => TEST::age)
-#    assert_equal [TEST::other, TEST::eyal], found
-
-    assert_equal 2, RDFS::Resource.find.size
-    assert_equal 2, RDFS::Resource.find(:all).size
-    assert_equal 2, RDFS::Resource.find(:all, :limit => 10).size
-    assert_equal 1, RDFS::Resource.find(:all, :limit => 1).size
+    assert_equal 2, RDFS::Resource.find_all.size
+#    assert_equal 2, RDFS::Resource.find(:all, :limit => 10).size
+#    assert_equal 1, RDFS::Resource.find(:all, :limit => 1).size
 
     if @adapter.contexts?
       file = "#{File.dirname(__FILE__)}/../test_person2_data.nt"

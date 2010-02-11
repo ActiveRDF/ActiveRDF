@@ -81,17 +81,18 @@ class Query2SPARQL
       end
     end
 
-    oidx = 0
+    o_idx = 0
 		where_clauses = query.where_clauses.collect do |s,p,o,c|
       # does there where clause use a context ? 
 		  if c.nil?
   			sp = [s,p].collect {|term| construct_clause(term) }.join(' ')
         # if all_types are requested, add filter for object value
-        if query.all_types? and !o.is_a?(Symbol) and !o.nil?
-          ovar = "o#{oidx}"
-          query.filter(ovar.to_sym, :regex, o) 
-          oidx += 1
-          "#{sp} ?#{ovar}"
+        if query.all_types? and !o.respond_to?(:uri)   # dont wildcard resources
+          o_var = "o#{o_idx}"
+          o_val = o.respond_to?(:uri) ? o.uri : o.to_s
+          query.filter(o_var.to_sym, :regex, o_val) 
+          o_idx += 1
+          "#{sp} ?#{o_var}"
         else
           "#{sp} #{construct_clause(o)}"
         end
