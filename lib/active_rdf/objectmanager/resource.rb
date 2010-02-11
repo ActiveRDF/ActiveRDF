@@ -10,9 +10,6 @@ module RDFS
   # class-level lookup (Person.find_by_name 'eyal'), and class-membership
   # (eyal.class ...Person).
   class RDFS::Resource
-    
-    include ResourceLike
-    
     #####                     #####
     ##### class level methods #####
     #####                     #####
@@ -21,15 +18,21 @@ module RDFS
       attr_accessor :class_uri
     end
 
-    def Resource.uri; class_uri.uri; end
+    def Resource.uri
+      class_uri.uri
+    end
+
     def Resource.==(other)
       other.respond_to?(:uri) ? other.uri == self.uri : false
     end
+
     def Resource.eql?(other)
       self == other
     end
 
-    def Resource.localname; Namespace.localname(self); end
+    def Resource.localname
+      Namespace.localname(self)
+    end
 
     # returns the predicates that have this resource as their domain (applicable
     # predicates for this resource)
@@ -100,16 +103,207 @@ module RDFS
 
     # overriding hash to use uri.hash
     # needed for array.uniq
-    def hash; uri.hash; end
+    def hash
+      uri.hash
+    end
 
     # overriding sort based on uri
-    def <=>(other); uri <=> other.uri; end
+    def <=>(other)
+      uri <=> other.uri
+    end
+
+    def is_a?(klass)
+      super || ObjectManager.construct_class(klass) == self
+    end
+
+    def instance_of?(klass)
+      if super
+        true
+      else
+        klass = ObjectManager.construct_class(klass)
+        is_a?(klass) || classes.include?(klass)
+      end
+    end
+    alias :kind_of? :instance_of?
+
+    def new_record?
+      Query.new.count(:p).where(self,:p,:o).execute == 0
+    end
+
+    # saves instance into datastore
+    def save
+      ConnectionPool.write_adapter.add(self,RDF::type,self.class)
+      self
+    end
+
+    def abbreviation
+      [Namespace.prefix(uri).to_s, localname]
+    end
+
+    # get an abbreviation from to_s
+    # returns a copy of uri if no abbreviation found
+    def abbr
+      (abbr = Namespace.abbreviate(uri)) ? abbr : uri
+    end
+
+    # checks if an abbrivation exists for this resource
+    def abbr?
+      Namespace.prefix(self) ? true : false
+    end
+
+    def localname
+      Namespace.localname(self)
+    end
+
+    # returns an RDF::Property for RDF::type's of this resource, e.g. [RDFS::Resource, FOAF::Person]
+    #
+    # Note: this method performs a database lookup for { self rdf:type ?o }.
+    # For simple type-checking (to know if you are handling an ActiveRDF object,
+    # use self.class, which does not do a database query, but simply returns
+    # RDFS::Resource.
+    def type
+      RDF::Property.new(RDF::type, self)
+    end
+
+    def type=(type)
+      RDF::Property.new(RDF::type, self).replace(type)
+    end
+
+    # returns array of Classes for all types
+    def classes
+      type.collect{|type_res| ObjectManager.construct_class(type_res)}
+    end
+
+    # define a localname for a predicate URI
+    #
+    # localname should be a Symbol or String, fulluri a Resource or String, e.g.
+    # register_predicate(:name, FOAF::lastName)
+    def register_predicate(localname, fulluri)
+      localname = localname.to_s
+      fulluri = RDFS::Resource.new(fulluri) if fulluri.is_a? String
+
+      # predicates is a hash from abbreviation string to full uri resource
+      (@predicates ||= {})[localname] = fulluri
+    end
+
+    # returns array of RDFS::Resources for properties that belong to this resource
+    def class_predicates
+      Query.new.distinct(:p).where(:p,RDFS::domain,:t).where(self,RDF::type,:t).execute
+    end
+    alias class_level_predicates class_predicates
+
+    # returns array of RDF::Propertys for properties that belong to this resource
+    def class_properties
+      class_predicates.collect{|prop| RDF::Property.new(prop,self)}
+    end
+
+    # returns array of RDFS::Resources for properties that are directly defined for this resource
+    def direct_predicates
+      Query.new.distinct(:p).where(self,:p,:o).execute
+    end
+
+    # returns array of RDF::Propertys that are directly defined for this resource
+    def direct_properties
+      direct_predicates.collect{|prop| RDF::Property.new(prop,self)}
+    end
+
+    # returns array of RDFS::Resources for all known properties of this resource
+    def predicates
+      direct_predicates | class_predicates
+    end
+
+    # returns array of RDF::Propertys for all known properties of this resource
+    def properties
+      predicates.collect{|prop| RDF::Property.new(prop,self)}
+    end
+
+    # for resources of type RDFS::Class, returns array of RDFS::Resources for the known properties of their objects
+    def instance_predicates
+      ip = Query.new.distinct(:p).where(:p,RDFS::domain,self).execute
+      if ip.size > 0
+        ip |= Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
+      else []
+      end
+    end
+
+    # for resources of type RDFS::Class, returns array of RDF::Propertys for the known properties of their objects
+    def instance_properties
+      instance_predicates.collect{|prop| RDF::Property.new(prop,self)}
+    end
+
+    # returns array RDFS::Resources for known properties that do not have a value
+    def empty_predicates
+      predicates.reject{|pred| pred.size > 0}.uniq
+    end
+
+    # returns array RDF::Propertys for known properties that do not have a value
+    def empty_properties
+      empty_predicates.collect{|prop| RDF::Property.new(prop,self)}
+    end
+
+    if $activerdf_internal_reasoning
+      # Redefine and add methods that perform some limited RDF & RDFS reasoning
+
+      # returns array of RDFS::Resources for the class properties of this resource, including those of its supertypes
+      def class_predicates
+        types.inject([]){|class_preds,type| class_preds |= type.instance_predicates}
+      end
+
+      # for resources of type RDFS::Class, returns array of RDFS::Resources for the known properties of their objects, including those of its supertypes
+      def instance_predicates
+        ip = Query.new.distinct(:s).where(:s,RDFS::domain,self).execute
+        ip |= ip.collect{|p| p.super_predicates}.flatten
+        ip |= super_types.collect{|type| type.instance_predicates}.flatten
+        ip |= Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
+        ip
+      end
+
+      # for resources of type RDFS::Property, returns array of RDFS::Resources for all properties that are super properties defined by RDFS::subPropertyOf
+      def super_predicates
+        sp = []
+        Query.new.distinct(:superproperty).where(self,RDFS::subPropertyOf,:superproperty).execute.each do |superproperty|
+          sp |= [superproperty]
+          sp |= superproperty.super_predicates
+        end
+        sp
+      end
+
+      # for resources of type RDFS::Class, returns array of RDFS::Resources for all super types defined by RDF::subClassOf
+      def super_types
+        st = []
+          Query.new.distinct(:superklass).where(self,RDFS::subClassOf,:superklass).execute.each do |supertype|
+            st |= [supertype]
+            st |= supertype.super_types
+          end
+        st
+      end
+
+      # for resources of type RDFS::Class, returns array of classes for all super types defined by RDF::subClassOf
+      # otherwise returns empty array
+      def super_classes
+        super_types.collect{|type_res| ObjectManager.construct_class(type_res)}
+      end
+
+      # returns array of RDFS::Resources for all types, including supertypes
+      def types
+        types = self.type.to_a
+        types |= types.collect{|type| type.super_types}.flatten
+        types |= [RDFS::Resource.class_uri]   # all resources are subtype of RDFS::Resource
+        types
+      end
+
+      # returns array of Classes for all types, including supertypes
+      def classes
+        types.collect{|type_res| ObjectManager.construct_class(type_res)}
+      end
+    end
 
     alias :to_s :uri
     def to_literal_s
       raise ActiveRdfError, "emtpy RDFS::Resources not allowed" if self.uri.size == 0
       "<#{uri}>"
     end
+
     def inspect
       if ConnectionPool.adapters.size > 0
         type =
@@ -134,20 +328,6 @@ module RDFS
         label = self.uri
       end
       "#<#{type} #{label}>"
-    end
-
-    def abbreviation; [Namespace.prefix(uri).to_s, localname]; end
-
-    # get an abbreviation from to_s
-    # returns a copy of uri if no abbreviation found
-    def abbr
-      str = to_s
-      (abbr = Namespace.abbreviate(str)) ? abbr : str
-    end
-
-    # checks if an abbrivation exists for this resource
-    def abbr?
-      Namespace.prefix(self) ? true : false
     end
 
     def to_xml
@@ -181,10 +361,6 @@ module RDFS
       end
       xml += "</rdf:Description>\n"
       xml += "</rdf:RDF>"
-    end
-
-    def localname
-      Namespace.localname(self)
     end
 
     # Searches for property belonging to this resource. Returns RDF::Property.
@@ -256,173 +432,6 @@ module RDFS
       # we are never sure that eyal cannot have an age, we just dont know the
       # age right now)
       nil
-    end
-
-    # saves instance into datastore
-    def save
-      ConnectionPool.write_adapter.add(self,RDF::type,self.class)
-      self
-    end
-
-    # returns an RDF::Property for RDF::type's of this resource, e.g. [RDFS::Resource, FOAF::Person]
-    #
-    # Note: this method performs a database lookup for { self rdf:type ?o }.
-    # For simple type-checking (to know if you are handling an ActiveRDF object,
-    # use self.class, which does not do a database query, but simply returns
-    # RDFS::Resource.
-    def type
-      RDF::Property.new(RDF::type, self)
-    end
-
-    def type=(type)
-      RDF::Property.new(RDF::type, self).replace(type)
-    end
-
-    # returns array of Classes for all types
-    def classes
-      type.collect{|type_res| ObjectManager.construct_class(type_res)}
-    end
-
-    def is_a?(klass)
-      super || ObjectManager.construct_class(klass) == self
-    end
-
-    def instance_of?(klass)
-      if super
-        true
-      else
-        klass = ObjectManager.construct_class(klass)
-        is_a?(klass) || classes.include?(klass)
-      end
-    end
-    alias :kind_of? :instance_of?
-
-    # define a localname for a predicate URI
-    #
-    # localname should be a Symbol or String, fulluri a Resource or String, e.g.
-    # register_predicate(:name, FOAF::lastName)
-    def register_predicate(localname, fulluri)
-      localname = localname.to_s
-      fulluri = RDFS::Resource.new(fulluri) if fulluri.is_a? String
-
-      # predicates is a hash from abbreviation string to full uri resource
-      (@predicates ||= {})[localname] = fulluri
-    end
-
-    # returns array of RDFS::Resources for properties that belong to this resource
-    def class_predicates
-      Query.new.distinct(:p).where(:p,RDFS::domain,:t).where(self,RDF::type,:t).execute
-    end
-    alias class_level_predicates class_predicates
-
-    # returns array of RDF::Propertys for properties that belong to this resource
-    def class_properties
-      class_predicates.collect{|prop| RDF::Property.new(prop,self)}
-    end
-
-    # returns array of RDFS::Resources for properties that are directly defined for this resource
-    def direct_predicates
-      Query.new.distinct(:p).where(self,:p,:o).execute
-    end
-
-    # returns array of RDF::Propertys that are directly defined for this resource
-    def direct_properties
-      direct_predicates.collect{|prop| RDF::Property.new(prop,self)}
-    end
-
-    # returns array of RDFS::Resources for all known properties of this resource
-    def predicates
-      direct_predicates | class_predicates
-    end
-
-    # returns array of RDF::Propertys for all known properties of this resource
-    def properties
-      predicates.collect{|prop| RDF::Property.new(prop,self)}
-    end
-
-    # for resources of type RDFS::Class, returns array of RDFS::Resources for the known properties of their objects
-    def instance_predicates
-      ip = Query.new.distinct(:p).where(:p,RDFS::domain,self).execute
-      if ip.size > 0
-        ip |= Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
-      else []
-      end
-    end
-
-    # for resources of type RDFS::Class, returns array of RDF::Propertys for the known properties of their objects
-    def instance_properties
-      instance_predicates.collect{|prop| RDF::Property.new(prop,self)}
-    end
-
-    # returns array RDFS::Resources for known properties that do not have a value
-    def empty_predicates
-      predicates.reject{|pred| pred.size > 0}.uniq
-    end
-
-    # returns array RDF::Propertys for known properties that do not have a value
-    def empty_properties
-      empty_predicates.collect{|prop| RDF::Property.new(prop,self)}
-    end
-
-    def new_record?
-      Query.new.count(:p).where(self,:p,:o).execute == 0
-    end
-
-    if $activerdf_internal_reasoning
-      # Redefine and add methods that perform some limited RDF & RDFS reasoning
-
-      # returns array of RDFS::Resources for the class properties of this resource, including those of its supertypes
-      def class_predicates
-        types.inject([]){|class_preds,type| class_preds |= type.instance_predicates}
-      end
-
-      # for resources of type RDFS::Class, returns array of RDFS::Resources for the known properties of their objects, including those of its supertypes
-      def instance_predicates
-        ip = Query.new.distinct(:s).where(:s,RDFS::domain,self).execute
-        ip |= ip.collect{|p| p.super_predicates}.flatten
-        ip |= super_types.collect{|type| type.instance_predicates}.flatten
-        ip |= Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
-        ip
-      end
-
-      # for resources of type RDFS::Property, returns array of RDFS::Resources for all properties that are super properties defined by RDFS::subPropertyOf
-      def super_predicates
-        sp = []
-        Query.new.distinct(:superproperty).where(self,RDFS::subPropertyOf,:superproperty).execute.each do |superproperty|
-          sp |= [superproperty]
-          sp |= superproperty.super_predicates
-        end
-        sp
-      end
-
-      # for resources of type RDFS::Class, returns array of RDFS::Resources for all super types defined by RDF::subClassOf
-      def super_types
-        st = []
-          Query.new.distinct(:superklass).where(self,RDFS::subClassOf,:superklass).execute.each do |supertype|
-            st |= [supertype]
-            st |= supertype.super_types
-          end
-        st
-      end
-
-      # for resources of type RDFS::Class, returns array of classes for all super types defined by RDF::subClassOf
-      # otherwise returns empty array
-      def super_classes
-        super_types.collect{|type_res| ObjectManager.construct_class(type_res)}
-      end
-
-      # returns array of RDFS::Resources for all types, including supertypes
-      def types
-        types = self.type.to_a
-        types |= types.collect{|type| type.super_types}.flatten
-        types |= [RDFS::Resource.class_uri]   # all resources are subtype of RDFS::Resource
-        types
-      end
-
-      # returns array of Classes for all types, including supertypes
-      def classes
-        types.collect{|type_res| ObjectManager.construct_class(type_res)}
-      end
     end
   end
 end

@@ -59,7 +59,7 @@ class Query
 
   # Clears the select clauses
   def clear_select
-    ActiveRdfLogger::log_debug "Cleared select clause"
+    ActiveRdfLogger::log_debug "Cleared select clause", self
     @select_clauses = []
     @distinct = false
   end
