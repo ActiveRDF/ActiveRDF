@@ -1,4 +1,4 @@
-module RDFS
+module ActiveRDF
   
   # Helper Module that contains same additional methods that
   # are expected from classes that want to behave like
@@ -19,7 +19,7 @@ module RDFS
     end
     
     # NTriple representation of element
-    def to_ntriple
+    def to_literal_s
       "<#{uri}>"
     end
     

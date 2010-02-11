@@ -26,7 +26,7 @@ class PropertyList < Array
     add pv
     
     # insert the new statment into the store
-    FederationManager.add(@s, @p, pv)
+    ActiveRDF::FederationManager.add(@s, @p, pv)
   end
   
   # delete a statment which contains old_p_value
@@ -35,7 +35,7 @@ class PropertyList < Array
     check_writeable!
     # delete the old statment
     self.delete(old_p_value)
-    FederationManager.delete(@s, @p, old_p_value)
+    ActiveRDF::FederationManager.delete(@s, @p, old_p_value)
     
     # insert the new statment
     self << new_p_value
@@ -50,13 +50,13 @@ class PropertyList < Array
       # delete only triples whose values is specified by parameters
       params.each{|param|
         if self.delete(param)
-          return FederationManager.delete(@s, @p, param)
+          return ActiveRDF::FederationManager.delete(@s, @p, param)
         end
       }
     else
       # delete every triple related to :s and :p whose values is contained by self...
       self.each{|value|
-        if FederationManager.delete(@s, @p, value) == false
+        if ActiveRDF::FederationManager.delete(@s, @p, value) == false
           return false
         end
       }

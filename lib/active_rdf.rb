@@ -31,6 +31,8 @@ require 'objectmanager/literal'
 require 'federation/connection_pool'
 require 'queryengine/query'
 require 'federation/active_rdf_adapter'
+# Todo: Not used in ARDF any more? -> Still required for Talia
+require 'objectmanager/property_list'
 
 ActiveRdfLogger::log_info "ActiveRDF loaded, logging level: #{ActiveRdfLogger::logger.level}"
 

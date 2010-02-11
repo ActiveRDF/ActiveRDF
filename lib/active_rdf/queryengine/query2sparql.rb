@@ -68,17 +68,17 @@ module ActiveRDF
       filters = query.filter_clauses.collect do |filter|
         variable, operator, operand = filter[0], filter[1][0], filter[1][1]
         case operator
-          when :lang
-            tag, exact = operand
-            if exact
-              "lang(?#{variable}) = '#{tag}'"
-            else
-              "regex(lang(?#{variable}), '#{tag.gsub(/_.*/,'')}')"
-            end
-          when :datatype
-            "datatype(?#{variable}) = #{operand.to_literal_s}"
-          when :regex,:regexp
-            "regex(str(?#{variable}), '#{operand.to_s}')"
+        when :lang
+          tag, exact = operand
+          if exact
+            "lang(?#{variable}) = '#{tag}'"
+          else
+            "regex(lang(?#{variable}), '#{tag.gsub(/_.*/,'')}')"
+          end
+        when :datatype
+          "datatype(?#{variable}) = #{operand.to_literal_s}"
+        when :regex,:regexp
+          "regex(str(?#{variable}), '#{operand.to_s}')"
         end
       end
       "FILTER (#{filters.join(" && ")})" if filters.size > 0
@@ -90,21 +90,19 @@ module ActiveRDF
 
     def Query2SPARQL.construct_clause(term)
       case term
-        when Symbol
-          "?#{term}"
-        when RDFS::Resource, RDFS::Literal
-          term.to_literal_s
+      when Symbol
+        "?#{term}"
+      when RDFS::Resource, RDFS::Literal, ActiveRDF::ResourceLike
+        term.to_literal_s
       when String
         "\"#{term}\""
-      when RDFS::Literal
-        term.to_literal_s
-        when Class
-          raise ActiveRdfError, "class must inherit from RDFS::Resource" unless term.ancestors.include?(RDFS::Resource)
-          term.class_uri.to_literal_s
-        when nil
-          nil
-        else
-          "\"#{term.to_s}\""
+      when Class
+        raise ActiveRdfError, "class must inherit from RDFS::Resource" unless term.ancestors.include?(RDFS::Resource)
+        term.class_uri.to_literal_s
+      when nil
+        nil
+      else
+        term.respond_to?(:uri) ? "<#{term.to_s}>" : "\"#{term.to_s}\""
       end
     end
 
