@@ -73,11 +73,11 @@ def get_secondary_adapter
 end
 
 def get_read_only_adapter
-	if ConnectionPool.adapter_types.include?(:sparql)
+  if ConnectionPool.adapter_types.include?(:sparql)
     get_sparql
   else
-		raise ActiveRdfError, "no suitable read-only adapter found for test"
-	end
+    raise ActiveRdfError, "no suitable read-only adapter found for test"
+  end
 end
 
 def get_primary_write_adapter

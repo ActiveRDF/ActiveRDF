@@ -17,7 +17,7 @@ class TestResourceWriting < Test::Unit::TestCase
 
     @@eyal.test::age = 100
     assert_equal 100, @@eyal.test::age.to_a.first
-   
+
     @@eyal.age += 18
     assert_equal [100,18], @@eyal.age
 
@@ -29,7 +29,7 @@ class TestResourceWriting < Test::Unit::TestCase
     TEST::eyal.test::email = ["eyal@cs.vu.nl","eyal.oren@deri.net"]
     assert_equal 2, TEST::eyal.email.size
     TEST::eyal.email.clear
-    
+
     # once direct predicates not defined in the schema are removed, they are no longer accessible without specifying a namespace
     assert_nil TEST::eyal.email
     assert_raise ActiveRdfError do

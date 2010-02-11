@@ -2,7 +2,7 @@ require 'federation/connection_pool'
 
 include ActiveRdfBenchmark
 
-# Manages the federation of datasources: distributes queries to right 
+# Manages the federation of datasources: distributes queries to right
 # datasources and merges their results
 
 class FederationManager
@@ -21,10 +21,10 @@ class FederationManager
     benchmark("SPARQL/RDF", Logger::DEBUG) do |bench_message|
       bench_message << "DELETE #{s} - #{p} - #{o} : #{c}" if(bench_message)
     raise ActiveRdfError, "cannot write without a write-adapter" unless ConnectionPool.write_adapter
-      # transform wildcard symbols to nil (for the adaptors)
-      s = nil if s.is_a? Symbol
-      p = nil if p.is_a? Symbol
-      o = nil if o.is_a? Symbol
+    # transform wildcard symbols to nil (for the adaptors)
+    s = nil if s.is_a? Symbol
+    p = nil if p.is_a? Symbol
+    o = nil if o.is_a? Symbol
       ConnectionPool.write_adapter.delete(s,p,o,c)
   end
   end
@@ -45,9 +45,9 @@ class FederationManager
   # by distributing query over complete read-pool
   # and aggregating the results
   def FederationManager.execute(q, options={:flatten => false})
-		if ConnectionPool.read_adapters.empty?
-			raise ActiveRdfError, "cannot execute query without data sources" 
-		end
+    if ConnectionPool.read_adapters.empty?
+      raise ActiveRdfError, "cannot execute query without data sources"
+    end
 
     benchmark("SPARQL/RDF", Logger::DEBUG) do |bench_message|
       # Only build the benchmark message if we need it
@@ -67,11 +67,11 @@ class FederationManager
       # were filtered out when doing results.union)
       results = []
       ConnectionPool.read_adapters.each do |source|
-				source_results = source.execute(q)
-				source_results.each do |clauses|
-					results << clauses
-				end
-			end
+        source_results = source.execute(q)
+        source_results.each do |clauses|
+          results << clauses
+        end
+      end
 
       # count
       return results.flatten.inject{|mem,c| mem + c} if q.count?
@@ -96,10 +96,10 @@ class FederationManager
           results = nil
         when 1
           results = results.first
-				end
-			end
+        end
+      end
     end
-    
+
     results
     end # End benchmark
   end # End query

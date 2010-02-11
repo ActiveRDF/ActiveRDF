@@ -3,7 +3,7 @@
 # License:: LGPL
 
 class NG4JAdapter < ActiveRdfAdapter
-  
+
   ConnectionPool.register_adapter(:ng4j, self)
 
   class NG4JAdapterConfigurationError < StandardError
@@ -16,9 +16,9 @@ class NG4JAdapter < ActiveRdfAdapter
   attr_accessor :root_directory
   attr_accessor :graphset
 
-  # :database 
+  # :database
   #   either use :url, :type, :username, AND :password (for a
-  #   regular connection) OR :datasource AND :type (for a container 
+  #   regular connection) OR :datasource AND :type (for a container
   #   connection), default to memory data store
   #   example for a derby connection:
   #     :database => {:url => "jdbc:hsqldb:file:/some/location/on/your/drive", :type => "hsql", :username => "sa", :password => ""}
@@ -29,7 +29,7 @@ class NG4JAdapter < ActiveRdfAdapter
   def initialize(params = {})
     dbparams = params[:database]
     self.keyword_search = params[:lucene]
-    
+
     # if the model name is not provided and file persistence is used, then jena just
     # creates random files in the tmp dir. not good, as we need to know the model name
     # to have persistence
@@ -38,12 +38,12 @@ class NG4JAdapter < ActiveRdfAdapter
     else
       self.model_name = "http://deri.org/defaultgraph"
     end
-    
+
     # do some sanity checking
     if self.keyword_search? && !LuceneARQ.lucene_available?
       raise NG4JAdapterConfigurationError, "Lucene requested but is not available"
     end
-    
+
     # NG4J only supports in-memory store and database storage with HSQL, mysql and postgresql
     if dbparams
 
@@ -55,22 +55,22 @@ class NG4JAdapter < ActiveRdfAdapter
       rescue NameError
         raise NG4JAdapterConfigurationError, "database type #{dbparams[:type]} not recognized"
       end
-      
-      self.connection = NG4J::DB::DriverManager.getConnection(dbparams[:url], 
+
+      self.connection = NG4J::DB::DriverManager.getConnection(dbparams[:url],
                                                    dbparams[:username],
                                                    dbparams[:password])
-    
+
       self.graphset = NG4J::DB::NamedGraphSetDB.new(self.connection)
-      
-    else      
-      self.graphset = NG4J::Impl::NamedGraphSetImpl.new()      
+
+    else
+      self.graphset = NG4J::Impl::NamedGraphSetImpl.new()
     end
 
     self.model = self.graphset.asJenaModel(self.model_name)
-    
+
     self.reads = true
     self.writes = true
-    
+
     self
   end
 
@@ -116,7 +116,7 @@ class NG4JAdapter < ActiveRdfAdapter
     o = (is_wildcard?(object) ? Jena::Graph::Node.create("??") : build_object(object))
 
     self.graphset.removeQuad(NG4J::Internal::Quad.new(c, s, p, o))
-    
+
     self.model.prepare if self.model.respond_to? :prepare
     self.model.rebind if self.model.respond_to? :rebind
   end
@@ -127,10 +127,10 @@ class NG4JAdapter < ActiveRdfAdapter
     if context.nil?
       context = RDFS::Resource.new(self.model_name)
     end
-    
-    self.graphset.addQuad(NG4J::Internal::Quad.new(build_context(context), build_subject(subject), 
+
+    self.graphset.addQuad(NG4J::Internal::Quad.new(build_context(context), build_subject(subject),
       build_predicate(predicate), build_object(object)))
-    
+
     self.model.prepare if self.model.respond_to? :prepare
     self.model.rebind if self.model.respond_to? :rebind
   end
@@ -143,12 +143,12 @@ class NG4JAdapter < ActiveRdfAdapter
   # :format
   #   format -- :ntriples, :n3, or :rdfxml, default :rdfxml
   # :into
-  #   :default_model for the main model, otherwise the contents of the uri get loaded 
-  #   into a context with the same uri 
+  #   :default_model for the main model, otherwise the contents of the uri get loaded
+  #   into a context with the same uri
   # TODO: add quad support
   def load(uri_as_string, params = {})
     format = params[:format] ? params[:format] : :rdfxml
-    
+
     jena_format =
       case format
       when :rdfxml
@@ -165,20 +165,20 @@ class NG4JAdapter < ActiveRdfAdapter
     else
       self.graphset.read(uri_as_string, jena_format)
     end
-    
+
     self.lucene_index_behind = true
-    
-  end  
+
+  end
 
   # this method gets called by the ActiveRDF query engine
   # TODO: add quad support
   def execute(query)
 
     if self.keyword_search? && query.keyword?
-            
+
       # duplicate the query
       query_with_keywords = query.dup
-      
+
       # now duplicate the where stuff so we can fiddle with it...
       # this is GROSS -- fix this if Query ever sprouts a proper
       # deep copy or a where_clauses setter
@@ -191,7 +191,7 @@ class NG4JAdapter < ActiveRdfAdapter
         #query.where("lucene_literal_#{var}".to_sym, LuceneARQ::KEYWORD_PREDICATE, keyword)
         #query.where(var, "lucene_property_#{var}".to_sym, "lucene_literal_#{var}".to_sym)
 
-        # use this if activerdf expects the literal to come back, not the 
+        # use this if activerdf expects the literal to come back, not the
         # subject, or if using indexbuildersubject (which makes the subject
         # come back instead of the literal
         query_with_keywords.where(var, RDFS::Resource.new(LuceneARQ::KEYWORD_PREDICATE), keyword)
@@ -210,17 +210,17 @@ class NG4JAdapter < ActiveRdfAdapter
       return [[true]] if results.size > 0
       return [[false]]
     end
-    
+
     if query.count?
       return results.size
     end
 
     results
-    
+
   end
 
   # ==========================================================================
-  # put private methods here to seperate api methods from the 
+  # put private methods here to seperate api methods from the
   # inner workings of the adapter
   private
 
@@ -234,7 +234,7 @@ class NG4JAdapter < ActiveRdfAdapter
       else
         objlit = object
       end
-      
+
       if objlit.type
         type = Jena::Datatypes::TypeMapper.getInstance.getTypeByName(objlit.type.uri)
         o = Jena::Graph::Node.createLiteral(objlit.value.to_s, nil, type)
@@ -243,11 +243,11 @@ class NG4JAdapter < ActiveRdfAdapter
       else
         o = Jena::Graph::Node.createLiteral(objlit.value.to_s)
       end
-    end    
+    end
     return o
   end
 
-  def build_subject(subject) 
+  def build_subject(subject)
     # TODO: raise error if not URI
     return Jena::Graph::Node.createURI(subject.uri)
   end
@@ -272,7 +272,7 @@ class NG4JAdapter < ActiveRdfAdapter
   #     else
   #       objlit = object
   #     end
-  #     
+  #
   #     if objlit.type
   #       type = Jena::Datatypes::TypeMapper.getInstance.getTypeByName(objlit.type.uri)
   #       o = self.model.createTypedLiteral(objlit.value, type)
@@ -281,14 +281,14 @@ class NG4JAdapter < ActiveRdfAdapter
   #     else
   #       o = self.model.createTypedLiteral(objlit.value, nil)
   #     end
-  #   end    
+  #   end
   #   return o
   # end
-  # 
-  # def build_model_subject(subject) 
+  #
+  # def build_model_subject(subject)
   #   self.model.getResource(subject.uri)
   # end
-  # 
+  #
   # def build_model_predicate(predicate)
   #   self.model.getProperty(predicate.uri)
   # end
@@ -298,16 +298,16 @@ class NG4JAdapter < ActiveRdfAdapter
   end
 
   def query_jena(query)
-    query_sparql = translate(query)    
-    
+    query_sparql = translate(query)
+
     # jena_query = Jena::Query::QueryFactory.create(query_sparql)
-    # 
+    #
     # puts jena_query
     #
-    
+
     if query_sparql =~ /GRAPH/
       # query contains GRAPH keyword and has to be executed against an NG4J NamedGraphDataset
-      qexec = Jena::Query::QueryExecutionFactory.create(query_sparql, 
+      qexec = Jena::Query::QueryExecutionFactory.create(query_sparql,
             NG4J::Sparql::NamedGraphDataset.new(self.graphset, Jena::Graph::Node.createURI(self.model_name)))
     else
       # query without GRAPH keyword gets executed against the union model
@@ -321,7 +321,7 @@ class NG4JAdapter < ActiveRdfAdapter
       LuceneARQ::LARQ.setDefaultIndex(qexec.getContext, retrieve_lucene_index)
     end
 
-    begin 
+    begin
       results = perform_query(query, qexec)
     ensure
       qexec.close
@@ -334,7 +334,7 @@ class NG4JAdapter < ActiveRdfAdapter
   def perform_query(query, qexec)
     results = qexec.execSelect
     arr_results = []
-    
+
     while results.hasNext
       row = results.nextSolution
       res_row = []
@@ -351,7 +351,7 @@ class NG4JAdapter < ActiveRdfAdapter
             # datatyped literal
             res_row << Literal.new(thing.getValue, RDFS::Resource.new(thing.getDatatypeURI))
           elsif thing.getDatatypeURI.nil?
-            # language tagged literal 
+            # language tagged literal
             res_row << Literal.new(thing.getLexicalForm, "@" + thing.getLanguage)
           else
             raise ActiveRdfError, "Jena Sparql returned a strange literal"

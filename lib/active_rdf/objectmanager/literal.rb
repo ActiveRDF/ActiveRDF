@@ -50,7 +50,7 @@ module RDFS
       end
     end
     alias :datatype :xsd_type
-      
+
     def to_literal_s
       s = kind_of?(Time) ? xmlschema : to_s
       unless $activerdf_without_datatype
@@ -80,12 +80,12 @@ class LocalizedString < String
     end
   end
   alias_method :eql?, :==
-  
+
   def inspect
     super + "@#@lang"
   end
 
-  # returns quoted string with language type if present. 
+  # returns quoted string with language type if present.
   # xsd:string isn't appended when lang missing (xsd:string should be considered the default type)
   def to_literal_s
     $activerdf_without_datatype ? "\"#{self}\"" : "\"#{self}\"@#@lang"

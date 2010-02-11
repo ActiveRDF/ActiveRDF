@@ -9,19 +9,19 @@ require "#{File.dirname(__FILE__)}/../common"
 
 class TestConnectionPool < Test::Unit::TestCase
   def setup
-		ConnectionPool.clear
+    ConnectionPool.clear
   end
 
   def teardown
-		ConnectionPool.clear
+    ConnectionPool.clear
   end
 
-  def test_class_add_data_source    
+  def test_class_add_data_source
     # test for successfull adding of an adapter
     adapter = get_primary_adapter
     assert_kind_of ActiveRdfAdapter, adapter
     assert ConnectionPool.adapter_pool.include?(adapter)
-    
+
     # now check that we have different adapters for primary and secondary
     adapter2 = get_secondary_adapter
     assert adapter != adapter2

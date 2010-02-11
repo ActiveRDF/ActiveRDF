@@ -17,7 +17,7 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
   include SetupAdapter
   include TestNetworkAwareAdapter
   include TestReasoningAdapter
-  
+
   def setup
     super(:type => :rdflite)
   end
@@ -28,12 +28,12 @@ class TestRdfLiteAdapter < Test::Unit::TestCase
 
   def test_initialise
     @adapter = ConnectionPool.add(:type => :rdflite, :keyword => false)
-    assert !@adapter.keyword_search? 
+    assert !@adapter.keyword_search?
   end
 
 #  def test_keyword_search
 #    @adapter = ConnectionPool.add(:type => :rdflite, :keyword => true)
-#    
+#
 #    # we cant garantuee that ferret is installed
 #    if @adapter.keyword_search?
 #      assert_equal TEST::eyal, Query.new.distinct(:s).where(:s,:keyword,"blue").execute(:flatten => true)

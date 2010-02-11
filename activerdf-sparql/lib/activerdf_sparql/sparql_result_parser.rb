@@ -9,7 +9,7 @@ class SparqlResultParser
     @current_type = nil
     @resource_type = resource_type
   end
-  
+
   def tag_start(name, attrs)
     case name
     when 'variable'
@@ -22,7 +22,7 @@ class SparqlResultParser
       @current_type = name
     end
   end
-  
+
   def tag_end(name)
     if name == "result"
       @result << @current_result
@@ -31,10 +31,10 @@ class SparqlResultParser
     elsif name == "sparql"
     end
   end
-  
+
   def text(text)
     if !@current_type.nil?
-      @current_result[@index] = create_node(@current_type, text)  
+      @current_result[@index] = create_node(@current_type, text)
     end
   end
 
@@ -49,7 +49,7 @@ class SparqlResultParser
       value.to_s
     end
   end
-  
+
   def method_missing (*args)
   end
 end

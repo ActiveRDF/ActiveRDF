@@ -28,7 +28,7 @@ class TestQuery2Sparql < Test::Unit::TestCase
     assert_equal expected, generated
   end
 
-	def test_sparql_distinct
+  def test_sparql_distinct
     query = Query.new
     query.distinct(:s)
     query.where(:s, RDFS::Resource.new('foaf:age'), :a)

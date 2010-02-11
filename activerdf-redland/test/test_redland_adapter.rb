@@ -26,7 +26,7 @@ module TestRedlandAdapter
 end
 
 class TestRedlandAdapterMemory < Test::Unit::TestCase
-  include TestRedlandAdapter 
+  include TestRedlandAdapter
   # not persistent
 
   def setup
@@ -35,9 +35,9 @@ class TestRedlandAdapterMemory < Test::Unit::TestCase
 end
 
 #class TestRedlandAdapterFile < Test::Unit::TestCase
-#  include TestRedlandAdapter 
+#  include TestRedlandAdapter
 #  include TestPersistentAdapter
-# 
+#
 #  def setup
 #    super(:type => :redland, :location => @location)
 #    @location = File.join(Dir.tmpdir,"redland-temp")
@@ -48,7 +48,7 @@ end
 #end
 
 class TestRedlandAdapterSqlite < Test::Unit::TestCase
-  include TestRedlandAdapter 
+  include TestRedlandAdapter
   # not persistent
 
   def setup
@@ -69,7 +69,7 @@ end
 
 #class TestRedlandAdapterPostgres < Test::Unit::TestCase
 #  include TestPersistentAdapter
-#  include TestRedlandAdapter 
+#  include TestRedlandAdapter
 #
 #  def setup
 #    super(:type => :redland, :name => 'db1', :location => 'postgresql',

@@ -28,14 +28,14 @@ class TestObjectManager < Test::Unit::TestCase
     assert_kind_of Class, TEST::Person
     assert TEST::Person.ancestors.include?(RDFS::Resource)
     new_person = TEST::Person.new(TEST::michael)
-    assert_instance_of TEST::Person, new_person 
+    assert_instance_of TEST::Person, new_person
     assert new_person.respond_to?(:uri)
 
     assert_equal RDFS::Resource.new('http://www.w3.org/2000/01/rdf-schema#Class'), RDFS::Class
     assert_kind_of Class, RDFS::Class
     assert RDFS::Class.ancestors.include?(RDFS::Resource)
     new_class = RDFS::Class.new(TEST::klass)
-    assert_instance_of RDFS::Resource, new_class 
+    assert_instance_of RDFS::Resource, new_class
     assert new_class.respond_to?(:uri)
   end
 

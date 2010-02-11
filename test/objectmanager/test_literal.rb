@@ -33,7 +33,7 @@ class TestLiteral < Test::Unit::TestCase
 
   def test_equality
     test1 = 'test'
-    test2 = RDFS::Literal.typed('test', XSD::string)  
+    test2 = RDFS::Literal.typed('test', XSD::string)
     assert_equal test2.to_literal_s, test1.to_literal_s
   end
 
@@ -63,7 +63,7 @@ class TestLocalizedString < Test::Unit::TestCase
     assert @ls_en == LocalizedString.new('localized string','en')
     assert @ls_en != LocalizedString.new('localized string','@gb')
   end
-  
+
   def test_to_literal_s
     assert_equal '"localized string"@en', @ls_en.to_literal_s
     $activerdf_without_datatype = true
