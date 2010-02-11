@@ -1,4 +1,4 @@
-require 'active_rdf'
+# require 'active_rdf'
 
 # TODO: support limit and offset
 
@@ -94,6 +94,10 @@ module ActiveRDF
           "?#{term}"
         when RDFS::Resource, RDFS::Literal
           term.to_literal_s
+      when String
+        "\"#{term}\""
+      when RDFS::Literal
+        term.to_literal_s
         when Class
           raise ActiveRdfError, "class must inherit from RDFS::Resource" unless term.ancestors.include?(RDFS::Resource)
           term.class_uri.to_literal_s

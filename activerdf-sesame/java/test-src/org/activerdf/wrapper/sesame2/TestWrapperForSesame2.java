@@ -23,17 +23,17 @@ public class TestWrapperForSesame2 extends TestCase {
 
 	
 	public void testJustGetTheWrapper() {
-		myWrapper.callConstructor();
+		myWrapper.callConstructor(null, null, false);
 	}
 
 	public void testMemoryStorePersistence() throws IOException {
 		File location = new File(new File (".").getCanonicalFile().toString() + "/../test/sesame-persistence-test1");
-		myWrapper.callConstructor(location, true);
+		myWrapper.callConstructor(location, null, false);
 	}
 
 	public void NativeStorePersistence() throws IOException {
 		File location = new File(new File (".").getCanonicalFile().toString() + "/../test/sesame-persistence-test2");
-		myWrapper.callConstructor(location, "spoc,pocs", true);
+		myWrapper.callConstructor(location, "spoc,pocs", false);
 	}
 
 	

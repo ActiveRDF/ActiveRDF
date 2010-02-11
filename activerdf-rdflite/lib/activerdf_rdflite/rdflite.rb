@@ -15,14 +15,13 @@ require 'mime/types'
 # search if ferret is installed.
 module ActiveRDF
   class RDFLite < ActiveRdfAdapter
-    $activerdflog.info "loading RDFLite adapter"
+    ActiveRdfLogger::log_info "Loading RDFLite adapter", self
 
     begin
       require 'ferret'
       @@have_ferret = true
     rescue LoadError
-      $activerdflog.info "Keyword search is disabled since we could not load Ferret. To
-      enable, please do \"gem install ferret\""
+      ActiveRdfLogger::log_info "Keyword search is disabled since we could not load Ferret. To enable, please do \"gem install ferret\"", self
       @@have_ferret = false
     end
 
@@ -35,7 +34,8 @@ module ActiveRDF
     # * :keyword => true/false (defaults to false)
     # * :pidx, :oidx, etc. => true/false (enable/disable these indices)
     def initialize(params = {})
-      super
+      super()
+      ActiveRdfLogger::log_info(self) { "Initialised rdflite with params #{params.to_s}" }
 
       @reasoning = truefalse(params[:reasoning], false)
       @subprops = {} if @reasoning
@@ -68,10 +68,10 @@ module ActiveRDF
         infos.add_field(:object, :store => :no) #, :index => :omit_norms)
 
         @ferret = if params[:location]
-                    Ferret::I.new(:path => params[:location] + '.ferret', :field_infos => infos)
-                  else
-                    Ferret::I.new(:field_infos => infos)
-                  end
+          Ferret::I.new(:path => params[:location] + '.ferret', :field_infos => infos)
+        else
+          Ferret::I.new(:field_infos => infos)
+        end
       end
     end
 
@@ -107,7 +107,7 @@ module ActiveRDF
       conditions = []
 
       [s,p,o,c].each_with_index do |r,i|
-        unless r.nil? or r.is_a?(Symbol)
+        unless r.nil? or check_type(r, Symbol)
           where_clauses << "#{SPOC[i]} = ?"
           conditions << r.to_literal_s
         end
@@ -119,7 +119,7 @@ module ActiveRDF
 
       # execute delete string with possible deletion conditions (for each
       # non-empty where clause)
-      $activerdflog.debug("deleting #{[s,p,o,c].join(' ')}")
+      ActiveRdfLogger::log_debug(self) { "Deleting #{[s,p,o,c].join(' ')}" }
       @db.execute(ds, *conditions)
 
       # delete literal from ferret index
@@ -156,14 +156,14 @@ module ActiveRDF
     # loads triples from file in ntriples format
     def load(location, syntax = nil)
       context = if @contexts
-                  if URI.parse(location).host
-                    RDFS::Resource.new(location)
-                   else
-                    RDFS::Resource.new("file:#{location}")
-                  end
-                else
-                  nil
-                end
+        if URI.parse(location).host
+          RDFS::Resource.new(location)
+        else
+          RDFS::Resource.new("file:#{location}")
+        end
+      else
+        nil
+      end
 
       if MIME::Types.of(location) == MIME::Types['application/rdf+xml'] or syntax == 'rdfxml'
         # check if rapper available
@@ -200,7 +200,7 @@ module ActiveRDF
       @db
     end
 
-  # executes ActiveRDF query on datastore
+    # executes ActiveRDF query on datastore
     def execute(query)
       # construct query clauses
       sql, conditions = translate(query)
@@ -215,12 +215,12 @@ module ActiveRDF
       elsif query.count?
         return [[results[0][0].to_i]]
       else
-      # otherwise we convert results to ActiveRDF nodes and return them
-        return wrap(query, results)
+        # otherwise we convert results to ActiveRDF nodes and return them
+        return wrap(results, query.resource_class)
       end
     end
 
-  # translates ActiveRDF query into internal sqlite query string
+    # translates ActiveRDF query into internal sqlite query string
     def translate(query)
       where, conditions = construct_where(query)
       [construct_select(query) + construct_join(query) + where + construct_sort(query) + construct_limit(query), conditions]
@@ -269,9 +269,6 @@ module ActiveRDF
       if not query.sort_clauses.empty?
         sort = query.sort_clauses.collect { |term| variable_name(query, term) }
         " order by (#{sort.join(',')})"
-      elsif not query.reverse_sort_clauses.empty?
-        sort = query.reverse_sort_clauses.collect { |term| variable_name(query, term) }
-        " order by (#{sort.join(',')}) DESC"
       else
         ""
       end
@@ -289,7 +286,7 @@ module ActiveRDF
       occurances = term_occurances(query).reject{|var,terms| terms.size < 2}
 
       # start with variables in first where clause
-      var_queue = query.where_clauses[0].find_all{|obj| obj.is_a?(Symbol) and occurances.include?(obj)}
+      var_queue = query.where_clauses[0].find_all{|obj| check_type(obj, Symbol) and occurances.include?(obj)}
 
       while !var_queue.empty? do
         var = var_queue.shift
@@ -314,7 +311,7 @@ module ActiveRDF
           join_stmt << join
 
           # add any terms from this table that haven't been seen yet to the queue
-          var_queue.concat query.where_clauses[table[1..-1].to_i].find_all{|obj| obj.is_a?(Symbol) and !seen_vars.include?(obj) and occurances.include?(obj)}
+          var_queue.concat query.where_clauses[table[1..-1].to_i].find_all{|obj| check_type(obj, Symbol) and !seen_vars.include?(obj) and occurances.include?(obj)}
         end
       end
 
@@ -328,7 +325,7 @@ module ActiveRDF
       term_occurances = {}
       query.where_clauses.each_with_index do |clause, table_index|
         clause.zip(SPOC).each do |obj,field|
-          if obj.is_a?(Symbol)
+          if check_type(obj, Symbol)
             (term_occurances[obj] ||= []) << ["t#{table_index}",field]
           end
         end
@@ -348,7 +345,7 @@ module ActiveRDF
 
       query.where_clauses.each_with_index do |clause, table_index|
         clause.zip(SPOC).each do |clause_elem,field|
-          if !(clause_elem.is_a?(Symbol) or clause_elem.nil?)
+          if !(check_type(clause_elem, Symbol) or clause_elem.nil?)
             # include querying on subproperty fields
             if field == 'p' and query.reasoning? and $activerdf_internal_reasoning
               predicate = clause_elem
@@ -369,17 +366,17 @@ module ActiveRDF
                 right_hand_sides << clause_elem.to_literal_s
               end
             end
-          # process filters
-          elsif field == 'o' and clause_elem.is_a?(Symbol) and (filter = query.filter_clauses[clause_elem])
+            # process filters
+          elsif field == 'o' and check_type(clause_elem, Symbol) and (filter = query.filter_clauses[clause_elem])
             operator, operand = filter
             case operator
-              when :datatype
-                where << "t#{table_index}.o like ?"
-                right_hand_sides << "%\"^^<#{operand}>"
-              when :lang
-                lang, exact = operand
-                where << "t#{table_index}.o like ?"
-                right_hand_sides << (exact ? "%\"@#{lang}" : "%\"@%#{lang}%")
+            when :datatype
+              where << "t#{table_index}.o like ?"
+              right_hand_sides << "%\"^^<#{operand}>"
+            when :lang
+              lang, exact = operand
+              where << "t#{table_index}.o like ?"
+              right_hand_sides << (exact ? "%\"@#{lang}" : "%\"@%#{lang}%")
             end
           end
         end
@@ -415,15 +412,26 @@ module ActiveRDF
       end
     end
 
-  # wrap resources into ActiveRDF resources, literals into Strings
-    def wrap(query, results)
-      results.collect do |row|
-        row.collect { |result| parse(result) }
+    # "safe" type checking that will not trigger additional queries
+    # on RDFS::Resource. This assumes that the klass is not a Resource
+    # type itself
+    def check_type(item, klass)
+      if(item.respond_to?(:uri))
+        item.class == klass
+      else
+        item.is_a?(klass)
       end
     end
 
-    def parse(result)
-      NTriplesParser.parse_node(result)
+    # wrap resources into ActiveRDF resources, literals into Strings
+    def wrap(results, result_type)
+      results.collect do |row|
+        row.collect { |result| parse(result, result_type) }
+      end
+    end
+
+    def parse(result, result_type)
+      NTriplesParser.parse_node(result, result_type)
     end
 
     def create_indices(params)

@@ -46,7 +46,7 @@ end
 
 def get_secondary_adapter
 #### Fetching default
-#  ConnectionPool.add(:type => :fetching)
+  ConnectionPool.add(:type => :fetching)
 #### Suggesting default
 #  ConnectionPool.add(:type => :suggesting)
 #### Rdflite default
@@ -58,7 +58,7 @@ def get_secondary_adapter
 #### Redland memory
 #  ConnectionPool.add(:type => :redland, :name => 'db2', :location => 'memory')
 #### Redland sqlite
-  ConnectionPool.add(:type => :redland, :name => 'db2', :location => 'sqlite', :new => 'yes')
+#  ConnectionPool.add(:type => :redland, :name => 'db2', :location => 'sqlite', :new => 'yes')
 #### Redland MySql
 #  ConnectionPool.add(:type => :redland, :name => 'db2', :location => 'mysql',
 #                                :host => 'localhost', :database => 'redland_test',

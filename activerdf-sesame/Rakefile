@@ -3,6 +3,7 @@ require 'rake'
 require 'rake/testtask'
 require 'rake/clean'
 require 'rake/gempackagetask'
+require 'rake/rdoctask'
 require 'rake/contrib/xforge'
 require 'rubygems'
 require 'fileutils'
@@ -16,6 +17,13 @@ $project  = MetaProject::Project::XForge::RubyForge.new('activerdf')
 #setup_tests
 setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
 
+# setup rdoc 
+Rake::RDocTask.new do |rdoc|
+	rdoc.rdoc_dir = 'doc/rdoc'
+	rdoc.options << '--line-numbers'
+	rdoc.rdoc_files.add ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
+end
+
 desc "Does a full compile, test run"
 task :default => [:test, :package]
 
@@ -27,6 +35,11 @@ setup_gem($name, $version) do |spec|
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('activerdf', '>= 1.6.4')
   spec.files = FileList[ 'ext/*.jar', '[A-Z]*', 'lib/**/*.rb', 'test/**/*' ].to_a
+end
+
+task :build_java do
+  Dir::chdir(File.expand_path(File.join(File.dirname(__FILE__), 'java')))
+  `ant`
 end
 
 task :verify_rubyforge do

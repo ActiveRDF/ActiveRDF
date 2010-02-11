@@ -1,4 +1,4 @@
-require 'active_rdf'
+# require 'active_rdf'
 
 # Maintains pool of adapter instances that are connected to datasources. Returns
 # right adapter for a given datasource, by either reusing an
@@ -34,7 +34,7 @@ module ActiveRDF
 
     # clears the pool: removes all registered data sources
     def ConnectionPool.clear
-      $activerdflog.info "ConnectionPool: clear called"
+    ActiveRdfLogger::log_info "Clear called", self
       @@adapter_pool = []
       @@adapter_parameters = []
       self.write_adapter = nil
@@ -64,7 +64,7 @@ module ActiveRDF
 
     # returns adapter-instance for given parameters (either existing or new)
     def ConnectionPool.add_data_source(connection_params)
-      $activerdflog.info "ConnectionPool: add_data_source with params: #{connection_params.inspect}"
+    ActiveRdfLogger::log_info(self) { "add_data_source with params: #{connection_params.inspect}" }
 
       # either get the adapter-instance from the pool
       # or create new one (and add it to the pool)
@@ -73,14 +73,14 @@ module ActiveRDF
         # adapter not in the pool yet: create it,
         # register its connection parameters in parameters-array
         # and add it to the pool (at same index-position as parameters)
-        $activerdflog.debug("Create a new adapter for parameters #{connection_params.inspect}")
+      ActiveRdfLogger::log_debug(self) { "Create a new adapter for parameters #{connection_params.inspect}" }
         adapter = create_adapter(connection_params)
         @@adapter_parameters << connection_params
         @@adapter_pool << adapter
       else
         # if adapter parametrs registered already,
         # then adapter must be in the pool, at the same index-position as its parameters
-        $activerdflog.debug("Reusing existing adapter")
+      ActiveRdfLogger::log_debug("Reusing existing adapter")
         adapter = @@adapter_pool[index]
       end
 
@@ -92,7 +92,7 @@ module ActiveRDF
 
     # remove one adapter from activerdf
     def ConnectionPool.remove_data_source(adapter)
-      $activerdflog.info "ConnectionPool: remove_data_source with params: #{adapter.to_s}"
+    ActiveRdfLogger.log_info(self) { "ConnectionPool: remove_data_source with params: #{adapter.to_s}" }
 
       index = @@adapter_pool.index(adapter)
 
@@ -138,14 +138,20 @@ module ActiveRDF
     # adapter-types can register themselves with connection pool by
     # indicating which adapter-type they are
     def ConnectionPool.register_adapter(type, klass)
-      $activerdflog.info "ConnectionPool: registering adapter of type #{type} for class #{klass}"
+    ActiveRdfLogger::log_info(self) { "Registering adapter of type #{type} for class #{klass}" }
       @@registered_adapter_types[type] = klass
     end
+
+  # unregister adapter-type
+  def ConnectionPool.unregister_adapter(type)
+    ActiveRdfLogger::log_info(self) { "ConnectionPool: deregistering adapter of type #{type}" }
+    @@registered_adapter_types.delete type
+  end
 
     # create new adapter from connection parameters
     def ConnectionPool.create_adapter connection_params
       # lookup registered adapter klass
-      klass = @@registered_adapter_types[connection_params[:type]]
+    klass = @@registered_adapter_types[connection_params[:type].to_sym]
 
       # raise error if adapter type unknown
       raise(ActiveRdfError, "unknown adapter type #{connection_params[:type]}") if klass.nil?

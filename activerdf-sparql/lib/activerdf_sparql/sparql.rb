@@ -1,4 +1,4 @@
-require 'active_rdf'
+# require 'active_rdf'
 require 'queryengine/query2sparql'
 require 'open-uri'
 require 'cgi'
@@ -8,7 +8,7 @@ require "#{File.dirname(__FILE__)}/sparql_result_parser"
 module ActiveRDF
   # SPARQL adapter
   class SparqlAdapter < ActiveRdfAdapter
-    $activerdflog.info "loading SPARQL adapter"
+  ActiveRdfLogger::log_info "Loading SPARQL adapter", self
     ConnectionPool.register_adapter(:sparql, self)
 
     attr_reader :engine
@@ -45,6 +45,7 @@ module ActiveRDF
 
       @request_method = params[:request_method] || :get
       raise ActiveRdfError, "Request method unsupported" unless [:get,:post].include? @request_method
+    ActiveRdfLogger::log_info(self) { "Sparql adapter initialised #{inspect}" }
     end
 
     def size
@@ -55,25 +56,27 @@ module ActiveRDF
     # may be called with a block
     def execute(query, &block)
       qs = Query2SPARQL.translate(query)
+    ActiveRdfLogger::log_debug(self) { "Executing sparql query #{query}" }
 
       if @caching
          result = query_cache(qs)
          if result.nil?
-           $activerdflog.debug "cache miss for query #{qs}"
+        ActiveRdfLogger.log_debug(self) { "Cache miss for query #{qs}" }
          else
-           $activerdflog.debug "cache hit for query #{qs}"
+        ActiveRdfLogger.log_debug(self) { "Cache hit for query #{qs}" }
            return result
          end
       end
 
-      result = execute_sparql_query(qs, header(query), &block)
+    result = execute_sparql_query(qs, query.resource_class, header(query), &block)
       add_to_cache(qs, result) if @caching
       result = [] if result == "timeout"
       return result
     end
 
     # do the real work of executing the sparql query
-    def execute_sparql_query(qs, header=nil, &block)
+  def execute_sparql_query(qs, resource_type, header=nil, &block)
+    ActiveRdfLogger::log_debug(self) { "Executing query #{qs} on url #@url" }
       header = header(nil) if header.nil?
 
       # querying sparql endpoint
@@ -84,33 +87,30 @@ module ActiveRDF
         when :get
           # encoding query string in URL
           url = "#@url?query=#{CGI.escape(qs)}"
-          $activerdflog.debug "GET #{url}"
+        ActiveRdfLogger.log_debug(self) { "GET #{url}" }
           timeout(@timeout) do
             open(url, header) do |f|
               response = f.read
             end
           end
         when :post
-          $activerdflog.debug "POST #@url with #{qs}"
+        ActiveRdfLogger.log_debug(self) { "POST #@url with #{qs}" }
           response = Net::HTTP.post_form(URI.parse(@url),{'query'=>qs}).body
         end
       rescue Timeout::Error
         raise ActiveRdfError, "timeout on SPARQL endpoint"
-        return "timeout"
       rescue OpenURI::HTTPError => e
         raise ActiveRdfError, "error on SPARQL endpoint, server said: \n%s:\n%s" % [e,e.io.read]
-        return []
       rescue Errno::ECONNREFUSED
         raise ActiveRdfError, "connection refused on SPARQL endpoint #@url"
-        return []
        end
 
       # we parse content depending on the result format
       results = case @result_format
                 when :json
-                  parse_json(response)
+      parse_json(response, resource_type)
                 when :xml, :sparql_xml
-                  parse_xml(response)
+      parse_xml(response, resource_type)
                 end
 
       if block_given?
@@ -127,12 +127,13 @@ module ActiveRDF
     end
 
     private
+  # FIXME: Cache not primed for handling res classes!
     def add_to_cache(query_string, result)
       unless result.nil? or result.empty?
         if result == "timeout"
           @@sparql_cache.store(query_string, [])
         else
-          $activerdflog.debug "adding to sparql cache - query: #{query_string}"
+        ActiveRdfLogger.log_debug(self) { "Adding to sparql cache - query: #{query_string}" }
           @@sparql_cache.store(query_string, result)
         end
       end
@@ -164,10 +165,9 @@ module ActiveRDF
       end
     end
 
-    # parse json query results into array
-    def parse_json(s)
-      # this will try to first load json with the native c extensions,
-      # and if this fails json_pure will be loaded
+  # parse json query results into array. resource_type is the type to be used
+  # for "resource" objects.
+  def parse_json(s, resource_type)
       require 'json'
 
       parsed_object = JSON.parse(s)
@@ -180,7 +180,7 @@ module ActiveRDF
       objects.each do |obj|
         result = []
         vars.each do |v|
-          result << create_node( obj[v]['type'], obj[v]['value'])
+        result << create_node( obj[v]['type'], obj[v]['value'], resource_type)
         end
         results << result
       end
@@ -189,17 +189,18 @@ module ActiveRDF
     end
 
     # parse xml stream result into array
-    def parse_xml(s)
-      parser = SparqlResultParser.new
+  def parse_xml(s, resource_type)
+    parser = SparqlResultParser.new(resource_type)
       REXML::Document.parse_stream(s, parser)
       parser.result
     end
 
-    # create ruby objects for each RDF node
-    def create_node(type, value)
+  # create ruby objects for each RDF node. resource_type is the class to be used
+  # for "resource" objects.
+  def create_node(type, value, resource_type)
       case type
       when 'uri'
-        RDFS::Resource.new(value)
+      resource_type.new(value)
       when 'bnode'
         BNode.new(value)
       when 'literal','typed-literal'

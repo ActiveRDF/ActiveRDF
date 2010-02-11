@@ -1,7 +1,7 @@
 # Author:: Eyal Oren
 # Copyright:: (c) 2005-2006 Eyal Oren
 # License:: LGPL
-require 'active_rdf'
+# require 'active_rdf'
 require 'federation/connection_pool'
 require 'queryengine/query2sparql'
 require 'rdf/redland'
@@ -10,10 +10,18 @@ require 'rdf/redland'
 # uses SPARQL for querying
 module ActiveRDF
   class RedlandAdapter < ActiveRdfAdapter
-    $activerdflog.info "RedlandAdapter: loading Redland adapter"
+  ActiveRdfLogger::log_info "Loading Redland adapter", self
     ConnectionPool.register_adapter(:redland,self)
 
     # instantiate connection to Redland database
+  # * location: Data location (:memory, :mysql, :postgresql)
+  # * database: Database name
+  # * new: Create new database
+  # * host: Database server address
+  # * password: Password
+  # * port: Database server port
+  # * reconnect: Set automatic reconnect to database server
+  # * user: Username
     def initialize(params = {})
       super
       location = params[:location]
@@ -54,7 +62,7 @@ module ActiveRDF
       options << "hash-type='#{hash_type}'" if hash_type   # convert option key from hash_type to hash-type. :hash-type is an invalid symbol
       @model = Redland::Model.new Redland::TripleStore.new(store_type, name, options)
       @options = options
-      $activerdflog.info "RedlandAdapter: initialized adapter with type=\'#{store_type}\', name=\'#{name}\' options: #{options} => #{@model.inspect}"
+    ActiveRDFLogger::log_inf(self) { "RedlandAdapter: initialized adapter with type=\'#{store_type}\', name=\'#{name}\' options: #{options} => #{@model.inspect}" }
 
       rescue Redland::RedlandError => e
         raise ActiveRdfError, "RedlandAdapter: could not initialise Redland database: #{e.message}\nstore_type=\'#{store_type}\', name=\'#{name}\' options: #{options}"
@@ -62,6 +70,8 @@ module ActiveRDF
 
     # load a file from the given location with the given syntax into the model.
     # use Redland syntax strings, e.g. "ntriples" or "rdfxml", defaults to "ntriples"
+  # * location: location of file to load.
+  # * syntax: syntax of file
     def load(location, syntax="ntriples")
       raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
       parser = Redland::Parser.new(syntax, "", nil)
@@ -82,7 +92,7 @@ module ActiveRDF
     def execute(query, &block)
       raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
       qs = Query2SPARQL.translate(query)
-      $activerdflog.debug "RedlandAdapter: executing SPARQL query #{qs}"
+    ActiveRdfLogger::log_debug(self) { "Executing SPARQL query #{qs}" }
 
       redland_query = Redland::Query.new(qs, 'sparql')
       query_results = @model.query_execute(redland_query)
@@ -90,15 +100,16 @@ module ActiveRDF
       # return Redland's answer without parsing if ASK query
       return [[query_results.get_boolean?]] if query.ask?
 
-      # $activerdflog.debug "RedlandAdapter: found #{query_results.size} query results"
+    ActiveRdfLogger::log_debug(self) { "Found #{query_results.size} query results" }
 
       # verify if the query has failed
       if query_results.nil?
-        $activerdflog.debug "RedlandAdapter: query has failed with nil result"
+      ActiveRdfLogger::log_debug "Query has failed with nil result", self
         return false
       end
+
       if not query_results.is_bindings?
-        $activerdflog.debug "RedlandAdapter: query has failed without bindings"
+      ActiveRdfLogger::log_debug "Query has failed without bindings", self
         return false
       end
 
@@ -119,13 +130,14 @@ module ActiveRDF
     # * result_format: :json or :xml
     def get_query_results(query, result_format=nil)
       raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
-      get_sparql_query_results(Query2SPARQL.translate(query), result_format)
+    get_sparql_query_results(Query2SPARQL.translate(query), result_format, query.resource_class)
     end
 
     # executes sparql query and returns results as SPARQL JSON or XML results
     # * query: sparql query string
     # * result_format: :json or :xml
-    def get_sparql_query_results(qs, result_format=nil)
+  # * result_type: Is the type that is used for "resource" results
+  def get_sparql_query_results(qs, result_type, result_format=nil)
       # author: Eric Hanson
       raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
 
@@ -142,24 +154,26 @@ module ActiveRDF
       redland_query = Redland::Query.new(qs, 'sparql')
       query_results = @model.query_execute(redland_query)
 
+    if (result_format != :array)
       # get string representation in requested result_format (json or xml)
       query_results.to_string(result_uri)
     end
+  end
 
     # add triple to datamodel
     def add(s,p,o,c=nil)
       raise ActiveRdfError, "RedlandAdapter: adapter is closed" unless @enabled
-      $activerdflog.warn "RedlandAdapter: adapter does not support contexts" if (!@contexts and !c.nil?)
-      #$activerdflog.debug "RedlandAdapter: adding triple #{s} #{p} #{o} #{c}"
+    ActiveRdfLogger::log_warn(self) {  "Adapter does not support contexts" } if (!@contexts and !c.nil?)
+    ActiveRdfLogger::log_debug(self) {  "Adding triple #{s} #{p} #{o} #{c}" }
 
       # verify input
       if s.nil? || p.nil? || o.nil?
-        $activerdflog.debug "RedlandAdapter: cannot add triple with empty element, exiting"
+      ActiveRdfLogger::log_debug "Cannot add triple with empty subject, exiting", self
         return false
       end
 
       unless s.respond_to?(:uri) && p.respond_to?(:uri)
-        $activerdflog.debug "RedlandAdapter: cannot add triple where s/p are not resources, exiting"
+      ActiveRdfLogger::log_info(self) { "RedlandAdapter: cannot add triple where s/p are not resources, exiting" }
         return false
       end
       quad = [s,p,o,c].collect{|e| to_redland(e)}
@@ -167,7 +181,7 @@ module ActiveRDF
       @model.add(*quad)
       save if ConnectionPool.auto_flush?
       rescue Redland::RedlandError => e
-        $activerdflog.warn "RedlandAdapter: adding triple(#{quad}) failed in Redland library: #{e}"
+      ActiveRdfLogger::log_warn "Adding triple (#{quad}) failed in Redland library: #{e}", self
         return false
     end
 

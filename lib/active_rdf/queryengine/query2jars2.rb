@@ -1,4 +1,4 @@
-require 'active_rdf'
+# require 'active_rdf'
 
 # Translates abstract query into jars2 query.
 # (ignores ASK queries)
@@ -17,7 +17,7 @@ module ActiveRDF
         # figure it out.
       end
 
-      $activerdflog.debug "Query2Jars2: translated #{query} to #{str}"
+    ActiveRdfLogger::log_debug(self) { "Query2Jars2: translated #{query} to #{str}" }
       return str
     end
   end

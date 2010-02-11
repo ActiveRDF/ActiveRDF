@@ -1,32 +1,49 @@
 require 'federation/connection_pool'
 
+include ActiveRdfBenchmark
+
 # Manages the federation of datasources: distributes queries to right
 # datasources and merges their results
 
 module ActiveRDF
   class FederationManager
-    def FederationManager.contexts
+	def FederationManager.contexts
       ConnectionPool.adapters.collect{|adapter| adapter.contexts if adapter.respond_to?(:contexts)}.flatten.compact
     end
 
-    # add triple s,p,o to the currently selected write-adapter
-    def FederationManager.add(s,p,o)
+    # add triple s,p,o (context is optional) to the currently selected write-adapter
+    def FederationManager.add(s,p,o,c=nil)
+      benchmark("SPARQL/RDF", Logger::DEBUG) do |bench_message|
+        bench_message << "ADD #{s} - #{p} - #{o} : #{c}" if(bench_message)
       # TODO: allow addition of full graphs
       raise ActiveRdfError, "cannot write without a write-adapter" unless ConnectionPool.write_adapter
-      ConnectionPool.write_adapter.add(s,p,o)
+        ConnectionPool.write_adapter.add(s,p,o,c)
+    end
     end
 
-    # delete triple s,p,o from the currently selected write adapter (s and p are
-    # mandatory, o is optional, nil arguments and all symbols are interpreted as wildcards)
-    def FederationManager.delete(s,p,o=:all)
+    # delete triple s,p,o (context is optional) to the currently selected write-adapter
+    def FederationManager.delete(s,p=nil,o=nil,c=nil)
+      benchmark("SPARQL/RDF", Logger::DEBUG) do |bench_message|
+        bench_message << "DELETE #{s} - #{p} - #{o} : #{c}" if(bench_message)
       raise ActiveRdfError, "cannot write without a write-adapter" unless ConnectionPool.write_adapter
-
       # transform wildcard symbols to nil (for the adaptors)
       s = nil if s.is_a? Symbol
       p = nil if p.is_a? Symbol
       o = nil if o.is_a? Symbol
+        ConnectionPool.write_adapter.delete(s,p,o,c)
+      end
+    end
 
-      ConnectionPool.write_adapter.delete(s,p,o)
+    # delete every triples about a specified resource
+    def FederationManager.delete_all(resource)
+      delete(resource, nil, nil)
+    end
+
+    # Clear the store (or the given context)
+    def FederationManager.clear(context=nil)
+      # FIXME: Make sure that all adapters support clearing
+      raise(RuntimeError, "Adapter #{ConnectionPool.write_adapter.class} doesn't support clear") unless(ConnectionPool.write_adapter.respond_to?(:clear))
+      ConnectionPool.write_adapter.clear(context)
     end
 
     # executes read-only queries
@@ -37,6 +54,9 @@ module ActiveRDF
         raise ActiveRdfError, "cannot execute query without data sources"
       end
 
+      benchmark("SPARQL/RDF", Logger::DEBUG) do |bench_message|
+        # Only build the benchmark message if we need it
+        bench_message << ((q.class == String) ? q : q.to_sp) if(bench_message)
       # ask each adapter for query results
       # and yield them consequtively
       if block_given?
@@ -86,6 +106,7 @@ module ActiveRDF
       end
 
       results
+      end # End benchmark
+    end # End query
     end
   end
-end

@@ -15,7 +15,7 @@ $CLASSPATH << "/Users/benjamin/Development/activerdf/activerdf-sesame/ext/openrd
 $CLASSPATH << "/Users/benjamin/Development/activerdf/activerdf-sesame/ext/slf4j-api-1.3.0.jar"
 
 
-require 'active_rdf'
+# require 'active_rdf'
 
 
 class TestSesameAdapter < Test::Unit::TestCase
