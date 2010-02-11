@@ -20,7 +20,7 @@ def get_primary_adapter
 #### Suggesting default
 #  ConnectionPool.add(:type => :suggesting)
 #### Rdflite default
-  ConnectionPool.add(:type => :rdflite)
+  ConnectionPool.add(:type => :rdflite, :contexts => 'yes')
 #### Redland default
 #  ConnectionPool.add(:type => :redland, :contexts => 'no')
 #### Redland file

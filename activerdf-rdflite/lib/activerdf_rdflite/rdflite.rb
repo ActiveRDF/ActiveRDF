@@ -13,41 +13,50 @@ require 'mime/types'
 ActiveRdfLogger::log_info "Loading RDFLite adapter", self
 
 begin 
-  require 'ferret'
-  @@have_ferret = true
+	require 'ferret'
+	@@have_ferret = true
 rescue LoadError
   ActiveRdfLogger::log_info "Keyword search is disabled since we could not load Ferret. To enable, please do \"gem install ferret\"", self
-  @@have_ferret = false
+	@@have_ferret = false
 end
 
 # RDFLite is a lightweight RDF database on top of sqlite3. It can act as adapter 
 # in ActiveRDF. It supports on-disk and in-memory usage, and allows keyword 
 # search if ferret is installed.
 class RDFLite < ActiveRdfAdapter
-  ConnectionPool.register_adapter(:rdflite,self)
-  bool_accessor :keyword_search, :reasoning
+	ConnectionPool.register_adapter(:rdflite,self)
+	bool_accessor :keyword_search, :reasoning
 
-  # instantiates RDFLite database
-  # available parameters:
-  # * :location => filepath (defaults to memory)
-  # * :keyword => true/false (defaults to false)
-  # * :pidx, :oidx, etc. => true/false (enable/disable these indices)
-  def initialize(params = {})
+	# instantiates RDFLite database
+	# available parameters:
+	# * :location => filepath (defaults to memory)
+	# * :keyword => true/false (defaults to false)
+	# * :pidx, :oidx, etc. => true/false (enable/disable these indices)
+	def initialize(params = {})
     super()
     ActiveRdfLogger::log_info(self) { "Initialised rdflite with params #{params.to_s}" }
 
-    @reads = true
-    @writes = truefalse(params[:write], true)
     @reasoning = truefalse(params[:reasoning], false)
-
-    # if no file-location given, we use in-memory store
-    file = params[:location] || ':memory:'
-    @db = SQLite3::Database.new(file) 
-
-    # disable keyword search by default, enable only if ferret is found
-    @keyword_search = truefalse(params[:keyword], false) && @@have_ferret 
-
     @subprops = {} if @reasoning
+
+		# if no file-location given, we use in-memory store
+		file = params[:location] || ':memory:'
+		@db = SQLite3::Database.new(file) 
+
+		# disable keyword search by default, enable only if ferret is found
+		@keyword_search = truefalse(params[:keyword], false) && @@have_ferret 
+
+		# turn off filesystem synchronisation for speed
+		@db.synchronous = 'off'
+
+    # drop the table if a new datastore is requested
+    @db.execute('drop table if exists triple') if truefalse(params[:new],false)
+
+		# create triples table. ignores duplicated triples
+		@db.execute('create table if not exists triple(s,p,o,c, unique(s,p,o,c) on conflict ignore)')
+
+		create_indices(params)
+		@db
 
     if keyword_search?
       # we initialise the ferret index, either as a file or in memory
@@ -58,41 +67,29 @@ class RDFLite < ActiveRdfAdapter
       infos.add_field(:object, :store => :no) #, :index => :omit_norms)
 
       @ferret = if params[:location]
-        Ferret::I.new(:path => params[:location] + '.ferret', :field_infos => infos)
-      else
-        Ferret::I.new(:field_infos => infos)
-      end
-    end
-
-    # turn off filesystem synchronisation for speed
-    @db.synchronous = 'off'
-
-    # drop the table if a new datastore is requested
-    @db.execute('drop table if exists triple') if truefalse(params[:new],false)
-
-    # create triples table. ignores duplicated triples
-    @db.execute('create table if not exists triple(s,p,o,c, unique(s,p,o,c) on conflict ignore)')
-
-    create_indices(params)
-    @db
-  end
-
-  # returns the number of triples in the datastore (incl. possible duplicates)
-  def size
-    @db.execute('select count(*) from triple')[0][0].to_i
-  end
-
-  # returns all triples in the datastore
-  def dump
-    @db.execute('select s,p,o,c from triple').collect do |s,p,o,c|
-      [s,p,o,c].join(' ')
+                  Ferret::I.new(:path => params[:location] + '.ferret', :field_infos => infos)
+                else
+                  Ferret::I.new(:field_infos => infos)
+                end
     end
   end
 
-  # deletes all triples from datastore
-  def clear
-    @db.execute('delete from triple')
-  end
+	# returns the number of triples in the datastore (incl. possible duplicates)
+	def size
+		@db.execute('select count(*) from triple')[0][0].to_i
+	end
+
+	# returns all triples in the datastore
+	def dump
+		@db.execute('select s,p,o,c from triple').collect do |s,p,o,c|
+			[s,p,o,c].join(' ')
+		end
+	end
+
+	# deletes all triples from datastore
+	def clear
+		@db.execute('delete from triple')
+	end
 
   # close adapter and remove it from the ConnectionPool
   def close
@@ -100,11 +97,11 @@ class RDFLite < ActiveRdfAdapter
     @db.close
   end
 
-  # deletes triple(s,p,o,c) from datastore
-  # symbol parameters match anything: delete(:s,:p,:o) will delete all triples
-  # you can specify a context to limit deletion to that context: 
-  # delete(:s,:p,:o, 'http://context') will delete all triples with that context
-  def delete(s, p, o=nil, c=nil)
+	# deletes triple(s,p,o,c) from datastore
+	# symbol parameters match anything: delete(:s,:p,:o) will delete all triples
+	# you can specify a context to limit deletion to that context: 
+	# delete(:s,:p,:o, 'http://context') will delete all triples with that context
+	def delete(s, p, o=nil, c=nil)
     where_clauses = []
     conditions = []   
 
@@ -115,51 +112,57 @@ class RDFLite < ActiveRdfAdapter
       end
     end
 
-    # construct delete string
-    ds = 'delete from triple'
-    ds << " where #{where_clauses.join(' and ')}" unless where_clauses.empty?
+		# construct delete string
+		ds = 'delete from triple'
+		ds << " where #{where_clauses.join(' and ')}" unless where_clauses.empty?
 
-    # execute delete string with possible deletion conditions (for each 
-    # non-empty where clause)
+		# execute delete string with possible deletion conditions (for each 
+		# non-empty where clause)
     ActiveRdfLogger::log_debug(self) { "Deleting #{[s,p,o,c].join(' ')}" }
-    @db.execute(ds, *conditions)
+		@db.execute(ds, *conditions)
 
-    # delete literal from ferret index
-    @ferret.search_each("subject:\"#{s}\", object:\"#{o}\"") do |idx, score|
-      @ferret.delete(idx)
-    end if keyword_search?
+		# delete literal from ferret index
+		@ferret.search_each("subject:\"#{s}\", object:\"#{o}\"") do |idx, score|
+			@ferret.delete(idx)
+		end if keyword_search?
 
-    @db
-  end
+		@db
+	end
 
-  # adds triple(s,p,o) to datastore
-  # s,p must be resources, o can be primitive data or resource
-  def add(s,p,o,c=nil)
-    # check illegal input
-    raise(ActiveRdfError, "adding non-resource #{s} while adding (#{s},#{p},#{o},#{c})") unless s.respond_to?(:uri)
-    raise(ActiveRdfError, "adding non-resource #{p} while adding (#{s},#{p},#{o},#{c})") unless p.respond_to?(:uri)
+	# adds triple(s,p,o) to datastore
+	# s,p must be resources, o can be primitive data or resource
+	def add(s,p,o,c=nil)
+		# check illegal input
+		raise(ActiveRdfError, "adding non-resource #{s} while adding (#{s},#{p},#{o},#{c})") unless s.respond_to?(:uri)
+		raise(ActiveRdfError, "adding non-resource #{p} while adding (#{s},#{p},#{o},#{c})") unless p.respond_to?(:uri)
+
+    c = c.to_literal_s unless c.nil?
 
     # insert triple into database
     @db.execute('insert into triple values (?,?,?,?);',s.to_literal_s,p.to_literal_s,o.to_literal_s,c)
 
-    ## if keyword-search available, insert the object into keyword search
-    #@ferret << {:subject => s, :object => o} if keyword_search?
-  end
+		## if keyword-search available, insert the object into keyword search
+		#@ferret << {:subject => s, :object => o} if keyword_search?
+	end
 
-  # flushes openstanding changes to underlying sqlite3
-  def flush
-    # since we always write changes into sqlite3 immediately, we don't do 
-    # anything here
-    true
-  end
+	# flushes openstanding changes to underlying sqlite3
+	def flush
+		# since we always write changes into sqlite3 immediately, we don't do 
+		# anything here
+		true
+	end
 
-  # loads triples from file in ntriples format
-  def load(location, syntax = nil)
-    context = if URI.parse(location).host
-      location
-    else
-      RDFS::Resource.new("file:#{location}").uri
-    end
+	# loads triples from file in ntriples format
+	def load(location, syntax = nil)
+    context = if @contexts
+                if URI.parse(location).host
+                  RDFS::Resource.new(location)
+                 else
+                  RDFS::Resource.new("file:#{location}")
+                end
+              else
+                nil
+              end
 
     if MIME::Types.of(location) == MIME::Types['application/rdf+xml'] or syntax == 'rdfxml' 
       # check if rapper available
@@ -177,91 +180,91 @@ class RDFLite < ActiveRdfAdapter
       data = open(location).read
       add_ntriples(data, context)
     end
-  end
+	end
 
-  # adds ntriples from given context into datastore
-  def add_ntriples(ntriples, context)
-    # add each triple to db
-    @db.transaction
+	# adds ntriples from given context into datastore
+	def add_ntriples(ntriples, context = nil)
+		# add each triple to db
+		@db.transaction
 
     ntriples = NTriplesParser.parse(ntriples)
     ntriples.each do |s,p,o|
       add(s,p,o,context)
 
-      # if keyword-search available, insert the object into keyword search
-      @ferret << {:subject => s.to_literal_s, :object => o.to_literal_s} if keyword_search?
-    end
+			# if keyword-search available, insert the object into keyword search
+      @ferret << {:subject => s.to_s, :object => o.to_s} if keyword_search?
+		end
 
-    @db.commit
-    @db
-  end
+		@db.commit
+		@db
+	end
 
-  # executes ActiveRDF query on datastore
-  def execute(query)
-    # construct query clauses
-    sql, conditions = translate(query)
+	# executes ActiveRDF query on datastore
+	def execute(query)
+		# construct query clauses
+		sql, conditions = translate(query)
 
-    # executing query, passing all where-clause values as parameters (so that 
-    # sqlite will encode quotes correctly)
-    results = @db.execute(sql, *conditions)
+		# executing query, passing all where-clause values as parameters (so that 
+		# sqlite will encode quotes correctly)
+		results = @db.execute(sql, *conditions)
 
-    # if ASK query, we check whether we received a positive result count
-    if query.ask?
-      return [[results[0][0].to_i > 0]]
-    elsif query.count?
-      return [[results[0][0].to_i]]
-    else
-      # otherwise we convert results to ActiveRDF nodes and return them
+		# if ASK query, we check whether we received a positive result count
+		if query.ask?
+			return [[results[0][0].to_i > 0]]
+		elsif query.count?
+			return [[results[0][0].to_i]]
+		else
+			# otherwise we convert results to ActiveRDF nodes and return them
       return wrap(results, query.resource_class)
-    end
-  end
+		end
+	end
 
-  # translates ActiveRDF query into internal sqlite query string
-  def translate(query)
-    where, conditions = construct_where(query)
-    [construct_select(query) + construct_join(query) + where + construct_sort(query) + construct_limit(query), conditions]
-  end
+	# translates ActiveRDF query into internal sqlite query string
+	def translate(query)
+		where, conditions = construct_where(query)
+		[construct_select(query) + construct_join(query) + where + construct_sort(query) + construct_limit(query), conditions]
+	end
 
-  private
-  # constants for extracting resources/literals from sql results
-  SPOC = ['s','p','o','c']
+	private
+	# constants for extracting resources/literals from sql results
+	SPOC = ['s','p','o','c']
 
-  # construct select clause
-  def construct_select(query)
-    # ASK queries counts the results, and return true if results > 0
-    return "select count(*)" if query.ask?
+	# construct select clause
+	def construct_select(query)
+		# ASK queries counts the results, and return true if results > 0
+		return "select count(*)" if query.ask?
 
-    # add select terms for each selectclause in the query
-    # the term names depend on the join conditions, e.g. t0.s or t1.p
-    select = query.select_clauses.collect do |term|
-      variable_name(query, term)
-    end
+		# add select terms for each selectclause in the query
+		# the term names depend on the join conditions, e.g. t0.s or t1.p
+		select = query.select_clauses.collect do |term|
+			variable_name(query, term)
+		end
 
-    # add possible distinct and count functions to select clause
-    select_clause = ''
-    select_clause << 'distinct ' if query.distinct?
-    select_clause << select.join(', ')
-    select_clause = "count(#{select_clause})" if query.count?
+		# add possible distinct and count functions to select clause
+		select_clause = ''
+		select_clause << 'distinct ' if query.distinct?
+		select_clause << select.join(', ')
+		select_clause = "count(#{select_clause})" if query.count?
 
-    "select " + select_clause
-  end
+		"select " + select_clause
+	end
 
-  # construct (optional) limit and offset clauses
-  def construct_limit(query)
-    clause = ""
+	# construct (optional) limit and offset clauses
+	def construct_limit(query)
+		clause = ""
 
-    # if no limit given, use limit -1 (no limit)
-    limit = query.limits.nil? ? -1 : query.limits
+		# if no limit given, use limit -1 (no limit)
+		limit = query.limits.nil? ? -1 : query.limits
 
-    # if no offset given, use offset 0
-    offset = query.offsets.nil? ? 0 : query.offsets
+		# if no offset given, use offset 0
+		offset = query.offsets.nil? ? 0 : query.offsets
 
-    clause << " limit #{limit} offset #{offset}"
-    clause
-  end
+		clause << " limit #{limit} offset #{offset}"
+		clause
+	end
 
-  # sort query results on variable clause (optionally)
-  def construct_sort(query)
+	# sort query results on variable clause (optionally)
+	def construct_sort(query)
     if not query.sort_clauses.empty?
       sort = query.sort_clauses.collect { |term| variable_name(query, term) }
       " order by (#{sort.join(',')})"
@@ -271,11 +274,11 @@ class RDFLite < ActiveRdfAdapter
     else
       ""
     end
-  end
+	end
 
-  # construct join clause
-  # begins with first element of construct traverses tables referenced by 
-  def construct_join(query)
+	# construct join clause
+	# begins with first element of construct traverses tables referenced by 
+	def construct_join(query)
     join_stmt = []
     seen_aliases = ['t0']  # first table already seen
     seen_vars = []
@@ -331,16 +334,16 @@ class RDFLite < ActiveRdfAdapter
     end
     term_occurances
   end
+  
+	# construct where clause
+	def construct_where(query)
+		# collecting where clauses, these will be added to the sql string later
+		where = []
 
-  # construct where clause
-  def construct_where(query)
-    # collecting where clauses, these will be added to the sql string later
-    where = []
-
-    # collecting all the right-hand sides of where clauses (e.g. where name = 
-    # 'abc'), to add to query string later using ?-notation, because then 
-    # sqlite will automatically encode quoted literals correctly
-    right_hand_sides = []
+		# collecting all the right-hand sides of where clauses (e.g. where name = 
+		# 'abc'), to add to query string later using ?-notation, because then 
+		# sqlite will automatically encode quoted literals correctly
+		right_hand_sides = []
 
     query.where_clauses.each_with_index do |clause, table_index|
       clause.zip(SPOC).each do |clause_elem,field|
@@ -381,27 +384,27 @@ class RDFLite < ActiveRdfAdapter
       end
     end
 
-    # if keyword clause given, convert it using keyword index
-    if query.keyword? && keyword_search?
-      subjects = []
-      select_subject = query.keywords.collect {|subj,key| subj}.uniq
-      raise ActiveRdfError, "cannot do keyword search over multiple subjects" if select_subject.size > 1
+		# if keyword clause given, convert it using keyword index
+		if query.keyword? && keyword_search?
+			subjects = []
+			select_subject = query.keywords.collect {|subj,key| subj}.uniq
+			raise ActiveRdfError, "cannot do keyword search over multiple subjects" if select_subject.size > 1
 
-      keywords = query.keywords.collect {|subj,key| key}
-      @ferret.search_each("object:#{keywords}") do |idx,score|
-        subjects << @ferret[idx][:subject]
-      end
-      subjects.uniq! if query.distinct?
-      where << "#{variable_name(query,select_subject.first)} in (#{subjects.collect {'?'}.join(',')})"
-      right_hand_sides += subjects
-    end
+			keywords = query.keywords.collect {|subj,key| key}
+			@ferret.search_each("object:#{keywords}") do |idx,score|
+				subjects << @ferret[idx][:subject]
+			end
+			subjects.uniq! if query.distinct?
+			where << "#{variable_name(query,select_subject.first)} in (#{subjects.collect {'?'}.join(',')})"
+			right_hand_sides += subjects
+		end
 
-    if where.empty?
-      ['',[]]
-    else
-      ["where " + where.join(' and '), right_hand_sides]
-    end
-  end
+		if where.empty?
+			['',[]]
+		else
+			["where " + where.join(' and '), right_hand_sides]
+		end
+	end
 
   # returns first sql variable name found for a queryterm
   def variable_name(query,term)
@@ -411,35 +414,35 @@ class RDFLite < ActiveRdfAdapter
     end
   end
 
-  # wrap resources into ActiveRDF resources, literals into Strings
+	# wrap resources into ActiveRDF resources, literals into Strings
   def wrap(results, result_type)
-    results.collect do |row|
+		results.collect do |row|
       row.collect { |result| parse(result, result_type) }
-    end
-  end
+		end
+	end
 
   def parse(result, result_type)
     NTriplesParser.parse_node(result, result_type)
-  end
+	end
 
-  def create_indices(params)
-    sidx = params[:sidx] || false
-    pidx = params[:pidx] || false
-    oidx = params[:oidx] || false
-    spidx = params[:spidx] || true
-    soidx = params[:soidx] || false
-    poidx = params[:poidx] || true
-    opidx = params[:opidx] || false
+	def create_indices(params)
+		sidx = params[:sidx] || false
+		pidx = params[:pidx] || false
+		oidx = params[:oidx] || false
+		spidx = params[:spidx] || true
+		soidx = params[:soidx] || false
+		poidx = params[:poidx] || true
+		opidx = params[:opidx] || false
 
-    # creating lookup indices
-    @db.transaction do 
-      @db.execute('create index if not exists sidx on triple(s)') if sidx
-      @db.execute('create index if not exists pidx on triple(p)') if pidx
-      @db.execute('create index if not exists oidx on triple(o)') if oidx
-      @db.execute('create index if not exists spidx on triple(s,p)') if spidx
-      @db.execute('create index if not exists soidx on triple(s,o)') if soidx
-      @db.execute('create index if not exists poidx on triple(p,o)') if poidx
-      @db.execute('create index if not exists opidx on triple(o,p)') if opidx
-    end
-  end
+		# creating lookup indices
+		@db.transaction do 
+			@db.execute('create index if not exists sidx on triple(s)') if sidx
+			@db.execute('create index if not exists pidx on triple(p)') if pidx
+			@db.execute('create index if not exists oidx on triple(o)') if oidx
+			@db.execute('create index if not exists spidx on triple(s,p)') if spidx
+			@db.execute('create index if not exists soidx on triple(s,o)') if soidx
+			@db.execute('create index if not exists poidx on triple(p,o)') if poidx
+			@db.execute('create index if not exists opidx on triple(o,p)') if opidx
+		end
+	end
 end

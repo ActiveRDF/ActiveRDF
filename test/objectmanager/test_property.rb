@@ -45,7 +45,6 @@ end
 class TestAssociatedProperty < Test::Unit::TestCase
   include SetupAdapter
 
-
   def setup
     super
     @adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
@@ -217,6 +216,17 @@ class TestAssociatedProperty < Test::Unit::TestCase
     assert_equal XSD::integer, TEST::eyal.comment.datatype(XSD::integer).datatype
     assert_equal ["string"], TEST::eyal.comment.datatype(XSD::string)   # LocalizedString != XSD::string
     assert_equal [t], TEST::eyal.comment.datatype(XSD::time)
+  end
+
+  def test_context
+    if @adapter.contexts?
+      @adapter.load "#{File.dirname(__FILE__)}/../test_person2_data.nt"
+      context_one = RDFS::Resource.new("file:#{File.dirname(__FILE__)}/../test_person_data.nt")
+      context_two = RDFS::Resource.new("file:#{File.dirname(__FILE__)}/../test_person2_data.nt")
+      assert_equal [27], RDF::Property.new(TEST::age,TEST::eyal).context(context_one)
+      assert_equal   [], RDF::Property.new(TEST::age,TEST::eyal).context(context_two)
+      assert_equal [30], RDF::Property.new(TEST::age,TEST::michael).context(context_two)
+    end
   end
 
   def test_length

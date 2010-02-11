@@ -42,7 +42,7 @@ class Query2SPARQL
           end
         when :datatype
           "datatype(?#{variable}) = #{operand.to_literal_s}"
-        when :regex
+        when :regex,:regexp
           "regex(str(?#{variable}), '#{operand.to_s}')"
       end
     end
@@ -88,10 +88,8 @@ class Query2SPARQL
   			sp = [s,p].collect {|term| construct_clause(term) }.join(' ')
         # if all_types are requested, add filter for object value
         if query.all_types? and !o.respond_to?(:uri)   # dont wildcard resources
-          o_var = "o#{o_idx}"
-          o_val = o.respond_to?(:uri) ? o.uri : o.to_s
-          query.filter(o_var.to_sym, :regex, o_val) 
-          o_idx += 1
+          o_var = "o#{o_idx += 1}".to_sym
+          query.filter(o_var, :regexp, o.to_s) 
           "#{sp} ?#{o_var}"
         else
           "#{sp} #{construct_clause(o)}"
