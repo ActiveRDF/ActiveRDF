@@ -3,6 +3,12 @@ require 'rubygems'
 
 # ActiveRDF loader
 
+# Provide (partial) reasoning for RDF and RDFS only
+$activerdf_internal_reasoning = true
+
+# TODO: is this functionality needed?
+$activerdf_without_datatype = false
+
   file = File.symlink?(__FILE__) ? File.readlink(__FILE__) : __FILE__
   this_dir = File.dirname(File.expand_path(file))  
 
