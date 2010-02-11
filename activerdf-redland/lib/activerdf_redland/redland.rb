@@ -262,7 +262,9 @@ module ActiveRdf
           node = query_results.binding_value(i)
 
           # we determine the node type
-          if node.literal?
+          if node.nil?
+            nil
+          elsif node.literal?
             value = Redland.librdf_node_get_literal_value(node.node)
 
             lang_uri_ref = Redland.librdf_node_get_literal_value_language(node.node)

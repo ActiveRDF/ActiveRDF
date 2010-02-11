@@ -7,7 +7,7 @@ require 'federation/federation_manager'
 # Query.new.select(:s).where(:s,:p,:o).
 module ActiveRdf
   class Query
-    attr_reader :select_clauses, :where_clauses, :sort_clauses, :keywords, :limits, :offsets, :reverse_sort_clauses, :filter_clauses
+    attr_reader :select_clauses, :where_clauses, :filter_clauses, :sort_clauses, :limits, :offsets, :keywords
 
     bool_accessor :distinct, :ask, :select, :count, :keyword, :all_types
 
@@ -15,16 +15,15 @@ module ActiveRdf
   # type objects instead of RDFS::Resource
   def initialize(resource_type = RDFS::Resource)
       @distinct = false
-      @limit = nil
-      @offset = nil
       @select_clauses = []
       @where_clauses = []
-      @sort_clauses = []
       @filter_clauses = {}
+      @sort_clauses = []
+      @limits = nil
+      @offsets = nil
       @keywords = {}
       @reasoning = nil
       @all_types = false
-      @reverse_sort_clauses = []
       @nil_clause_idx = -1
     set_resource_class(resource_type)
     end
@@ -67,6 +66,7 @@ module ActiveRdf
 
     # Adds variables to select clause
     def select *s
+      raise(ActiveRdfError, "variable must be a Symbol") unless s.all?{|var| var.is_a?(Symbol)}
       @select = true
       # removing duplicate select clauses
       @select_clauses.concat(s).uniq!
@@ -92,8 +92,8 @@ module ActiveRdf
     end
 
     # Set query to ignore language & datatypes for objects
-    def all_types
-      @all_types = true
+    def all_types(enabled = true)
+      @all_types = enabled
       self
     end
 
@@ -111,9 +111,21 @@ module ActiveRdf
     end
 
     # Adds sort predicates
+    # 
     def sort *s
-      # add sort clauses without duplicates
-      @sort_clauses.concat(s).uniq!
+      s.each do |var| 
+         
+        @sort_clauses << [var,:asc]
+      end
+      self
+    end
+
+    # adds reverse sorting predicates
+    def reverse_sort *s
+      s.each do |var| 
+        raise(ActiveRdfError, "variable must be a Symbol") unless var.is_a? Symbol
+        @sort_clauses << [var,:desc]
+      end
       self
     end
 
@@ -146,13 +158,6 @@ module ActiveRdf
 
     def datatype(variable, type)
       filter(variable,:datatype,type)
-    end
-
-    # adds reverse sorting predicates
-    def reverse_sort *s
-      # add sort clauses without duplicates
-      @reverse_sort_clauses.concat(s).uniq!
-      self
     end
 
     # Adds limit clause (maximum number of results to return)
