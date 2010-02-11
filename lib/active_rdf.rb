@@ -46,7 +46,7 @@ end
 
 
 # determine whether activerdf is installed as a gem:
-if Gem::cache.search(/^activerdf$/).empty?
+if Gem::cache.find_name('activerdf').empty?
   # we are not running as a gem
   ActiveRdfLogger::log_info 'ActiveRDF is NOT installed as a Gem', self
   if ENV['ACTIVE_RDF_ADAPTERS'].nil?
