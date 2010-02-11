@@ -5,7 +5,7 @@ require 'federation/federation_manager'
 # features. Query is passed to federation manager or adapter for execution on
 # data source.  In all clauses symbols represent variables:
 # Query.new.select(:s).where(:s,:p,:o).
-module ActiveRdf
+module ActiveRDF
   class Query
     attr_reader :select_clauses, :where_clauses, :filter_clauses, :sort_clauses, :limits, :offsets, :keywords
 

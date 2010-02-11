@@ -19,7 +19,7 @@ $CLASSPATH << "/Users/benjamin/Development/activerdf/activerdf-sesame/ext/slf4j-
 
 
 class TestSesameAdapter < Test::Unit::TestCase
-  include ActiveRdf
+  include ActiveRDF
 
   # TODO maybe put more stuff into setup and teardown...
   def setup

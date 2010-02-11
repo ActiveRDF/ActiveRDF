@@ -4,7 +4,7 @@
 
 require 'active_rdf'
 
-module ActiveRdf
+module ActiveRDF
   # TODO: about this adapter
   class SesameAdapter < ActiveRdfAdapter
     ActiveRdfLogger::log_info "Loading Sesame adapter", self

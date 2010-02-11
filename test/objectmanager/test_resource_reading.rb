@@ -196,7 +196,7 @@ class TestResourceReading < Test::Unit::TestCase
     assert_equal [@@eyal], TEST::Person.find_by.mixedCamelCase_underscored_property("a mixed CamelCase and underscored property").execute
 
     # Sqlite doesn't support regular expressions by default
-    unless ConnectionPool.write_adapter.class == ActiveRdf::RDFLite
+    unless ConnectionPool.write_adapter.class == ActiveRDF::RDFLite
       # find TEST::Person resources with property matching the specified regex
       assert_equal [@@eyal], TEST::Person.find_by.age(:regex => /7/).execute
       assert_equal [@@eyal], TEST::Person.find_by.eye(:regex => /lu/).execute

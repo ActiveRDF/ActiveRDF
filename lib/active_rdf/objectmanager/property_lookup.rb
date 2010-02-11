@@ -1,4 +1,4 @@
-module ActiveRdf
+module ActiveRDF
   class PropertyLookup
 
     # not directly chainable like ResourceQuery

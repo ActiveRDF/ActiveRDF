@@ -11,9 +11,9 @@ require 'open-uri'
 require 'mime/types'
 
 # RDFLite is a lightweight RDF database on top of sqlite3. It can act as adapter
-# in ActiveRdf. It supports on-disk and in-memory usage, and allows keyword
+# in ActiveRDF. It supports on-disk and in-memory usage, and allows keyword
 # search if ferret is installed.
-module ActiveRdf
+module ActiveRDF
   class RDFLite < ActiveRdfAdapter
     ActiveRdfLogger::log_info "Loading RDFLite adapter", self
 

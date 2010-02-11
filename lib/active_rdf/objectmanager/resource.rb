@@ -31,7 +31,7 @@ module RDFS
     end
 
     def Resource.localname
-      ActiveRdf::Namespace.localname(self)
+      ActiveRDF::Namespace.localname(self)
     end
 
     # returns the predicates that have this resource as their domain (applicable
@@ -46,13 +46,13 @@ module RDFS
 
     # Find all resources of this type
     def Resource.find_all(options = {}, &blk)
-      ActiveRdf::ResourceQuery.new(self,options.delete(:context)).execute(options,&blk)
+      ActiveRDF::ResourceQuery.new(self,options.delete(:context)).execute(options,&blk)
     end
 
     # Find resources of this type, restricted by optional property args
-    # see ActiveRdf::ResourceQuery usage
+    # see ActiveRDF::ResourceQuery usage
     def Resource.find_by(context = nil)
-      ActiveRdf::ResourceQuery.new(self,context)
+      ActiveRDF::ResourceQuery.new(self,context)
     end
 
     # Find an existing resource with the given uri, otherwise returns nil
@@ -88,8 +88,8 @@ module RDFS
 
     # setting our own class uri to rdfs:resource
     # (has to be done after defining our RDFS::Resource.new
-    # because it cannot be found in ActiveRdf::Namespace.lookup otherwise)
-    self.class_uri = ActiveRdf::Namespace.lookup(:rdfs, :Resource)
+    # because it cannot be found in ActiveRDF::Namespace.lookup otherwise)
+    self.class_uri = ActiveRDF::Namespace.lookup(:rdfs, :Resource)
 
     #####                         #####
     ##### instance level methods  #####
@@ -113,42 +113,42 @@ module RDFS
     end
 
     def is_a?(klass)
-      klass = ActiveRdf::ObjectManager.construct_class(klass)
+      klass = ActiveRDF::ObjectManager.construct_class(klass)
       super || types.any?{|t| klass == t}
     end
 
     def instance_of?(klass)
-      klass = ActiveRdf::ObjectManager.construct_class(klass)
+      klass = ActiveRDF::ObjectManager.construct_class(klass)
       super || direct_types.any?{|t| klass == t}
     end
 
     def new_record?
-      ActiveRdf::Query.new.count(:p).where(self,:p,:o).execute == 0
+      ActiveRDF::Query.new.count(:p).where(self,:p,:o).execute == 0
     end
 
     # saves instance into datastore
     def save
-      ActiveRdf::ConnectionPool.write_adapter.add(self,RDF::type,self.class)
+      ActiveRDF::ConnectionPool.write_adapter.add(self,RDF::type,self.class)
       self
     end
 
     def abbreviation
-      [ActiveRdf::Namespace.prefix(uri).to_s, localname]
+      [ActiveRDF::Namespace.prefix(uri).to_s, localname]
     end
 
     # get an abbreviation from to_s
     # returns a copy of uri if no abbreviation found
     def abbr
-      (abbr = ActiveRdf::Namespace.abbreviate(uri)) ? abbr : uri
+      (abbr = ActiveRDF::Namespace.abbreviate(uri)) ? abbr : uri
     end
 
     # checks if an abbrivation exists for this resource
     def abbr?
-      ActiveRdf::Namespace.prefix(self) ? true : false
+      ActiveRDF::Namespace.prefix(self) ? true : false
     end
 
     def localname
-      ActiveRdf::Namespace.localname(self)
+      ActiveRDF::Namespace.localname(self)
     end
 
     # returns an RDF::Property for RDF::type's of this resource, e.g. [RDFS::Resource, FOAF::Person]
@@ -172,7 +172,7 @@ module RDFS
 
     # returns array of Classes for all types
     def classes
-      types.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
+      types.collect{|type_res| ActiveRDF::ObjectManager.construct_class(type_res)}
     end
 
     # TODO: remove
@@ -191,8 +191,8 @@ module RDFS
 
     # returns array of RDFS::Resources for properties that belong to this resource
     def class_predicates
-      ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,:t).where(self,RDF::type,:t).execute |
-        ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
+      ActiveRDF::Query.new.distinct(:p).where(:p,RDFS::domain,:t).where(self,RDF::type,:t).execute |
+        ActiveRDF::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
     end
     alias class_level_predicates class_predicates
 
@@ -203,7 +203,7 @@ module RDFS
 
     # returns array of RDFS::Resources for properties that are directly defined for this resource
     def direct_predicates
-      ActiveRdf::Query.new.distinct(:p).where(self,:p,:o).execute
+      ActiveRDF::Query.new.distinct(:p).where(self,:p,:o).execute
     end
 
     # returns array of RDF::Propertys that are directly defined for this resource
@@ -233,9 +233,9 @@ module RDFS
 
     # for resources of type RDFS::Class, returns array of RDFS::Resources for the known properties of their objects
     def instance_predicates
-      ip = ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,self).execute
+      ip = ActiveRDF::Query.new.distinct(:p).where(:p,RDFS::domain,self).execute
       if ip.size > 0
-        ip |= ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
+        ip |= ActiveRDF::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
       else []
       end
     end
@@ -246,7 +246,7 @@ module RDFS
     end
 
     def contexts
-      ActiveRdf::Query.new.distinct(:c).where(self,nil,nil,:c).execute
+      ActiveRDF::Query.new.distinct(:c).where(self,nil,nil,:c).execute
     end
 
     if $activerdf_internal_reasoning
@@ -269,10 +269,10 @@ module RDFS
 
       # for resources of type RDFS::Class, returns array of RDFS::Resources for the known properties of their objects, including those of its supertypes
       def instance_predicates
-        preds = ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,self).execute
+        preds = ActiveRDF::Query.new.distinct(:p).where(:p,RDFS::domain,self).execute
         preds |= preds.collect{|p| p.super_predicates}.flatten
         preds |= super_types.collect{|type| type.instance_predicates}.flatten
-        preds |= ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
+        preds |= ActiveRDF::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
         preds
       end
 
@@ -280,19 +280,19 @@ module RDFS
 
       # for resources of type RDFS::Class, returns array of RDFS::Resources for all super types defined by RDF::subClassOf
       def super_types
-        sups = ActiveRdf::Query.new.distinct(:super_class).where(self,RDFS::subClassOf,:super_class).execute
+        sups = ActiveRDF::Query.new.distinct(:super_class).where(self,RDFS::subClassOf,:super_class).execute
         sups |= sups.inject([]){|supsups, sup| supsups |= sup.super_types} 
       end
 
       # for resources of type RDFS::Class, returns array of classes for all super types defined by RDF::subClassOf
       # otherwise returns empty array
       def super_classes
-        super_types.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
+        super_types.collect{|type_res| ActiveRDF::ObjectManager.construct_class(type_res)}
       end
 
       # for resources of type RDF::Property, returns array of RDFS::Resources for all super properties defined by RDFS::subPropertyOf
       def super_predicates
-        sups = ActiveRdf::Query.new.distinct(:super_property).where(self, RDFS::subPropertyOf, :super_property).execute
+        sups = ActiveRDF::Query.new.distinct(:super_property).where(self, RDFS::subPropertyOf, :super_property).execute
         sups |= sups.inject([]){|supsups, sup| supsups |= sup.super_predicates}
       end
 
@@ -303,7 +303,7 @@ module RDFS
 
       # for resources of type RDF::Property, returns array of RDFS::Resources for all sub properties defined by RDFS::subPropertyOf
       def sub_predicates
-        subs = ActiveRdf::Query.new.distinct(:sub_property).where(:sub_property, RDFS::subPropertyOf, self).execute
+        subs = ActiveRDF::Query.new.distinct(:sub_property).where(:sub_property, RDFS::subPropertyOf, self).execute
         subs |= subs.inject([]){|subsubs, sub| subsubs |= sub.sub_predicates}
       end
 
@@ -317,12 +317,12 @@ module RDFS
 
     alias :to_s :uri
     def to_literal_s
-      raise ActiveRdf::ActiveRdfError, "emtpy RDFS::Resources not allowed" if self.uri.size == 0
+      raise ActiveRDF::ActiveRdfError, "emtpy RDFS::Resources not allowed" if self.uri.size == 0
       "<#{uri}>"
     end
 
     def inspect
-      if ActiveRdf::ConnectionPool.adapters.size > 0
+      if ActiveRDF::ConnectionPool.adapters.size > 0
         type =
           if (t = self.type) and t.size > 0
             t = t.collect{|res| res.abbr }
@@ -348,18 +348,18 @@ module RDFS
     end
 
     def to_xml
-      base = ActiveRdf::Namespace.expand(ActiveRdf::Namespace.prefix(self),'').chop
+      base = ActiveRDF::Namespace.expand(ActiveRDF::Namespace.prefix(self),'').chop
 
       xml = "<?xml version=\"1.0\"?>\n"
       xml += "<rdf:RDF xmlns=\"#{base}\#\"\n"
-      ActiveRdf::Namespace.abbreviations.each { |p| uri = ActiveRdf::Namespace.expand(p,''); xml += "  xmlns:#{p.to_s}=\"#{uri}\"\n" if uri != base + '#' }
+      ActiveRDF::Namespace.abbreviations.each { |p| uri = ActiveRDF::Namespace.expand(p,''); xml += "  xmlns:#{p.to_s}=\"#{uri}\"\n" if uri != base + '#' }
       xml += "  xml:base=\"#{base}\">\n"
 
       xml += "<rdf:Description rdf:about=\"\##{localname}\">\n"
       direct_predicates.each do |p|
-        objects = ActiveRdf::Query.new.distinct(:o).where(self, p, :o).execute
+        objects = ActiveRDF::Query.new.distinct(:o).where(self, p, :o).execute
         objects.each do |obj|
-          prefix, localname = ActiveRdf::Namespace.prefix(p), ActiveRdf::Namespace.localname(p)
+          prefix, localname = ActiveRDF::Namespace.prefix(p), ActiveRDF::Namespace.localname(p)
           pred_xml = if prefix
                        "%s:%s" % [prefix, localname]
                      else
@@ -395,7 +395,7 @@ module RDFS
       end
 
       # otherwise pass search on to PropertyQuery
-      ActiveRdf::PropertyLookup.new(self).method_missing(method, *args)
+      ActiveRDF::PropertyLookup.new(self).method_missing(method, *args)
     end
   end
 end

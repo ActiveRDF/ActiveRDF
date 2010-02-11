@@ -4,7 +4,7 @@
 
 # Translates abstract query into SPARQL that can be executed on SPARQL-compliant
 # data source.
-module ActiveRdf
+module ActiveRDF
   class Query2SPARQL
     Engines_With_Keyword = [:yars2, :virtuoso]
     def Query2SPARQL.translate(query, engine=nil)

@@ -1,6 +1,6 @@
 require 'benchmark'
 # Default ActiveRDF error
-module ActiveRdf
+module ActiveRDF
   class ActiveRdfError < StandardError; end
 end
 

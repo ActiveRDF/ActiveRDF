@@ -1,7 +1,7 @@
 # require 'active_rdf'
 
 # Constructs Ruby classes for RDFS classes (in the right namespace)
-module ActiveRdf
+module ActiveRDF
   class ObjectManager
     # Constructs empty Ruby classes for all RDF types found in the data. Allows
     # users to invoke methods on classes (e.g. FOAF::Person) without

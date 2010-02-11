@@ -3,7 +3,7 @@
 # License:: LGPL
 
 # FetchingAdapter is an extension to rdflite for fetching RDF from online sources.
-module ActiveRdf
+module ActiveRDF
   class FetchingAdapter < RDFLite
     ConnectionPool.register_adapter(:fetching, self)
 

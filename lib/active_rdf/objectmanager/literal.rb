@@ -3,7 +3,7 @@ require 'time'
 
 module RDFS
   module Literal
-    ActiveRdf::Namespace.register :xsd, 'http://www.w3.org/2001/XMLSchema#'
+    ActiveRDF::Namespace.register :xsd, 'http://www.w3.org/2001/XMLSchema#'
 
     class << self
       attr_accessor :class_uri

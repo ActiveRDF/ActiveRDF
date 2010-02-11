@@ -45,7 +45,7 @@ module RDF
       end
     end
 
-    self.class_uri = ActiveRdf::Namespace.lookup(:rdf, :Property)
+    self.class_uri = ActiveRDF::Namespace.lookup(:rdf, :Property)
 
     def initialize_copy(property)
       if @subject
@@ -77,7 +77,7 @@ module RDF
     def []=(md5_or_value,new_value)
       value = self[md5_or_value]
       raise IndexError, "Couldn't find existing value to replace: #{md5_or_value}" unless value
-      ActiveRdf::FederationManager.delete(@subject, self.property, value)
+      ActiveRDF::FederationManager.delete(@subject, self.property, value)
       add(new_value)
     end
 
@@ -110,9 +110,9 @@ module RDF
     def add(*args)
       args.each do |arg|
         if arg.respond_to?(:to_ary)
-          arg.to_ary.each {|item| ActiveRdf::FederationManager.add(@subject, self.property, item)}
+          arg.to_ary.each {|item| ActiveRDF::FederationManager.add(@subject, self.property, item)}
         else
-          ActiveRdf::FederationManager.add(@subject, self.property, arg)
+          ActiveRDF::FederationManager.add(@subject, self.property, arg)
         end
       end
       self
@@ -120,7 +120,7 @@ module RDF
 
     # Removes all values
     def clear
-      ActiveRdf::FederationManager.delete(@subject, self.property)
+      ActiveRDF::FederationManager.delete(@subject, self.property)
       self
     end
 
@@ -176,7 +176,7 @@ module RDF
     def delete(md5_or_value)
       value = self[md5_or_value]
       if value
-        ActiveRdf::FederationManager.delete(@subject, self.property, value)
+        ActiveRDF::FederationManager.delete(@subject, self.property, value)
         value
       elsif block_given?
         yield
@@ -191,7 +191,7 @@ module RDF
 
     # Calls block once for each value, passing a copy of the value as a parameter
     def each(&block)  # :yields: value
-      q = ActiveRdf::Query.new.distinct(:o).where(@subject,self,:o,@context)
+      q = ActiveRDF::Query.new.distinct(:o).where(@subject,self,:o,@context)
       if @lang and !@datatype
         q.lang(:o,@lang,@exact_lang)
       elsif @datatype and !@lang
@@ -294,7 +294,7 @@ module RDF
     # If more than 1 value is found, ActiveRdfError is thrown.
     def only
       entries = self.entries
-      raise ActiveRdf::ActiveRdfError if entries.size > 1
+      raise ActiveRDF::ActiveRdfError if entries.size > 1
       entries[0]
     end
 
