@@ -236,16 +236,16 @@ module RDFS
 
     # returns array RDFS::Resources for known properties that do not have a value
     def empty_predicates
-      predicates.reject{|pred| pred.size > 0}.uniq
+      empty_properties.collect{|prop| RDFS::Resource.new(prop)}
     end
 
     # returns array RDF::Propertys for known properties that do not have a value
     def empty_properties
-      empty_predicates.collect{|prop| RDF::Property.new(prop,self)}
+      properties.reject{|prop| prop.size > 0}
     end
 
     if $activerdf_internal_reasoning
-      # Redefine and add methods that perform some limited RDF & RDFS reasoning
+      # Redefine and add methods that perform some limited RDFS reasoning
 
       # returns array of RDFS::Resources for the class properties of this resource, including those of its supertypes
       def class_predicates
@@ -254,31 +254,39 @@ module RDFS
 
       # for resources of type RDFS::Class, returns array of RDFS::Resources for the known properties of their objects, including those of its supertypes
       def instance_predicates
-        ip = ActiveRdf::Query.new.distinct(:s).where(:s,RDFS::domain,self).execute
-        ip |= ip.collect{|p| p.super_predicates}.flatten
-        ip |= super_types.collect{|type| type.instance_predicates}.flatten
-        ip |= ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
-        ip
+        preds = ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,self).execute
+        preds |= preds.collect{|p| p.super_predicates}.flatten
+        preds |= super_types.collect{|type| type.instance_predicates}.flatten
+        preds |= ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
+        preds
       end
 
-      # for resources of type RDFS::Property, returns array of RDFS::Resources for all properties that are super properties defined by RDFS::subPropertyOf
+      # for resources of type RDF::Property, returns array of RDFS::Resources for all super properties defined by RDFS::subPropertyOf
       def super_predicates
-        sp = []
-        ActiveRdf::Query.new.distinct(:superproperty).where(self,RDFS::subPropertyOf,:superproperty).execute.each do |superproperty|
-          sp |= [superproperty]
-          sp |= superproperty.super_predicates
-        end
-        sp
+        sups = ActiveRdf::Query.new.distinct(:super_property).where(self, RDFS::subPropertyOf, :super_property).execute
+        sups |= sups.inject([]){|supsups, sup| supsups |= sup.super_predicates}
+      end
+
+      # for resources of type RDF::Property, returns array of RDF::Propertys for all super properties defined by RDFS::subPropertyOf
+      def super_properties
+        super_predicates.collect{|prop| RDF::Property.new(prop,self)}
+      end
+
+      # for resources of type RDF::Property, returns array of RDFS::Resources for all sub properties defined by RDFS::subPropertyOf
+      def sub_predicates
+        subs = ActiveRdf::Query.new.distinct(:sub_property).where(:sub_property, RDFS::subPropertyOf, self).execute
+        subs |= subs.inject([]){|subsubs, sub| subsubs |= sub.sub_predicates}
+      end
+
+      # for resources of type RDF::Property, returns array of RDF::Propertys for all sub properties defined by RDFS::subPropertyOf
+      def sub_properties
+        sub_predicates.collect{|prop| RDF::Property.new(prop,self)}
       end
 
       # for resources of type RDFS::Class, returns array of RDFS::Resources for all super types defined by RDF::subClassOf
       def super_types
-        st = []
-          ActiveRdf::Query.new.distinct(:superklass).where(self,RDFS::subClassOf,:superklass).execute.each do |supertype|
-            st |= [supertype]
-            st |= supertype.super_types
-          end
-        st
+        sups = ActiveRdf::Query.new.distinct(:super_class).where(self,RDFS::subClassOf,:super_class).execute
+        sups |= sups.inject([]){|supsups, sup| supsups |= sup.super_types} 
       end
 
       # for resources of type RDFS::Class, returns array of classes for all super types defined by RDF::subClassOf
@@ -299,6 +307,7 @@ module RDFS
       def classes
         types.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
       end
+    # end $activerdf_internal_reasoning
     end
 
     alias :to_s :uri
