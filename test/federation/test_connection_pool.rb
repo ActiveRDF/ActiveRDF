@@ -27,6 +27,14 @@ class TestConnectionPool < Test::Unit::TestCase
     assert adapter != adapter2
   end
 
+  def test_duplicate_registration
+    adapter1 = ConnectionPool.add_data_source(:type => :rdflite)
+    adapter2 = ConnectionPool.add_data_source(:type => :rdflite)
+
+    assert_equal adapter1, adapter2
+    assert_equal adapter1.object_id, adapter2.object_id
+  end
+
   def test_class_adapter_pool
     ConnectionPool.clear
     assert_equal 0, ConnectionPool.adapter_pool.size

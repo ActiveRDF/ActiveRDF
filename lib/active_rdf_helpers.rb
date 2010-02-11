@@ -31,6 +31,17 @@ class Array
   end  
 end
 
+# extract boolean from value 
+def truefalse(val, default = nil)
+  raise ArgumentError, "truefalse: default must be a boolean: #{default}" if !default.nil? and !(default == true || default == false)
+  case val
+  when true,/^yes|y$/i then true
+  when false,/^no|n$/i then false
+  else default
+  end
+end
+
+
 module ActiveRdfBenchmark
   # Benchmarking for ActiveRecord. You may pass a message with additional
   # information - there's a little hack that the "real" benchmark will pass

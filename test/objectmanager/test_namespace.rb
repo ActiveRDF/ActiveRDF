@@ -53,20 +53,20 @@ class TestNamespace < Test::Unit::TestCase
   end
 
   def test_class_localname
-    assert_equal 'type', Namespace.lookup(:rdf, :type).localname
-    assert_equal 'type', RDF::type.localname
+		assert_equal 'type', Namespace.lookup(:rdf, :type).localname
+		assert_equal 'type', RDF::type.localname
 
-    assert_equal 'Class', Namespace.lookup(:rdfs, :Class).localname
-    assert_equal 'Class', RDFS::Class.localname
+		assert_equal 'Class', Namespace.lookup(:rdfs, :Class).localname
+		assert_equal 'Class', RDFS::Class.localname
   end
 
   def test_class_register
-    test = 'http://test.org/'
-    abc = RDFS::Resource.new("#{test}abc")
-    Namespace.register :test, test
+		test = 'http://activerdf.org/test/'
+		abc = RDFS::Resource.new("#{test}abc")
+		Namespace.register :test, test
 
-    assert_equal abc, Namespace.lookup(:test, :abc)
-    assert_equal abc, TEST::abc
+		assert_equal abc, Namespace.lookup(:test, :abc)
+		assert_equal abc, TEST::abc
   end
 
   def test_attributes

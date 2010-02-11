@@ -1,7 +1,9 @@
 require 'active_rdf'
-Namespace.register(:test, 'http://activerdf.org/test/')
+require "#{File.dirname(File.expand_path(__FILE__))}/../common"
 
 module TestActiveRdfAdapter
+  include SetupAdapter
+  
   @@test = TEST::test
   @@eyal = TEST::eyal
   @@eye = TEST::eye
@@ -10,18 +12,8 @@ module TestActiveRdfAdapter
   @@age = TEST::age
   @@ageval = 23
   @@mboxval = 'aahfgiouhfg'
-  
+
   # override setup in TestCase. define @adapter_args & finally call super
-  def setup
-    ConnectionPool.clear
-    @adapter = ConnectionPool.add(@adapter_args)
-  end
-
-  def teardown
-    ConnectionPool.remove_data_source(@adapter)
-    @adapter.close if @adapter.instance_eval{@enabled}   # close if not closed already
-  end
-
   def test_simple_query
     @adapter.add(@@eyal, @@name, "eyal oren")
     @adapter.add(@@eyal, @@age, @@ageval)
@@ -58,8 +50,8 @@ module TestActiveRdfAdapter
   def test_dump
     @adapter.add(@@eyal, @@age, @@test)
   
-    dump = @adapter.dump  
-    assert_kind_of String, dump
+    dump = @adapter.dump
+    assert_kind_of Array, dump
   end
   
   def test_size
@@ -73,19 +65,19 @@ module TestActiveRdfAdapter
 #    interpreted = "test\nbreak\"quoted\""
 #
 #    @adapter.add(@@eyal, TEST::newline_quotes_string, string)
-#    assert_equal string, @@eyal.newline_quotes_string
+#    assert_equal string, @@eyal.newline_quotes_string.only
 #
 #    @adapter.add(@@eyal, TEST::newline_quotes_interpreted, interpreted)
-#    assert_equal interpreted, @@eyal.newline_quotes_interpreted
+#    assert_equal interpreted, @@eyal.newline_quotes_interpreted.only
 #
 #    string = 'ümlaut and \u00ebmlaut'
 #    interpreted = "ümlaut and ëmlaut"
 #
 #    @adapter.add(@@eyal, TEST::umlaut_string, string)
-#    assert_equal string, @@eyal.umlaut_string
+#    assert_equal string, @@eyal.umlaut_string.only
 #
 #    @adapter.add(@@eyal, TEST::umlaut_interpreted, interpreted)
-#    assert_equal string, @@eyal.umlaut_interpreted
+#    assert_equal string, @@eyal.umlaut_interpreted.only
 #  end  
 
   def test_retrieve_a_triple_with_only_uris
@@ -127,6 +119,7 @@ module TestActiveRdfAdapter
 #  
   def test_retrieve_a_triple_with_fixnum
     @adapter.add(@@eyal, @@age, @@ageval)
+
     result = Query.new.distinct(:o).where(@@eyal, :p, :o).execute
     assert_equal 1, result.flatten.size
   
@@ -142,5 +135,20 @@ module TestActiveRdfAdapter
     result = Query.new.distinct(:p).where(@@eyal, :p, @@ageval).execute
     assert_equal 1, result.flatten.size
   end
-    
+
+#  def test_retrieve_a_triple_with_property
+#    @adapter.add(@@eyal, @@age, @@ageval)
+#
+#    p = RDF::Property.new(@@age)
+#    assert !p.respond_to?(:to_ary)
+#
+#    result = Query.new.distinct(:p).where(@@eyal, p, @@ageval).execute
+#    assert_equal 1, result.flatten.size
+#
+#    p = RDF::Property.new(@@age, @@eyal)
+#    assert p.respond_to?(:to_ary)
+#
+#    result = Query.new.distinct(:p).where(@@eyal, p, p).execute
+#    assert_equal 1, result.flatten.size
+#  end
 end

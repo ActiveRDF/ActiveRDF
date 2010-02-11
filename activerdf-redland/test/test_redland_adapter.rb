@@ -5,13 +5,15 @@
 require 'test/unit'
 require 'tmpdir'
 require 'fileutils'
-common_test_dir = File.join(File.dirname(File.expand_path(__FILE__)),'..','..','test')
-require "#{common_test_dir}/test_writable_adapter"
-require "#{common_test_dir}/test_persistent_adapter"
+common_test_dir = File.dirname(File.expand_path(__FILE__)) + '/../../test'
+require "#{common_test_dir}/adapters/test_writable_adapter"
+require "#{common_test_dir}/adapters/test_persistent_adapter"
+require "#{common_test_dir}/adapters/test_network_aware_adapter"
 
 module TestRedlandAdapter
   include TestWritableAdapter
-  
+  include TestNetworkAwareAdapter
+
   def test_sparql_query
     @adapter.add(@@eyal, @@age, @@ageval)
 
@@ -28,32 +30,29 @@ class TestRedlandAdapterMemory < Test::Unit::TestCase
   # not persistent
 
   def setup
-    @adapter_args = {:type => :redland, :location => "memory"}
-    super
+    super(:type => :redland, :location => "memory")
   end
 end
 
-class TestRedlandAdapterFile < Test::Unit::TestCase
-  include TestRedlandAdapter 
-  include TestPersistentAdapter
- 
-  def setup
-    @location = File.join(Dir.tmpdir,"redland-temp")
-    @adapter_args = {:type => :redland, :location => @location} 
-    super
-  end
-  def teardown
-    FileUtils.rm Dir.glob(@location + '-*')
-  end
-end
+#class TestRedlandAdapterFile < Test::Unit::TestCase
+#  include TestRedlandAdapter 
+#  include TestPersistentAdapter
+# 
+#  def setup
+#    super(:type => :redland, :location => @location)
+#    @location = File.join(Dir.tmpdir,"redland-temp")
+#  end
+#  def teardown
+#    FileUtils.rm Dir.glob(@location + '-*')
+#  end
+#end
 
 class TestRedlandAdapterSqlite < Test::Unit::TestCase
   include TestRedlandAdapter 
   # not persistent
 
   def setup
-    @adapter_args = {:type => :redland, :location => 'sqlite'}
-    super
+    super(:type => :redland, :location => 'sqlite')
   end
 end
 
@@ -62,11 +61,9 @@ end
 #  include TestPersistentAdapter
 #
 #  def setup
-#    @adapter_args = {:type => :redland, :name => 'db1', :location => 'mysql',
-#                     :host => 'localhost', :database => 'redland_test',
-#                     :user => '', :password => '', :new => 'yes'}
-#    super
-#    @adapter.clear
+#    super(:type => :redland, :name => 'db1', :location => 'mysql',
+#          :host => 'localhost', :database => 'redland_test',
+#          :user => '', :password => '', :new => 'yes')
 #  end
 #end
 
@@ -75,10 +72,9 @@ end
 #  include TestRedlandAdapter 
 #
 #  def setup
-#    @adapter_args = {:type => :redland, :name => 'db1', :location => 'postgresql',
-#                     :host => 'localhost', :database => 'redland_test',
-#                     :user => '', :password => '', :new => 'yes'}
-#    super
+#    super(:type => :redland, :name => 'db1', :location => 'postgresql',
+#          :host => 'localhost', :database => 'redland_test',
+#          :user => '', :password => '', :new => 'yes')
 #  end
 #end
 

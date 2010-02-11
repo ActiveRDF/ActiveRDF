@@ -100,6 +100,8 @@ class Query2SPARQL
       when RDFS::Resource
         raise ActiveRdfError, "emtpy RDFS::Resources not allowed" if term.uri.size == 0
         term.to_literal_s
+      when String
+        "\"#{term}\""
       when RDFS::Literal
         term.to_literal_s
       when Class
