@@ -98,7 +98,7 @@ class OrderedSet
   # execute query and return the result
   def query
     # execute query
-    result = Query.new.select(:p, :o).where(self.uri, :p, :o).filter('regex(str(?p), "^' + (RDF::_).uri + '")').execute
+    result = Query.new.select(:p, :o).where(self.uri, :p, :o).regex(:p, "^#{(RDF::_).uri}").execute
     
     # order result
     result = result.sort_by { |items| items[0] }

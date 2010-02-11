@@ -28,25 +28,25 @@ class Query2SPARQL
     return str
   end
 
-  # concatenate each from clause using space
-  def self.from_clauses(query)
-    params = []
-    # construct single context clauses if context is present
-    query.where_clauses.each {|s,p,o,c|
-      params << "FROM #{construct_clause(c)}" unless c.nil?
-    }
-
-    # return FROM sintax or "" if no context is speficied
-    if (params.empty?)
-      ""
-    else
-      "#{params.join(' ')} "
-    end
-  end
-
-  # concatenate filters in query
+  # build filters in query
   def self.filter_clauses(query)
-    "FILTER (#{query.filter_clauses.join(" && ")})" unless query.filter_clauses.empty?
+    filters = query.filter_clauses.collect do |filter|
+      variable, operator, operand = filter[0], filter[1][0], filter[1][1]
+      case operator
+        when :lang
+          tag, exact = operand
+          if exact
+            "lang(?#{variable}) = '#{tag}'"
+          else
+            "regex(lang(?#{variable}), '#{tag.gsub(/_.*/,'')}')"
+          end
+        when :datatype
+          "datatype(?#{variable}) = #{operand.to_literal_s}"
+        when :regex
+          "regex(str(?#{variable}), '#{operand.to_s}')"
+      end
+    end
+    "FILTER (#{filters.join(" && ")})" if filters.size > 0
   end
 
   def self.sort_clauses(query)
@@ -81,11 +81,22 @@ class Query2SPARQL
       end
     end
 
+    oidx = 0
 		where_clauses = query.where_clauses.collect do |s,p,o,c|
       # does there where clause use a context ? 
 		  if c.nil?
-  			[s,p,o].collect {|term| construct_clause(term) }.join(' ')
+  			sp = [s,p].collect {|term| construct_clause(term) }.join(' ')
+        # if all_types are requested, add filter for object value
+        if query.all_types? and !o.is_a?(Symbol) and !o.nil?
+          ovar = "o#{oidx}"
+          query.filter(ovar.to_sym, :regex, o) 
+          oidx += 1
+          "#{sp} ?#{ovar}"
+        else
+          "#{sp} #{construct_clause(o)}"
+        end
   		else
+        # TODO: add support for all_types to GRAPH queries
   		  "GRAPH #{construct_clause(c)} { #{construct_clause(s)} #{construct_clause(p)} #{construct_clause(o)} }"
 		  end
 		end
@@ -97,8 +108,7 @@ class Query2SPARQL
     case term
       when Symbol
         "?#{term}"
-      when RDFS::Resource
-        raise ActiveRdfError, "emtpy RDFS::Resources not allowed" if term.uri.size == 0
+      when RDFS::Resource, RDFS::Literal
         term.to_literal_s
       when String
         "\"#{term}\""

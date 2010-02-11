@@ -25,6 +25,19 @@ class TestResourceWriting < Test::Unit::TestCase
     assert_equal [100, 80], @@eyal.test::age
   end
 
+  def test_clear_property
+    TEST::eyal.test::email = ["eyal@cs.vu.nl","eyal.oren@deri.net"]
+    assert_equal 2, TEST::eyal.email.size
+    TEST::eyal.email.clear
+    
+    # once direct predicates not defined in the schema are removed, they are no longer accessible without specifying a namespace
+    assert_nil TEST::eyal.email
+    assert_raise ActiveRdfError do
+      TEST::eyal.email = ""
+    end
+    assert_equal 0, TEST::eyal.test::email.size
+  end
+
   def test_save
     foo = RDFS::Resource.new(TEST::foo)
     assert_equal 0, ConnectionPool.write_adapter.size

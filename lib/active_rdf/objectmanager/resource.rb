@@ -43,7 +43,10 @@ module RDFS
     # end
 
     def Resource.localname; Namespace.localname(self); end
-    def Resource.to_literal_s; "<#{class_uri.uri}>"; end
+    def Resource.to_literal_s
+      raise ActiveRdfError, "emtpy RDFS::Resources not allowed" if self.uri.size == 0
+      "<#{class_uri.uri}>"
+    end
 
     # returns the predicates that have this resource as their domain (applicable
     # predicates for this resource)
@@ -122,7 +125,10 @@ module RDFS
     def <=>(other); uri <=> other.uri; end
 
     alias :to_s :uri
-    def to_literal_s; "<#{uri}>"; end
+    def to_literal_s
+      raise ActiveRdfError, "emtpy RDFS::Resources not allowed" if self.uri.size == 0
+      "<#{uri}>"
+    end
     def inspect
       if ConnectionPool.adapters.size > 0
         type = self.type

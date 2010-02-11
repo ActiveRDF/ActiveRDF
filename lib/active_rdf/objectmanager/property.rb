@@ -46,6 +46,14 @@ module RDF
 
     self.class_uri = Namespace.lookup(:rdf, :Property)
 
+    def initialize_copy(property)
+      if @subject
+        class<<self
+          include AssociatedProperty
+        end
+      end
+    end
+
     # Returns the property object for this property without @subject set
     def property
       RDF::Property.new(self)
@@ -87,7 +95,7 @@ module RDF
       add(new_value)
     end
 
-    # Returns a new array with the object appended 
+    # Returns a new array with the object appended, or the objects values if obj.respond_to? :to_ary
     def +(obj)
       to_a + [*obj]
     end
@@ -148,7 +156,7 @@ module RDF
       if type.nil?
         @datatype
       else
-        property_with_datatype =  RDF::Property.new(self, @subject)
+        property_with_datatype = dup
         property_with_datatype.datatype = type
         property_with_datatype
       end
@@ -181,7 +189,7 @@ module RDF
     def each(&block)  # :yields: value
       q = Query.new.distinct(:o).where(@subject,self,:o)
       if @lang and !@datatype
-        q.lang(:o,"@#@lang",@exact_lang)
+        q.lang(:o,@lang,@exact_lang)
       elsif @datatype and !@lang
         q.datatype(:o, @datatype)
       elsif @lang and @datatype
