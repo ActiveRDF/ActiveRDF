@@ -8,6 +8,8 @@ require 'queryengine/ntriples_parser'
 require "#{File.dirname(__FILE__)}/../common"
 
 class TestNTriplesParser < Test::Unit::TestCase
+  include ActiveRdf
+
   def setup
   end
 

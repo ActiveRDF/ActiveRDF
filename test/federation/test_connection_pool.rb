@@ -8,6 +8,8 @@ require 'federation/connection_pool'
 require "#{File.dirname(__FILE__)}/../common"
 
 class TestConnectionPool < Test::Unit::TestCase
+  include ActiveRdf
+
   def setup
     ConnectionPool.clear
   end
@@ -20,7 +22,7 @@ class TestConnectionPool < Test::Unit::TestCase
     # test for successfull adding of an adapter
     adapter = get_primary_adapter
     assert_kind_of ActiveRdfAdapter, adapter
-    assert ConnectionPool.adapter_pool.include?(adapter)
+    assert ConnectionPool.adapters.include?(adapter)
 
     # now check that we have different adapters for primary and secondary
     adapter2 = get_secondary_adapter
@@ -37,9 +39,9 @@ class TestConnectionPool < Test::Unit::TestCase
 
   def test_class_adapter_pool
     ConnectionPool.clear
-    assert_equal 0, ConnectionPool.adapter_pool.size
+    assert_equal 0, ConnectionPool.adapters.size
     get_primary_adapter
-    assert_equal 1, ConnectionPool.adapter_pool.size
+    assert_equal 1, ConnectionPool.adapters.size
   end
 
   def test_class_register_adapter
@@ -59,15 +61,7 @@ class TestConnectionPool < Test::Unit::TestCase
 
   def test_class_clear
     ConnectionPool.clear
-    assert ConnectionPool.adapter_pool.empty?
+    assert ConnectionPool.adapters.empty?
     assert_nil ConnectionPool.write_adapter
   end
 end
-
-# need access to connectionpool.adapter_pool in tests
-class ConnectionPool
-  def self.adapter_pool
-    @@adapter_pool
-  end
-end
-

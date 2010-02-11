@@ -9,6 +9,8 @@ require 'queryengine/query'
 require "#{File.dirname(__FILE__)}/../common"
 
 class TestAdapter < Test::Unit::TestCase
+  include ActiveRdf
+
   def setup
     ConnectionPool.clear
   end
