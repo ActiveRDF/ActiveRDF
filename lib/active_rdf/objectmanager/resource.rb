@@ -174,11 +174,13 @@ module RDFS
       type.collect{|type_res| ActiveRdf::ObjectManager.construct_class(type_res)}
     end
 
+    # TODO: remove
     # define a localname for a predicate URI
     #
     # localname should be a Symbol or String, fulluri a Resource or String, e.g.
     # register_predicate(:name, FOAF::lastName)
     def register_predicate(localname, fulluri)
+      warn "Registered predicates is deprecated. Please use registered namespaces instead."
       localname = localname.to_s
       fulluri = RDFS::Resource.new(fulluri) if fulluri.is_a? String
 
@@ -188,7 +190,8 @@ module RDFS
 
     # returns array of RDFS::Resources for properties that belong to this resource
     def class_predicates
-      ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,:t).where(self,RDF::type,:t).execute
+      ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,:t).where(self,RDF::type,:t).execute |
+        ActiveRdf::Query.new.distinct(:p).where(:p,RDFS::domain,RDFS::Resource).execute  # all resources share RDFS::Resource properties
     end
     alias class_level_predicates class_predicates
 
@@ -364,46 +367,12 @@ module RDFS
     end
 
     # Searches for property belonging to this resource. Returns RDF::Property.
-    # Replaces any existing values if method is an assignment: resource.prop=(new_value)
+    # Replaces any existing values if method is an assignment: resource.prop = new_value
     def method_missing(method, *args)
-      # possibilities:
-      # 1. eyal.age is registered abbreviation
-      # evidence: age in @predicates
-      # action: return RDF::Property(age,self) and store value if assignment
-      #
-      # 2. eyal.age is a custom-written method in class Person
+      # check for custom written method
+      # eyal.age is a custom-written method in class Person
       # evidence: eyal type ?c, ?c.methods includes age
       # action: return results from calling custom method
-      #
-      # 3. eyal.foaf::name, where foaf is a registered abbreviation
-      # evidence: foaf in Namespace.
-      # action: return namespace proxy that handles 'name' invocation, by
-      # rewriting into predicate lookup (similar to case (1)
-      #
-      # 4. eyal.age is a property of eyal (triple exists <eyal> <age> "30")
-      # evidence: eyal age ?a, ?a is not nil (only if value exists)
-      # action: return RDF::Property(age,self) and store value if assignment
-      #
-      # 5. eyal's class is in the domain of age, but does not have value for eyal
-      # evidence: eyal age ?a is nil and eyal type ?c, age domain ?c
-      # action: return RDF::Property(age,self) and store value if assignment
-
-      ActiveRdfLogger::log_debug(self) { "method_missing: #{method}" }
-
-      # are we doing an update or not?
-      # checking if method ends with '='
-
-      update = method.to_s[-1..-1] == '='
-      methodname = update ? method.to_s[0..-2] : method.to_s
-
-      # check for registered abbreviation
-      if @predicates and @predicates.include?(methodname)
-        property = RDF::Property.new(@predicates[methodname],self)
-        property.replace(args) if update
-        return property
-      end
-
-      # check for custom written method
       classes.each do |klass|
         if klass.instance_methods.include?(method.to_s)
           _dup = klass.new(uri)
@@ -411,131 +380,8 @@ module RDFS
         end
       end
 
-      # check for registered namespace
-      if Namespace.abbreviations.include?(methodname.to_sym)
-        # catch the invocation on the namespace
-        return PropertyNamespaceProxy.new(methodname,self)
-      end
-
-      # check for known property
-      property = properties.find{|prop| Namespace.localname(prop) == methodname}
-      if property
-        property.replace(*args) if update
-        return property
-      end
-
-      raise ActiveRdfError, "could not set #{methodname} to #{args}: no suitable predicate found. Maybe you are missing some schema information?" if update
-
-      # if none of the three possibilities work out, we don't know this method
-      # invocation, but we don't want to throw NoMethodError, instead we return
-      # nil, so that eyal.age does not raise error, but returns nil. (in RDFS,
-      # we are never sure that eyal cannot have an age, we just dont know the
-      # age right now)
-      nil
-    end
-  end
-end
-
-module ActiveRdf
-  # Catches namespaces for properties
-  class PropertyNamespaceProxy
-    def initialize(ns, subject)
-      @ns = ns
-      @subject = subject
-    end
-    def method_missing(localname, *values)
-      update = localname.to_s[-1..-1] == '='
-      localname = update ? localname.to_s[0..-2] : localname.to_s
-
-      property = RDF::Property.new(Namespace.lookup(@ns, localname),@subject)
-      property.replace(*values) if update
-      property
-    end
-    private(:type)
-  end
-
-  # Search for resources of a given type, with given property restrictions.
-  # Usage:
-  #   ResourceQuery.new(TEST::Person).execute                                         # find all TEST::Person resources
-  #   ResourceQuery.new(TEST::Person).age.execute                                     # find TEST::Person resources that have the property age
-  #   ResourceQuery.new(TEST::Person).age(27).execute                                 # find TEST::Person resources with property matching the supplied value
-  #   ResourceQuery.new(TEST::Person).age(27,:context => context_resource).execute    # find TEST::Person resources with property matching supplied value and context
-  #   ResourceQuery.new(TEST::Person).email('personal@email','work@email').execute    # find TEST::Person resources with property matching the supplied values
-  #   ResourceQuery.new(TEST::Person).email(['personal@email','work@email']).execute  # find TEST::Person resources with property matching the supplied values
-  #   ResourceQuery.new(TEST::Person).eye('blue').execute(:all_types => true)         # find TEST::Person resources with property matching the supplied value ignoring lang/datatypes
-  #   ResourceQuery.new(TEST::Person).eye(LocalizedString('blue','en')).execute       # find TEST::Person resources with property matching the supplied value
-  #   ResourceQuery.new(TEST::Person).eye(:regex => /lu/).execute                     # find TEST::Person resources with property matching the specified regex
-  #   ResourceQuery.new(TEST::Person).eye(:lang => '@en').execute                     # find TEST::Person resources with property having the specified language
-  #   ResourceQuery.new(TEST::Person).age(:datatype => XSD::Integer).execute          # find TEST::Person resources with property having the specified datatype
-  #   ResourceQuery.new(RDFS::Resource).test::age(27).execute                         # find RDFS::Resources having the fully qualified property and value
-  #   ResourceQuery.new(TEST::Person).age(27).eye(LocalizedString('blue','en')).execute  # chain multiple properties together, ANDing restrictions
-  class ResourceQuery
-    private(:type)
-
-    def initialize(type,context = nil)
-      @ns = nil
-      @type = type
-      @query = Query.new.distinct(:s).where(:s,RDF::type,@type,context)
-      @var_idx = -1
-    end
-
-    def execute(options = {}, &blk)
-      if truefalse(options[:all_types])
-        if @query.filter_clauses.values.any?{|operator,operand| operator == :lang or operator == :datatype}
-          raise ActiveRdfError, "all_types may not be specified in conjunction with any lang or datatype restrictions"
-        end
-        @query = @query.dup.all_types
-      end
-      @query.execute(options, &blk)
-    end
-
-    def method_missing(ns_or_property, *values)
-      options = values.extract_options!
-      values.flatten!
-
-      # if the namespace has been seen, lookup the property
-      if @ns
-        property = Namespace.lookup(@ns, ns_or_property)
-        # fully qualified property found. clear the ns:name for next invocation
-        @ns = nil
-      elsif Namespace.abbreviations.include?(ns_or_property)
-        # we store the ns:name for next method_missing invocation
-        @ns = ns_or_property
-        return self
-      else
-        # ns_or_property not a namespace, so must be an unqualified property
-        property_str = ns_or_property.to_s
-        property = @type.instance_predicates.find{|prop| Namespace.localname(prop) == property_str}
-        raise ActiveRdfError, "no suitable predicate matching '#{property_str}' found. Maybe you are missing some schema information?" unless property
-      end
-
-      # restrict by values if provided
-      if values.size > 0 then values.each do |value|
-          @query.where(:s,property,value,options[:context])
-        end
-      # otherwise restrict by property occurance only
-      else
-        var = "rq#{@var_idx += 1}".to_sym
-        @query.where(:s,property,var,options[:context])
-
-        # add filters
-        if options[:lang] && options[:datatype]
-          raise ActiveRdfError, "only lang or datatype may be specified, not both"
-        elsif options[:lang]
-          @query.lang(var,options[:lang])
-        elsif options[:datatype]
-          @query.datatype(var,options[:datatype])
-        end
-        if options[:regex]
-          @query.regex(var,options[:regex])
-        end
-      end
-
-      self
-    end
-
-    def to_s
-      @query.to_s
+      # otherwise pass search on to PropertyQuery
+      ActiveRdf::PropertyQuery.new(self).method_missing(method, *args)
     end
   end
 end

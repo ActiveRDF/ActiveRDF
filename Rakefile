@@ -17,14 +17,14 @@ setup_tests
 setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
 
 Rake::RDocTask.new do |rdoc|
-	files = ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc', 'test/*.rb']
-	files << 'activerdf-*/lib/**/*.rb'
-	rdoc.rdoc_files.add(files)
-	rdoc.main = "README"
-	rdoc.title = "ActiveRDF documentation"
-	rdoc.template = "tools/allison/allison.rb"
-	rdoc.rdoc_dir = 'doc'
-	rdoc.options << '--line-numbers' << '--inline-source'
+  files = ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc', 'test/*.rb']
+  files << 'activerdf-*/lib/**/*.rb'
+  rdoc.rdoc_files.add(files)
+  rdoc.main = "README"
+  rdoc.title = "ActiveRDF documentation"
+  rdoc.template = "tools/allison/allison.rb"
+  rdoc.rdoc_dir = 'doc'
+  rdoc.options << '--line-numbers' << '--inline-source'
 end
 
 
@@ -62,7 +62,9 @@ end
 begin
   require 'rcov/rcovtask'
   Rcov::RcovTask.new do |t|
-    t.test_files = FileList["activerdf-*/test/**/*.rb"]
+    t.test_files = FileList.new("test/**/*.rb", "activerdf-*/test/**/*.rb") do |fl|
+      fl.exclude(/jena|sesame|sparql/i)
+    end
     t.verbose = true
   end
 rescue LoadError
@@ -72,5 +74,7 @@ end
 # define test_all task
 Rake::TestTask.new do |t|
   t.name = :test_all
-  t.test_files = FileList["test/**/*.rb", "activerdf-*/test/**/*.rb"]
+  t.test_files = FileList.new("test/**/*.rb", "activerdf-*/test/**/*.rb") do |fl|
+    fl.exclude(/jena|sesame|sparql/i)
+  end
 end
