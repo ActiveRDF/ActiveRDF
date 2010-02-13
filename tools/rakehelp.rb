@@ -18,32 +18,32 @@ def setup_rdoc files
 end
 
 def base_gem_spec(pkg_name, pkg_version)
-	pkg_version = pkg_version
-	pkg_name    = pkg_name
-	pkg_file_name = "#{pkg_name}-#{pkg_version}"
-	Gem::Specification.new do |s|
-		s.name = pkg_name
-		s.version = pkg_version
-		s.platform = Gem::Platform::RUBY
-		s.has_rdoc = true
-		s.extra_rdoc_files = [ "README" ]
+  pkg_version = pkg_version
+  pkg_name    = pkg_name
+  pkg_file_name = "#{pkg_name}-#{pkg_version}"
+  Gem::Specification.new do |s|
+    s.name = pkg_name
+    s.version = pkg_version
+    s.platform = Gem::Platform::RUBY
+    s.has_rdoc = true
+    s.extra_rdoc_files = [ "README" ]
 
-		s.files = %w(LICENSE README CHANGELOG) +
-		Dir.glob("{bin,doc/rdoc,test,lib}/**/*") +
-		Dir.glob("examples/**/*.rb")
+    s.files = %w(LICENSE README CHANGELOG) +
+    Dir.glob("{bin,doc/rdoc,test,lib}/**/*") +
+    Dir.glob("examples/**/*.rb")
 
-		s.require_path = "lib"
-		s.extensions = FileList["ext/**/extconf.rb"].to_a
-		s.bindir = "bin"
-	end
+    s.require_path = "lib"
+    s.extensions = FileList["ext/**/extconf.rb"].to_a
+    s.bindir = "bin"
+  end
 end
 
 def setup_gem(pkg_name, pkg_version)
-	spec = base_gem_spec(pkg_name, pkg_version)
-	yield spec if block_given?
+  spec = base_gem_spec(pkg_name, pkg_version)
+  yield spec if block_given?
 
-	Rake::GemPackageTask.new(spec) do |p|
-		p.gem_spec = spec
-		p.need_tar = false
-	end
+  Rake::GemPackageTask.new(spec) do |p|
+    p.gem_spec = spec
+    p.need_tar = false
+  end
 end

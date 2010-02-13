@@ -1,4 +1,3 @@
-# require 'active_rdf'
 require 'federation/federation_manager'
 
 # Represents a query on a datasource, abstract representation of SPARQL
@@ -11,9 +10,9 @@ module ActiveRDF
 
     bool_accessor :distinct, :ask, :select, :count, :keyword, :all_types
 
-  # Creates a new query. You may pass a different class that is used for "resource"
-  # type objects instead of RDFS::Resource
-  def initialize(resource_type = RDFS::Resource)
+    # Creates a new query. You may pass a different class that is used for "resource"
+    # type objects instead of RDFS::Resource
+    def initialize(resource_type = RDFS::Resource)
       @distinct = false
       @select_clauses = []
       @where_clauses = []
@@ -28,22 +27,22 @@ module ActiveRDF
     set_resource_class(resource_type)
     end
 
-  # This returns the class that is be used for resources, by default this
-  # is RDFS::Resource
-  def resource_class
-    @resource_class ||= RDFS::Resource
-  end
+    # This returns the class that is be used for resources, by default this
+    # is RDFS::Resource
+    def resource_class
+      @resource_class ||= RDFS::Resource
+    end
 
-  # Sets the resource_class. Any class may be used, however it is required
-  # that it can be created using the uri of the resource as it's only 
-  # parameter and that it has an 'uri' property
-  def set_resource_class(resource_class)
-    raise(ArgumentError, "resource_class must be a class") unless(resource_class.class == Class)
+    # Sets the resource_class. Any class may be used, however it is required
+    # that it can be created using the uri of the resource as it's only 
+    # parameter and that it has an 'uri' property
+    def set_resource_class(resource_class)
+      raise(ArgumentError, "resource_class must be a class") unless(resource_class.class == Class)
 
-    test = resource_class.new("http://uri")
-    raise(ArgumentError, "Must have an uri property") unless(test.respond_to?(:uri))
-    @resource_class = resource_class
-  end
+      test = resource_class.new("http://uri")
+      raise(ArgumentError, "Must have an uri property") unless(test.respond_to?(:uri))
+      @resource_class = resource_class
+    end
 
     def initialize_copy(orig)
       # dup the instance variables so we're not messing with the original query's values
@@ -59,7 +58,7 @@ module ActiveRDF
 
     # Clears the select clauses
     def clear_select
-    ActiveRdfLogger::log_debug "Cleared select clause", self
+      ActiveRdfLogger::log_debug(self) { "Cleared select clause" }
       @select_clauses = []
       @distinct = false
     end
@@ -114,7 +113,7 @@ module ActiveRDF
     # 
     def sort *s
       s.each do |var| 
-         
+        raise(ActiveRdfError, "variable must be a Symbol") unless var.is_a? Symbol
         @sort_clauses << [var,:asc]
       end
       self
@@ -142,10 +141,9 @@ module ActiveRDF
     # variable is Ruby symbol that appears in select/where clause, regex is Ruby
     # regular expression
     def regexp(variable, regexp)
-    raise(ActiveRdfError, "variable must be a symbol") unless variable.is_a? Symbol
-    regexp = regexp.source if(regexp.is_a?(Regexp))
-
-    filter(variable, :regexp, regexp)
+      raise(ActiveRdfError, "variable must be a symbol") unless variable.is_a? Symbol
+      regexp = regexp.source if(regexp.is_a?(Regexp))
+      filter(variable, :regexp, regexp)
     end
     alias :regex :regexp
 

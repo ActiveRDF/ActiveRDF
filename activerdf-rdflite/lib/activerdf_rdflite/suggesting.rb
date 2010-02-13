@@ -26,7 +26,7 @@ class SuggestingAdapter < FetchingAdapter
 
   # suggests additional predicates that might be applicable for the given resource
   def suggest(resource)
-		ActiveRdfLogger::log_debug(self) { "Starting suggestions for #{size} triples" }
+    ActiveRdfLogger::log_debug(self) { "Starting suggestions for #{size} triples" }
     time = Time.now
 
     predicates = []
@@ -53,7 +53,7 @@ class SuggestingAdapter < FetchingAdapter
       end
       [candidate, score]
     end
-		ActiveRdfLogger::log_debug(self) { "Suggestions for #{resource} took #{Time.now-time}s" }
+    ActiveRdfLogger::log_debug(self) { "Suggestions for #{resource} took #{Time.now-time}s" }
     suggestions
   end
 

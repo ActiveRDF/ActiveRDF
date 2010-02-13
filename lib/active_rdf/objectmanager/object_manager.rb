@@ -1,5 +1,3 @@
-# require 'active_rdf'
-
 # Constructs Ruby classes for RDFS classes (in the right namespace)
 module ActiveRDF
   class ObjectManager
@@ -21,7 +19,7 @@ module ActiveRDF
       # flattening to get rid of nested arrays
       # compacting array to get rid of nil (if one of these queries returned nil)
       klasses = klasses.flatten.compact
-    ActiveRdfLogger::log_debug(self) { "Construct_classes: classes found: #{klasses}" }
+      ActiveRdfLogger::log_debug(self) { "Construct_classes: classes found: #{klasses}" }
 
       # then we construct a Ruby class for each found rdfs:class
       # and return the set of all constructed classes
@@ -51,21 +49,21 @@ module ActiveRDF
       if prefix.nil?
         # if the prefix is unknown, we create our own from the full URI
         modulename = create_module_name(resource)
-      ActiveRdfLogger::log_debug(self) { "Construct_class: constructing modulename #{modulename} from URI #{resource}" }
+        ActiveRdfLogger::log_debug(self) { "Construct_class: constructing modulename #{modulename} from URI #{resource}" }
       else
         # otherwise we convert the registered prefix into a module name
         modulename = prefix_to_module(prefix)
-      ActiveRdfLogger::log_debug(self) { "ObjectManager: construct_class: constructing modulename #{modulename} from registered prefix #{prefix}" }
+        ActiveRdfLogger::log_debug(self) { "ObjectManager: construct_class: constructing modulename #{modulename} from registered prefix #{prefix}" }
       end
       klassname = localname_to_class(localname)
 
       # look whether module defined
       # else: create it
       _module = if Object.const_defined?(modulename.to_sym)
-      ActiveRdfLogger::log_debug(self) { "ObjectManager: construct_class: module name #{modulename} previously defined" }
+        ActiveRdfLogger::log_debug(self) { "ObjectManager: construct_class: module name #{modulename} previously defined" }
           Object.const_get(modulename.to_sym)
         else
-      ActiveRdfLogger::log_debug(self) { "ObjectManager: construct_class: defining module name #{modulename} now" }
+        ActiveRdfLogger::log_debug(self) { "ObjectManager: construct_class: defining module name #{modulename} now" }
           Object.const_set(modulename, Module.new)
         end
 
@@ -75,7 +73,7 @@ module ActiveRDF
         # if so, return the existing class
         _module.const_get(klassname.to_sym)
       else
-      ActiveRdfLogger::log_debug(self) { "ObjectManager: construct_class: creating given class #{klassname}" }
+        ActiveRdfLogger::log_debug(self) { "ObjectManager: construct_class: creating given class #{klassname}" }
         # otherwise: create it, inside that module, as subclass of RDFS::Resource
         # (using toplevel Class.new to prevent RDFS::Class.new from being called)
         klass = _module.module_eval("#{klassname} = Object::Class.new(RDFS::Resource)")

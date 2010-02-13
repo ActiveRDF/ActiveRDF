@@ -15,13 +15,13 @@ require 'mime/types'
 # search if ferret is installed.
 module ActiveRDF
   class RDFLite < ActiveRdfAdapter
-    ActiveRdfLogger::log_info "Loading RDFLite adapter", self
+    ActiveRdfLogger::log_info(self) { "Loading RDFLite adapter" }
 
     begin
       require 'ferret'
       @@have_ferret = true
     rescue LoadError
-      ActiveRdfLogger::log_info "Keyword search is disabled since we could not load Ferret. To enable, please do \"gem install ferret\"", self
+      ActiveRdfLogger::log_info(self) { "Keyword search is disabled since we could not load Ferret. To enable, please do \"gem install ferret\"" }
       @@have_ferret = false
     end
 
@@ -34,7 +34,7 @@ module ActiveRDF
     # * :keyword => true/false (defaults to false)
     # * :pidx, :oidx, etc. => true/false (enable/disable these indices)
     def initialize(params = {})
-      super()
+      super
       ActiveRdfLogger::log_info(self) { "Initialised rdflite with params #{params.to_s}" }
 
       @reasoning = truefalse(params[:reasoning], false)

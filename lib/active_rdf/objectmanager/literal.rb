@@ -1,4 +1,3 @@
-# require 'active_rdf'
 require 'time'
 
 module RDFS

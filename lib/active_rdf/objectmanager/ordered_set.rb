@@ -1,4 +1,3 @@
-# require 'active_rdf'
 require 'queryengine/query'
 require 'objectmanager/resource'
 

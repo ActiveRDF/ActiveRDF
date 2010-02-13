@@ -2,7 +2,6 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
-# require 'active_rdf'
 require 'queryengine/query2jars2'
 require 'net/http'
 require 'cgi'
@@ -11,7 +10,7 @@ require 'cgi'
 # (experimental YARS branch for SWSE engine)
 module ActiveRDF
   class Jars2Adapter < ActiveRdfAdapter
-  ActiveRdfLogger::log_info "Loading Jars2 adapter", self
+    ActiveRdfLogger::log_info(self) { "Loading Jars2 adapter" }
     ConnectionPool.register_adapter(:jars2, self)
 
     # initialises connection to jars2 datastore
@@ -25,7 +24,7 @@ module ActiveRDF
 
       @host = params[:host] || 'm3pe.org'
       @port = params[:port] || 2020
-    ActiveRdfLogger::log_info(self) { "Initializing new instance with host: #{@host} port: #{@port}" }
+      ActiveRdfLogger::log_info(self) { "Initializing new instance with host: #{@host} port: #{@port}" }
       @yars = Net::HTTP.new(@host, @port)
     end
 
@@ -42,7 +41,7 @@ module ActiveRDF
       # the result
       response = @yars.get("/?q=#{CGI.escape(qs)}&eyal", header)
 
-    ActiveRdfLogger::log_debug(self) { "Jars2Adapter: query executed: #{qs}" }
+      ActiveRdfLogger::log_debug(self) { "Jars2Adapter: query executed: #{qs}" }
 
       # return empty array if no content
       return [] if response.is_a?(Net::HTTPNoContent)
@@ -60,7 +59,7 @@ module ActiveRDF
         final_results = results
       end
 
-    ActiveRdfLogger::log_debug_pp "Query returned %s", final_results if ActiveRdfLogger::log_level == Logger::DEBUG
+      ActiveRdfLogger::log_debug_pp "Query returned %s", final_results if ActiveRdfLogger::log_level == Logger::DEBUG
       final_results
     end
 
@@ -103,14 +102,14 @@ module ActiveRDF
       answers
     end
 
-  # converts ntriples serialisation of resource or literal into ActiveRDF object.
-  #
-  # resource_type is the class to be used for "resource" objects.
-  def convert_into_activerdf(string, resource_type)
+    # converts ntriples serialisation of resource or literal into ActiveRDF object.
+    #
+    # resource_type is the class to be used for "resource" objects.
+    def convert_into_activerdf(string, resource_type)
       case string
       when /<(.*)>/
         # <http://foaf/Person> is a resource
-      resource_type.new($1)
+        resource_type.new($1)
       when /"(.*)"/
         # "30" is a literal
         # TODO: handle datatypes

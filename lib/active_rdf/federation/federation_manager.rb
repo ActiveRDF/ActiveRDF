@@ -7,7 +7,7 @@ include ActiveRdfBenchmark
 
 module ActiveRDF
   class FederationManager
-	def FederationManager.contexts
+  def FederationManager.contexts
       ConnectionPool.adapters.collect{|adapter| adapter.contexts if adapter.respond_to?(:contexts)}.flatten.compact
     end
 

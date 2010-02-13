@@ -1,5 +1,3 @@
-# require 'active_rdf'
-
 # Translates abstract query into jars2 query.
 # (ignores ASK queries)
 module ActiveRDF

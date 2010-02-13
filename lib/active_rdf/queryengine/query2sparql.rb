@@ -1,5 +1,3 @@
-# require 'active_rdf'
-
 # TODO: support limit and offset
 
 # Translates abstract query into SPARQL that can be executed on SPARQL-compliant

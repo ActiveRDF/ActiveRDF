@@ -1,4 +1,8 @@
 == activerdf (HEAD)
+  * New improved logging, including optional benchmarking of queries  (Daniel Hahn)
+  * Fixes to the Sesame adapter  (Daniel Hahn)
+  * User definable default Resource class  (Daniel Hahn)
+
   * ActiveRDF classes have been moved into their own module, ActiveRDF::.
   * Registered predicates are being deprecated in favor of registered 
     namespaces instead.

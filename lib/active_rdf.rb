@@ -50,24 +50,24 @@ end
 # determine whether activerdf is installed as a gem:
 if Gem::cache.find_name('activerdf').empty?
   # we are not running as a gem
-  ActiveRdfLogger::log_info 'ActiveRDF is NOT installed as a Gem', self
+  ActiveRdfLogger::log_info(self) { 'ActiveRDF is NOT installed as a Gem' }
   if ENV['ACTIVE_RDF_ADAPTERS'].nil?
-  if RUBY_PLATFORM =~ /java/
-    load_adapter this_dir + '/activerdf/activerdf-jena/lib/activerdf_jena/init'
-    load_adapter this_dir + '/activerdf/activerdf-sparql/lib/activerdf_sparql/sparql'
-      load_adapter this_dir + '/../activerdf-sesame/lib/activerdf_sesame/sesame'
+    if RUBY_PLATFORM =~ /java/
+      load_adapter this_dir + '/activerdf/activerdf-jena/lib/activerdf_jena/init'
+      load_adapter this_dir + '/activerdf/activerdf-sparql/lib/activerdf_sparql/sparql'
+        load_adapter this_dir + '/../activerdf-sesame/lib/activerdf_sesame/sesame'
+    else
+      load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
+      load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/fetching'
+      load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/suggesting'
+      load_adapter this_dir + '/../activerdf-redland/lib/activerdf_redland/redland'
+      load_adapter this_dir + '/../activerdf-sparql/lib/activerdf_sparql/sparql'
+      #load_adapter this_dir + '/../activerdf-yars/lib/activerdf_yars/jars2'
+    end
   else
-    load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
-    load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/fetching'
-    load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/suggesting'
-    load_adapter this_dir + '/../activerdf-redland/lib/activerdf_redland/redland'
-    load_adapter this_dir + '/../activerdf-sparql/lib/activerdf_sparql/sparql'
-    #load_adapter this_dir + '/../activerdf-yars/lib/activerdf_yars/jars2'
-  end
-else
-    #load specified adapters
-    #for example: ENV['ACTIVE_RDF_ADAPTERS'] = "redland,sparql"
-    ENV['ACTIVE_RDF_ADAPTERS'].split(",").uniq.each { |adapterItem|  
+    # load specified adapters
+    # for example: ENV['ACTIVE_RDF_ADAPTERS'] = "redland,sparql"
+    ENV['ACTIVE_RDF_ADAPTERS'].split(",").uniq.each do |adapterItem|  
       case adapterItem.strip.downcase 
       when "rdflite"
         load_adapter this_dir + '/../activerdf-rdflite/lib/activerdf_rdflite/rdflite'
@@ -85,12 +85,12 @@ else
         ActiveRdfLogger::log_error "Unknown adapter #{name}"
         raise ActiveRdfError, "Unknown adapter #{name}"
       end
-    }
+    end
   end
 else
   # we are running as a gem
   require 'gem_plugin'
-  ActiveRdfLogger::log_info 'ActiveRDF is installed as a Gem'
+  ActiveRdfLogger::log_info(self) { 'ActiveRDF is installed as a Gem' }
   GemPlugin::Manager.instance.load "activerdf" => GemPlugin::INCLUDE
 end
 

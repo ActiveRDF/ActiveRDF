@@ -1,5 +1,3 @@
-# require 'active_rdf'
-
 # Manages namespace abbreviations and expansions
 module ActiveRDF
   class Namespace
@@ -13,7 +11,7 @@ module ActiveRDF
       raise ActiveRdfError, "namespace uri should end with # or /" unless /\/|#/ =~ fullURI.to_s[-1..-1]
       klass_name = prefix.to_s.upcase
       prefix = prefix.to_s.downcase.to_sym
-    ActiveRdfLogger::log_info(self) {  "Namespace: registering #{fullURI} to #{klass_name}" }
+      ActiveRdfLogger::log_info(self) { "Namespace: registering #{fullURI} to #{klass_name}" }
       @@namespaces[prefix] = fullURI.to_s
       @@inverted_namespaces[fullURI.to_s] = prefix
 
@@ -124,7 +122,7 @@ module ActiveRDF
 
     # catch FOAF::Person
     def const_missing(klass)
-    ActiveRdfLogger::log_info(self) { "Const missing on Namespace #{klass}" }
+      ActiveRdfLogger::log_info(self) { "Const missing on Namespace #{klass}" }
       @klasses ||={}  # class cache
       @klasses[klass] ||= ObjectManager.construct_class(Namespace.lookup(@prefix, klass))
     end

@@ -20,9 +20,9 @@ setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
 
 # setup rdoc 
 Rake::RDocTask.new do |rdoc|
-	rdoc.rdoc_dir = 'doc/rdoc'
-	rdoc.options << '--line-numbers'
-	rdoc.rdoc_files.add ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
+  rdoc.rdoc_dir = 'doc/rdoc'
+  rdoc.options << '--line-numbers'
+  rdoc.rdoc_files.add ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
 end
 
 desc "Does a full compile, test run"
@@ -58,7 +58,7 @@ task :release => [:clean, :verify_rubyforge, :package ] do
     release.files         = release_files.to_a
     release.release_name  = "#$name #$version"
     release.package_name  = "activerdf-sparql"
-		release.release_notes = ""
+    release.release_notes = ""
 
     changes = []
     File.open("CHANGELOG") do |file|
@@ -66,9 +66,9 @@ task :release => [:clean, :verify_rubyforge, :package ] do
 
       file.each do |line|
         line.chomp!
-				if current and line =~ /^==/
-					current = false; next 
-				end
+        if current and line =~ /^==/
+          current = false; next 
+        end
         break if line.empty? and not current
         changes << line
       end

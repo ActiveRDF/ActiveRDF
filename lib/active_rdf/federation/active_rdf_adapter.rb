@@ -1,4 +1,3 @@
-# require 'active_rdf'
 require 'queryengine/query2sparql'
 
 # Generic superclass of all adapters
@@ -7,6 +6,10 @@ module ActiveRDF
     # indicate if adapter can read and write
     bool_accessor :reads, :writes, :contexts, :enabled
 
+    # The following options are accepted
+    #  :write => true | false       # adapter supports writing. default true
+    #  :new => true | false         # create new dataset. default false
+    #  :contexts =>  true | false   # adapter supports contexts. default false
     def initialize(params = {})
       # defaults
       @enabled =                               true

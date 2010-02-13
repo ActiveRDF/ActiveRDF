@@ -20,9 +20,9 @@ setup_clean ["pkg", "lib/*.bundle", "*.gem", ".config"]
 
 # setup rdoc 
 Rake::RDocTask.new do |rdoc|
-	rdoc.rdoc_dir = 'doc/rdoc'
-	rdoc.options << '--line-numbers'
-	rdoc.rdoc_files.add ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
+  rdoc.rdoc_dir = 'doc/rdoc'
+  rdoc.options << '--line-numbers'
+  rdoc.rdoc_files.add ['README', 'LICENSE', 'lib/**/*.rb', 'doc/**/*.rdoc']
 end
 
 desc "Does a full compile, test run"
@@ -34,8 +34,8 @@ setup_gem($name, $version) do |spec|
   spec.author="Eyal Oren <eyal.oren@deri.org"
   spec.add_dependency('gem_plugin', '>= 0.2.1')
   spec.add_dependency('activerdf', '>= 1.6.4')
-	spec.requirements << 'librdf0 (Redland)'
-	spec.requirements << 'librdf-ruby (Redland Ruby bindings)'
+  spec.requirements << 'librdf0 (Redland)'
+  spec.requirements << 'librdf-ruby (Redland Ruby bindings)'
 end
 
 task :verify_rubyforge do
@@ -52,7 +52,7 @@ task :release => [ :clean, :verify_rubyforge, :package ] do
     release.files         = release_files.to_a
     release.release_name  = "#$name #$version"
     release.package_name  = "activerdf-redland"
-		release.release_notes = ""
+    release.release_notes = ""
 
     changes = []
     File.open("CHANGELOG") do |file|
@@ -60,9 +60,9 @@ task :release => [ :clean, :verify_rubyforge, :package ] do
 
       file.each do |line|
         line.chomp!
-				if current and line =~ /^==/
-					current = false; next 
-				end
+        if current and line =~ /^==/
+          current = false; next 
+        end
         break if line.empty? and not current
         changes << line
       end
