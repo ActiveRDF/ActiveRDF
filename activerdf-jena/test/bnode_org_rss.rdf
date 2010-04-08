@@ -61,7 +61,7 @@
       <![CDATA[
 Just a short update on <a href="http://esw.w3.org/topic/SweoIG/TaskForces/CommunityProjects/knowee">knowee</a>, one of the SWEO Community Projects. There is nice progress, although it took some time to get things moving. An early <a href="http://knowee.org/">site is now online</a>, and we have a <a href="http://esw.w3.org/topic/SweoIG/TaskForces/CommunityProjects/knowee/UserInterface">first design for the app</a>.<br />
 <br />
-I still have to flesh out knowee's approach to &quot;social graph portability&quot; (or whatever it's called this week), but then I'll focus on the prototype which will hopefully be available by Mid/End-September. 
+I still have to flesh out knowee's approach to &quot;social graph portability&quot; (or whatever it's called this week), but then I'll focus on the prototype which will hopefully be available by Mid/End-September.
       ]]>
     </content:encoded>
   </item>
@@ -196,7 +196,7 @@ Just
 in case you're waiting for email replies: I'm moving to the new office
 for my semweb startup this/next week and probably won't be online again
 before Mon 14th. Well, I'm sort-of online now, but this
-~0K dial-up can't really be called <em>online</em>... 
+~0K dial-up can't really be called <em>online</em>...
       ]]>
     </content:encoded>
   </item>
@@ -333,7 +333,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
         <th>eRDF</th>
         <th>RDFa</th>
       </tr>
-    
+
         <tr class="points first">
           <td>1</td>
           <td>DRY (Don't Repeat Yourself)</td>
@@ -348,7 +348,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>yes</td>
           <td>mostly</td>
         </tr>
-      
+
         <tr class="points">
           <td>2</td>
           <td>HTML4 / XHTML 1.0 validity</td>
@@ -363,7 +363,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>yes</td>
           <td>no</td>
         </tr>
-      
+
         <tr class="points">
           <td>3</td>
           <td>Custom extensions / Vocabulary mixing</td>
@@ -378,7 +378,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>yes</td>
           <td>yes</td>
         </tr>
-      
+
         <tr class="points">
           <td>4</td>
           <td>Arbitrary resource descriptions</td>
@@ -393,7 +393,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>yes</td>
           <td>yes</td>
         </tr>
-      
+
         <tr class="points">
           <td>5</td>
           <td>Explicit syntactic means for arbitrary resource descriptions</td>
@@ -408,7 +408,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>no</td>
           <td>yes</td>
         </tr>
-      
+
         <tr class="points">
           <td>6</td>
           <td>Supported by the W3C</td>
@@ -423,7 +423,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>partly</td>
           <td>yes</td>
         </tr>
-      
+
         <tr class="points">
           <td>7</td>
           <td>Follow <a href="http://www.dublincore.org/documents/dcq-html/">DCMI guidelines</a></td>
@@ -438,7 +438,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>yes</td>
           <td>no</td>
         </tr>
-      
+
         <tr class="points">
           <td>8</td>
           <td>Stable/Uniform syntax specification</td>
@@ -453,7 +453,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>yes</td>
           <td>yes</td>
         </tr>
-      
+
         <tr class="points">
           <td>9</td>
           <td>Predictable RDF mappings</td>
@@ -468,7 +468,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>yes</td>
           <td>yes</td>
         </tr>
-      
+
         <tr class="points">
           <td>10</td>
           <td>Live/Web Clipboard Compatibility</td>
@@ -483,7 +483,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>mostly</td>
           <td>mostly</td>
         </tr>
-      
+
         <tr class="points">
           <td>11</td>
           <td>Reliable copying, aggregation, and re-publishing of source chunks. (Self-containment)</td>
@@ -498,7 +498,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>partly</td>
           <td>partly</td>
         </tr>
-      
+
         <tr class="points">
           <td>12</td>
           <td>Support for not just plain literals (e.g. typed dates, floats, or markup).</td>
@@ -513,7 +513,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>no</td>
           <td>yes</td>
         </tr>
-      
+
         <tr class="points">
           <td>13</td>
           <td>Triple bloat prevention (only actively marked-up information leads to triples)</td>
@@ -528,7 +528,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>yes</td>
           <td>no</td>
         </tr>
-      
+
         <tr class="points">
           <td>14</td>
           <td>Possible integration in namespaced (non-HTML) XML languages.</td>
@@ -543,7 +543,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>no</td>
           <td>yes</td>
         </tr>
-      
+
         <tr class="points">
           <td>15</td>
           <td>Mainstream Web developers are already adopting it.</td>
@@ -558,7 +558,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>no</td>
           <td>no</td>
         </tr>
-      
+
         <tr class="points">
           <td>16</td>
           <td>Tidy-safety (Cleaning up the page will never alter the embedded semantics)</td>
@@ -573,7 +573,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>yes</td>
           <td>no</td>
         </tr>
-      
+
         <tr class="points">
           <td>17</td>
           <td>Explicit support for blank nodes.</td>
@@ -588,7 +588,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>no</td>
           <td>yes</td>
         </tr>
-      
+
         <tr class="points">
           <td>18</td>
           <td>Compact syntax, based on existing HTML semantics like the <code>address</code> tag or rel/rev/class attributes.</td>
@@ -603,7 +603,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>mostly</td>
           <td>partly</td>
         </tr>
-      
+
         <tr class="points">
           <td>19</td>
           <td>Inclusion of newly evolving publishing patterns (e.g. rel="nofollow").</td>
@@ -618,7 +618,7 @@ Pretending to be constructive, and in order to make things less biased, I embedd
           <td>no</td>
           <td>partly</td>
         </tr>
-      
+
         <tr class="points">
           <td>20</td>
           <td>Support for head section metadata such as OpenID or Feed hooks.</td>

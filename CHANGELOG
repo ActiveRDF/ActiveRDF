@@ -1,4 +1,5 @@
 == activerdf (HEAD)
+  * Standardized line endings to LF
   * New improved logging, including optional benchmarking of queries  (Daniel Hahn)
   * Fixes to the Sesame adapter  (Daniel Hahn)
   * User definable default Resource class  (Daniel Hahn)
