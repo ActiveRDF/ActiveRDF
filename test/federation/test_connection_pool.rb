@@ -4,8 +4,7 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'federation/connection_pool'
-require "#{File.dirname(__FILE__)}/../common"
+require 'test_helper'
 
 class TestConnectionPool < Test::Unit::TestCase
   include ActiveRDF
@@ -20,12 +19,12 @@ class TestConnectionPool < Test::Unit::TestCase
 
   def test_class_add_data_source
     # test for successfull adding of an adapter
-    adapter = get_primary_adapter
+    adapter = get_default_primary_adapter
     assert_kind_of ActiveRdfAdapter, adapter
     assert ConnectionPool.adapters.include?(adapter)
 
     # now check that we have different adapters for primary and secondary
-    adapter2 = get_secondary_adapter
+    adapter2 = get_default_secondary_adapter
     assert adapter != adapter2
   end
 
@@ -40,7 +39,7 @@ class TestConnectionPool < Test::Unit::TestCase
   def test_class_adapter_pool
     ConnectionPool.clear
     assert_equal 0, ConnectionPool.adapters.size
-    get_primary_adapter
+    get_default_primary_adapter
     assert_equal 1, ConnectionPool.adapters.size
   end
 

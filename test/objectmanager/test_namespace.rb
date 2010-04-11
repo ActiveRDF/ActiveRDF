@@ -4,8 +4,7 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'objectmanager/namespace'
-require "#{File.dirname(__FILE__)}/../common"
+require 'test_helper'
 
 class TestNamespace < Test::Unit::TestCase
   include ActiveRDF

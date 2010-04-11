@@ -4,9 +4,7 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'federation/federation_manager'
-require 'queryengine/query'
-require "#{File.dirname(__FILE__)}/../common"
+require 'test_helper'
 
 class TestAdapter < Test::Unit::TestCase
   include ActiveRDF

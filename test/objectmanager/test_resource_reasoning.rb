@@ -2,7 +2,7 @@ require 'active_rdf'
 if $activerdf_internal_reasoning
   require 'test/unit'
   require 'set'
-  require "#{File.dirname(__FILE__)}/../common"
+  require 'test_helper'
 
   class TestResourceReasoning < Test::Unit::TestCase
     include SetupAdapter

@@ -5,7 +5,7 @@
 require 'test/unit'
 require 'active_rdf'
 require 'set'
-require "#{File.dirname(__FILE__)}/../common"
+require 'test_helper'
 
 class TestResourceReading < Test::Unit::TestCase
   include SetupAdapter

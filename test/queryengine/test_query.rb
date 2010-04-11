@@ -4,8 +4,7 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'queryengine/query'
-require "#{File.dirname(__FILE__)}/../common"
+require 'test_helper'
 
 class TestQuery < Test::Unit::TestCase
   def setup

@@ -1,8 +1,9 @@
 # Author:: Eyal Oren
 # Copyright:: (c) 2005-2006 Eyal Oren
 # License:: LGPL
-require 'federation/connection_pool'
-require 'queryengine/query2sparql'
+
+require 'active_rdf/federation/connection_pool'
+require 'active_rdf/queryengine/query2sparql'
 require 'rdf/redland'
 
 # Adapter to Redland database

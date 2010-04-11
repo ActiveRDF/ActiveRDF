@@ -1,5 +1,3 @@
-require 'active_rdf'
-
 module ActiveRDF
   Namespace.register(:bnode, "http://www.activerdf.org/bnode#")
 

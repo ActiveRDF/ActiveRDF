@@ -90,7 +90,7 @@ module ActiveRDF
       case term
       when Symbol
         "?#{term}"
-      when RDFS::Resource, RDFS::Literal, ActiveRDF::ResourceLike
+      when RDFS::Resource, RDFS::Literal
         term.to_literal_s
       when String
         "\"#{term}\""

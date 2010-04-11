@@ -2,15 +2,13 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
-# require 'active_rdf'
 require 'test/unit'
 require 'active_rdf'
-common_test_dir = File.dirname(File.expand_path(__FILE__)) + '/../../test'
-require "#{common_test_dir}/adapters/test_persistent_adapter"
-require "#{common_test_dir}/adapters/test_bnode_capable_adapter"
-require "#{common_test_dir}/adapters/test_context_aware_adapter"
-require "#{common_test_dir}/adapters/test_network_aware_adapter"
-require "#{common_test_dir}/adapters/test_reasoning_adapter"
+require 'adapters/test_persistent_adapter'
+require 'adapters/test_bnode_capable_adapter'
+require 'adapters/test_context_aware_adapter'
+require 'adapters/test_network_aware_adapter'
+require 'adapters/test_reasoning_adapter'
 
 
 class TestRdfLiteAdapter < Test::Unit::TestCase

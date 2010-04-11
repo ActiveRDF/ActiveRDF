@@ -4,9 +4,8 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'queryengine/query'
-require 'queryengine/query2sparql'
-require "#{File.dirname(__FILE__)}/../common"
+require 'active_rdf/queryengine/query2sparql'
+require 'test_helper'
 require 'set'
 
 class TestQueryEngine < Test::Unit::TestCase

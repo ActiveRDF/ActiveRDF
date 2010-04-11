@@ -1,8 +1,8 @@
-require 'queryengine/query2sparql'
 require 'open-uri'
 require 'cgi'
 require 'rexml/document'
-require "#{File.dirname(__FILE__)}/sparql_result_parser"
+require 'active_rdf/queryengine/query2sparql'
+require 'activerdf_sparql/sparql_result_parser'
 
 module ActiveRDF
   # SPARQL adapter
@@ -39,7 +39,7 @@ module ActiveRDF
       @result_format = params[:results] || :json
       raise ActiveRdfError, "Result format unsupported" unless [:xml, :json, :sparql_xml].include? @result_format
 
-      @engine = params[:engine]
+      @engine = params[:engine] || :virtuoso
       raise ActiveRdfError, "SPARQL engine unsupported" unless [:yars2, :sesame2, :joseki, :virtuoso].include? @engine
 
       @request_method = params[:request_method] || :get

@@ -1,7 +1,7 @@
 require 'test/unit'
 require 'active_rdf'
 require 'set'
-require File.dirname(File.expand_path(__FILE__)) + '/../common'
+require 'test_helper'
 
 class TestProperty < Test::Unit::TestCase
   include SetupAdapter

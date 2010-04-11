@@ -2,9 +2,9 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
-require 'test/unit'
+require 'test/unit'  
 require 'active_rdf'
-require "#{File.dirname(__FILE__)}/../common"
+require 'test_helper'
 
 class TestObjectManager < Test::Unit::TestCase
   include SetupAdapter
@@ -40,8 +40,8 @@ class TestObjectManager < Test::Unit::TestCase
   end
 
   def test_invalid_resource
-    assert_raise ActiveRdfError do
-      Query.new.distinct(:o).where(TEST::Person.new(''),TEST::age,:o).execute
+    assert_raise ActiveRDF::ActiveRdfError do
+      ActiveRDF::Query.new.distinct(:o).where(TEST::Person.new(''),TEST::age,:o).execute
     end
   end
 

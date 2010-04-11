@@ -67,25 +67,29 @@ module ActiveRDF
       # either get the adapter-instance from the pool
       # or create new one (and add it to the pool)
       index = @@adapter_parameters.index(connection_params)
-      if index.nil?
-        # adapter not in the pool yet: create it,
+      
+      if connection_params[:new]
+        # create a new connection when requested
+        # these adapters are not cached
+        connection = get_connection(connection_params)
+      elsif index.nil?
+        # connection not in the pool yet: create it,
         # register its connection parameters in parameters-array
         # and add it to the pool (at same index-position as parameters)
-        ActiveRdfLogger::log_debug(self) { "Create a new adapter for parameters #{connection_params.inspect}" }
-        adapter = create_adapter(connection_params)
+        connection = get_connection(connection_params)
         @@adapter_parameters << connection_params
-        @@adapter_pool << adapter
+        @@adapter_pool << connection
       else
         # if adapter parametrs registered already,
         # then adapter must be in the pool, at the same index-position as its parameters
         ActiveRdfLogger::log_debug("Reusing existing adapter")
-        adapter = @@adapter_pool[index]
+        connection = @@adapter_pool[index]
       end
 
       # sets the adapter as current write-source if it can write
-      self.write_adapter = adapter if adapter.writes?
+      ConnectionPool.write_adapter = connection if connection.writes?
 
-      return adapter
+      connection
     end
 
     # remove one adapter from activerdf
@@ -113,8 +117,11 @@ module ActiveRDF
       adapter.close
     end
 
+
     # sets adapter-instance for connection parameters (if you want to re-enable an existing adapter)
     def ConnectionPool.set_data_source(adapter, connection_params = {})
+      # FIXME: remove in future version
+      warn "Warning: ConnectionPool.set_data_source deprecated. Use add_data_source instead which will return the old connection given the connection_params"
       index = @@adapter_parameters.index(connection_params)
       if index.nil?
         @@adapter_parameters << connection_params
@@ -140,24 +147,59 @@ module ActiveRDF
       @@registered_adapter_types[type] = klass
     end
 
-  # unregister adapter-type
-  def ConnectionPool.unregister_adapter(type)
-    ActiveRdfLogger::log_info(self) { "ConnectionPool: deregistering adapter of type #{type}" }
-    @@registered_adapter_types.delete type
-  end
-
-    # create new adapter from connection parameters
-    def ConnectionPool.create_adapter connection_params
-      # lookup registered adapter klass
-    klass = @@registered_adapter_types[connection_params[:type].to_sym]
-
-      # raise error if adapter type unknown
-      raise(ActiveRdfError, "unknown adapter type #{connection_params[:type]}") if klass.nil?
-
-      # create new adapter-instance
-      klass.send(:new,connection_params)
+    # unregister adapter-type
+    def ConnectionPool.unregister_adapter(type)
+      ActiveRdfLogger::log_info(self) { "ConnectionPool: deregistering adapter of type #{type}" }
+      @@registered_adapter_types.delete type
     end
 
-    private_class_method :create_adapter
+    def ConnectionPool.load_adapter(name)
+      name = name.to_s.strip.downcase.to_sym
+      begin 
+        case name
+        when :rdflite
+          require 'activerdf_rdflite/rdflite'
+          require 'activerdf_rdflite/fetching'
+          require 'activerdf_rdflite/suggesting'
+        when :fetching
+          require 'activerdf_rdflite/fetching'
+        when :redland
+          require 'activerdf_redland/redland'
+        when :sparql
+          require 'activerdf_sparql/sparql'
+        when :jars
+          require 'activerdf_yars/jars2'
+        when :jena
+          require 'activerdf_jena/jena'
+        when :sesame
+          require 'activerdf_sesame/sesame'
+        else
+          # raise error if adapter type unknown
+          ActiveRdfLogger::log_error "Unknown adapter #{name}"
+          raise ActiveRdfError, "Unknown adapter #{name}"
+        end
+
+        @@registered_adapter_types[name]
+        
+      rescue Exception => e
+        ActiveRdfLogger::log_info "Could not load adapter #{name}: #{e}"
+        raise ActiveRdfError, "Could not load adapter #{name}: #{e}"
+      end
+    end
+
+    # create new adapter from connection parameters
+    def ConnectionPool.get_connection(connection_params)
+      ActiveRdfLogger::log_debug(self) { "Create a new adapter for parameters #{connection_params.inspect}" }
+
+      name = connection_params[:type].to_s.strip.downcase.to_sym
+      
+      # return registered adapter class otherwise load requested adapter
+      adapter = @@registered_adapter_types[name] || load_adapter(name)
+
+      # create new adapter instance
+      adapter.send(:new,connection_params)
+    end    
+    private_class_method :get_connection
+
   end
 end

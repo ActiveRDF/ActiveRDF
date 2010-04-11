@@ -4,8 +4,8 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'queryengine/query2jars2'
-require "#{File.dirname(__FILE__)}/../common"
+require 'active_rdf/queryengine/query2jars2'
+require 'test_helper'
 
 class TestQuery2Jars2 < Test::Unit::TestCase
   def setup

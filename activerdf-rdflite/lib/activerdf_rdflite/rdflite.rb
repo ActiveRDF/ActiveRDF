@@ -3,10 +3,9 @@
 # License:: LGPL
 
 require 'sqlite3'
-require 'active_rdf'
-require 'federation/connection_pool'
+require 'active_rdf/federation/connection_pool'
+require 'active_rdf/queryengine/ntriples_parser'
 require 'uuidtools'
-require 'queryengine/ntriples_parser'
 require 'open-uri'
 require 'mime/types'
 

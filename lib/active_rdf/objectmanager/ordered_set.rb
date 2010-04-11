@@ -1,5 +1,5 @@
-require 'queryengine/query'
-require 'objectmanager/resource'
+require 'active_rdf/queryengine/query'
+require 'active_rdf/objectmanager/resource'
 
 class OrderedSet
     

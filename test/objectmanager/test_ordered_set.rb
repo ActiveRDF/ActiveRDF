@@ -5,15 +5,15 @@
 
 require 'test/unit'
 require 'active_rdf'
-require "#{File.dirname(__FILE__)}/../common"
-require 'objectmanager/ordered_set'
+require 'test_helper'
+require 'active_rdf/objectmanager/ordered_set'
 
 class TestOrderedSet < Test::Unit::TestCase
 
   def setup
     ConnectionPool.clear
     
-    adapter = get_primary_write_adapter
+    adapter = get_default_primary_write_adapter
     adapter.load "#{File.dirname(__FILE__)}/../test_person_data.nt"
     adapter.load "#{File.dirname(__FILE__)}/../test_rdf_data.nt"
     ObjectManager.construct_classes

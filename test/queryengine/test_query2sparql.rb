@@ -4,7 +4,7 @@
 
 require 'test/unit'
 require 'active_rdf'
-require "#{File.dirname(__FILE__)}/../common"
+require 'test_helper'
 
 class TestQuery2Sparql < Test::Unit::TestCase
 
@@ -60,7 +60,7 @@ class TestQuery2Sparql < Test::Unit::TestCase
   def test_execute_sort_query
     ConnectionPool.clear
     file_one = "#{File.dirname(__FILE__)}/../small-one.nt"
-    adapter = get_primary_adapter
+    adapter = get_default_primary_adapter
     
     if (adapter.class.to_s != "SesameAdapter")
       adapter.load file_one

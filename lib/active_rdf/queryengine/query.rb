@@ -1,4 +1,4 @@
-require 'federation/federation_manager'
+require 'active_rdf/federation/federation_manager'
 
 # Represents a query on a datasource, abstract representation of SPARQL
 # features. Query is passed to federation manager or adapter for execution on
@@ -25,23 +25,6 @@ module ActiveRDF
       @all_types = false
       @nil_clause_idx = -1
     set_resource_class(resource_type)
-    end
-
-    # This returns the class that is be used for resources, by default this
-    # is RDFS::Resource
-    def resource_class
-      @resource_class ||= RDFS::Resource
-    end
-
-    # Sets the resource_class. Any class may be used, however it is required
-    # that it can be created using the uri of the resource as it's only 
-    # parameter and that it has an 'uri' property
-    def set_resource_class(resource_class)
-      raise(ArgumentError, "resource_class must be a class") unless(resource_class.class == Class)
-
-      test = resource_class.new("http://uri")
-      raise(ArgumentError, "Must have an uri property") unless(test.respond_to?(:uri))
-      @resource_class = resource_class
     end
 
     def initialize_copy(orig)
@@ -245,7 +228,7 @@ module ActiveRDF
 
     # Returns SPARQL serialisation of query
     def to_sp
-    require 'queryengine/query2sparql' unless(defined?(Query2SPARQL))
+    require 'active_rdf/queryengine/query2sparql' unless(defined?(Query2SPARQL))
       Query2SPARQL.translate(self)
     end
 

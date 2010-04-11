@@ -5,10 +5,9 @@
 require 'test/unit'
 require 'tmpdir'
 require 'fileutils'
-common_test_dir = File.dirname(File.expand_path(__FILE__)) + '/../../test'
-require "#{common_test_dir}/adapters/test_writable_adapter"
-require "#{common_test_dir}/adapters/test_persistent_adapter"
-require "#{common_test_dir}/adapters/test_network_aware_adapter"
+require 'adapters/test_writable_adapter'
+require 'adapters/test_persistent_adapter'
+require 'adapters/test_network_aware_adapter'
 
 module TestRedlandAdapter
   include TestWritableAdapter

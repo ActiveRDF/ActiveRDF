@@ -1,5 +1,5 @@
 require 'active_rdf'
-require "#{File.dirname(File.expand_path(__FILE__))}/../common"
+require 'test_helper'
 
 module TestActiveRdfAdapter
   include SetupAdapter

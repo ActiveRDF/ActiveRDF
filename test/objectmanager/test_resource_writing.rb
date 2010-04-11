@@ -4,8 +4,7 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'federation/connection_pool'
-require "#{File.dirname(__FILE__)}/../common"
+require 'test_helper'
 
 class TestResourceWriting < Test::Unit::TestCase
   include SetupAdapter

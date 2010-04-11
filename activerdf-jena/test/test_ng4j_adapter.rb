@@ -3,14 +3,9 @@
 # License:: LGPL
 
 require 'test/unit'
-require 'rubygems'
-
 require "java"
-
 require 'active_rdf'
-
 require "pp"
-
 require "fileutils"
 
 class TestNG4JAdapter < Test::Unit::TestCase

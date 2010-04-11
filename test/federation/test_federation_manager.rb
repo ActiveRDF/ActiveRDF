@@ -4,7 +4,7 @@
 
 require 'test/unit'
 require 'active_rdf'
-require "#{File.dirname(File.expand_path(__FILE__))}/../common"
+require 'test_helper'
 
 class TestFederationManager < Test::Unit::TestCase
   include ActiveRDF
@@ -27,14 +27,14 @@ class TestFederationManager < Test::Unit::TestCase
 
 
   def test_single_pool
-    a1 = get_primary_adapter
-    a2 = get_primary_adapter
+    a1 = get_default_primary_adapter
+    a2 = get_default_primary_adapter
     assert_equal a1, a2
     assert_equal a1.object_id, a2.object_id
   end
 
   def test_add
-    get_primary_write_adapter
+    get_default_primary_write_adapter
     FederationManager.add(@@eyal, @@age, @@age_number)
 
     age_result = Query.new.select(:o).where(@@eyal, @@age, :o).execute(:flatten=>true)
@@ -43,7 +43,7 @@ class TestFederationManager < Test::Unit::TestCase
 
   def test_add_no_write_adapter
     # zero write, one read -> must raise error
-    adapter = get_read_only_adapter
+    adapter = get_default_read_only_adapter
     assert (not adapter.writes?)
     assert_raises(ActiveRdfError) { FederationManager.add(@@eyal, @@age, @@age_number) }
   end
@@ -51,8 +51,8 @@ class TestFederationManager < Test::Unit::TestCase
   def test_add_one_write_one_read
     # one write, one read
 
-    write1 = get_primary_write_adapter
-    read1 = get_read_only_adapter
+    write1 = get_default_primary_write_adapter
+    read1 = get_default_read_only_adapter
     assert_not_equal write1,read1
     assert_not_equal write1.object_id, read1.object_id
 
@@ -63,13 +63,13 @@ class TestFederationManager < Test::Unit::TestCase
   end
 
   def test_get_different_read_and_write_adapters
-    r1 = get_primary_adapter
-    r2 = get_secondary_adapter
+    r1 = get_default_primary_adapter
+    r2 = get_default_secondary_adapter
     assert_not_equal r1,r2
     assert_not_equal r1.object_id, r2.object_id
 
-    w1 = get_primary_write_adapter
-    w2 = get_secondary_write_adapter
+    w1 = get_default_primary_write_adapter
+    w2 = get_default_secondary_write_adapter
     assert_not_equal w1,w2
     assert_not_equal w1.object_id, w2.object_id
   end
@@ -79,8 +79,8 @@ class TestFederationManager < Test::Unit::TestCase
     # we need to different write adapters for this
     #
 
-    get_secondary_write_adapter
-    get_primary_write_adapter
+    get_default_secondary_write_adapter
+    get_default_primary_write_adapter
 
     FederationManager.add(@@eyal, @@age, @@age_number)
 
@@ -91,9 +91,9 @@ class TestFederationManager < Test::Unit::TestCase
   def test_add_two_write_switching
     # two write, one read, with switching
 
-    write1 = get_primary_write_adapter
-    write2 = get_secondary_write_adapter
-    get_read_only_adapter
+    write1 = get_default_primary_write_adapter
+    write2 = get_default_secondary_write_adapter
+    get_default_read_only_adapter
 
     ConnectionPool.write_adapter = write1
 
@@ -113,7 +113,7 @@ class TestFederationManager < Test::Unit::TestCase
 
   def test_federated_query
     test_person_data = "#{File.dirname(__FILE__)}/../test_person_data.nt"
-    first_adapter = get_primary_write_adapter
+    first_adapter = get_default_primary_write_adapter
     first_adapter.load(test_person_data)
     first = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
 
@@ -122,15 +122,15 @@ class TestFederationManager < Test::Unit::TestCase
     assert first != []
 
     ConnectionPool.clear
-    second_adapter = get_secondary_write_adapter
+    second_adapter = get_default_secondary_write_adapter
     second_adapter.load(test_person_data)
     second = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
 
     # now we query both adapters in parallel
     ConnectionPool.clear
-    first_adapter = get_primary_write_adapter
+    first_adapter = get_default_primary_write_adapter
     first_adapter.load(test_person_data)
-    second_adapter = get_secondary_write_adapter
+    second_adapter = get_default_secondary_write_adapter
     second_adapter.load(test_person_data)
     both = Query.new.select(:s,:p,:o).where(:s,:p,:o).execute
     # assert both together contain twice the sum of the separate sources
