@@ -1,4 +1,4 @@
-require 'active_rdf/federation/connection_pool'
+require 'active_rdf/storage/connection_pool'
 
 include ActiveRdfBenchmark
 

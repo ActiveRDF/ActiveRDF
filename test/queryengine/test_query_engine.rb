@@ -4,7 +4,7 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'active_rdf/queryengine/query2sparql'
+require 'active_rdf/query/query2sparql'
 require 'test_helper'
 require 'set'
 

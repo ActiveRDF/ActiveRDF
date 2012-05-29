@@ -1,7 +1,7 @@
 $:.unshift File.join(File.dirname(__FILE__),'..', '..','lib', 'active_rdf')
 
 require 'test/unit'
-require 'directaccess/direct_access'
+require 'active_rdf/directaccess/direct_access'
 
 class TestDirectAccess < Test::Unit::TestCase
   

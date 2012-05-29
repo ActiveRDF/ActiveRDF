@@ -5,8 +5,8 @@
 require "rubygems"
 require 'active_rdf'
 require 'test/unit'
-require 'federation/federation_manager'
-require 'queryengine/query'
+require 'active_rdf/storage/federated_store'
+require 'active_rdf/query/query'
 
 
 class TestSparqlAdapter < Test::Unit::TestCase

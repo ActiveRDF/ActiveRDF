@@ -6,7 +6,7 @@
 require 'test/unit'
 require 'active_rdf'
 require 'test_helper'
-require 'active_rdf/objectmanager/ordered_set'
+require 'active_rdf/model/ordered_set'
 
 class TestOrderedSet < Test::Unit::TestCase
 

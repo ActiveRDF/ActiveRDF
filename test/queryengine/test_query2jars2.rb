@@ -4,7 +4,7 @@
 
 require 'test/unit'
 require 'active_rdf'
-require 'active_rdf/queryengine/query2jars2'
+require 'active_rdf/query/query2jars2'
 require 'test_helper'
 
 class TestQuery2Jars2 < Test::Unit::TestCase

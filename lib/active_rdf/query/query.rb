@@ -1,4 +1,4 @@
-require 'active_rdf/federation/federation_manager'
+require 'active_rdf/storage/federated_store'
 
 # Represents a query on a datasource, abstract representation of SPARQL
 # features. Query is passed to federation manager or adapter for execution on
@@ -228,7 +228,7 @@ module ActiveRDF
 
     # Returns SPARQL serialisation of query
     def to_sp
-    require 'active_rdf/queryengine/query2sparql' unless(defined?(Query2SPARQL))
+    require 'active_rdf/query/query2sparql' unless(defined?(Query2SPARQL))
       Query2SPARQL.translate(self)
     end
 

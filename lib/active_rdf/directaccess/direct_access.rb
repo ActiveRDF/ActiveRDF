@@ -1,4 +1,4 @@
-require 'active_rdf_helpers'
+require 'active_rdf/helpers'
 
 
 # Direct access for Redland adapter

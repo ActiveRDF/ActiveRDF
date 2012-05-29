@@ -1,6 +1,6 @@
-require 'active_rdf/objectmanager/object_manager'
-require 'active_rdf/objectmanager/namespace'
-require 'active_rdf/queryengine/query'
+require 'active_rdf/model/object_manager'
+require 'active_rdf/namespace'
+require 'active_rdf/query/query'
 
 module RDFS
   # Represents an RDF resource and manages manipulations of that resource,

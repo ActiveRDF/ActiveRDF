@@ -1,4 +1,4 @@
-require 'active_rdf/queryengine/query2sparql'
+require 'active_rdf/query/query2sparql'
 
 # Generic superclass of all adapters
 module ActiveRDF

@@ -2,7 +2,7 @@
 # Copyright:: (c) 2005-2006
 # License:: LGPL
 
-require 'active_rdf/queryengine/query2jars2'
+require 'active_rdf/query/query2jars2'
 require 'net/http'
 require 'cgi'
 
