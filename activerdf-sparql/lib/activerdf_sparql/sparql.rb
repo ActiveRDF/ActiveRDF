@@ -1,7 +1,7 @@
 require 'open-uri'
 require 'cgi'
 require 'rexml/document'
-require 'active_rdf/queryengine/query2sparql'
+require 'active_rdf/query/query2sparql'
 require 'activerdf_sparql/sparql_result_parser'
 
 module ActiveRDF
