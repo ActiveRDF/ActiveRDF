@@ -38,6 +38,24 @@ module ActiveRDF
       end
     end
 
+    # This returns the class that is be used for resources, by default this
+    # is RDFS::Resource
+    def resource_class
+      @resource_class ||= RDFS::Resource
+    end
+
+    # Sets the resource_class. Any class may be used, however it is required
+    # that it can be created using the uri of the resource as it's only 
+    # parameter and that it has an 'uri' property
+    def set_resource_class(resource_class)
+      raise(ArgumentError, "resource_class must be a class") unless(resource_class.class == Class)
+
+      test = resource_class.new("http://uri")
+      raise(ArgumentError, "Must have an uri property") unless(test.respond_to?(:uri))
+      @resource_class = resource_class
+    end
+
+
 
     # Clears the select clauses
     def clear_select
