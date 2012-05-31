@@ -332,6 +332,10 @@ module RDF
       hash
     end
 
+    def to_s
+      to_a.join(",")
+    end
+
     # Return an array containing the values for the given keys.
     def values_at(*args)
       args.collect{|md5| self[md5]}
