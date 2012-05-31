@@ -18,23 +18,28 @@ class SparqlResultParser
       @current_result = []
     when 'binding'
       @index = @vars.index(attrs['name'])
-    when 'bnode', 'literal', 'typed-literal', 'uri'
+    when 'bnode', 'literal', 'typed-literal', 'uri', 'boolean'
       @current_type = name
     end
   end
 
   def tag_end(name)
-    if name == "result"
+    case name
+    when 'result'
       @result << @current_result
-    elsif name == 'bnode' || name == 'literal' || name == 'typed-literal' || name == 'uri'
+    when 'bnode', 'literal', 'typed-literal', 'uri', 'boolean'
       @current_type = nil
-    elsif name == "sparql"
+    when 'sparql'
     end
   end
 
   def text(text)
     if !@current_type.nil?
-      @current_result[@index] = create_node(@current_type, text)
+      if @current_type == 'boolean'
+        @result = [truefalse(text)]
+      else
+        @current_result[@index] = create_node(@current_type, text)
+      end
     end
   end
 

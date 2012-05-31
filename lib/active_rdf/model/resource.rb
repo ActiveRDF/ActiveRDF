@@ -121,7 +121,7 @@ module RDFS
     end
 
     def new_record?
-      ActiveRDF::Query.new.count(:p).where(self,:p,:o).execute == 0
+      !ActiveRDF::Query.new.ask.where(self,:p,:o).execute
     end
 
     # saves instance into datastore

@@ -78,6 +78,10 @@ module ActiveRDF
           end
         end
 
+        # ask queries return boolean values. the results array will contain one for each adapter: [false,true,...]
+        # if any adapter returned true, then return true
+        return results.any?{|val| val.is_a?(TrueClass)} if q.ask?
+
         # count
         return results.flatten.inject{|mem,c| mem + c} if q.count?
 

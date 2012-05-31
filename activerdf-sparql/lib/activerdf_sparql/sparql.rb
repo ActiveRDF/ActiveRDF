@@ -172,6 +172,8 @@ module ActiveRDF
         parsed_object = JSON.parse(s)
         return [] if parsed_object.nil?
 
+        return [truefalse(parsed_object['boolean'])] if parsed_object.has_key?('boolean')
+
         results = []
         vars = parsed_object['head']['vars']
         objects = parsed_object['results']['bindings']

@@ -210,7 +210,7 @@ module ActiveRDF
 
       # if ASK query, we check whether we received a positive result count
       if query.ask?
-        return [[results[0][0].to_i > 0]]
+        return [results[0][0].to_i > 0]
       elsif query.count?
         return [[results[0][0].to_i]]
       else
