@@ -36,8 +36,8 @@ end
 def truefalse(val, default = nil)
   raise ArgumentError, "truefalse: default must be a boolean: #{default}" if !default.nil? and !(default == true || default == false)
   case val
-  when true,/^yes|y$/i then true
-  when false,/^no|n$/i then false
+  when true,/^yes|y|true$/i then true
+  when false,/^no|n$|false/i then false
   else default
   end
 end
