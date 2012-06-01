@@ -6,6 +6,8 @@ require 'active_rdf/storage/federated_store'
 # Query.new.select(:s).where(:s,:p,:o).
 module ActiveRDF
   class Query
+    include Helpers
+
     attr_reader :select_clauses, :where_clauses, :filter_clauses, :sort_clauses, :limits, :offsets, :keywords
 
     bool_accessor :distinct, :ask, :select, :count, :keyword, :all_types
@@ -81,7 +83,7 @@ module ActiveRDF
 
     # Request reasoning be performed on query
     def reasoning(bool)
-      @reasoning = truefalse(bool)
+      @reasoning = to_boolean(bool)
       self
     end
     def reasoning=(bool)

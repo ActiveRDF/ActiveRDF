@@ -10,6 +10,8 @@ require 'rdf/redland'
 # uses SPARQL for querying
 module ActiveRDF
   class RedlandAdapter < ActiveRdfAdapter
+    include Helpers
+
     ActiveRdfLogger::log_info "Loading Redland adapter", self
     ConnectionPool.register_adapter(:redland,self)
 
@@ -43,7 +45,7 @@ module ActiveRDF
           [:host, :port, :database, :user, :password].each{|k| options[k] = params[k] if params[k]}
           options[:host] ||= 'localhost'
         end
-        options[:reconnect] = truefalse(params[:reconnect], false) if location == 'mysql'
+        options[:reconnect] = to_boolean(params[:reconnect], false) if location == 'mysql'
       when 'memory',nil
         # use storage module hashes with hash-type 'memory' instead of non-indexing storage module memory
         store_type = 'hashes'

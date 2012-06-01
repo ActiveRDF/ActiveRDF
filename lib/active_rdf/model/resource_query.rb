@@ -15,6 +15,7 @@ module ActiveRDF
   #   ResourceQuery.new(RDFS::Resource).test::age(27).execute                         # find RDFS::Resources having the fully qualified property and value
   #   ResourceQuery.new(TEST::Person).age(27).eye(LocalizedString('blue','en')).execute  # chain multiple properties together, ANDing restrictions
   class ResourceQuery
+    include Helpers
     private(:type)
 
     def initialize(type,context = nil)
@@ -25,7 +26,7 @@ module ActiveRDF
     end
 
     def execute(options = {}, &blk)
-      if truefalse(options[:all_types])
+      if to_boolean(options[:all_types])
         if @query.filter_clauses.values.any?{|operator,operand| operator == :lang or operator == :datatype}
           raise ActiveRdfError, "all_types may not be specified in conjunction with any lang or datatype restrictions"
         end

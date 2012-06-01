@@ -15,6 +15,7 @@ require 'mime/types'
 module ActiveRDF
   class RDFLite < ActiveRdfAdapter
     ActiveRdfLogger::log_info(self) { "Loading RDFLite adapter" }
+    include Helpers
 
     begin
       require 'ferret'
@@ -36,7 +37,7 @@ module ActiveRDF
       super
       ActiveRdfLogger::log_info(self) { "Initialised rdflite with params #{params.to_s}" }
 
-      @reasoning = truefalse(params[:reasoning], false)
+      @reasoning = to_boolean(params[:reasoning], false)
       @subprops = {} if @reasoning
 
       # if no file-location given, we use in-memory store
@@ -44,13 +45,13 @@ module ActiveRDF
       @db = SQLite3::Database.new(file)
 
       # disable keyword search by default, enable only if ferret is found
-      @keyword_search = truefalse(params[:keyword], false) && @@have_ferret
+      @keyword_search = to_boolean(params[:keyword], false) && @@have_ferret
 
       # turn off filesystem synchronisation for speed
       @db.synchronous = 'off'
 
       # drop the table if a new datastore is requested
-      @db.execute('drop table if exists triple') if truefalse(params[:new],false)
+      @db.execute('drop table if exists triple') if to_boolean(params[:new],false)
 
       # create triples table. ignores duplicated triples
       @db.execute('create table if not exists triple(s,p,o,c, unique(s,p,o,c) on conflict ignore)')

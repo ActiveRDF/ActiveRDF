@@ -63,7 +63,9 @@ module RDF
 
   # Provides methods for accessing property values when @subject is set
   module AssociatedProperty
+    include ActiveRDF::Helpers
     include Enumerable
+
     # Value reference. Retrieves a copy of the value by the key or value. Returns nil if not found.
     def [](md5_or_value)
       unless md5_or_value.nil?
@@ -281,7 +283,7 @@ module RDF
     def lang=(*args)
       args.flatten!
       @lang = args[0].sub(/^@/,'')
-      @exact_lang = truefalse(args[1],true)
+      @exact_lang = to_boolean(args[1],true)
     end
 
     # Returns the number of values assigned to this property for this @subject

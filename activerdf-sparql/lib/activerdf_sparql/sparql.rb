@@ -7,6 +7,8 @@ require 'activerdf_sparql/sparql_result_parser'
 module ActiveRDF
   # SPARQL adapter
   class SparqlAdapter < ActiveRdfAdapter
+    include Helpers
+
     ActiveRdfLogger::log_info(self) { "Loading SPARQL adapter" }
     ConnectionPool.register_adapter(:sparql, self)
 
@@ -172,7 +174,7 @@ module ActiveRDF
         response = JSON.parse(response_str)
         return [] if response.nil?
 
-        return [truefalse(response['boolean'])] if response.has_key?('boolean')
+        return [to_boolean(response['boolean'])] if response.has_key?('boolean')
 
         results = []
         vars = response['head']['vars']

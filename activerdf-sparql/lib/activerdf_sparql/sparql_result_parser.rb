@@ -36,7 +36,7 @@ class SparqlResultParser
   def text(text)
     if !@current_type.nil?
       if @current_type == 'boolean'
-        @result = [truefalse(text)]
+        @result = [to_boolean(text)]
       else
         @current_result[@index] = create_node(@current_type, text)
       end

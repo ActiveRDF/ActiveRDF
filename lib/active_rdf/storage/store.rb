@@ -3,6 +3,8 @@ require 'active_rdf/query/query2sparql'
 # Generic superclass of all adapters
 module ActiveRDF
   class ActiveRdfAdapter
+    include Helpers
+
     # indicate if adapter can read and write
     bool_accessor :enabled, :reads, :writes, :new, :contexts, :enabled
 
@@ -14,9 +16,9 @@ module ActiveRDF
       # defaults
       @enabled =                               true
       @reads =                                 true
-      @writes =      truefalse(params[:write], true)
-      @new =           truefalse(params[:new], false)
-      @contexts = truefalse(params[:contexts], false)
+      @writes =      to_boolean(params[:write], true)
+      @new =           to_boolean(params[:new], false)
+      @contexts = to_boolean(params[:contexts], false)
     end
 
     # translate a query to its string representation
