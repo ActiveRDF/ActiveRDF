@@ -15,16 +15,16 @@ module RDF
   #  age.to_a => ActiveRdfError: http://activerdf.org/test/age: no associated subject
   #
   #  email = RDF::Property.new('http://activerdf.org/test/email', 'http://activerdf.org/test/eyal')
-  #  email.replace("eyal@cs.cu.nl")                                 # replace any existing values
+  #  email.replace("eyal@cs.vu.nl")                                 # replace any existing values
   #  email.add("eyal.oren@deri.com")                                # add new value to this property
   #  email += ("eyal.oren@deri.net")                                # alternative way to add new value
   #  email.clear                                                    # delete any existing values
-  #  email.add(["eyal@cs.cu.nl","eyal.oren@deri.com"])              # add array containing values
+  #  email.add(["eyal@cs.vu.nl","eyal.oren@deri.com"])              # add array containing values
   #  email["eyal.oren@deri.com"] = "eyal.oren@deri.net"             # replace existing value
   #  email[p.index("eyal.oren@deri.net")] = "eyal.oren@deri.org"    # replace existing value by key
   #  email.include?("eyal.oren@deri.org") => true                   # check for existing value
-  #  email == ["eyal.oren@deri.org","eyal@cs.cu.nl"] => true        # compare value(s) to array (order is ignored)
-  #  email.delete("eyal@cs.cu.nl")                                  # delete specific value
+  #  email == ["eyal.oren@deri.org","eyal@cs.vu.nl"] => true        # compare value(s) to array (order is ignored)
+  #  email.delete("eyal@cs.vu.nl")                                  # delete specific value
   #  email == "eyal.oren@deri.org" => true                          # compare value(s) to single value
   #  email.collect!{|val| val.gsub(/@/,' at ').gsub(/\./,' dot ')}  # update value(s) with result of block
   class Property < RDFS::Resource
