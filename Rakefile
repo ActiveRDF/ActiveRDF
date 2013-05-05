@@ -1,11 +1,11 @@
 require 'rake'
 require 'rake/testtask'
 require 'rake/clean'
-require 'rake/rdoctask'
+require 'rdoc/task'
 require 'fileutils'
 include FileUtils
 
-require 'tools/rakehelp'
+require_relative 'tools/rakehelp'
 
 $version  = IO.read('VERSION').strip
 $name     = 'activerdf'
@@ -28,8 +28,8 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gemspec|
     gemspec.name = 'activerdf'
-    gemspec.summary = 'Offers object-oriented access to RDF (with adapters to several datastores).' 
-    gemspec.description = gemspec.summary 
+    gemspec.summary = 'Offers object-oriented access to RDF (with adapters to several datastores).'
+    gemspec.description = gemspec.summary
     gemspec.authors = ['Michael Diamond', 'Eyal Oren', 'The Talia Team']
     gemspec.email = 'michael@thinknasium.org'
     gemspec.homepage = 'http://www.activerdf.org'

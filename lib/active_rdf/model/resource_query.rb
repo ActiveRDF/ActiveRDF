@@ -16,6 +16,7 @@ module ActiveRDF
   #   ResourceQuery.new(TEST::Person).age(27).eye(LocalizedString('blue','en')).execute  # chain multiple properties together, ANDing restrictions
   class ResourceQuery
     include Helpers
+    attr :type
     private(:type)
 
     def initialize(type,context = nil)
