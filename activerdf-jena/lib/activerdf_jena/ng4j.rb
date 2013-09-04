@@ -15,7 +15,7 @@ module NG4J
 
     include_package('de.fuberlin.wiwiss.ng4j.db')
 
-    include_class('java.sql.DriverManager')
+    java_import('java.sql.DriverManager')
 
     # this maps downcased Jena database types into drivers
     DRIVER_MAP = {
@@ -29,9 +29,9 @@ module NG4J
       (class << self ; self ; end).send(:bool_accessor, av.to_sym)
       begin
         java.lang.Class.forName driver
-        Jena::DB.send("#{av}=", true)
+        Jena::SDB.send("#{av}=", true)
       rescue
-        Jena::DB.send("#{av}=", false)
+        Jena::SDB.send("#{av}=", false)
       end
     end
 

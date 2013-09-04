@@ -15,8 +15,13 @@ module Jena
     include_package('com.hp.hpl.jena.rdf.model')
   end
 
-  module DB
-    include_package('com.hp.hpl.jena.db')
+  module TDB
+    include_package('com.hp.hpl.jena.tdb')
+  end
+
+  module SDB
+    include_package('com.hp.hpl.jena.sdb')
+    include_package('com.hp.hpl.jena.sdb.sql')
 
     # this maps downcased Jena database types into drivers
     DRIVER_MAP = {
@@ -33,9 +38,9 @@ module Jena
       (class << self ; self ; end).send(:bool_accessor, av.to_sym)
       begin
         java.lang.Class.forName driver
-        Jena::DB.send("#{av}=", true)
+        Jena::SDB.send("#{av}=", true)
       rescue
-        Jena::DB.send("#{av}=", false)
+        Jena::SDB.send("#{av}=", false)
       end
     end
   end
