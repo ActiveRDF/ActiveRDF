@@ -49,6 +49,7 @@ module ActiveRDF
     attr_accessor :ontology_type, :model_name, :reasoner, :connection
     attr_accessor :model_maker, :base_model, :model, :lucene_index, :dataset
     attr_accessor :root_directory
+    attr_accessor :resolve_online
 
     # :database
     #   either use :url, :type, :username, AND :password (for a
@@ -59,6 +60,9 @@ module ActiveRDF
     # :file
     #   database wins over this, this wins over memory store.  parameter is
     #   a string or file indicating the root directory for all files.
+    # :tdb
+    #   TDB receives lower priority than :database and :file.
+    #   Value is a path to TDB database directory/folder.
     # :model
     #   name of model to use, default is jena's default
     # :ontology
@@ -70,13 +74,18 @@ module ActiveRDF
     #   :transitive, :rdfs, :rdfs_simple, :owl_micro, :owl_mini, :owl,
     #   :generic_rule
     # :lucene
-    #   set to true to enable true lucene indexing of this store, default false
+    #   set to true to enable true lucene indexing of this store, default false.
+    # :resolve_online
+    #    Boolean value. Default is false.
+    #    True =>  Jena document manager automatically fetches ontologies
+    #             from their URLs.
     def initialize(params = {})
       dbparams = params[:database]
       self.ontology_type = params[:ontology]
       self.reasoner = params[:reasoner]
       self.keyword_search = params[:lucene]
-
+      self.resolve_online = params[:resolve_online] || false
+      
       # if the model name is not provided and file persistence is used, then jena just
       # creates random files in the tmp dir. not good, as we need to know the model name
       # to have persistence
@@ -147,9 +156,11 @@ module ActiveRDF
         rf = map_reasoner_factory(self.reasoner)
         onturi = map_ontology_type(self.ontology_type)
 
-        spec =
-          Jena::Ontology::OntModelSpec.new(self.model_maker,
-          Jena::Ontology::OntDocumentManager.new,
+        odm = Jena::Ontology::OntDocumentManager.new
+        odm.setProcessImports(self.resolve_online)
+        
+        spec = Jena::Ontology::OntModelSpec.new(
+          self.model_maker, odm,
           rf, onturi)
 
         self.model = Jena::Model::ModelFactory.
@@ -458,7 +469,7 @@ module ActiveRDF
       results
     end
 
-    def query_pellet(query)
+    def query_pellet0(query)
       query_sparql = translate(query)
       jena_query = Jena::Query::QueryFactory.create(query_sparql)
 
@@ -474,7 +485,7 @@ module ActiveRDF
       end
 
       results
-    end 
+    end
 
     def query_pellet(query)
       query_sparql = translate(query)
