@@ -519,15 +519,15 @@ module ActiveRDF
             next if thing.isAnon
             res_row << RDFS::Resource.new(thing.to_s)
           elsif thing.kind_of? Jena::Model::Literal
-            if thing.getLanguage == "" and thing.getDatatypeURI.nil?
+            if thing.getLanguage == "" and thing.getDatatypeURI.nil? then
               # plain literal
-              res_row << Literal.new(thing.getString)
-            elsif thing.getLanguage == ""
+              res_row << thing.getString # FIXME - RDFS::Literal.new(thing.getString)
+            elsif thing.getLanguage == "" then
               # datatyped literal
-              res_row << Literal.new(thing.getValue, RDFS::Resource.new(thing.getDatatypeURI))
+              res_row << thing.getValue # FIXME - RDFS::Literal.new(thing.getValue, RDFS::Resource.new(thing.getDatatypeURI))
             elsif thing.getDatatypeURI.nil?
               # language tagged literal
-              res_row << Literal.new(thing.getLexicalForm, "@" + thing.getLanguage)
+              res_row << thing.getLexicalForm # FIXME - RDFS::Literal.new(thing.getLexicalForm, "@" + thing.getLanguage)
             else
               raise ActiveRdfError, "Jena Sparql returned a strange literal"
             end
