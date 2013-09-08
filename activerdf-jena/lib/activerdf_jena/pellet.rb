@@ -11,7 +11,7 @@ module Pellet
   end
 
   begin
-    include_class('org.mindswap.pellet.jena.PelletReasonerFactory')
+    java_import('org.mindswap.pellet.jena.PelletReasonerFactory')
     self.pellet_available = true
     self.reasoner_factory = PelletReasonerFactory.theInstance
   rescue
@@ -20,6 +20,12 @@ module Pellet
 
   module Query
     include_package('org.mindswap.pellet.query.jena')
+  end
+
+  module Sparqldl
+    module Jena
+      include_package('com.clarkparsia.pellet.sparqldl.jena')
+    end
   end
 
 end

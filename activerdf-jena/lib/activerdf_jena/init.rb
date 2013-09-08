@@ -15,6 +15,7 @@ $: << File.dirname(File.expand_path(file))
 java_dir = File.expand_path(File.join(File.dirname(File.expand_path(file)), "..", "..", "ext"))
 
 Dir.foreach(java_dir) do |jar|
+  puts "Loading #{jar}"
   $CLASSPATH << File.join(java_dir, jar) if jar =~ /.jar$/
 end
 

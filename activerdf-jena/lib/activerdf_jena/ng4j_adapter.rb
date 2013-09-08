@@ -2,6 +2,7 @@
 # Copyright:: (c) 2007 DERI
 # License:: LGPL
 
+module ActiveRDF
 class NG4JAdapter < ActiveRdfAdapter
 
   ConnectionPool.register_adapter(:ng4j, self)
@@ -377,3 +378,4 @@ class NG4JAdapter < ActiveRdfAdapter
   end
 
 end
+end # module ActiveRDF

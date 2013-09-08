@@ -42,8 +42,8 @@ def setup_gem(pkg_name, pkg_version)
   spec = base_gem_spec(pkg_name, pkg_version)
   yield spec if block_given?
 
-  Rake::GemPackageTask.new(spec) do |p|
-    p.gem_spec = spec
-    p.need_tar = false
+  Gem::PackageTask.new(spec) do |p|
+    p.need_tar = true
+    p.need_zip = false
   end
 end
